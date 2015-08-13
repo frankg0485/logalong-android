@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="input_bgd_color">#e4e6e8</color>
+    <color name="base_menu_color">#a4a6a8</color>
+    <color name="base_bgd_color">#d4d6d8</color>
+    <color name="base_fgd_color">#dee2e6</color>
+    <color name="base_bgd_separator_color">#c4c6c8</color>
+    <color name="base_text_color">#303030</color>
+    <color name="base_white_text_color">#f0f0f0</color>
+    <color name="gray_text_color">#505050</color>
+    <color name="light_gray_text_color">#606060</color>
+    <color name="dark_gray_text_color">#808080</color>
+    <color name="red_text_color">#6d5246</color>
+    <color name="header_color">#304050</color>
+    <color name="tab_text_color">#405060</color>
+    <color name="header_text_color">#c0c0c0</color>
+    <color name="footer_text_color">#f0f0f0</color>
+    <color name="footer_color">#405060</color>
+    <color name="warn_text_color">#ffff40</color>
+    <color name="base_green">#42bb38</color>
+    <color name="released_base_btn_background">#42bb38</color>
+    <color name="pressed_base_btn_background">#52cb48</color>
+    <color name="released_quickie_btn_background">#b4cdcd</color>
+    <color name="pressed_quickie_btn_background">#e0eeee</color>
+    <color name="released_btn_background">#607078</color>
+    <color name="pressed_btn_background">#778f8f</color>
+    <color name="released_emoji_btn_background">#d4d6d8</color>
+    <color name="pressed_emoji_btn_background">#c4c6c8</color>
+    <color name="released_emoji_backspace_btn_background">#e4e6e8</color>
+    <color name="pressed_emoji_backspace_btn_background">#c4c6c8</color>
+    <color name="released_login_btn_background">#42bb38</color>
+    <color name="pressed_login_btn_background">#52cb48</color>
+    <color name="released_alt_login_btn_background">#708088</color>
+    <color name="pressed_alt_login_btn_background">#879f9f</color>
+</resources>
