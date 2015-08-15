@@ -1,17 +1,286 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@color/base_bgd_color" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/base_bgd_color">
 
-    <TextView
-        android:id="@+id/welcome"
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_margin="30dp"
-        android:text="welcome"
-        android:textColor="@color/light_gray_text_color"
-        android:textSize="18sp" />
+        android:background="@color/base_fgd_color"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="5dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center|left"
+            android:orientation="horizontal"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp">
+
+            <TextView
+                android:id="@+id/value"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:text="0.0"
+                android:textSize="30dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.8"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/b1"
+                    style="@style/setTimeButtons"
+                    android:text="1" />
+
+                <Button
+                    android:id="@+id/b2"
+                    style="@style/setTimeButtons"
+                    android:text="2" />
+
+                <Button
+                    android:id="@+id/b3"
+                    style="@style/setTimeButtons"
+                    android:text="3" />
+
+                <Button
+                    android:id="@+id/plus"
+                    style="@style/setTimeButtons"
+                    android:text="+" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/b4"
+                    style="@style/setTimeButtons"
+                    android:text="4" />
+
+                <Button
+                    android:id="@+id/b5"
+                    style="@style/setTimeButtons"
+                    android:text="5" />
+
+                <Button
+                    android:id="@+id/b6"
+                    style="@style/setTimeButtons"
+                    android:text="6" />
+
+                <Button
+                    android:id="@+id/minus"
+                    style="@style/setTimeButtons"
+                    android:text="-" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/b7"
+                    style="@style/setTimeButtons"
+                    android:text="7" />
+
+                <Button
+                    android:id="@+id/b8"
+                    style="@style/setTimeButtons"
+                    android:text="8" />
+
+                <Button
+                    android:id="@+id/b9"
+                    style="@style/setTimeButtons"
+                    android:text="9" />
+
+                <Button
+                    android:id="@+id/multiply"
+                    style="@style/setTimeButtons"
+                    android:text="*" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/b0"
+                    style="@style/setTimeButtons"
+                    android:text="0" />
+
+                <Button
+                    android:id="@+id/dot"
+                    style="@style/setTimeButtons"
+                    android:text="." />
+
+                <Button
+                    android:id="@+id/back"
+                    style="@style/setTimeButtons"
+                    android:text="&lt;==" />
+
+                <Button
+                    android:id="@+id/divide"
+                    style="@style/setTimeButtons"
+                    android:text="/" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1.5"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/clear"
+                    style="@style/setTimeButtons"
+                    android:text="C" />
+
+                <Button
+                    android:id="@+id/ok"
+                    style="@style/setTimeActionButtons"
+                    android:layout_weight="2"
+                    android:text="@android:string/ok" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:paddingTop="10dp">
+
+            <Switch
+                android:id="@+id/switchExpenseIncome"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:checked="true"
+                android:textOff="income"
+                android:textOn="expense" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="category:"
+                android:textSize="16dp" />
+
+            <Spinner
+                android:id="@+id/spinnerCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:popupBackground="#408080"
+                android:spinnerMode="dropdown" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="account:"
+                android:textSize="16dp" />
+
+            <Spinner
+                android:id="@+id/spinnerAccount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:popupBackground="#408080"
+                android:spinnerMode="dropdown"
+                android:touchscreenBlocksFocus="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="note:"
+                android:textSize="16dp" />
+
+            <EditText
+                android:id="@+id/note"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="date:"
+                android:textSize="16dp" />
+
+            <EditText
+                android:id="@+id/date"
+                android:layout_width="160dp"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 </RelativeLayout>
