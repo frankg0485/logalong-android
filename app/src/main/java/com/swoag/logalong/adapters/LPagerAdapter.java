@@ -7,9 +7,8 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.fragments.AccountsFragment;
-import com.swoag.logalong.fragments.NewLogFragment;
-import com.swoag.logalong.fragments.ViewLogFragment;
-import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.fragments.NewTransactionFragment;
+import com.swoag.logalong.fragments.ViewTransactionFragment;
 
 public class LPagerAdapter extends FragmentStatePagerAdapter {
     private static final String TAG = LPagerAdapter.class.getSimpleName();
@@ -25,11 +24,11 @@ public class LPagerAdapter extends FragmentStatePagerAdapter {
         switch (i) {
             case 1:
             default:
-                fragment = LFragment.getInstanceOf(NewLogFragment.class);
+                fragment = LFragment.getInstanceOf(NewTransactionFragment.class);
                 break;
 
             case 0:
-                fragment = LFragment.getInstanceOf(ViewLogFragment.class);
+                fragment = LFragment.getInstanceOf(ViewTransactionFragment.class);
                 break;
 
             case 2:

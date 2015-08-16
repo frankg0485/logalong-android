@@ -1,31 +1,32 @@
 package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.LFragmentActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.LViewUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+public class TransactionEdit implements View.OnClickListener {
+    private Activity activity;
+    private View rootView;
+    private LItem item;
+    private LItem savedItem;
+    private TransitionEditItf callback;
 
-public class NewLogFragment extends LFragment implements View.OnClickListener {
-    private static final String TAG = NewLogFragment.class.getSimpleName();
-
-    private Spinner spinnerCategory, spinnerAccount;
-    private Button btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9;
-    private Button btnDot, btnBack, btnPlus, btnMinus, btnMultiply, btnDivide;
-    private Button btnClear, btnOk;
+    private View view0, view1, view2, view3, view4, view5, view6, view7, view8, view9;
+    private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
+    private View viewClear, viewBack, viewCancel, viewOk;
     private TextView valueTV;
 
     private String inputString = "";
@@ -33,98 +34,75 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
     private int lastValueEnd;
     private int mathOperator;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_new_log, container, false);
-        spinnerCategory = (Spinner) rootView.findViewById(R.id.spinnerCategory);
+    public interface TransitionEditItf {
+        public static final int EXIT_DELETE = 10;
+        public static final int EXIT_OK = 20;
+        public static final int EXIT_CANCEL = 30;
 
-        spinnerAccount = (Spinner) rootView.findViewById(R.id.spinnerAccount);
-        List<String> list = new ArrayList<String>();
-        list.add("Cash");
-        list.add("Credit:Discover");
-        list.add("Credit:Master");
-        list.add("Credit:Visa");
-        list.add("Checkings");
-        list.add("Savings");
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(LApp.ctx, android.R.layout.simple_spinner_item, list);
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerAccount.setAdapter(dataAdapter);
+        public void onTransactionEditExit(int action, boolean changed);
+    }
 
-        List<String> list2 = new ArrayList<String>();
-        list2.add("Food");
-        list2.add("Grocery");
-        list2.add("Gas");
-        list2.add("Entertainment");
-        list2.add("General");
-        ArrayAdapter<String> dataAdapter2 = new ArrayAdapter<String>(LApp.ctx, android.R.layout.simple_spinner_item, list2);
-        dataAdapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCategory.setAdapter(dataAdapter2);
+    public TransactionEdit(Activity activity, View rootView, LItem item, TransitionEditItf callback) {
+        this.activity = activity;
+        this.rootView = rootView;
+        this.item = item;
+        this.callback = callback;
 
-        btn0 = setBtnListener(rootView, R.id.b0);
-        btn0 = setBtnListener(rootView, R.id.b1);
-        btn0 = setBtnListener(rootView, R.id.b2);
-        btn0 = setBtnListener(rootView, R.id.b3);
-        btn0 = setBtnListener(rootView, R.id.b4);
-        btn0 = setBtnListener(rootView, R.id.b5);
-        btn0 = setBtnListener(rootView, R.id.b6);
-        btn0 = setBtnListener(rootView, R.id.b7);
-        btn0 = setBtnListener(rootView, R.id.b8);
-        btn0 = setBtnListener(rootView, R.id.b9);
-        btnBack = setBtnListener(rootView, R.id.back);
-        btnDot = setBtnListener(rootView, R.id.dot);
-        btnPlus = setBtnListener(rootView, R.id.plus);
-        btnMinus = setBtnListener(rootView, R.id.minus);
-        btnMultiply = setBtnListener(rootView, R.id.multiply);
-        btnDivide = setBtnListener(rootView, R.id.divide);
-        btnClear = setBtnListener(rootView, R.id.clear);
-        btnOk = setBtnListener(rootView, R.id.ok);
+        this.savedItem = new LItem(item);
+
+        create();
+    }
+
+    private void create() {
+        view0 = setViewListener(rootView, R.id.b0);
+        view1 = setViewListener(rootView, R.id.b1);
+        view2 = setViewListener(rootView, R.id.b2);
+        view3 = setViewListener(rootView, R.id.b3);
+        view4 = setViewListener(rootView, R.id.b4);
+        view5 = setViewListener(rootView, R.id.b5);
+        view6 = setViewListener(rootView, R.id.b6);
+        view7 = setViewListener(rootView, R.id.b7);
+        view8 = setViewListener(rootView, R.id.b8);
+        view9 = setViewListener(rootView, R.id.b9);
+        viewBackSpace = setViewListener(rootView, R.id.backspace);
+        viewDot = setViewListener(rootView, R.id.dot);
+        viewPlus = setViewListener(rootView, R.id.plus);
+        viewMinus = setViewListener(rootView, R.id.minus);
+        viewMultiply = setViewListener(rootView, R.id.multiply);
+        viewDivide = setViewListener(rootView, R.id.divide);
+        viewClear = setViewListener(rootView, R.id.clear);
+        viewCancel = setViewListener(rootView, R.id.cancel);
+        viewBack = setViewListener(rootView, R.id.back);
+        viewOk = setViewListener(rootView, R.id.ok);
 
         valueTV = (TextView) rootView.findViewById(R.id.value);
-        clearInputString();
 
-        return rootView;
+        clearInputString();
     }
 
-    @Override
-    public void onDestroyView() {
-        btn0 = null;
-        btn1 = null;
-        btn2 = null;
-        btn3 = null;
-        btn4 = null;
-        btn5 = null;
-        btn6 = null;
-        btn7 = null;
-        btn8 = null;
-        btn9 = null;
-        btnBack = null;
-        btnDot = null;
-        btnPlus = null;
-        btnMultiply = null;
-        btnDivide = null;
-        btnClear = null;
-        btnOk = null;
-
-        spinnerAccount = null;
-        spinnerCategory = null;
+    private void destroy() {
+        view0 = null;
+        view1 = null;
+        view2 = null;
+        view3 = null;
+        view4 = null;
+        view5 = null;
+        view6 = null;
+        view7 = null;
+        view8 = null;
+        view9 = null;
+        viewBackSpace = null;
+        viewDot = null;
+        viewPlus = null;
+        viewMultiply = null;
+        viewDivide = null;
+        viewClear = null;
+        viewCancel = null;
+        viewBack = null;
+        viewOk = null;
 
         valueTV = null;
-
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onSelected(boolean selected) {
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
+        savedItem = null;
     }
 
     @Override
@@ -163,7 +141,7 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
             case R.id.dot:
                 appendToString(-1);
                 break;
-            case R.id.back:
+            case R.id.backspace:
                 removeLastDigitFromString();
                 break;
             case R.id.clear:
@@ -182,6 +160,12 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
                 doMathToString(3);
                 break;
 
+            case R.id.back:
+            case R.id.cancel:
+                destroy();
+                callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                break;
+
             case R.id.ok:
                 saveLog();
                 break;
@@ -191,47 +175,47 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
         }
     }
 
-    private Button setBtnListener(View v, int id) {
-        Button btn = (Button) v.findViewById(id);
-        btn.setOnClickListener(this);
-        return btn;
+    private View setViewListener(View v, int id) {
+        View view = v.findViewById(id);
+        view.setOnClickListener(this);
+        return view;
     }
 
     private void enableOk(boolean yes) {
-        btnOk.setEnabled(yes);
-        if (yes) LViewUtils.setAlpha((View) btnOk, 1.0f);
-        else LViewUtils.setAlpha((View) btnOk, 0.5f);
+        viewOk.setEnabled(yes);
+        if (yes) LViewUtils.setAlpha((View) viewOk, 1.0f);
+        else LViewUtils.setAlpha((View) viewOk, 0.5f);
     }
 
     private void enableMath(boolean yes) {
-        btnPlus.setEnabled(yes);
-        btnMinus.setEnabled(yes);
-        btnMultiply.setEnabled(yes);
-        btnDivide.setEnabled(yes);
+        viewPlus.setEnabled(yes);
+        viewMinus.setEnabled(yes);
+        viewMultiply.setEnabled(yes);
+        viewDivide.setEnabled(yes);
 
         if (yes) {
-            LViewUtils.setAlpha((View) btnPlus, 1.0f);
-            LViewUtils.setAlpha((View) btnMinus, 1.0f);
-            LViewUtils.setAlpha((View) btnMultiply, 1.0f);
-            LViewUtils.setAlpha((View) btnDivide, 1.0f);
+            LViewUtils.setAlpha((View) viewPlus, 1.0f);
+            LViewUtils.setAlpha((View) viewMinus, 1.0f);
+            LViewUtils.setAlpha((View) viewMultiply, 1.0f);
+            LViewUtils.setAlpha((View) viewDivide, 1.0f);
         } else {
-            LViewUtils.setAlpha((View) btnPlus, 0.5f);
-            LViewUtils.setAlpha((View) btnMinus, 0.5f);
-            LViewUtils.setAlpha((View) btnMultiply, 0.5f);
-            LViewUtils.setAlpha((View) btnDivide, 0.5f);
+            LViewUtils.setAlpha((View) viewPlus, 0.5f);
+            LViewUtils.setAlpha((View) viewMinus, 0.5f);
+            LViewUtils.setAlpha((View) viewMultiply, 0.5f);
+            LViewUtils.setAlpha((View) viewDivide, 0.5f);
         }
     }
 
     private void enableDot(boolean yes) {
-        btnDot.setEnabled(yes);
-        if (yes) LViewUtils.setAlpha((View) btnDot, 1.0f);
-        else LViewUtils.setAlpha((View) btnDot, 0.5f);
+        viewDot.setEnabled(yes);
+        if (yes) LViewUtils.setAlpha((View) viewDot, 1.0f);
+        else LViewUtils.setAlpha((View) viewDot, 0.5f);
     }
 
     private void clearInputString() {
         inputString = "";
         valueTV.setText("0.0");
-        btnOk.setText(LApp.ctx.getString(android.R.string.ok));
+        ((Button)viewOk).setText(LApp.ctx.getString(android.R.string.ok));
 
         mathOperator = -1;
         lastValue = 0;
@@ -271,7 +255,7 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
             } else {
                 if (lastDigit == '+' || lastDigit == '-' || lastDigit == '*' || lastDigit == '/') {
                     mathOperator = -1;
-                    btnOk.setText(LApp.ctx.getString(android.R.string.ok));
+                    ((Button)viewOk).setText(LApp.ctx.getString(android.R.string.ok));
                 }
             }
 
@@ -319,7 +303,7 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
 
         if (getValue(tmp) != 0) {
             enableOk(true);
-            if (mathOperator < 0) enableMath(true);
+            enableMath(true);
         } else {
             if (mathOperator == 3 || mathOperator < 0) enableOk(false);
             if (mathOperator < 0) enableMath(false);
@@ -327,6 +311,10 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
     }
 
     private void doMathToString(int operator) {
+        if (mathOperator >= 0) {
+            saveLog();
+        }
+
         switch (operator) {
             case 0:
                 inputString += '+';
@@ -345,7 +333,7 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
         lastValueEnd = inputString.length();
         lastValue = getValue(inputString.substring(0, lastValueEnd - 1));
         enableMath(false);
-        btnOk.setText("=");
+        ((Button)viewOk).setText("=");
         enableDot(true);
 
         mathOperator = operator;
@@ -391,7 +379,22 @@ public class NewLogFragment extends LFragment implements View.OnClickListener {
             valueTV.setText(inputString);
             enableDot(false); //math result always has '.' in it.
         } else {
-
+            doSaveLog();
         }
+    }
+
+    private void doSaveLog() {
+        LItem item = new LItem();
+        item.setCategory(1);
+        item.setVendor(1);
+        item.setTag(-1);
+        item.setValue(getValue(inputString));
+        DBAccess.addItem(item);
+
+        clearInputString();
+
+        boolean changed = !item.isEqual(savedItem);
+        destroy();
+        callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
     }
 }

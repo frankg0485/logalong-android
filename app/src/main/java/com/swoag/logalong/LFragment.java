@@ -11,18 +11,19 @@ import java.util.HashMap;
 
 public class LFragment extends Fragment {
     private static final String TAG = LFragment.class.getSimpleName();
-    public static final int SCREEN_ACTIVE                 = 100;
-    public static final int SCREEN_TIMEOUT                = 200;
-    public static final int SCREEN_TIMEOUT_FULLSCREEN     = 300;
+    public static final int SCREEN_ACTIVE = 100;
+    public static final int SCREEN_TIMEOUT = 200;
+    public static final int SCREEN_TIMEOUT_FULLSCREEN = 300;
     public int mInstanceId;
 
-    private static HashMap <String, LFragment> map = new HashMap<String, LFragment>();
-    public static Fragment getInstanceOf (Class<?> klass) {
+    private static HashMap<String, LFragment> map = new HashMap<String, LFragment>();
+
+    public static Fragment getInstanceOf(Class<?> klass) {
         LFragment frag = map.get(klass.getName() + 0);
         if (frag == null) {
             try {
                 //LLog.d(TAG, "new instance: " + klass);
-                frag = (LFragment)klass.newInstance();
+                frag = (LFragment) klass.newInstance();
                 frag.mInstanceId = 0;
                 putInstanceOf(klass, 0, frag);
             } catch (Exception e) {
@@ -33,12 +34,12 @@ public class LFragment extends Fragment {
         return frag;
     }
 
-    public static Fragment getInstanceOf (Class<?> klass, int id) {
+    public static Fragment getInstanceOf(Class<?> klass, int id) {
         LFragment frag = map.get(klass.getName() + id);
         if (frag == null) {
             try {
                 //LLog.d(TAG, "new instance: " + klass + "@" + id);
-                frag = (LFragment)klass.newInstance();
+                frag = (LFragment) klass.newInstance();
                 frag.mInstanceId = id;
                 putInstanceOf(klass, id, frag);
             } catch (Exception e) {
@@ -49,7 +50,7 @@ public class LFragment extends Fragment {
         return frag;
     }
 
-    private static void putInstanceOf (Class<?> klass, int id, LFragment obj) {
+    private static void putInstanceOf(Class<?> klass, int id, LFragment obj) {
         //LLog.d(TAG, "put instance: " + klass + "@" + obj);
         map.put(klass.getName() + id, obj);
     }
@@ -76,18 +77,14 @@ public class LFragment extends Fragment {
         super.onSaveInstanceState(outState);
     }
 
-    public boolean gotoSleep (int mode) {
+    public boolean gotoSleep(int mode) {
         return false;
     }
 
-    public boolean onReceiveDockSignal (int signal) {
-        return false;
+    public void onSelected(boolean selected) {
     }
 
-    public void onSelected (boolean selected) {
-    }
-
-    public boolean onBackPressed () {
+    public boolean onBackPressed() {
         return false;
     }
 

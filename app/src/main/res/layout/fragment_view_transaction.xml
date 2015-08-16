@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <ViewFlipper
+        android:id="@+id/viewFlipper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/balanceBar"
+        android:layout_alignParentTop="true">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <ViewFlipper
+                android:id="@+id/listViewFlipper"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/balanceBar"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="1dp">
+
+                <ListView
+                    android:id="@+id/logsListLeft"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="1dp" />
+
+                <ListView
+                    android:id="@+id/logsList"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="1dp" />
+
+                <ListView
+                    android:id="@+id/logsListRight"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:divider="@android:color/transparent"
+                    android:dividerHeight="1dp" />
+            </ViewFlipper>
+
+            <RelativeLayout
+                android:id="@+id/balanceBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/bottomBar"
+                android:background="#e4e6e8"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginLeft="20dp"
+                    android:layout_toLeftOf="@+id/balance"
+                    android:gravity="center_vertical"
+                    android:text="Balance:"
+                    android:textSize="14dp" />
+
+                <TextView
+                    android:id="@+id/balance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_toLeftOf="@+id/delta"
+                    android:gravity="right|center_vertical"
+                    android:text="1234.45"
+                    android:textColor="@color/base_red"
+                    android:textSize="14dp" />
+
+                <TextView
+                    android:id="@+id/delta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="20dp"
+                    android:gravity="right|center_vertical"
+                    android:text="(345.00)"
+                    android:textColor="@color/base_red"
+                    android:textSize="14dp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/bottomBar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/footer_height"
+                android:layout_alignParentBottom="true"
+                android:background="#C0080c10"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp">
+
+                <ImageView
+                    android:id="@+id/filter"
+                    android:layout_width="60dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:clickable="true"
+                    android:paddingBottom="6dp"
+                    android:paddingTop="6dp"
+                    android:src="@drawable/ic_menu_sort_by_size" />
+
+                <ImageView
+                    android:id="@+id/prev"
+                    android:layout_width="60dp"
+                    android:layout_height="36dp"
+                    android:layout_centerVertical="true"
+                    android:layout_toLeftOf="@+id/next"
+                    android:paddingBottom="6dp"
+                    android:paddingTop="6dp"
+                    android:src="@drawable/ic_action_left" />
+
+                <ImageView
+                    android:id="@+id/next"
+                    android:layout_width="60dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:paddingBottom="6dp"
+                    android:paddingTop="6dp"
+                    android:src="@drawable/ic_action_right" />
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <include
+                android:id="@+id/logEdit"
+                layout="@layout/transaction_edit" />
+        </LinearLayout>
+    </ViewFlipper>
+</RelativeLayout>
+

@@ -46,18 +46,26 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_LOG_NAME = "LLog";
     public static final String TABLE_LOG_COLUMN_TYPE = "Type";
     public static final String TABLE_LOG_COLUMN_CATEGORY = "Category";
-    public static final String TABLE_LOG_COLUMN_FROM = "From";
-    public static final String TABLE_LOG_COLUMN_TO = "To";
-    public static final String TABLE_LOG_COLUMN_BY = "By";
-    public static final String TABLE_LOG_COLUMN_TIMESTAMP = "TimeStamp";
-    public static final String TABLE_LOG_COLUMN_VALUE = "Value";
+    public static final String TABLE_LOG_COLUMN_FROM = "FromAccountId";
+    public static final String TABLE_LOG_COLUMN_TO = "ToAccountId";
+    public static final String TABLE_LOG_COLUMN_BY = "MadeBy";
+    public static final String TABLE_LOG_COLUMN_TIMESTAMP = "TimeStmp";
+    public static final String TABLE_LOG_COLUMN_VALUE = "Dollar";
     public static final String TABLE_LOG_COLUMN_NOTE = "Note";
-
+    public static final String TABLE_LOG_COLUMN_TAG = "Tag";
+    public static final String TABLE_LOG_COLUMN_VENDOR = "Vendor";
 
     public static final String TABLE_CATEGORY_NAME = "LCategory";
     public static final String TABLE_CATEGORY_COLUMN_NAME = "Name";
-    public static final String TABLE_CATEGORY_COLUMN_PARENT = "Parent";
+    public static final String TABLE_CATEGORY_COLUMN_STATE = "State";
 
+    public static final String TABLE_TAG_NAME = "LTag";
+    public static final String TABLE_TAG_COLUMN_NAME = "Name";
+    public static final String TABLE_TAG_COLUMN_STATE = "State";
+
+    public static final String TABLE_VENDOR_NAME = "LVendor";
+    public static final String TABLE_VENDOR_COLUMN_NAME = "Name";
+    public static final String TABLE_VENDOR_COLUMN_STATE = "State";
 
     private static final String CREATE_TABLE_ACCOUNT = "CREATE TABLE " + TABLE_ACCOUNT_NAME +
             "( _id integer primary key autoincrement," +
@@ -74,17 +82,19 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_reservedText2 + " TEXT," +
             TABLE_COLUMN_reservedText3 + " TEXT," +
             TABLE_COLUMN_reservedText4 + " TEXT" +
-            ");" ;
+            ");";
 
     private static final String CREATE_TABLE_LOG = "CREATE TABLE " + TABLE_LOG_NAME +
-            "( _id integer primary key autoincrement ," +
+            "( _id integer primary key autoincrement," +
+            TABLE_LOG_COLUMN_VALUE + " REAL," +
+            TABLE_LOG_COLUMN_CATEGORY + " INTEGER," +
             TABLE_LOG_COLUMN_FROM + " INTEGER," +
             TABLE_LOG_COLUMN_TO + " INTEGER," +
             TABLE_LOG_COLUMN_BY + " INTEGER," +
             TABLE_LOG_COLUMN_TIMESTAMP + " INTEGER," +
             TABLE_LOG_COLUMN_TYPE + " INTEGER," +
-            TABLE_LOG_COLUMN_CATEGORY + " INTEGER," +
-            TABLE_LOG_COLUMN_VALUE + " REAL," +
+            TABLE_LOG_COLUMN_TAG + " INTEGER," +
+            TABLE_LOG_COLUMN_VENDOR + " INTEGER," +
             TABLE_LOG_COLUMN_NOTE + " TEXT," +
             TABLE_COLUMN_reservedInteger1 + " INTEGER," +
             TABLE_COLUMN_reservedInteger2 + " INTEGER," +
@@ -98,10 +108,26 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY_NAME +
             "( _id integer primary key autoincrement ," +
-            TABLE_CATEGORY_COLUMN_PARENT + " INTEGER," +
+            TABLE_CATEGORY_COLUMN_STATE + " INTEGER," +
             TABLE_CATEGORY_COLUMN_NAME + " TEXT," +
             TABLE_COLUMN_reservedInteger1 + " INTEGER," +
-            TABLE_COLUMN_reservedText1 + " TEXT," +
+            TABLE_COLUMN_reservedText1 + " TEXT" +
+            ");";
+
+    private static final String CREATE_TABLE_TAG = "CREATE TABLE " + TABLE_TAG_NAME +
+            "( _id integer primary key autoincrement ," +
+            TABLE_TAG_COLUMN_STATE + " INTEGER," +
+            TABLE_TAG_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_reservedInteger1 + " INTEGER," +
+            TABLE_COLUMN_reservedText1 + " TEXT" +
+            ");";
+
+    private static final String CREATE_TABLE_VENDOR = "CREATE TABLE " + TABLE_VENDOR_NAME +
+            "( _id integer primary key autoincrement ," +
+            TABLE_VENDOR_COLUMN_STATE + " INTEGER," +
+            TABLE_VENDOR_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_reservedInteger1 + " INTEGER," +
+            TABLE_COLUMN_reservedText1 + " TEXT" +
             ");";
 
     private static final String CREATE_TABLE_RESERVED = "" +
@@ -123,7 +149,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_reservedText7 + " TEXT," +
             TABLE_COLUMN_reservedText8 + " TEXT" +
             TABLE_COLUMN_reservedReal1 + " REAL," +
-            TABLE_COLUMN_reservedBlob1 + " BLOB," +
+            TABLE_COLUMN_reservedBlob1 + " BLOB" +
             ");";
 
     public DBHelper(Context context, int version) {
@@ -135,10 +161,12 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ACCOUNT);
         db.execSQL(CREATE_TABLE_LOG);
         db.execSQL(CREATE_TABLE_CATEGORY);
-        db.execSQL("CREATE TABLE " +  TABLE_reserved1 + CREATE_TABLE_RESERVED);
-        db.execSQL("CREATE TABLE " +  TABLE_reserved2 + CREATE_TABLE_RESERVED);
-        db.execSQL("CREATE TABLE " +  TABLE_reserved3 + CREATE_TABLE_RESERVED);
-        db.execSQL("CREATE TABLE " +  TABLE_reserved4 + CREATE_TABLE_RESERVED);
+        db.execSQL(CREATE_TABLE_TAG);
+        db.execSQL(CREATE_TABLE_VENDOR);
+        db.execSQL("CREATE TABLE " + TABLE_reserved1 + CREATE_TABLE_RESERVED);
+        db.execSQL("CREATE TABLE " + TABLE_reserved2 + CREATE_TABLE_RESERVED);
+        db.execSQL("CREATE TABLE " + TABLE_reserved3 + CREATE_TABLE_RESERVED);
+        db.execSQL("CREATE TABLE " + TABLE_reserved4 + CREATE_TABLE_RESERVED);
     }
 
     @Override
