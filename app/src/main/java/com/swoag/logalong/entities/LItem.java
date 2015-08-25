@@ -10,12 +10,12 @@ public class LItem {
 
     double value;
     int type;
-    int category;
-    int from;
-    int to;
-    int by;
-    int tag;
-    int vendor;
+    long category;
+    long from;
+    long to;
+    long by;
+    long tag;
+    long vendor;
     String note;
     long timeStamp;
 
@@ -92,36 +92,52 @@ public class LItem {
         this.type = type;
     }
 
-    public int getCategory() {
+    public long getCategory() {
         return category;
     }
 
-    public void setCategory(int category) {
+    public void setCategory(long category) {
         this.category = category;
     }
 
-    public int getFrom() {
+    public long getFrom() {
         return from;
     }
 
-    public void setFrom(int from) {
+    public void setFrom(long from) {
         this.from = from;
     }
 
-    public int getTo() {
+    public long getTo() {
         return to;
     }
 
-    public void setTo(int to) {
+    public void setTo(long to) {
         this.to = to;
     }
 
-    public int getBy() {
+    public long getBy() {
         return by;
     }
 
-    public void setBy(int by) {
+    public void setBy(long by) {
         this.by = by;
+    }
+
+    public long getTag() {
+        return tag;
+    }
+
+    public void setTag(long tag) {
+        this.tag = tag;
+    }
+
+    public long getVendor() {
+        return vendor;
+    }
+
+    public void setVendor(long vendor) {
+        this.vendor = vendor;
     }
 
     public String getNote() {
@@ -132,27 +148,11 @@ public class LItem {
         this.note = note;
     }
 
-    public int getTag() {
-        return tag;
-    }
-
-    public void setTag(int tag) {
-        this.tag = tag;
-    }
-
     public long getTimeStamp() {
         return timeStamp;
     }
 
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
-    }
-
-    public int getVendor() {
-        return vendor;
-    }
-
-    public void setVendor(int vendor) {
-        this.vendor = vendor;
     }
 }

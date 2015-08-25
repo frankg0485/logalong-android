@@ -20,6 +20,8 @@
     <color name="base_red">#bb4238</color>
     <color name="base_green">#42bb38</color>
     <color name="base_blue">#4238bb</color>
+    <color name="base_blue_color">#2487ab</color>
+    <color name="dialog_bg_color">#a0000000</color>
     <color name="released_base_btn_background">#42bb38</color>
     <color name="pressed_base_btn_background">#52cb48</color>
     <color name="released_quickie_btn_background">#b4cdcd</color>

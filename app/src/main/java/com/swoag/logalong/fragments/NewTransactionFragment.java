@@ -11,6 +11,7 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.utils.AppPersistency;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
@@ -84,12 +85,15 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
 
     @Override
     public void onTransactionEditExit(int action, boolean changed) {
+
         switch (action) {
             case TransactionEdit.TransitionEditItf.EXIT_OK:
+                AppPersistency.transactionChanged = changed;
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                AppPersistency.transactionChanged = changed;
                 break;
         }
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
@@ -99,6 +103,9 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
 
     private void newLog(int type) {
         item.setType(type);
+        item.setTo(4);
+        item.setCategory(2);
+        item.setVendor(1);
 
         edit = new TransactionEdit(getActivity(), rootView, item, this);
 

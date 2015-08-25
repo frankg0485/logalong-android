@@ -2,11 +2,16 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
+import android.content.Context;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -15,9 +20,14 @@ import com.swoag.logalong.LFragment;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LSelectionDialog;
 
-public class TransactionEdit implements View.OnClickListener {
+public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf {
+    private static final String TAG = TransactionEdit.class.getSimpleName();
+
     private Activity activity;
     private View rootView;
     private LItem item;
@@ -26,8 +36,12 @@ public class TransactionEdit implements View.OnClickListener {
 
     private View view0, view1, view2, view3, view4, view5, view6, view7, view8, view9;
     private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
+    private View viewAccount, viewCategory, viewVendor, viewTag;
     private View viewClear, viewBack, viewCancel, viewOk;
-    private TextView valueTV;
+    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV;
+    private EditText noteET;
+
+    private LSelectionDialog mSelectionDialog;
 
     private String inputString = "";
     private double lastValue;
@@ -74,10 +88,27 @@ public class TransactionEdit implements View.OnClickListener {
         viewCancel = setViewListener(rootView, R.id.cancel);
         viewBack = setViewListener(rootView, R.id.back);
         viewOk = setViewListener(rootView, R.id.ok);
+        viewAccount = setViewListener(rootView, R.id.accountRow);
+        viewCategory = setViewListener(rootView, R.id.categoryRow);
+        viewVendor = setViewListener(rootView, R.id.vendorRow);
+        viewTag = setViewListener(rootView, R.id.tagRow);
 
         valueTV = (TextView) rootView.findViewById(R.id.value);
 
+        accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
+        accountTV.setText(DBAccess.getAccountById(item.getTo()));
+        categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
+        categoryTV.setText(DBAccess.getCategoryById(item.getCategory()));
+        vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
+        vendorTV.setText(DBAccess.getVendorById(item.getVendor()));
+        tagTV = (TextView) rootView.findViewById(R.id.tvTag);
+        tagTV.setText(DBAccess.getTagById(item.getTag()));
+
+        noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
+
         clearInputString();
+        inputString = String.format("%.2f", item.getValue());
+        valueTV.setText(inputString);
     }
 
     private void destroy() {
@@ -100,13 +131,23 @@ public class TransactionEdit implements View.OnClickListener {
         viewCancel = null;
         viewBack = null;
         viewOk = null;
+        viewAccount = null;
+        viewCategory = null;
+        viewVendor = null;
+        viewTag = null;
 
+        noteET = null;
         valueTV = null;
+        accountTV = null;
+        categoryTV = null;
+        vendorTV = null;
+        tagTV = null;
         savedItem = null;
     }
 
     @Override
     public void onClick(View v) {
+        hideIME();
         switch (v.getId()) {
             case R.id.b0:
                 appendToString(0);
@@ -160,6 +201,76 @@ public class TransactionEdit implements View.OnClickListener {
                 doMathToString(3);
                 break;
 
+            case R.id.noteEditText:
+                noteET.setCursorVisible(true);
+                try {
+                    if (noteET.requestFocus()) {
+                        InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                        keyboard.showSoftInput(noteET, 0);
+                    }
+                } catch (Exception e) {
+                }
+                break;
+
+            case R.id.accountRow:
+                try {
+                    ids[9] = R.string.select_account;
+                    mSelectionDialog = new LSelectionDialog
+                            (activity, this, ids,
+                                    DBHelper.TABLE_ACCOUNT_NAME,
+                                    DBHelper.TABLE_ACCOUNT_COLUMN_NAME, 0, DLG_ID_ACCOUNT);
+                    mSelectionDialog.show();
+                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                } catch (Exception e) {
+                    LLog.w(TAG, "unable to open phone database");
+                }
+                break;
+            case R.id.categoryRow:
+                try {
+                    ids[9] = R.string.select_category;
+                    mSelectionDialog = new LSelectionDialog
+                            (activity, this, ids,
+                                    DBHelper.TABLE_CATEGORY_NAME,
+                                    DBHelper.TABLE_CATEGORY_COLUMN_NAME, 0, DLG_ID_CATEGORY);
+                    mSelectionDialog.show();
+                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                } catch (Exception e) {
+                    LLog.w(TAG, "unable to open phone database");
+                }
+                break;
+            case R.id.vendorRow:
+                try {
+                    ids[9] = R.string.select_vendor;
+                    mSelectionDialog = new LSelectionDialog
+                            (activity, this, ids,
+                                    DBHelper.TABLE_VENDOR_NAME,
+                                    DBHelper.TABLE_VENDOR_COLUMN_NAME, 0, DLG_ID_VENDOR);
+                    mSelectionDialog.show();
+                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                } catch (Exception e) {
+                    LLog.w(TAG, "unable to open phone database");
+                }
+                break;
+            case R.id.tagRow:
+                try {
+                    ids[9] = R.string.select_tag;
+                    mSelectionDialog = new LSelectionDialog
+                            (activity, this, ids,
+                                    DBHelper.TABLE_TAG_NAME,
+                                    DBHelper.TABLE_TAG_COLUMN_NAME, 0, DLG_ID_TAG);
+                    mSelectionDialog.show();
+                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                } catch (Exception e) {
+                    LLog.w(TAG, "unable to open phone database");
+                }
+                break;
+            /*
+            case R.id.tvAccount:
+            case R.id.tvCategory:
+            case R.id.tvVendor:
+            case R.id.tvTag:
+                break;
+            */
             case R.id.back:
             case R.id.cancel:
                 destroy();
@@ -174,6 +285,57 @@ public class TransactionEdit implements View.OnClickListener {
                 break;
         }
     }
+
+    @Override
+    public Cursor onGetCursor(String table, String column) {
+        if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))
+            return DBAccess.getAllAccountsCursor();
+        else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
+            return DBAccess.getAllCategoriesCursor();
+        else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME))
+            return DBAccess.getAllVendorsCursor();
+        else if (table.contentEquals(DBHelper.TABLE_TAG_NAME)) return DBAccess.getAllTagsCursor();
+        return null;
+    }
+
+    private static final int DLG_ID_ACCOUNT = 10;
+    private static final int DLG_ID_CATEGORY = 20;
+    private static final int DLG_ID_VENDOR = 30;
+    private static final int DLG_ID_TAG = 40;
+
+    @Override
+    public void onSelectionDialogExit(int dlgId, long selectedId) {
+        switch (dlgId) {
+            case DLG_ID_ACCOUNT:
+                item.setTo(selectedId);
+                accountTV.setText(DBAccess.getAccountById(selectedId));
+                break;
+            case DLG_ID_CATEGORY:
+                item.setCategory(selectedId);
+                categoryTV.setText(DBAccess.getCategoryById(selectedId));
+                break;
+            case DLG_ID_VENDOR:
+                item.setVendor(selectedId);
+                vendorTV.setText(DBAccess.getVendorById(selectedId));
+                break;
+            case DLG_ID_TAG:
+                item.setTag(selectedId);
+                tagTV.setText(DBAccess.getTagById(selectedId));
+                break;
+        }
+    }
+
+    private int[] ids = new int[]{
+            R.layout.selection_dialog,
+            R.layout.selection_item,
+            R.id.title,
+            R.id.save,
+            R.id.cancel,
+            R.id.radioButton,
+            R.id.name,
+            R.id.list,
+            R.id.searchText,
+            R.string.select_account};
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
@@ -215,7 +377,7 @@ public class TransactionEdit implements View.OnClickListener {
     private void clearInputString() {
         inputString = "";
         valueTV.setText("0.0");
-        ((Button)viewOk).setText(LApp.ctx.getString(android.R.string.ok));
+        ((Button) viewOk).setText(LApp.ctx.getString(android.R.string.ok));
 
         mathOperator = -1;
         lastValue = 0;
@@ -255,7 +417,7 @@ public class TransactionEdit implements View.OnClickListener {
             } else {
                 if (lastDigit == '+' || lastDigit == '-' || lastDigit == '*' || lastDigit == '/') {
                     mathOperator = -1;
-                    ((Button)viewOk).setText(LApp.ctx.getString(android.R.string.ok));
+                    ((Button) viewOk).setText(LApp.ctx.getString(android.R.string.ok));
                 }
             }
 
@@ -333,7 +495,7 @@ public class TransactionEdit implements View.OnClickListener {
         lastValueEnd = inputString.length();
         lastValue = getValue(inputString.substring(0, lastValueEnd - 1));
         enableMath(false);
-        ((Button)viewOk).setText("=");
+        ((Button) viewOk).setText("=");
         enableDot(true);
 
         mathOperator = operator;
@@ -383,11 +545,16 @@ public class TransactionEdit implements View.OnClickListener {
         }
     }
 
+    private void hideIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(noteET.getWindowToken(), 0);
+            noteET.setCursorVisible(false);
+        } catch (Exception e) {
+        }
+    }
+
     private void doSaveLog() {
-        LItem item = new LItem();
-        item.setCategory(1);
-        item.setVendor(1);
-        item.setTag(-1);
         item.setValue(getValue(inputString));
         DBAccess.addItem(item);
 

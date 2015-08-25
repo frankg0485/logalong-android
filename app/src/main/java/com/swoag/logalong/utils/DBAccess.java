@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
+import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.entities.LTag;
@@ -119,6 +120,13 @@ public class DBAccess {
         return cv;
     }
 
+    private static ContentValues setAccountValues(LAccount account) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_NAME, account.getName());
+        cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_STATE, account.getState());
+        return cv;
+    }
+
     private static ContentValues setItemValues(LItem item) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_LOG_COLUMN_TYPE, item.getType());
@@ -135,16 +143,16 @@ public class DBAccess {
         return cv;
     }
 
-    private static void getItemValues(Cursor cur, LItem LItem) {
-        /*
-        LItem.setId(cur.getInt(0));
-        LItem.setAccountId(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_ID)));
-        LItem.setStatus(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_STATUS)));
-        LItem.setFullName(cur.getString(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_REAL_NAME)));
-        LItem.setName(cur.getString(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_NAME)));
-        LItem.setNumber(cur.getString(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_NUMBER)));
-        LItem.setIcon(cur.getBlob(cur.getColumnIndex(DBHelper.TABLE_LItemS_COLUMN_ICON)));
-        */
+    private static void getItemValues(Cursor cur, LItem item) {
+        item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TYPE)));
+        item.setFrom(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_FROM)));
+        item.setTo(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TO)));
+        item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_CATEGORY)));
+        item.setTag(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TAG)));
+        item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_VENDOR)));
+        item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_VALUE)));
+        item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE)));
+        item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP)));
     }
 
     private static int getItemList(ArrayList<LItem> LItems, Cursor cur, boolean sort) {
@@ -229,10 +237,10 @@ public class DBAccess {
         }
     }
 
-    public static void addItem(LItem LItem) {
+    public static void addItem(LItem item) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setItemValues(LItem);
+            ContentValues cv = setItemValues(item);
             db.insert(DBHelper.TABLE_LOG_NAME, "", cv);
             dirty = true;
         }
@@ -249,7 +257,29 @@ public class DBAccess {
         }
     }
 
-    private static String getStringFromDbById(String table, String column, int id) {
+    public static LItem getLogItemById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        String str = "";
+        LItem item = new LItem();
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find id: " + id + " from log table");
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getItemValues(csr, item);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        if (csr != null) csr.close();
+        return item;
+    }
+
+    private static String getStringFromDbById(String table, String column, long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         String str = "";
@@ -270,16 +300,20 @@ public class DBAccess {
         return str;
     }
 
-    public static String getCategoryById(int id) {
+    public static String getCategoryById(long id) {
         return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_CATEGORY_COLUMN_NAME, id);
     }
 
-    public static String getVendorById(int id) {
+    public static String getVendorById(long id) {
         return getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_VENDOR_COLUMN_NAME, id);
     }
 
-    public static String getTagById(int id) {
+    public static String getTagById(long id) {
         return getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_NAME, id);
+    }
+
+    public static String getAccountById(long id) {
+        return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_ACCOUNT_COLUMN_NAME, id);
     }
 
     public static long addCategory(LCategory category) {
@@ -313,5 +347,40 @@ public class DBAccess {
             dirty = true;
         }
         return id;
+    }
+
+    public static long addAccount(LAccount acccount) {
+        long id = -1;
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setAccountValues(acccount);
+            id = db.insert(DBHelper.TABLE_ACCOUNT_NAME, "", cv);
+            dirty = true;
+        }
+        return id;
+    }
+
+    public static Cursor getAllAccountsCursor() {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME, null);
+        return cur;
+    }
+
+    public static Cursor getAllCategoriesCursor() {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME, null);
+        return cur;
+    }
+
+    public static Cursor getAllVendorsCursor() {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME, null);
+        return cur;
+    }
+
+    public static Cursor getAllTagsCursor() {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME, null);
+        return cur;
     }
 }

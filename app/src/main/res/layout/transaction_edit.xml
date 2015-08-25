@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="45"
         android:orientation="vertical">
 
         <LinearLayout
@@ -49,13 +49,14 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/accountRow"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingLeft="42dp"
             android:paddingRight="5dp"
-            android:paddingTop="15dp">
+            android:paddingTop="10dp">
 
             <TextView
                 android:id="@+id/tvAccount"
@@ -75,12 +76,13 @@
 
         <LinearLayout
             android:layout_width="fill_parent"
+            android:id="@+id/categoryRow"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingLeft="42dp"
             android:paddingRight="5dp"
-            android:paddingTop="10dp">
+            android:paddingTop="5dp">
 
             <TextView
                 android:id="@+id/tvCategory"
@@ -102,10 +104,38 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
+            android:id="@+id/vendorRow"
             android:orientation="horizontal"
             android:paddingLeft="42dp"
             android:paddingRight="5dp"
-            android:paddingTop="10dp">
+            android:paddingTop="5dp">
+
+            <TextView
+                android:id="@+id/tvVendor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/vendor_not_specified"
+                android:textColor="#aaa"
+                android:textSize="16dp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginLeft="30dp"
+                android:background="@drawable/ic_action_right" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="42dp"
+            android:id="@+id/tagRow"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp">
 
             <TextView
                 android:id="@+id/tvTag"
@@ -113,6 +143,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Empty tag"
+                android:textColor="#aaa"
                 android:textSize="16dp"
                 android:textStyle="bold" />
 
@@ -123,11 +154,30 @@
                 android:background="@drawable/ic_action_right" />
 
         </LinearLayout>
+
+        <EditText
+            android:id="@+id/noteEditText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="40dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/editbox_bgd"
+            android:gravity="top"
+            android:hint="@string/additional_note_here"
+            android:imeOptions="flagNoExtractUi"
+            android:padding="10dp"
+            android:singleLine="false"
+            android:textColor="#fff"
+            android:textColorHint="#d8d8d8"></EditText>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="55"
         android:background="@color/base_fgd_color"
         android:gravity="center_vertical"
         android:orientation="vertical"

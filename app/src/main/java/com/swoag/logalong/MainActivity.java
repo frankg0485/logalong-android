@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.com.swoag.logalong.views.LViewPager;
+import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
@@ -219,6 +220,16 @@ public class MainActivity extends LFragmentActivity {
     }
 
 
+    private static String[] accounts = {
+            "Checking",
+            "Savings",
+            "Cash",
+            "Credit:Discover",
+            "Credit:Master",
+            "Credit:Visa",
+            "Credit:American Express"
+    };
+
     private static String[] categories = {
             "Clothes",
             "Eating Out",
@@ -232,6 +243,10 @@ public class MainActivity extends LFragmentActivity {
             "General"
     };
 
+    /*private static String[] tags = {
+            "General"
+    };*/
+
     private static String[] vendors = {
             "Chiptole",
             "Corner Bakery",
@@ -241,6 +256,14 @@ public class MainActivity extends LFragmentActivity {
             "Panera"
     };
 
+    public static void addAccounts() {
+        LAccount account = new LAccount();
+        for (int ii = 0; ii < accounts.length; ii++) {
+            account.setName(accounts[ii]);
+            DBAccess.addAccount(account);
+        }
+    }
+
     public static void addCategories() {
         LCategory category = new LCategory();
         for (int ii = 0; ii < categories.length; ii++) {
@@ -248,6 +271,14 @@ public class MainActivity extends LFragmentActivity {
             DBAccess.addCategory(category);
         }
     }
+
+    /*public static void addTags() {
+        LTag tag = new LTag();
+        for (int ii = 0; ii < tags.length; ii++) {
+            tag.setName(tags[ii]);
+            DBAccess.addTag(tag);
+        }
+    }*/
 
     public static void addVendors() {
         LVendor vendor = new LVendor();
@@ -258,17 +289,25 @@ public class MainActivity extends LFragmentActivity {
     }
 
     private void initDb() {
-        if (DBAccess.getCategoryById(0).isEmpty()) {
+        if (DBAccess.getAccountById(1).isEmpty()) {
+            addAccounts();
+        }
+
+        if (DBAccess.getCategoryById(1).isEmpty()) {
             addCategories();
         }
-        if (DBAccess.getVendorById(0).isEmpty()) {
+        if (DBAccess.getVendorById(1).isEmpty()) {
             addVendors();
         }
+
+        /*if (DBAccess.getTagById(1).isEmpty()) {
+            addTags();
+        }*/
     }
 
     private void doOneTimeInit() {
         initDb();
         /*if (LPreferences.getOneTimeInit()) return;
-		LPreferences.setOneTimeInit(true);*/
+        LPreferences.setOneTimeInit(true);*/
     }
 }

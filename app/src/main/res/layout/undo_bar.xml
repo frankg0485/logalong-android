@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/undoView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/undo_bar_bgd"
+    android:clickable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    android:paddingRight="15dp"
+    android:paddingTop="5dp" >
+
+    <ImageView
+        android:id="@+id/accept"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="5dp"
+        android:src="@drawable/ic_action_accept" />
+
+    <TextView
+        android:id="@+id/msg"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="5dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="@color/base_text_color" />
+
+    <View
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/h_gradient_background" />
+
+    <LinearLayout
+        android:id="@+id/undo"
+        android:layout_width="100dp"
+        android:layout_height="38dp"
+        android:background="@drawable/toast_btn_selector"
+        android:clickable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp" >
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_action_undo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:text="@string/undo"
+            android:textColor="@color/base_text_color" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -17,6 +17,7 @@ import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 
@@ -74,7 +75,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     @Override
     public void onSelected(boolean selected) {
         //LLog.d(TAG, "onSelected" + selected);
-        if (selected) {
+        if (selected && AppPersistency.transactionChanged) {
+            AppPersistency.transactionChanged = false;
             logsCursor = DBAccess.getAllItemsCursor();
             adapter.swapCursor(logsCursor);
             adapter.notifyDataSetChanged();
@@ -179,7 +181,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         public void onClick(View v) {
             VTag tag = (VTag) v.getTag();
 
-            LItem item = new LItem();
+            LItem item = DBAccess.getLogItemById(tag.id);
+
             TransactionEdit edit = new TransactionEdit(getActivity(), rootView, item, this);
 
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
