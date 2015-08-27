@@ -45,13 +45,19 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         listViewFlipper.setAnimateFirstView(false);
         listViewFlipper.setDisplayedChild(1);
 
-        logsCursor = DBAccess.getAllItemsCursor();
+        logsCursor = DBAccess.getAllActiveItemsCursor();
         adapter = new MyCursorAdapter(getActivity(), logsCursor);
         listView = (ListView) rootView.findViewById(R.id.logsList);
         listView.setAdapter(adapter);
-
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                listView.setSelection(adapter.getCount() - 1);
+            }
+        });
         balanceBar = rootView.findViewById(R.id.balanceBar);
         bottomBar = rootView.findViewById(R.id.bottomBar);
+
         return rootView;
     }
 
@@ -77,7 +83,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         //LLog.d(TAG, "onSelected" + selected);
         if (selected && AppPersistency.transactionChanged) {
             AppPersistency.transactionChanged = false;
-            logsCursor = DBAccess.getAllItemsCursor();
+            logsCursor = DBAccess.getAllActiveItemsCursor();
             adapter.swapCursor(logsCursor);
             adapter.notifyDataSetChanged();
             listView.post(new Runnable() {
@@ -109,6 +115,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
             TransactionEdit.TransitionEditItf {
+        private LItem item;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
@@ -181,9 +188,9 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         public void onClick(View v) {
             VTag tag = (VTag) v.getTag();
 
-            LItem item = DBAccess.getLogItemById(tag.id);
+            item = DBAccess.getLogItemById(tag.id);
 
-            TransactionEdit edit = new TransactionEdit(getActivity(), rootView, item, this);
+            TransactionEdit edit = new TransactionEdit(getActivity(), rootView, item, false, this);
 
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -197,10 +204,18 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         public void onTransactionEditExit(int action, boolean changed) {
             switch (action) {
                 case TransactionEdit.TransitionEditItf.EXIT_OK:
+                    AppPersistency.transactionChanged = changed;
+                    if (changed) {
+                        DBAccess.updateItem(item);
+                        onSelected(true);
+                    }
                     break;
                 case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                     break;
                 case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                    AppPersistency.transactionChanged = true;
+                    DBAccess.deleteItemById(item.getId());
+                    onSelected(true);
                     break;
             }
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);

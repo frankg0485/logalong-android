@@ -80,25 +80,6 @@ public class DBAccess {
 
     private static LItem gLogItem;
 
-    private static LItem yaventLItem() {
-        if (gLogItem == null) {
-            gLogItem = new LItem();
-/*
-            gLogItem.setFullName(LApp.ctx.getString(R.string.yavent_team));
-            Resources res = LApp.ctx.getResources();
-            Drawable drawable = res.getDrawable(R.drawable.ic_action_person);
-            Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] icon = stream.toByteArray();
-            gLogItem.setIcon(icon);
-            gLogItem.setAccountId(0);
-            gLogItem.setStatus(LItem.STATUS_ACTIVE);
-            */
-        }
-        return gLogItem;
-    }
-
     private static ContentValues setCategoryValues(LCategory category) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_CATEGORY_COLUMN_NAME, category.getName());
@@ -130,6 +111,7 @@ public class DBAccess {
     private static ContentValues setItemValues(LItem item) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_LOG_COLUMN_TYPE, item.getType());
+        cv.put(DBHelper.TABLE_LOG_COLUMN_STATE, item.getState());
         cv.put(DBHelper.TABLE_LOG_COLUMN_CATEGORY, item.getCategory());
         cv.put(DBHelper.TABLE_LOG_COLUMN_FROM, item.getFrom());
         cv.put(DBHelper.TABLE_LOG_COLUMN_TO, item.getTo());
@@ -145,6 +127,7 @@ public class DBAccess {
 
     private static void getItemValues(Cursor cur, LItem item) {
         item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TYPE)));
+        item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_STATE)));
         item.setFrom(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_FROM)));
         item.setTo(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TO)));
         item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_CATEGORY)));
@@ -172,7 +155,7 @@ public class DBAccess {
                 }
             });
         }
-        LItems.add(yaventLItem());
+        //LItems.add(yaventLItem());
         return 0;
     }
 
@@ -195,9 +178,10 @@ public class DBAccess {
     }
 
     //TODO: not thread safe?
-    public static Cursor getAllItemsCursor() {
+    public static Cursor getAllActiveItemsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME, null);
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME + " WHERE State=?",
+                new String[]{"" + LItem.LOG_STATE_ACTIVE});
         return cur;
     }
 
@@ -246,14 +230,20 @@ public class DBAccess {
         }
     }
 
-    public static void updateItem(LItem LItem) {
+    public static void updateItem(LItem item) {
         synchronized (dbLock) {
-            /*
             SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setLItemValues(LItem);
-            db.update(DBHelper.TABLE_LItemS_NAME, cv, "_id=?", new String[]{"" + LItem.getId()});
-            */
+            ContentValues cv = setItemValues(item);
+            db.update(DBHelper.TABLE_LOG_NAME, cv, "_id=?", new String[]{"" + item.getId()});
             dirty = true;
+        }
+    }
+
+    public static void deleteItemById(long id) {
+        LItem item = getLogItemById(id);
+        if (item != null) {
+            item.setState(LItem.LOG_STATE_DELETED);
+            updateItem(item);
         }
     }
 
@@ -276,6 +266,7 @@ public class DBAccess {
             LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
         }
         if (csr != null) csr.close();
+        item.setId(id);
         return item;
     }
 
@@ -382,5 +373,50 @@ public class DBAccess {
         SQLiteDatabase db = getReadDb();
         Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME, null);
         return cur;
+    }
+
+    private static int getDbIndexById(String table, String state, int actvState, long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        int index = 0;
+        int ret = -1;
+        try {
+            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + state + "=?",
+                    new String[]{"" + actvState});
+
+            csr.moveToFirst();
+            while (true) {
+                if (id == csr.getLong(0)) {
+                    ret = index;
+                    break;
+                }
+                csr.moveToNext();
+                index++;
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        if (csr != null) csr.close();
+        return ret;
+    }
+
+    public static int getAccountIndexById(long id) {
+        return getDbIndexById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_ACCOUNT_COLUMN_STATE,
+                LAccount.ACCOUNT_STATE_ACTIVE, id);
+    }
+
+    public static int getCategoryIndexById(long id) {
+        return getDbIndexById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_CATEGORY_COLUMN_STATE,
+                LCategory.CATEGORY_STATE_ACTIVE, id);
+    }
+
+    public static int getVendorIndexById(long id) {
+        return getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_VENDOR_COLUMN_STATE,
+                LVendor.VENDOR_STATE_ACTIVE, id);
+    }
+
+    public static int getTagIndexById(long id) {
+        return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_STATE,
+                LTag.TAG_STATE_ACTIVE, id);
     }
 }

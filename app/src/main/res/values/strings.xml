@@ -12,5 +12,6 @@
     <string name="select_vendor">Select Vendor</string>
     <string name="select_tag">Select Tag</string>
     <string name="undo">Undo</string>
-    <string name="vendor_not_specified">Vendor not specified</string>
+    <string name="unspecified_tag">Tag not specified</string>
+    <string name="unspecified_vendor">Vendor not specified</string>
 </resources>

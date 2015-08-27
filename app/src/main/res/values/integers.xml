@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <integer name="anim_slide_time">750</integer>
+    <integer name="anim_dropdown_time">500</integer>
+    <integer name="anim_fade_time">750</integer>
+    <integer name="anim_fade_time_short">500</integer>
+
+    <integer name="dialog_width_weight">90</integer>
+</resources>

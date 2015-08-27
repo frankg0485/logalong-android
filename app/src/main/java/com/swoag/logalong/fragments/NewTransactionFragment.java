@@ -9,9 +9,11 @@ import android.widget.Button;
 import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LFragment;
+import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.utils.AppPersistency;
+import com.swoag.logalong.utils.DBAccess;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
@@ -34,8 +36,6 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         btnExpense = setBtnListener(rootView, R.id.expense);
         btnIncome = setBtnListener(rootView, R.id.income);
         btnTransaction = setBtnListener(rootView, R.id.transaction);
-
-        item = new LItem();
 
         return rootView;
     }
@@ -89,6 +89,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         switch (action) {
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 AppPersistency.transactionChanged = changed;
+                DBAccess.addItem(item);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
@@ -99,19 +100,25 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();
+
+        MainActivity actv = (MainActivity) getActivity();
+        actv.enablePager();
     }
 
     private void newLog(int type) {
+        item = new LItem();
         item.setType(type);
         item.setTo(4);
         item.setCategory(2);
-        item.setVendor(1);
 
-        edit = new TransactionEdit(getActivity(), rootView, item, this);
+        edit = new TransactionEdit(getActivity(), rootView, item, true, this);
 
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
         viewFlipper.showNext();
+
+        MainActivity actv = (MainActivity) getActivity();
+        actv.disablePager();
     }
 
     private Button setBtnListener(View v, int id) {

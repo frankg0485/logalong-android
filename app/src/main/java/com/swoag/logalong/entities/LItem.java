@@ -8,8 +8,13 @@ public class LItem {
     public static final int LOG_TYPE_INCOME = 20;
     public static final int LOG_TYPE_TRNASACTION = 30;
 
+    public static final int LOG_STATE_ACTIVE = 100;
+    public static final int LOG_STATE_DELETED = 200;
+
     double value;
     int type;
+    int state;
+    long id;
     long category;
     long from;
     long to;
@@ -21,7 +26,10 @@ public class LItem {
 
     public LItem() {
         this.timeStamp = System.currentTimeMillis();
+        this.value = 0;
         this.note = "";
+        this.id = 0;
+        this.state = LOG_STATE_ACTIVE;
     }
 
     public LItem(LItem item) {
@@ -82,6 +90,14 @@ public class LItem {
 
     public void setValue(double value) {
         this.value = value;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 
     public int getType() {
@@ -154,5 +170,13 @@ public class LItem {
 
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

@@ -45,6 +45,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_LOG_NAME = "LLog";
     public static final String TABLE_LOG_COLUMN_TYPE = "Type";
+    public static final String TABLE_LOG_COLUMN_STATE = "State";
     public static final String TABLE_LOG_COLUMN_CATEGORY = "Category";
     public static final String TABLE_LOG_COLUMN_FROM = "FromAccountId";
     public static final String TABLE_LOG_COLUMN_TO = "ToAccountId";
@@ -95,6 +96,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_LOG_COLUMN_TYPE + " INTEGER," +
             TABLE_LOG_COLUMN_TAG + " INTEGER," +
             TABLE_LOG_COLUMN_VENDOR + " INTEGER," +
+            TABLE_LOG_COLUMN_STATE + " INTEGER," +
             TABLE_LOG_COLUMN_NOTE + " TEXT," +
             TABLE_COLUMN_reservedInteger1 + " INTEGER," +
             TABLE_COLUMN_reservedInteger2 + " INTEGER," +

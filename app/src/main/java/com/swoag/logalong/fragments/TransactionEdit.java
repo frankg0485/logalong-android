@@ -25,11 +25,14 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LSelectionDialog;
 
+import java.text.SimpleDateFormat;
+
 public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
     private Activity activity;
     private View rootView;
+    private boolean bCreate;
     private LItem item;
     private LItem savedItem;
     private TransitionEditItf callback;
@@ -37,8 +40,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private View view0, view1, view2, view3, view4, view5, view6, view7, view8, view9;
     private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
     private View viewAccount, viewCategory, viewVendor, viewTag;
-    private View viewClear, viewBack, viewCancel, viewOk;
-    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV;
+    private View viewClear, viewBack, viewDiscard, viewCancel, viewOk;
+    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV, dateTV;
     private EditText noteET;
 
     private LSelectionDialog mSelectionDialog;
@@ -56,7 +59,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         public void onTransactionEditExit(int action, boolean changed);
     }
 
-    public TransactionEdit(Activity activity, View rootView, LItem item, TransitionEditItf callback) {
+    public TransactionEdit(Activity activity, View rootView, LItem item, boolean bCreate,
+                           TransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
         this.item = item;
@@ -64,6 +68,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
         this.savedItem = new LItem(item);
 
+        this.bCreate = bCreate;
         create();
     }
 
@@ -93,22 +98,48 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         viewVendor = setViewListener(rootView, R.id.vendorRow);
         viewTag = setViewListener(rootView, R.id.tagRow);
 
-        valueTV = (TextView) rootView.findViewById(R.id.value);
+        if (!bCreate) {
+            viewDiscard = setViewListener(rootView, R.id.discard);
+            viewDiscard.setVisibility(View.VISIBLE);
+        }
+
+        dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
 
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
         accountTV.setText(DBAccess.getAccountById(item.getTo()));
+
         categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
         categoryTV.setText(DBAccess.getCategoryById(item.getCategory()));
+
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
-        vendorTV.setText(DBAccess.getVendorById(item.getVendor()));
+        String tmp = DBAccess.getVendorById(item.getVendor());
+        if (tmp.isEmpty()) {
+            vendorTV.setText(activity.getString(R.string.unspecified_vendor));
+        } else {
+            vendorTV.setText(tmp);
+        }
+
         tagTV = (TextView) rootView.findViewById(R.id.tvTag);
-        tagTV.setText(DBAccess.getTagById(item.getTag()));
+        tmp = DBAccess.getTagById(item.getTag());
+        if (tmp.isEmpty()) {
+            tagTV.setText(activity.getString(R.string.unspecified_tag));
+        } else {
+            tagTV.setText(tmp);
+        }
 
         noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
 
+        valueTV = (TextView) rootView.findViewById(R.id.value);
         clearInputString();
-        inputString = String.format("%.2f", item.getValue());
-        valueTV.setText(inputString);
+        inputString = value2string(item.getValue());
+        if (inputString.isEmpty()) {
+            valueTV.setText("0.0");
+        } else {
+            valueTV.setText(inputString);
+            enableDot(false);
+            enableOk(true);
+        }
     }
 
     private void destroy() {
@@ -135,6 +166,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         viewCategory = null;
         viewVendor = null;
         viewTag = null;
+        viewDiscard = null;
 
         noteET = null;
         valueTV = null;
@@ -142,6 +174,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         categoryTV = null;
         vendorTV = null;
         tagTV = null;
+        dateTV = null;
         savedItem = null;
     }
 
@@ -218,7 +251,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_ACCOUNT_COLUMN_NAME, 0, DLG_ID_ACCOUNT);
+                                    DBHelper.TABLE_ACCOUNT_COLUMN_NAME, DBAccess.getAccountIndexById(item.getTo()), DLG_ID_ACCOUNT);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -231,7 +264,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_CATEGORY_NAME,
-                                    DBHelper.TABLE_CATEGORY_COLUMN_NAME, 0, DLG_ID_CATEGORY);
+                                    DBHelper.TABLE_CATEGORY_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -244,7 +277,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_VENDOR_NAME,
-                                    DBHelper.TABLE_VENDOR_COLUMN_NAME, 0, DLG_ID_VENDOR);
+                                    DBHelper.TABLE_VENDOR_COLUMN_NAME, DBAccess.getVendorIndexById(item.getVendor()), DLG_ID_VENDOR);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -257,20 +290,18 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_TAG_NAME,
-                                    DBHelper.TABLE_TAG_COLUMN_NAME, 0, DLG_ID_TAG);
+                                    DBHelper.TABLE_TAG_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
                     LLog.w(TAG, "unable to open phone database");
                 }
                 break;
-            /*
-            case R.id.tvAccount:
-            case R.id.tvCategory:
-            case R.id.tvVendor:
-            case R.id.tvTag:
+            case R.id.discard:
+                destroy();
+                callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
                 break;
-            */
+
             case R.id.back:
             case R.id.cancel:
                 destroy();
@@ -463,7 +494,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         if (mathOperator < 0) inputString = tmp;
         else inputString = inputString.substring(0, lastValueEnd) + tmp;
 
-        if (getValue(tmp) != 0) {
+        if (string2value(tmp) != 0) {
             enableOk(true);
             enableMath(true);
         } else {
@@ -493,7 +524,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
 
         lastValueEnd = inputString.length();
-        lastValue = getValue(inputString.substring(0, lastValueEnd - 1));
+        lastValue = string2value(inputString.substring(0, lastValueEnd - 1));
         enableMath(false);
         ((Button) viewOk).setText("=");
         enableDot(true);
@@ -502,7 +533,15 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         valueTV.setText(inputString);
     }
 
-    private double getValue(String str) {
+    private String value2string(double value) {
+        String str = "";
+        if (value != 0) {
+            str = String.format("%.2f", value);
+        }
+        return str;
+    }
+
+    private double string2value(String str) {
         if (str.isEmpty()) return 0f;
 
         char lastDigit = str.charAt(str.length() - 1);
@@ -518,7 +557,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void saveLog() {
         if (mathOperator >= 0) {
-            double curValue = getValue(inputString.substring(lastValueEnd, inputString.length()));
+            double curValue = string2value(inputString.substring(lastValueEnd, inputString.length()));
             switch (mathOperator) {
                 case 0:
                     curValue = lastValue + curValue;
@@ -555,10 +594,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private void doSaveLog() {
-        item.setValue(getValue(inputString));
-        DBAccess.addItem(item);
-
-        clearInputString();
+        item.setValue(string2value(inputString));
 
         boolean changed = !item.isEqual(savedItem);
         destroy();
