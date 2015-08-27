@@ -16,6 +16,7 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
@@ -30,7 +31,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private Cursor logsCursor;
     private MyCursorAdapter adapter;
     private ViewFlipper viewFlipper, listViewFlipper;
-    private View balanceBar, bottomBar;
+    private TextView balanceTV, deltaTV;
+    private double balance, delta;
     private View rootView;
 
     @Override
@@ -55,9 +57,10 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 listView.setSelection(adapter.getCount() - 1);
             }
         });
-        balanceBar = rootView.findViewById(R.id.balanceBar);
-        bottomBar = rootView.findViewById(R.id.bottomBar);
 
+        balanceTV = (TextView) rootView.findViewById(R.id.balance);
+        deltaTV = (TextView) rootView.findViewById(R.id.delta);
+        showBalance();
         return rootView;
     }
 
@@ -71,8 +74,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         listViewFlipper.setOutAnimation(null);
         listViewFlipper = null;
 
-        balanceBar = null;
-        bottomBar = null;
+        balanceTV = null;
+        deltaTV = null;
 
         rootView = null;
         super.onDestroyView();
@@ -92,6 +95,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     listView.setSelection(adapter.getCount() - 1);
                 }
             });
+            showBalance();
         }
     }
 
@@ -234,4 +238,30 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             }
         }
     }
+
+    private void showBalance() {
+        getBalance();
+        if (balance < 0) {
+            balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
+        } else {
+            balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
+        }
+        balanceTV.setText(String.format("%.2f", balance));
+
+        if (delta < 0) {
+            deltaTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
+        } else {
+            deltaTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
+        }
+        deltaTV.setText(String.format("%.2f", delta));
+    }
+
+    private void getBalance() {
+        LAccountSummary summary = new LAccountSummary();
+        DBAccess.getSummaryForAll(summary);
+        balance = summary.getBalance();
+        delta = summary.getIncome() - summary.getExpense();
+    }
 }
+
+

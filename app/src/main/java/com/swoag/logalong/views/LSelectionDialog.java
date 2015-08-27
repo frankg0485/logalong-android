@@ -207,12 +207,16 @@ public class LSelectionDialog extends Dialog
     }
 
     private void leave(boolean save) {
+        long selectedId = -1;
         hideSoftKeyboard();
         dismiss();
 
         int selectedPosition = save ? bitSet.nextSetBit(0) : startPosition;
-        mCursor.moveToPosition(selectedPosition);
-        this.callback.onSelectionDialogExit(dlgId, mCursor.getLong(0));
+        if (selectedPosition >= 0) {
+            mCursor.moveToPosition(selectedPosition);
+            selectedId = mCursor.getLong(0);
+        }
+        this.callback.onSelectionDialogExit(dlgId, selectedId);
     }
 
     @Override

@@ -72,6 +72,26 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         create();
     }
 
+    private void updateItemDisplay() {
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
+        accountTV.setText(DBAccess.getAccountById(item.getTo()));
+        categoryTV.setText(DBAccess.getCategoryById(item.getCategory()));
+
+        String tmp = DBAccess.getVendorById(item.getVendor());
+        if (tmp.isEmpty()) {
+            vendorTV.setText(activity.getString(R.string.unspecified_vendor));
+        } else {
+            vendorTV.setText(tmp);
+        }
+
+        tmp = DBAccess.getTagById(item.getTag());
+        if (tmp.isEmpty()) {
+            tagTV.setText(activity.getString(R.string.unspecified_tag));
+        } else {
+            tagTV.setText(tmp);
+        }
+    }
+
     private void create() {
         view0 = setViewListener(rootView, R.id.b0);
         view1 = setViewListener(rootView, R.id.b1);
@@ -104,29 +124,11 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
 
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
-        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
-
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
-        accountTV.setText(DBAccess.getAccountById(item.getTo()));
-
         categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
-        categoryTV.setText(DBAccess.getCategoryById(item.getCategory()));
-
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
-        String tmp = DBAccess.getVendorById(item.getVendor());
-        if (tmp.isEmpty()) {
-            vendorTV.setText(activity.getString(R.string.unspecified_vendor));
-        } else {
-            vendorTV.setText(tmp);
-        }
-
         tagTV = (TextView) rootView.findViewById(R.id.tvTag);
-        tmp = DBAccess.getTagById(item.getTag());
-        if (tmp.isEmpty()) {
-            tagTV.setText(activity.getString(R.string.unspecified_tag));
-        } else {
-            tagTV.setText(tmp);
-        }
+        updateItemDisplay();
 
         noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
 
@@ -339,21 +341,18 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
                 item.setTo(selectedId);
-                accountTV.setText(DBAccess.getAccountById(selectedId));
                 break;
             case DLG_ID_CATEGORY:
                 item.setCategory(selectedId);
-                categoryTV.setText(DBAccess.getCategoryById(selectedId));
                 break;
             case DLG_ID_VENDOR:
                 item.setVendor(selectedId);
-                vendorTV.setText(DBAccess.getVendorById(selectedId));
                 break;
             case DLG_ID_TAG:
                 item.setTag(selectedId);
-                tagTV.setText(DBAccess.getTagById(selectedId));
                 break;
         }
+        updateItemDisplay();
     }
 
     private int[] ids = new int[]{

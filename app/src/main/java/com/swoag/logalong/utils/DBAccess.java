@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.entities.LTag;
@@ -418,5 +419,34 @@ public class DBAccess {
     public static int getTagIndexById(long id) {
         return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_STATE,
                 LTag.TAG_STATE_ACTIVE, id);
+    }
+
+    public static void getSummaryForAll(LAccountSummary summary) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        double income = 0;
+        double expense = 0;
+        try {
+            csr = db.rawQuery("SELECT "
+                            + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
+                            + DBHelper.TABLE_LOG_COLUMN_VALUE + " FROM "
+                            + DBHelper.TABLE_LOG_NAME + " WHERE " + DBHelper.TABLE_LOG_COLUMN_STATE + "=?",
+                    new String[]{"" + LItem.LOG_STATE_ACTIVE});
+
+            csr.moveToFirst();
+            do {
+                double value = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
+                int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+                if (type == LItem.LOG_TYPE_INCOME) income += value;
+                else if (type == LItem.LOG_TYPE_EXPENSE) expense += value;
+            } while (csr.moveToNext());
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+        if (csr != null) csr.close();
+
+        summary.setBalance(income - expense);
+        summary.setIncome(income);
+        summary.setExpense(expense);
     }
 }

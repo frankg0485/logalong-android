@@ -227,7 +227,9 @@ public class MainActivity extends LFragmentActivity {
             "Credit:Discover",
             "Credit:Master",
             "Credit:Visa",
-            "Credit:American Express"
+            "Credit:American Express",
+            "Giftcard:Panera",
+            "Giftcard:AMC30"
     };
 
     private static String[] categories = {
@@ -248,12 +250,21 @@ public class MainActivity extends LFragmentActivity {
     };*/
 
     private static String[] vendors = {
+            "Amazon",
+            "Billy Beef",
+            "Blaze Pizza",
             "Chiptole",
             "Corner Bakery",
+            "Costco",
             "JCPenny",
+            "Jersy Mikes",
             "Jimmy Johns",
-            "McDonalds",
-            "Panera"
+            "Kohls",
+            "NufNuf",
+            "Panera",
+            "Sam's Club",
+            "Shure Cafe",
+            "Walmart"
     };
 
     public static void addAccounts() {

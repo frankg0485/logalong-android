@@ -68,22 +68,42 @@
                     android:layout_width="wrap_content"
                     android:layout_height="25dp"
                     android:layout_marginLeft="10dp"
-                    android:layout_toLeftOf="@+id/delta"
+                    android:layout_toLeftOf="@+id/p1"
                     android:gravity="right|center_vertical"
                     android:text="1234.45"
                     android:textColor="@color/base_red"
                     android:textSize="14dp" />
 
                 <TextView
+                    android:id="@+id/p1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_toLeftOf="@+id/delta"
+                    android:gravity="center_vertical"
+                    android:text="("
+                    android:textSize="14dp" />
+
+                <TextView
                     android:id="@+id/delta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_toLeftOf="@+id/p2"
+                    android:gravity="center_vertical"
+                    android:text="345.00"
+                    android:textColor="@color/base_red"
+                    android:textSize="14dp" />
+
+                <TextView
+                    android:id="@+id/p2"
                     android:layout_width="wrap_content"
                     android:layout_height="25dp"
                     android:layout_alignParentRight="true"
                     android:layout_marginLeft="5dp"
                     android:layout_marginRight="20dp"
-                    android:gravity="right|center_vertical"
-                    android:text="(345.00)"
-                    android:textColor="@color/base_red"
+                    android:gravity="center_vertical"
+                    android:text=")"
                     android:textSize="14dp" />
             </RelativeLayout>
 
@@ -102,8 +122,8 @@
                     android:layout_height="36dp"
                     android:layout_alignParentLeft="true"
                     android:layout_centerVertical="true"
-                    android:clickable="true"
                     android:layout_marginLeft="10dp"
+                    android:clickable="true"
                     android:paddingBottom="6dp"
                     android:paddingTop="6dp"
                     android:src="@drawable/ic_menu_sort_by_size" />
@@ -129,9 +149,9 @@
                     android:src="@drawable/ic_action_right" />
 
                 <include
-                    android:visibility="gone"
                     android:id="@+id/undobar"
-                    layout="@layout/undo_bar" />
+                    layout="@layout/undo_bar"
+                    android:visibility="gone" />
             </RelativeLayout>
 
         </RelativeLayout>
