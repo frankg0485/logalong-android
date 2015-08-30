@@ -35,6 +35,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private double balance, delta;
     private View rootView;
 
+    private TransactionEdit edit;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
@@ -121,6 +123,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             TransactionEdit.TransitionEditItf {
         private LItem item;
 
+
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
             //      using LoaderManager with a CursorLoader.
@@ -194,7 +197,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
             item = DBAccess.getLogItemById(tag.id);
 
-            TransactionEdit edit = new TransactionEdit(getActivity(), rootView, item, false, this);
+            edit = new TransactionEdit(getActivity(), rootView, item, false, this);
 
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -237,6 +240,15 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 this.id = id;
             }
         }
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        if (viewFlipper.getDisplayedChild() == 1) {
+            edit.dismiss();
+            return true;
+        }
+        return false;
     }
 
     private void showBalance() {

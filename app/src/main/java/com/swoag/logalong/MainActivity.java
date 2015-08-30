@@ -4,6 +4,7 @@ package com.swoag.logalong;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -192,6 +193,14 @@ public class MainActivity extends LFragmentActivity {
 				LViewUtils.disableEnableControls(true, (ViewGroup)footerV);
 			}
 		}*/
+    }
+
+    @Override
+    public void onBackPressed() {
+        LFragment yf = (LFragment) lPagerAdapter.getItem(mViewPager.getCurrentItem());
+        if (yf != null)
+            if (yf.onBackPressed()) return;
+        super.onBackPressed();
     }
 
     @Override

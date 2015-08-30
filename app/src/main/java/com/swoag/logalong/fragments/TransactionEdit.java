@@ -319,6 +319,11 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
     }
 
+    public void dismiss() {
+        destroy();
+        callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+    }
+
     @Override
     public Cursor onGetCursor(String table, String column) {
         if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))

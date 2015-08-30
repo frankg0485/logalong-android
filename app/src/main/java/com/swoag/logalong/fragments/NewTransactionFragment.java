@@ -105,6 +105,15 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         actv.enablePager();
     }
 
+    @Override
+    public boolean onBackPressed() {
+        if (viewFlipper.getDisplayedChild() == 1) {
+            edit.dismiss();
+            return true;
+        }
+        return false;
+    }
+
     private void newLog(int type) {
         item = new LItem();
         item.setType(type);

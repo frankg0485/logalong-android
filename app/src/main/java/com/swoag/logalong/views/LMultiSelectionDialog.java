@@ -38,15 +38,12 @@ import java.util.HashSet;
 import java.util.List;
 
 public class LMultiSelectionDialog extends Dialog
-        implements AdapterView.OnItemClickListener, View.OnClickListener, android.text.TextWatcher {
+        implements AdapterView.OnItemClickListener, View.OnClickListener {
     private static final String TAG = LMultiSelectionDialog.class.getSimpleName();
     private Cursor mCursor;
     private int idColumnIndex;
 
     public Context context;
-    private TextView countView;
-    private EditText searchText;
-    private TextView searchButton;
     private ListView mList;
 
 	/* 0: layoutId;
@@ -56,19 +53,13 @@ public class LMultiSelectionDialog extends Dialog
 	 * 4: cancelBtnId;
 	 * 5: selectAllCheckBoxId;
 	 * 6: selectCheckBoxId;
-	 * 7: countTextId;
-	 * 8: mainEntryTextId;
-	 * 9: subEntryTextId;
-	 * 10: listViewId;
-	 * 11: photoImageId;
-	 * 12: defaultPhotoResourceId;
-	 * 13: searchText
-	 * 14: searchButton
-	 * 15: titleStringId
+	 * 7: mainEntryTextId;
+	 * 8: listViewId;
+	 * 9: titleStringId
 	 */
 
     private int[] ids;
-    private LMultiSelectionDialog.OnSelectionDialogItf callback;
+    private LMultiSelectionDialog.OnMultiSelectionDialogItf callback;
 
     /* 0: mainEntryColumn;
      * 1: subEntryColumn;
@@ -76,41 +67,28 @@ public class LMultiSelectionDialog extends Dialog
     private String[] columns;
     private HashSet<Integer> selectedIds;
 
-    private boolean photo;
-
-    private void init(Context context, LMultiSelectionDialog.OnSelectionDialogItf callback,
+    private void init(Context context, LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
                       int[] ids, String[] columns) {
         this.context = context;
         this.callback = callback;
 
         selectedIds = new HashSet<Integer>();
 
-        this.mCursor = callback.onGetCursor("");
+        this.mCursor = callback.onMultiSelectionGetCursor("");
         this.idColumnIndex = this.mCursor.getColumnIndex("_id");
 
         this.ids = ids;
         this.columns = columns;
-        this.photo = false;
     }
 
-    public interface OnSelectionDialogItf {
-
-        public void onClick();
-
-        public Cursor onGetCursor(String column);
+    public interface OnMultiSelectionDialogItf {
+        public Cursor onMultiSelectionGetCursor(String column);
     }
 
-    public LMultiSelectionDialog(Context context, LMultiSelectionDialog.OnSelectionDialogItf callback,
+    public LMultiSelectionDialog(Context context, LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
                                  int[] ids, String[] columns) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
         init(context, callback, ids, columns);
-    }
-
-    public LMultiSelectionDialog(Context context, LMultiSelectionDialog.OnSelectionDialogItf callback,
-                                 int[] ids, String[] columns, boolean photo) {
-        super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        init(context, callback, ids, columns);
-        this.photo = photo;
     }
 
     @Override
@@ -122,30 +100,16 @@ public class LMultiSelectionDialog extends Dialog
         ((LinearLayout) findViewById(ids[5])).setOnClickListener(this);
         ((TextView) findViewById(ids[3])).setOnClickListener(this);
         ((TextView) findViewById(ids[4])).setOnClickListener(this);
-        countView = (TextView) findViewById(ids[7]);
-        ((TextView) findViewById(ids[2])).setText(context.getString(ids[15]));
+        ((TextView) findViewById(ids[2])).setText(context.getString(ids[9]));
 
-        ////SonrLog.d(TAG, "creating dialog");
         try {
-            mList = (ListView) findViewById(ids[10]);
+            mList = (ListView) findViewById(ids[8]);
             mList.setOnItemClickListener(this);
 
-            searchText = (EditText) findViewById(ids[13]);
-            searchButton = (TextView) findViewById(ids[14]);
-            searchButton.setOnClickListener(this);
-            searchText.addTextChangedListener(this);
-
             mList.setFastScrollEnabled(true);
-            /*if (photo) {
-                mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                        mCursor, ids[1], columns[0], columns[1], columns[2],
-                        ids[8], ids[9], ids[6], ids[11], ids[12]));
-            } else*/
-            {
-                mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                        mCursor, ids[1], columns[0], null/*columns[1]*/,
-                        ids[8], ids[9], ids[6]));
-            }
+            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
+                    mCursor, ids[1], columns[0], null/*columns[1]*/,
+                    ids[7], ids[6]));
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -204,7 +168,6 @@ public class LMultiSelectionDialog extends Dialog
                     }
                     this.mCursor.moveToNext();
                 }
-                countView.setText(Integer.toString(selectedIds.size()));
                 mList.invalidateViews();
             } catch (Exception e) {
                 LLog.e(TAG, "unexpected error: " + e.getMessage());
@@ -214,22 +177,13 @@ public class LMultiSelectionDialog extends Dialog
         } else if (id == ids[4]) {
             selectedIds.clear();
             leave();
-        } else if (id == ids[14]) {
-            hideSoftKeyboard();
         }
-    }
-
-    private void hideSoftKeyboard() {
-        InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-        //LLog.d(TAG, "input manager " + inputManager + "@" + searchText);
-        inputManager.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
     }
 
     @Override
     public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
         this.mCursor.moveToPosition(arg2);
         int id = this.mCursor.getInt(idColumnIndex);
-        //SonrLog.d(TAG, "click on id: " + id + "@" + arg2);
         boolean checked = !selectedIds.contains(id);
         if (checked) {
             selectedIds.add(id);
@@ -239,49 +193,14 @@ public class LMultiSelectionDialog extends Dialog
 
         CheckBox cb = (CheckBox) arg1.findViewById(ids[6]);
         cb.setChecked(checked);
-        arg1.findViewById(ids[8]).setSelected(checked);
-        countView.setText(Integer.toString(selectedIds.size()));
-        //LLog.d(TAG, "set num: " + bitSet.length());
+        arg1.findViewById(ids[7]).setSelected(checked);
     }
 
     private void leave() {
         List<HashSet> lb = new ArrayList<HashSet>();
 
         lb.add(selectedIds);
-        //this.clickListener.onClick(this.context, 0, ISonrDialog.BUTTON_NEUTRAL, lb);
-        hideSoftKeyboard();
         dismiss();
-    }
-
-    @Override
-    public void afterTextChanged(Editable s) {
-        ////SonrLog.d(TAG, "text changed to: " + alarmName.getText());
-        String newStr = searchText.getText().toString().trim();
-        mCursor = callback.onGetCursor(newStr);
-        idColumnIndex = mCursor.getColumnIndex("_id");
-
-        //countView.setText(Integer.toString(selectedIds.size()));
-
-        /*if (photo) {
-            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(), mCursor,
-                    ids[1], columns[0], columns[1], columns[2],
-                    ids[8], ids[9], ids[6], ids[11], ids[12]));
-        } else */
-        {
-            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                    mCursor, ids[1], columns[0], null/*columns[1]*/,
-                    ids[8], ids[9], ids[6]));
-        }
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        ////SonrLog.d(TAG, "text change: " + start + " " + after + " " + count);
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-        ////SonrLog.d(TAG, "text change: " + start + " " + before + " " + count);
     }
 
     /**
@@ -294,19 +213,15 @@ public class LMultiSelectionDialog extends Dialog
         private String column2;
         private String column3;
         private int textId1;
-        private int textId2;
         private int checkboxId;
-        private int photoId;
-        private int defaultImage;
 
         private void init(Context context, Cursor cursor,
                           int layoutId, String column1, String column2,
-                          int textId1, int textId2, int checkboxId) {
+                          int textId1, int checkboxId) {
             this.layoutId = layoutId;
             this.column1 = column1;
             this.column2 = column2;
             this.textId1 = textId1;
-            this.textId2 = textId2;
             this.checkboxId = checkboxId;
             mAlphabetIndexer = new AlphabetIndexer(cursor, cursor.getColumnIndex(column1),
                     " ABCDEFGHIJKLMNOPQRTSUVWXYZ");
@@ -315,27 +230,13 @@ public class LMultiSelectionDialog extends Dialog
 
         public MyCursorAdapter(Context context, Cursor cursor,
                                int layoutId, String column1, String column2,
-                               int textId1, int textId2, int checkboxId) {
+                               int textId1, int checkboxId) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
             //      using LoaderManager with a CursorLoader.
             //super(context, cursor, 0);
             super(context, cursor, false);
 
-            init(context, cursor, layoutId, column1, column2, textId1, textId2, checkboxId);
-        }
-
-        public MyCursorAdapter(Context context, Cursor cursor,
-                               int layoutId, String column1, String column2, String column3,
-                               int textId1, int textId2, int checkboxId, int photoId, int defaultImage) {
-            //TODO: deprecated API is used here for max OS compatibility, provide alternative
-            //      using LoaderManager with a CursorLoader.
-            //super(context, cursor, 0);
-            super(context, cursor, false);
-            init(context, cursor, layoutId, column1, column2, textId1, textId2, checkboxId);
-
-            this.column3 = column3;
-            this.photoId = photoId;
-            this.defaultImage = defaultImage;
+            init(context, cursor, layoutId, column1, column2, textId1, checkboxId);
         }
 
         /**
@@ -371,38 +272,6 @@ public class LMultiSelectionDialog extends Dialog
         public void bindView(View view, Context context, Cursor cursor) {
             TextView txtView = (TextView) view.findViewById(textId1);
             txtView.setText(cursor.getString(cursor.getColumnIndex(column1)));
-            txtView = (TextView) view.findViewById(textId2);
-            if (photo) {
-                txtView.setText(cursor.getString(cursor.getColumnIndex(column2)));
-                int id = cursor.getInt(cursor.getColumnIndex(column3));
-                byte[] photoBytes = null;
-                ////SonrLog.d(TAG, column3 + " id: " + id);
-                if (id > 0) {
-                    Uri photoUri = ContentUris.withAppendedId(ContactsContract.Data.CONTENT_URI, id);
-
-                    ContentResolver cr = context.getContentResolver();
-                    Cursor csr = cr.query(photoUri, new String[]{ContactsContract.CommonDataKinds.Photo.PHOTO},
-                            null, null, null);
-
-                    try {
-                        if (csr.moveToFirst()) {
-                            photoBytes = csr.getBlob(0);
-                        }
-                    } catch (Exception e) {
-
-                    } finally {
-                        csr.close();
-                    }
-                }
-                if (null != photoBytes) {
-                    ((ImageView) view.findViewById(photoId)).setImageBitmap
-                            (BitmapFactory.decodeByteArray(photoBytes, 0, photoBytes.length));
-                } else {
-                    ((ImageView) view.findViewById(photoId)).setImageResource(defaultImage);
-                }
-            } else {
-                //txtView.setText(SonrHelpers.durationToHMS(cursor.getLong(cursor.getColumnIndex(column2))));
-            }
 
             CheckBox cb = (CheckBox) view.findViewById(checkboxId);
             cb.setChecked(selectedIds.contains(cursor.getInt(idColumnIndex)));

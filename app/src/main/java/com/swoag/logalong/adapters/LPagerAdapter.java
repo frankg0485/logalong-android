@@ -6,7 +6,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.fragments.AccountsFragment;
+import com.swoag.logalong.fragments.SettingsFragment;
 import com.swoag.logalong.fragments.NewTransactionFragment;
 import com.swoag.logalong.fragments.ViewTransactionFragment;
 
@@ -32,7 +32,7 @@ public class LPagerAdapter extends FragmentStatePagerAdapter {
                 break;
 
             case 2:
-                fragment = LFragment.getInstanceOf(AccountsFragment.class);
+                fragment = LFragment.getInstanceOf(SettingsFragment.class);
                 break;
         }
 

@@ -34,6 +34,7 @@
                     android:layout_width="0dp"
                     android:layout_height="@dimen/dialog_title_height"
                     android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:gravity="center_vertical|left"
@@ -43,43 +44,11 @@
                     android:textSize="@dimen/settings_option_text_size"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
-                    android:gravity="center_vertical"
-                    android:text="0"
-                    android:textColor="#fff"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:gravity="center_vertical"
-                    android:text="selected"
-                    android:textColor="#fff"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dp"
-                android:layout_marginRight="1dp"
-                android:background="#40505050"
-                android:descendantFocusability="beforeDescendants"
-                android:focusableInTouchMode="true"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
                 <LinearLayout
                     android:id="@+id/selectall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginRight="10dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -94,42 +63,8 @@
                         android:textColor="@color/base_text_color"
                         android:textSize="15sp" />
                 </LinearLayout>
-
-                <EditText
-                    android:id="@+id/searchText"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="5dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/edittext_bg"
-                    android:ellipsize="end"
-                    android:gravity="center_vertical"
-                    android:imeOptions="flagNoExtractUi"
-                    android:singleLine="true"
-                    android:textColor="#fff"
-                    android:textColorHint="@color/base_text_color"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/searchButton"
-                    android:layout_width="72dp"
-                    android:layout_height="32dp"
-                    android:layout_marginBottom="5dp"
-                    android:layout_marginRight="5dp"
-                    android:layout_marginTop="5dp"
-                    android:background="@drawable/btn_selector"
-                    android:gravity="center"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:paddingTop="5dp"
-                    android:text="search"
-                    android:textColor="@color/base_text_color"
-                    android:textStyle="bold" />
             </LinearLayout>
+
 
             <ListView
                 android:id="@+id/list"

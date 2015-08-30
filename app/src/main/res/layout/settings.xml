@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/accounts"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_item_height"
+                android:layout_marginTop="@dimen/settings_row_margin_top"
+                android:background="@drawable/dialog_row_bgd">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/settings_row_margin_left"
+                    android:text="@string/accounts"
+                    android:textSize="@dimen/settings_option_text_size" />
+
+                <ImageView
+                    android:layout_width="@dimen/settings_row_icon_w"
+                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="@dimen/settings_row_margin_right"
+                    android:background="@drawable/ic_action_right" />
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/categories"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_item_height"
+                android:layout_marginTop="@dimen/settings_row_margin_top"
+                android:background="@drawable/dialog_row_bgd">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/settings_row_margin_left"
+                    android:text="@string/categories"
+                    android:textSize="@dimen/settings_option_text_size" />
+
+                <ImageView
+                    android:layout_width="@dimen/settings_row_icon_w"
+                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="@dimen/settings_row_margin_right"
+                    android:background="@drawable/ic_action_right" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/vendors"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_item_height"
+                android:layout_marginTop="@dimen/settings_row_margin_top"
+                android:background="@drawable/dialog_row_bgd">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/settings_row_margin_left"
+                    android:text="@string/vendors"
+                    android:textSize="@dimen/settings_option_text_size" />
+
+                <ImageView
+                    android:layout_width="@dimen/settings_row_icon_w"
+                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="@dimen/settings_row_margin_right"
+                    android:background="@drawable/ic_action_right" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/tags"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/settings_item_height"
+                android:layout_marginTop="@dimen/settings_row_margin_top"
+                android:background="@drawable/dialog_row_bgd">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="@dimen/settings_row_margin_left"
+                    android:text="@string/tags"
+                    android:textSize="@dimen/settings_option_text_size" />
+
+                <ImageView
+                    android:layout_width="@dimen/settings_row_icon_w"
+                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="@dimen/settings_row_margin_right"
+                    android:background="@drawable/ic_action_right" />
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
