@@ -4,19 +4,14 @@ package com.swoag.logalong.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.LFragment;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.utils.DBAccess;
@@ -74,17 +69,17 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void updateItemDisplay() {
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
-        accountTV.setText(DBAccess.getAccountById(item.getTo()));
-        categoryTV.setText(DBAccess.getCategoryById(item.getCategory()));
+        accountTV.setText(DBAccess.getAccountNameById(item.getTo()));
+        categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
 
-        String tmp = DBAccess.getVendorById(item.getVendor());
+        String tmp = DBAccess.getVendorNameById(item.getVendor());
         if (tmp.isEmpty()) {
             vendorTV.setText(activity.getString(R.string.unspecified_vendor));
         } else {
             vendorTV.setText(tmp);
         }
 
-        tmp = DBAccess.getTagById(item.getTag());
+        tmp = DBAccess.getTagNameById(item.getTag());
         if (tmp.isEmpty()) {
             tagTV.setText(activity.getString(R.string.unspecified_tag));
         } else {

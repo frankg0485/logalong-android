@@ -27,6 +27,7 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
+import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LSelectionDialog;
 
 import java.text.SimpleDateFormat;
@@ -40,6 +41,8 @@ public class GenericListEdit implements View.OnClickListener {
     private int listId;
     private ListView listView;
     private Cursor cursor;
+    private MyCursorAdapter adapter;
+    private View addV;
 
     public interface GenericListEditItf {
         public void onGenericListEditExit();
@@ -56,6 +59,9 @@ public class GenericListEdit implements View.OnClickListener {
 
     private void create() {
         this.listView = (ListView) rootView.findViewById(R.id.listView);
+        addV = rootView.findViewById(R.id.add);
+        addV.setOnClickListener(this);
+
         switch (listId) {
             case R.id.accounts:
                 cursor = DBAccess.getAllAccountsCursor();
@@ -72,23 +78,25 @@ public class GenericListEdit implements View.OnClickListener {
 
         }
 
-        MyCursorAdapter adapter = new MyCursorAdapter(activity, cursor);
+        adapter = new MyCursorAdapter(activity, cursor);
         listView.setAdapter(adapter);
     }
 
     private void destroy() {
-        this.listView = null;
+        listView = null;
+
+        addV.setOnClickListener(null);
+        addV = null;
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-
+            case R.id.add:
+                break;
             default:
                 break;
         }
-
-
     }
 
     public void dismiss() {
@@ -105,9 +113,10 @@ public class GenericListEdit implements View.OnClickListener {
 
     private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
             GenericListOptionDialog.GenericListOptionDialogItf,
+            LRenameDialog.LRenameDialogItf,
             LMultiSelectionDialog.OnMultiSelectionDialogItf {
         private LItem item;
-
+        GenericListOptionDialog optionDialog;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
@@ -125,8 +134,9 @@ public class GenericListEdit implements View.OnClickListener {
             String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_NAME));
             tv.setText(name);
 
-            view.setOnClickListener(this);
-            view.setTag(new VTag(cursor.getLong(0), name));
+            View v = view.findViewById(R.id.option);
+            v.setOnClickListener(this);
+            v.setTag(new VTag(cursor.getLong(0), name));
         }
 
         /**
@@ -142,16 +152,62 @@ public class GenericListEdit implements View.OnClickListener {
         public void onClick(View v) {
             VTag tag = (VTag) v.getTag();
 
-            GenericListOptionDialog dialog = new GenericListOptionDialog(activity, tag, tag.name,
+            optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
                     listId == R.id.vendors, this);
-            dialog.show();
+            optionDialog.show();
         }
 
         @Override
-        public void onGenericListOptionDialogExit(Object context, int viewId) {
+        public void onRenameDialogExit(Object id, boolean renamed, String newName) {
+            if (renamed) {
+                VTag tag = (VTag) id;
+                switch (listId) {
+                    case R.id.accounts:
+                        DBAccess.updateAccountNameById(tag.id, newName);
+                        break;
+                    case R.id.categories:
+                        DBAccess.updateCategoryNameById(tag.id, newName);
+                        break;
+                    case R.id.vendors:
+                        DBAccess.updateVendorNameById(tag.id, newName);
+                        break;
+                    case R.id.tags:
+                        DBAccess.updateTagNameById(tag.id, newName);
+                        break;
+
+                }
+                adapter.notifyDataSetChanged();
+            }
+            optionDialog.dismiss();
+        }
+
+        @Override
+        public boolean onGenericListOptionDialogExit(Object context, int viewId) {
+            VTag tag = (VTag) context;
             switch (viewId) {
                 case R.id.remove:
+                    break;
                 case R.id.rename:
+                    String title = "";
+                    switch (listId) {
+                        case R.id.accounts:
+                            title = activity.getString(R.string.rename_account);
+                            break;
+                        case R.id.categories:
+                            title = activity.getString(R.string.rename_category);
+                            break;
+                        case R.id.vendors:
+                            title = activity.getString(R.string.rename_vendor);
+                            break;
+                        case R.id.tags:
+                            title = activity.getString(R.string.rename_tag);
+                            break;
+
+                    }
+                    LRenameDialog renameDialog = new LRenameDialog(activity, context, this,
+                            title, tag.name, null);
+                    renameDialog.show();
+                    return true;
                 case R.id.associated_categories:
                     int[] ids = new int[]{
                             R.layout.multi_selection_dialog,
@@ -170,7 +226,14 @@ public class GenericListEdit implements View.OnClickListener {
 
                     LMultiSelectionDialog dialog = new LMultiSelectionDialog(activity, this, ids, columns);
                     dialog.show();
+                    return true;
             }
+            return false;
+        }
+
+        @Override
+        public void onMultiSelectionDialogExit() {
+            optionDialog.dismiss();
         }
 
         @Override
@@ -188,6 +251,5 @@ public class GenericListEdit implements View.OnClickListener {
             }
         }
     }
-
 }
 

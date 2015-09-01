@@ -86,8 +86,6 @@ public class SettingsFragment extends LFragment implements
                 actv.disablePager();
                 break;
             case R.id.goback:
-            case R.id.edit:
-            case R.id.add:
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
                 viewFlipper.showPrevious();

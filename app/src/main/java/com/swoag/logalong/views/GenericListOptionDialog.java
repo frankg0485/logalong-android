@@ -23,7 +23,7 @@ public class GenericListOptionDialog extends Dialog implements
     private GenericListOptionDialogItf callback;
 
     public interface GenericListOptionDialogItf {
-        public void onGenericListOptionDialogExit(final Object context, int viewId);
+        public boolean onGenericListOptionDialogExit(final Object context, int viewId);
     }
 
     public GenericListOptionDialog(Context parent, final Object context, String title, boolean showCategories,
@@ -61,7 +61,7 @@ public class GenericListOptionDialog extends Dialog implements
             case R.id.closeDialog:
                 break;
             default:
-                callback.onGenericListOptionDialogExit(context, v.getId());
+                if (callback.onGenericListOptionDialogExit(context, v.getId())) return;
                 break;
         }
         dismiss();

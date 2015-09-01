@@ -83,6 +83,8 @@ public class LMultiSelectionDialog extends Dialog
 
     public interface OnMultiSelectionDialogItf {
         public Cursor onMultiSelectionGetCursor(String column);
+
+        public void onMultiSelectionDialogExit();
     }
 
     public LMultiSelectionDialog(Context context, LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
@@ -200,6 +202,8 @@ public class LMultiSelectionDialog extends Dialog
         List<HashSet> lb = new ArrayList<HashSet>();
 
         lb.add(selectedIds);
+
+        callback.onMultiSelectionDialogExit();
         dismiss();
     }
 

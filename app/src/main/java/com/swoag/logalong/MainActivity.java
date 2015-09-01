@@ -4,7 +4,6 @@ package com.swoag.logalong;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -13,7 +12,6 @@ import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.com.swoag.logalong.views.LViewPager;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.LLog;
@@ -309,14 +307,14 @@ public class MainActivity extends LFragmentActivity {
     }
 
     private void initDb() {
-        if (DBAccess.getAccountById(1).isEmpty()) {
+        if (DBAccess.getAccountNameById(1).isEmpty()) {
             addAccounts();
         }
 
-        if (DBAccess.getCategoryById(1).isEmpty()) {
+        if (DBAccess.getCategoryNameById(1).isEmpty()) {
             addCategories();
         }
-        if (DBAccess.getVendorById(1).isEmpty()) {
+        if (DBAccess.getVendorNameById(1).isEmpty()) {
             addVendors();
         }
 

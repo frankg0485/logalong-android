@@ -88,11 +88,21 @@ public class DBAccess {
         return cv;
     }
 
+    private static void getCategoryValues(Cursor cur, LCategory category) {
+        category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_CATEGORY_COLUMN_NAME)));
+        category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_CATEGORY_COLUMN_STATE)));
+    }
+
     private static ContentValues setTagValues(LTag tag) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_TAG_COLUMN_NAME, tag.getName());
         cv.put(DBHelper.TABLE_TAG_COLUMN_STATE, tag.getState());
         return cv;
+    }
+
+    private static void getTagValues(Cursor cur, LTag tag) {
+        tag.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_TAG_COLUMN_NAME)));
+        tag.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_TAG_COLUMN_STATE)));
     }
 
     private static ContentValues setVendorValues(LVendor vendor) {
@@ -102,11 +112,21 @@ public class DBAccess {
         return cv;
     }
 
+    private static void getVendorValues(Cursor cur, LVendor vendor) {
+        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_VENDOR_COLUMN_NAME)));
+        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_VENDOR_COLUMN_STATE)));
+    }
+
     private static ContentValues setAccountValues(LAccount account) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_STATE, account.getState());
         return cv;
+    }
+
+    private static void getAccountValues(Cursor cur, LAccount account) {
+        account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_NAME)));
+        account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_STATE)));
     }
 
     private static ContentValues setItemValues(LItem item) {
@@ -292,20 +312,112 @@ public class DBAccess {
         return str;
     }
 
-    public static String getCategoryById(long id) {
+    public static String getCategoryNameById(long id) {
         return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_CATEGORY_COLUMN_NAME, id);
     }
 
-    public static String getVendorById(long id) {
+    public static String getVendorNameById(long id) {
         return getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_VENDOR_COLUMN_NAME, id);
     }
 
-    public static String getTagById(long id) {
+    public static String getTagNameById(long id) {
         return getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_NAME, id);
     }
 
-    public static String getAccountById(long id) {
+    public static String getAccountNameById(long id) {
         return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_ACCOUNT_COLUMN_NAME, id);
+    }
+
+    public static LCategory getCategoryById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LCategory category = new LCategory();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getCategoryValues(csr, category);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get category with id: " + id + ":" + e.getMessage());
+            category = null;
+        }
+        if (csr != null) csr.close();
+        return category;
+    }
+
+    public static LVendor getVendorById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LVendor vendor = new LVendor();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find vendor with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getVendorValues(csr, vendor);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get vendor with id: " + id + ":" + e.getMessage());
+            vendor = null;
+        }
+        if (csr != null) csr.close();
+        return vendor;
+    }
+
+    public static LTag getTagById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getTagValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with id: " + id + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
+    public static LAccount getAccountById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LAccount account = new LAccount();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getAccountValues(csr, account);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
+            account = null;
+        }
+        if (csr != null) csr.close();
+        return account;
     }
 
     public static long addCategory(LCategory category) {
@@ -419,6 +531,76 @@ public class DBAccess {
     public static int getTagIndexById(long id) {
         return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_STATE,
                 LTag.TAG_STATE_ACTIVE, id);
+    }
+
+
+    public static int updateAccountNameById(long id, String name) {
+        LAccount account = getAccountById(id);
+        if (account == null) {
+            LLog.e(TAG, "account no longer exists: " + id);
+            return -1;
+        }
+        account.setName(name);
+
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setAccountValues(account);
+            db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + id});
+            dirty = true;
+        }
+        return 0;
+    }
+
+
+    public static int updateCategoryNameById(long id, String name) {
+        LCategory category = getCategoryById(id);
+        if (category == null) {
+            LLog.e(TAG, "category no longer exists: " + id);
+            return -1;
+        }
+        category.setName(name);
+
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setCategoryValues(category);
+            db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + id});
+            dirty = true;
+        }
+        return 0;
+    }
+
+    public static int updateVendorNameById(long id, String name) {
+        LVendor vendor = getVendorById(id);
+        if (vendor == null) {
+            LLog.e(TAG, "vendor no longer exists: " + id);
+            return -1;
+        }
+        vendor.setName(name);
+
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setVendorValues(vendor);
+            db.update(DBHelper.TABLE_VENDOR_NAME, cv, "_id=?", new String[]{"" + id});
+            dirty = true;
+        }
+        return 0;
+    }
+
+    public static int updateTagNameById(long id, String name) {
+        LTag tag = getTagById(id);
+        if (tag == null) {
+            LLog.e(TAG, "tag no longer exists: " + id);
+            return -1;
+        }
+        tag.setName(name);
+
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setTagValues(tag);
+            db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + id});
+            dirty = true;
+        }
+        return 0;
     }
 
     public static void getSummaryForAll(LAccountSummary summary) {

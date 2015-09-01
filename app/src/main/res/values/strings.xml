@@ -10,6 +10,10 @@
     <string name="new_log">Logalong</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
+    <string name="rename_account">Rename Account</string>
+    <string name="rename_category">Rename Category</string>
+    <string name="rename_tag">Rename Tag</string>
+    <string name="rename_vendor">Rename Vendor</string>
     <string name="reports">Reports</string>
     <string name="select_account">Select Account</string>
     <string name="select_category">Select Category</string>

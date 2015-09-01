@@ -140,8 +140,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TAG));
 
-            String category = DBAccess.getCategoryById(categoryId);
-            String tag = DBAccess.getTagById(tagId);
+            String category = DBAccess.getCategoryNameById(categoryId);
+            String tag = DBAccess.getTagNameById(tagId);
 
             String str = "";
             if (!tag.isEmpty()) str = tag + ":";
@@ -150,7 +150,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
             tv = (TextView) view.findViewById(R.id.note);
             int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VENDOR));
-            String vendor = DBAccess.getVendorById(vendorId);
+            String vendor = DBAccess.getVendorNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE));
 
             if ((!note.isEmpty()) && (!vendor.isEmpty())) vendor += " - " + note;
