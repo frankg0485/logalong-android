@@ -15,6 +15,11 @@ public class LAccount {
         this.name = "";
     }
 
+    public LAccount(String name) {
+        this.state = ACCOUNT_STATE_ACTIVE;
+        this.name = name;
+    }
+
     public LAccount(int state, String name) {
         this.state = state;
         this.name = name;

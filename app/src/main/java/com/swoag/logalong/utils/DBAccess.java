@@ -16,6 +16,7 @@ import com.swoag.logalong.entities.LVendor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();
@@ -83,77 +84,77 @@ public class DBAccess {
 
     private static ContentValues setCategoryValues(LCategory category) {
         ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_CATEGORY_COLUMN_NAME, category.getName());
-        cv.put(DBHelper.TABLE_CATEGORY_COLUMN_STATE, category.getState());
+        cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
+        cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
         return cv;
     }
 
     private static void getCategoryValues(Cursor cur, LCategory category) {
-        category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_CATEGORY_COLUMN_NAME)));
-        category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_CATEGORY_COLUMN_STATE)));
+        category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
+        category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
     }
 
     private static ContentValues setTagValues(LTag tag) {
         ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_TAG_COLUMN_NAME, tag.getName());
-        cv.put(DBHelper.TABLE_TAG_COLUMN_STATE, tag.getState());
+        cv.put(DBHelper.TABLE_COLUMN_NAME, tag.getName());
+        cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
         return cv;
     }
 
     private static void getTagValues(Cursor cur, LTag tag) {
-        tag.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_TAG_COLUMN_NAME)));
-        tag.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_TAG_COLUMN_STATE)));
+        tag.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
+        tag.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
     }
 
     private static ContentValues setVendorValues(LVendor vendor) {
         ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_VENDOR_COLUMN_NAME, vendor.getName());
-        cv.put(DBHelper.TABLE_VENDOR_COLUMN_STATE, vendor.getState());
+        cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
+        cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
         return cv;
     }
 
     private static void getVendorValues(Cursor cur, LVendor vendor) {
-        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_VENDOR_COLUMN_NAME)));
-        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_VENDOR_COLUMN_STATE)));
+        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
+        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
     }
 
     private static ContentValues setAccountValues(LAccount account) {
         ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_NAME, account.getName());
-        cv.put(DBHelper.TABLE_ACCOUNT_COLUMN_STATE, account.getState());
+        cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
+        cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
         return cv;
     }
 
     private static void getAccountValues(Cursor cur, LAccount account) {
-        account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_NAME)));
-        account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_STATE)));
+        account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
+        account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
     }
 
     private static ContentValues setItemValues(LItem item) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_LOG_COLUMN_TYPE, item.getType());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_STATE, item.getState());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_CATEGORY, item.getCategory());
+        cv.put(DBHelper.TABLE_COLUMN_STATE, item.getState());
+        cv.put(DBHelper.TABLE_COLUMN_CATEGORY, item.getCategory());
         cv.put(DBHelper.TABLE_LOG_COLUMN_FROM, item.getFrom());
         cv.put(DBHelper.TABLE_LOG_COLUMN_TO, item.getTo());
         cv.put(DBHelper.TABLE_LOG_COLUMN_BY, item.getBy());
         cv.put(DBHelper.TABLE_LOG_COLUMN_VALUE, item.getValue());
         cv.put(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP, item.getTimeStamp());
         cv.put(DBHelper.TABLE_LOG_COLUMN_NOTE, item.getNote());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_TAG, item.getTag());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_VENDOR, item.getVendor());
+        cv.put(DBHelper.TABLE_COLUMN_TAG, item.getTag());
+        cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getVendor());
 
         return cv;
     }
 
     private static void getItemValues(Cursor cur, LItem item) {
         item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TYPE)));
-        item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_STATE)));
+        item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
         item.setFrom(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_FROM)));
         item.setTo(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TO)));
-        item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_CATEGORY)));
-        item.setTag(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TAG)));
-        item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_VENDOR)));
+        item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_CATEGORY)));
+        item.setTag(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
+        item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
         item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_VALUE)));
         item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE)));
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP)));
@@ -268,6 +269,32 @@ public class DBAccess {
         }
     }
 
+    private static void updateStateById(String table, long id, int state) {
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_STATE, state);
+            db.update(table, cv, "_id=?", new String[]{"" + id});
+            dirty = true;
+        }
+    }
+
+    public static void deleteAccountById(long id) {
+        updateStateById(DBHelper.TABLE_ACCOUNT_NAME, id, LAccount.ACCOUNT_STATE_DELETED);
+    }
+
+    public static void deleteCategoryById(long id) {
+        updateStateById(DBHelper.TABLE_CATEGORY_NAME, id, LCategory.CATEGORY_STATE_DELETED);
+    }
+
+    public static void deleteVendorById(long id) {
+        updateStateById(DBHelper.TABLE_VENDOR_NAME, id, LVendor.VENDOR_STATE_DELETED);
+    }
+
+    public static void deleteTagById(long id) {
+        updateStateById(DBHelper.TABLE_TAG_NAME, id, LTag.TAG_STATE_DELETED);
+    }
+
     public static LItem getLogItemById(long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -313,19 +340,19 @@ public class DBAccess {
     }
 
     public static String getCategoryNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_CATEGORY_COLUMN_NAME, id);
+        return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static String getVendorNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_VENDOR_COLUMN_NAME, id);
+        return getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static String getTagNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_NAME, id);
+        return getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static String getAccountNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_ACCOUNT_COLUMN_NAME, id);
+        return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static LCategory getCategoryById(long id) {
@@ -466,25 +493,33 @@ public class DBAccess {
 
     public static Cursor getAllAccountsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME, null);
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
         return cur;
     }
 
     public static Cursor getAllCategoriesCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME, null);
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LCategory.CATEGORY_STATE_ACTIVE});
         return cur;
     }
 
     public static Cursor getAllVendorsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME, null);
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LVendor.VENDOR_STATE_ACTIVE});
         return cur;
     }
 
     public static Cursor getAllTagsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME, null);
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LTag.TAG_STATE_ACTIVE});
         return cur;
     }
 
@@ -514,22 +549,22 @@ public class DBAccess {
     }
 
     public static int getAccountIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_ACCOUNT_COLUMN_STATE,
+        return getDbIndexById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LAccount.ACCOUNT_STATE_ACTIVE, id);
     }
 
     public static int getCategoryIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_CATEGORY_COLUMN_STATE,
+        return getDbIndexById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LCategory.CATEGORY_STATE_ACTIVE, id);
     }
 
     public static int getVendorIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_VENDOR_COLUMN_STATE,
+        return getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LVendor.VENDOR_STATE_ACTIVE, id);
     }
 
     public static int getTagIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_TAG_COLUMN_STATE,
+        return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LTag.TAG_STATE_ACTIVE, id);
     }
 
@@ -612,7 +647,7 @@ public class DBAccess {
             csr = db.rawQuery("SELECT "
                             + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
                             + DBHelper.TABLE_LOG_COLUMN_VALUE + " FROM "
-                            + DBHelper.TABLE_LOG_NAME + " WHERE " + DBHelper.TABLE_LOG_COLUMN_STATE + "=?",
+                            + DBHelper.TABLE_LOG_NAME + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{"" + LItem.LOG_STATE_ACTIVE});
 
             csr.moveToFirst();
@@ -630,5 +665,63 @@ public class DBAccess {
         summary.setBalance(income - expense);
         summary.setIncome(income);
         summary.setExpense(expense);
+    }
+
+    public static void addVendorCategory(long vendor, long category) {
+        boolean exists = false;
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        try {
+            csr = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_VENDOR + "=? AND "
+                            + DBHelper.TABLE_COLUMN_CATEGORY + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor, "" + category});
+            if (csr != null) {
+                if (csr.getCount() > 0) exists = true;
+                csr.close();
+            }
+
+            if (!exists) {
+                synchronized (dbLock) {
+                    db = getWriteDb();
+                    ContentValues cv = new ContentValues();
+                    cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
+                    cv.put(DBHelper.TABLE_COLUMN_VENDOR, vendor);
+                    cv.put(DBHelper.TABLE_COLUMN_CATEGORY, category);
+                    db.insert(DBHelper.TABLE_VENDOR_CATEGORY_NAME, "", cv);
+                    dirty = true;
+                }
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+    }
+
+    public static HashSet<Long> getVendorCategories(long vendor) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        HashSet<Long> cats = new HashSet<Long>();
+        try {
+            csr = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_VENDOR + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor});
+            if (csr != null) {
+                if (csr.getCount() > 0) {
+                    csr.moveToFirst();
+                    do {
+                        cats.add(csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
+                    } while (csr.moveToNext());
+                    return cats;
+                }
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+        return cats;
     }
 }

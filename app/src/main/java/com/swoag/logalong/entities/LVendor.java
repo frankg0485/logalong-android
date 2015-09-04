@@ -15,6 +15,11 @@ public class LVendor {
         this.name = "";
     }
 
+    public LVendor(String name) {
+        this.state = VENDOR_STATE_ACTIVE;
+        this.name = name;
+    }
+
     public LVendor(int state, String name) {
         this.state = state;
         this.name = name;

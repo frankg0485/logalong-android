@@ -248,7 +248,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_ACCOUNT_COLUMN_NAME, DBAccess.getAccountIndexById(item.getTo()), DLG_ID_ACCOUNT);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getTo()), DLG_ID_ACCOUNT);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -261,7 +261,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_CATEGORY_NAME,
-                                    DBHelper.TABLE_CATEGORY_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -274,7 +274,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_VENDOR_NAME,
-                                    DBHelper.TABLE_VENDOR_COLUMN_NAME, DBAccess.getVendorIndexById(item.getVendor()), DLG_ID_VENDOR);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getVendorIndexById(item.getVendor()), DLG_ID_VENDOR);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -287,7 +287,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_TAG_NAME,
-                                    DBHelper.TABLE_TAG_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {

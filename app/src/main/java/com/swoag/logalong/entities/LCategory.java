@@ -15,6 +15,11 @@ public class LCategory {
         this.name = "";
     }
 
+    public LCategory(String name) {
+        this.state = CATEGORY_STATE_ACTIVE;
+        this.name = name;
+    }
+
     public LCategory(int state, String name) {
         this.state = state;
         this.name = name;

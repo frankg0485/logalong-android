@@ -19,7 +19,11 @@ import android.widget.TextView;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTag;
+import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
@@ -27,12 +31,15 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
+import com.swoag.logalong.views.LNewAccountDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LSelectionDialog;
 
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 
-public class GenericListEdit implements View.OnClickListener {
+public class GenericListEdit implements View.OnClickListener,
+        LNewAccountDialog.LNewAccountDialogItf {
     private static final String TAG = GenericListEdit.class.getSimpleName();
 
     private Activity activity;
@@ -40,7 +47,6 @@ public class GenericListEdit implements View.OnClickListener {
     private GenericListEditItf callback;
     private int listId;
     private ListView listView;
-    private Cursor cursor;
     private MyCursorAdapter adapter;
     private View addV;
 
@@ -57,29 +63,37 @@ public class GenericListEdit implements View.OnClickListener {
         create();
     }
 
+    private Cursor getMyCursor() {
+        Cursor csr = null;
+        switch (listId) {
+            case R.id.accounts:
+                csr = DBAccess.getAllAccountsCursor();
+                break;
+            case R.id.categories:
+                csr = DBAccess.getAllCategoriesCursor();
+                break;
+            case R.id.vendors:
+                csr = DBAccess.getAllVendorsCursor();
+                break;
+            case R.id.tags:
+                csr = DBAccess.getAllTagsCursor();
+                break;
+        }
+        return csr;
+    }
+
     private void create() {
         this.listView = (ListView) rootView.findViewById(R.id.listView);
         addV = rootView.findViewById(R.id.add);
         addV.setOnClickListener(this);
 
-        switch (listId) {
-            case R.id.accounts:
-                cursor = DBAccess.getAllAccountsCursor();
-                break;
-            case R.id.categories:
-                cursor = DBAccess.getAllCategoriesCursor();
-                break;
-            case R.id.vendors:
-                cursor = DBAccess.getAllVendorsCursor();
-                break;
-            case R.id.tags:
-                cursor = DBAccess.getAllTagsCursor();
-                break;
-
+        Cursor cursor = getMyCursor();
+        if (null == cursor) {
+            LLog.e(TAG, "fatal: unable to open database");
+        } else {
+            adapter = new MyCursorAdapter(activity, cursor);
+            listView.setAdapter(adapter);
         }
-
-        adapter = new MyCursorAdapter(activity, cursor);
-        listView.setAdapter(adapter);
     }
 
     private void destroy() {
@@ -93,10 +107,58 @@ public class GenericListEdit implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.add:
-                break;
-            default:
+                String title = "";
+                switch (listId) {
+                    case R.id.accounts:
+                        title = activity.getString(R.string.new_account);
+                        break;
+                    case R.id.categories:
+                        title = activity.getString(R.string.new_category);
+                        break;
+                    case R.id.vendors:
+                        title = activity.getString(R.string.new_vendor);
+                        break;
+                    case R.id.tags:
+                        title = activity.getString(R.string.new_tag);
+                        break;
+                    default:
+                        break;
+                }
+                LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, this, this, title, null);
+                newAccountDialog.show();
                 break;
         }
+    }
+
+    @Override
+    public boolean onNewAccountDialogExit(Object id, boolean created, String name) {
+        if (created && name != null && !name.isEmpty()) {
+            switch (listId) {
+                case R.id.accounts:
+                    DBAccess.addAccount(new LAccount(name));
+                    break;
+                case R.id.categories:
+                    DBAccess.addCategory(new LCategory(name));
+                    break;
+                case R.id.vendors:
+                    DBAccess.addVendor(new LVendor(name));
+                    break;
+                case R.id.tags:
+                    DBAccess.addTag(new LTag(name));
+                    break;
+                default:
+                    break;
+            }
+
+            Cursor cursor = getMyCursor();
+            if (null == cursor) {
+                LLog.e(TAG, "fatal: unable to open database");
+            } else {
+                adapter.swapCursor(cursor);
+                adapter.notifyDataSetChanged();
+            }
+        }
+        return true;
     }
 
     public void dismiss() {
@@ -131,7 +193,7 @@ public class GenericListEdit implements View.OnClickListener {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             TextView tv = (TextView) view.findViewById(R.id.name);
-            String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_ACCOUNT_COLUMN_NAME));
+            String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
             tv.setText(name);
 
             View v = view.findViewById(R.id.option);
@@ -176,7 +238,14 @@ public class GenericListEdit implements View.OnClickListener {
                         break;
 
                 }
-                adapter.notifyDataSetChanged();
+
+                Cursor cursor = getMyCursor();
+                if (null == cursor) {
+                    LLog.e(TAG, "fatal: unable to open database");
+                } else {
+                    adapter.swapCursor(cursor);
+                    adapter.notifyDataSetChanged();
+                }
             }
             optionDialog.dismiss();
         }
@@ -186,6 +255,28 @@ public class GenericListEdit implements View.OnClickListener {
             VTag tag = (VTag) context;
             switch (viewId) {
                 case R.id.remove:
+                    switch (listId) {
+                        case R.id.accounts:
+                            DBAccess.deleteAccountById(tag.id);
+                            break;
+                        case R.id.categories:
+                            DBAccess.deleteCategoryById(tag.id);
+                            break;
+                        case R.id.vendors:
+                            DBAccess.deleteVendorById(tag.id);
+                            break;
+                        case R.id.tags:
+                            DBAccess.deleteTagById(tag.id);
+                            break;
+                    }
+
+                    Cursor cursor = getMyCursor();
+                    if (null == cursor) {
+                        LLog.e(TAG, "fatal: unable to open database");
+                    } else {
+                        adapter.swapCursor(cursor);
+                        adapter.notifyDataSetChanged();
+                    }
                     break;
                 case R.id.rename:
                     String title = "";
@@ -202,7 +293,6 @@ public class GenericListEdit implements View.OnClickListener {
                         case R.id.tags:
                             title = activity.getString(R.string.rename_tag);
                             break;
-
                     }
                     LRenameDialog renameDialog = new LRenameDialog(activity, context, this,
                             title, tag.name, null);
@@ -219,12 +309,14 @@ public class GenericListEdit implements View.OnClickListener {
                             R.id.checkBox1,
                             R.id.name,
                             R.id.list,
-                            R.string.select_account};
+                            R.string.select_categories};
                     String[] columns = new String[]{
-                            DBHelper.TABLE_CATEGORY_COLUMN_NAME
+                            DBHelper.TABLE_COLUMN_NAME
                     };
 
-                    LMultiSelectionDialog dialog = new LMultiSelectionDialog(activity, this, ids, columns);
+                    HashSet<Long> selectedIds = DBAccess.getVendorCategories(tag.id);
+                    LMultiSelectionDialog dialog = new LMultiSelectionDialog
+                            (activity, context, selectedIds, this, ids, columns);
                     dialog.show();
                     return true;
             }
@@ -232,9 +324,14 @@ public class GenericListEdit implements View.OnClickListener {
         }
 
         @Override
-        public void onMultiSelectionDialogExit() {
+        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections) {
+            VTag tag = (VTag) obj;
+            for (Long ii : selections) {
+                DBAccess.addVendorCategory(tag.id, ii);
+            }
             optionDialog.dismiss();
         }
+
 
         @Override
         public Cursor onMultiSelectionGetCursor(String column) {

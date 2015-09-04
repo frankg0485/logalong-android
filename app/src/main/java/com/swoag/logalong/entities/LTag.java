@@ -15,6 +15,11 @@ public class LTag {
         this.name = "";
     }
 
+    public LTag(String name) {
+        this.state = TAG_STATE_ACTIVE;
+        this.name = name;
+    }
+
     public LTag(int state, String name) {
         this.state = state;
         this.name = name;

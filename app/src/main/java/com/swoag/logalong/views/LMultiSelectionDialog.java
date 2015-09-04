@@ -65,14 +65,16 @@ public class LMultiSelectionDialog extends Dialog
      * 1: subEntryColumn;
      */
     private String[] columns;
-    private HashSet<Integer> selectedIds;
+    private HashSet<Long> selectedIds;
+    private Object obj;
 
-    private void init(Context context, LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
+    private void init(Context context, Object obj, HashSet<Long> selectedIds,
+                      LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
                       int[] ids, String[] columns) {
         this.context = context;
         this.callback = callback;
-
-        selectedIds = new HashSet<Integer>();
+        this.obj = obj;
+        this.selectedIds = selectedIds;
 
         this.mCursor = callback.onMultiSelectionGetCursor("");
         this.idColumnIndex = this.mCursor.getColumnIndex("_id");
@@ -84,13 +86,14 @@ public class LMultiSelectionDialog extends Dialog
     public interface OnMultiSelectionDialogItf {
         public Cursor onMultiSelectionGetCursor(String column);
 
-        public void onMultiSelectionDialogExit();
+        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections);
     }
 
-    public LMultiSelectionDialog(Context context, LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
+    public LMultiSelectionDialog(Context context, Object obj, HashSet<Long> selectedIds,
+                                 LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
                                  int[] ids, String[] columns) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        init(context, callback, ids, columns);
+        init(context, obj, selectedIds, callback, ids, columns);
     }
 
     @Override
@@ -164,9 +167,9 @@ public class LMultiSelectionDialog extends Dialog
                 for (int ii = 0; ii < this.mCursor.getCount(); ii++) {
 
                     if (cb.isChecked()) {
-                        selectedIds.add(this.mCursor.getInt(idColumnIndex));
+                        selectedIds.add(this.mCursor.getLong(idColumnIndex));
                     } else {
-                        selectedIds.remove(this.mCursor.getInt(idColumnIndex));
+                        selectedIds.remove(this.mCursor.getLong(idColumnIndex));
                     }
                     this.mCursor.moveToNext();
                 }
@@ -185,7 +188,7 @@ public class LMultiSelectionDialog extends Dialog
     @Override
     public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
         this.mCursor.moveToPosition(arg2);
-        int id = this.mCursor.getInt(idColumnIndex);
+        long id = this.mCursor.getLong(idColumnIndex);
         boolean checked = !selectedIds.contains(id);
         if (checked) {
             selectedIds.add(id);
@@ -199,11 +202,7 @@ public class LMultiSelectionDialog extends Dialog
     }
 
     private void leave() {
-        List<HashSet> lb = new ArrayList<HashSet>();
-
-        lb.add(selectedIds);
-
-        callback.onMultiSelectionDialogExit();
+        callback.onMultiSelectionDialogExit(obj, selectedIds);
         dismiss();
     }
 
@@ -278,7 +277,7 @@ public class LMultiSelectionDialog extends Dialog
             txtView.setText(cursor.getString(cursor.getColumnIndex(column1)));
 
             CheckBox cb = (CheckBox) view.findViewById(checkboxId);
-            cb.setChecked(selectedIds.contains(cursor.getInt(idColumnIndex)));
+            cb.setChecked(selectedIds.contains(cursor.getLong(idColumnIndex)));
         }
 
         /**

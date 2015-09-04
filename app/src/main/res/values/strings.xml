@@ -7,7 +7,11 @@
     <string name="categories">Categories</string>
     <string name="edit">Edit</string>
     <string name="login">Log In</string>
+    <string name="new_account">New Account</string>
+    <string name="new_category">New Category</string>
     <string name="new_log">Logalong</string>
+    <string name="new_tag">New Tag</string>
+    <string name="new_vendor">New Vendor</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
     <string name="rename_account">Rename Account</string>
@@ -17,6 +21,7 @@
     <string name="reports">Reports</string>
     <string name="select_account">Select Account</string>
     <string name="select_category">Select Category</string>
+    <string name="select_categories">Select Categories</string>
     <string name="select_vendor">Select Vendor</string>
     <string name="select_tag">Select Tag</string>
     <string name="settings">Settings</string>

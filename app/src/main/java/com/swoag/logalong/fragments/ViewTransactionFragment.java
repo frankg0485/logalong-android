@@ -137,8 +137,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             TextView tv = (TextView) view.findViewById(R.id.category);
-            int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_CATEGORY));
-            int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TAG));
+            int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
+            int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
 
             String category = DBAccess.getCategoryNameById(categoryId);
             String tag = DBAccess.getTagNameById(tagId);
@@ -149,7 +149,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             tv.setText(str);
 
             tv = (TextView) view.findViewById(R.id.note);
-            int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VENDOR));
+            int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
             String vendor = DBAccess.getVendorNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE));
 
