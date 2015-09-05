@@ -27,19 +27,44 @@ import java.text.SimpleDateFormat;
 public class ViewTransactionFragment extends LFragment implements View.OnClickListener {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
-    private ListView listView;
-    private Cursor logsCursor;
-    private MyCursorAdapter adapter;
-    private ViewFlipper viewFlipper, listViewFlipper;
-    private TextView balanceTV, deltaTV;
-    private double balance, delta;
-    private View rootView;
+    private ListView listView, altListView;
+    private TextView balanceTV, incomeTV, expenseTV, altBalanceTV, altIncomeTV, altExpenseTV;
+    private Cursor altLogsCursor, logsCursor;
+    private MyCursorAdapter adapter, altAdapter;
+    private LAccountSummary summary, altSummary;
 
+    private ViewFlipper viewFlipper, listViewFlipper;
+    private View rootView, prevView, nextView, filterView;
     private TransactionEdit edit;
+
+    private void initListView(boolean alt) {
+        if (alt) {
+            altLogsCursor = DBAccess.getAllActiveItemsCursor();
+            altAdapter = new MyCursorAdapter(getActivity(), altLogsCursor);
+            altListView.setAdapter(altAdapter);
+            altSummary = new LAccountSummary();
+        } else {
+            logsCursor = DBAccess.getAllActiveItemsCursor();
+            adapter = new MyCursorAdapter(getActivity(), logsCursor);
+            listView.setAdapter(adapter);
+            listView.post(new Runnable() {
+                @Override
+                public void run() {
+                    listView.setSelection(adapter.getCount() - 1);
+                }
+            });
+            summary = new LAccountSummary();
+            showBalance();
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
+
+        prevView = setViewListener(rootView, R.id.prev);
+        nextView = setViewListener(rootView, R.id.next);
+        filterView = setViewListener(rootView, R.id.filter);
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -49,25 +74,29 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         listViewFlipper.setAnimateFirstView(false);
         listViewFlipper.setDisplayedChild(1);
 
-        logsCursor = DBAccess.getAllActiveItemsCursor();
-        adapter = new MyCursorAdapter(getActivity(), logsCursor);
-        listView = (ListView) rootView.findViewById(R.id.logsList);
-        listView.setAdapter(adapter);
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(adapter.getCount() - 1);
-            }
-        });
 
-        balanceTV = (TextView) rootView.findViewById(R.id.balance);
-        deltaTV = (TextView) rootView.findViewById(R.id.delta);
-        showBalance();
+        listView = (ListView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.logsList);
+        balanceTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.balance);
+        expenseTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.expense);
+        incomeTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.income);
+
+        altListView = (ListView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.logsList);
+        altBalanceTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.balance);
+        altExpenseTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.expense);
+        altIncomeTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.income);
+
+        initListView(true);
+        initListView(false);
+
         return rootView;
     }
 
     @Override
     public void onDestroyView() {
+        prevView = null;
+        nextView = null;
+        filterView = null;
+
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
         viewFlipper = null;
@@ -77,7 +106,11 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         listViewFlipper = null;
 
         balanceTV = null;
-        deltaTV = null;
+        expenseTV = null;
+        incomeTV = null;
+        altBalanceTV = null;
+        altExpenseTV = null;
+        altIncomeTV = null;
 
         rootView = null;
         super.onDestroyView();
@@ -114,6 +147,14 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.filter:
+                break;
+            case R.id.prev:
+                showPrevNext(true);
+                break;
+            case R.id.next:
+                showPrevNext(false);
+                break;
             default:
                 break;
         }
@@ -253,26 +294,66 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private void showBalance() {
         getBalance();
-        if (balance < 0) {
+
+        if (summary.getBalance() < 0) {
             balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
         } else {
             balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
         }
-        balanceTV.setText(String.format("%.2f", balance));
+        balanceTV.setText(String.format("%.2f", summary.getBalance()));
 
-        if (delta < 0) {
-            deltaTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
-        } else {
-            deltaTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
-        }
-        deltaTV.setText(String.format("%.2f", delta));
+        incomeTV.setText(String.format("%.2f", summary.getIncome()));
+        expenseTV.setText(String.format("%.2f", summary.getExpense()));
     }
 
     private void getBalance() {
-        LAccountSummary summary = new LAccountSummary();
         DBAccess.getSummaryForAll(summary);
-        balance = summary.getBalance();
-        delta = summary.getIncome() - summary.getExpense();
+        DBAccess.getSummaryForAll(altSummary);
+    }
+
+    private boolean isAltView = false;
+    private ListView lv;
+
+    private void showPrevNext(boolean prev) {
+        isAltView = !isAltView;
+
+        if (isAltView) {
+            altLogsCursor = DBAccess.getAllActiveItemsCursor();
+            altAdapter.swapCursor(altLogsCursor);
+            altAdapter.notifyDataSetChanged();
+            altListView.post(new Runnable() {
+                @Override
+                public void run() {
+                    altListView.setSelection(altAdapter.getCount() - 1);
+                }
+            });
+        } else {
+            logsCursor = DBAccess.getAllActiveItemsCursor();
+            adapter.swapCursor(logsCursor);
+            adapter.notifyDataSetChanged();
+            listView.post(new Runnable() {
+                @Override
+                public void run() {
+                    listView.setSelection(adapter.getCount() - 1);
+                }
+            });
+        }
+
+        if (prev) {
+            listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+            listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+            listViewFlipper.showPrevious();
+        } else {
+            listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+            listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+            listViewFlipper.showNext();
+        }
+    }
+
+    private View setViewListener(View v, int id) {
+        View view = v.findViewById(id);
+        view.setOnClickListener(this);
+        return view;
     }
 }
 

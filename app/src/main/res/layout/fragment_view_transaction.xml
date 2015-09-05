@@ -18,93 +18,18 @@
                 android:id="@+id/listViewFlipper"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@+id/balanceBar"
+                android:layout_above="@+id/bottomBar"
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="1dp">
 
-                <ListView
-                    android:id="@+id/logsListLeft"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:divider="@android:color/transparent"
-                    android:dividerHeight="1dp" />
+                <include
+                    android:id="@+id/logs"
+                    layout="@layout/logs_listview" />
 
-                <ListView
-                    android:id="@+id/logsList"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:divider="@android:color/transparent"
-                    android:dividerHeight="1dp" />
-
-                <ListView
-                    android:id="@+id/logsListRight"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:divider="@android:color/transparent"
-                    android:dividerHeight="1dp" />
+                <include
+                    android:id="@+id/logsAlt"
+                    layout="@layout/logs_listview" />
             </ViewFlipper>
-
-            <RelativeLayout
-                android:id="@+id/balanceBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/bottomBar"
-                android:background="#e4e6e8"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_alignParentLeft="true"
-                    android:layout_marginLeft="20dp"
-                    android:layout_toLeftOf="@+id/balance"
-                    android:gravity="center_vertical"
-                    android:text="Balance:"
-                    android:textSize="14dp" />
-
-                <TextView
-                    android:id="@+id/balance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_toLeftOf="@+id/p1"
-                    android:gravity="right|center_vertical"
-                    android:text="1234.45"
-                    android:textColor="@color/base_red"
-                    android:textSize="14dp" />
-
-                <TextView
-                    android:id="@+id/p1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_toLeftOf="@+id/delta"
-                    android:gravity="center_vertical"
-                    android:text="("
-                    android:textSize="14dp" />
-
-                <TextView
-                    android:id="@+id/delta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_marginLeft="5dp"
-                    android:layout_toLeftOf="@+id/p2"
-                    android:gravity="center_vertical"
-                    android:text="345.00"
-                    android:textColor="@color/base_red"
-                    android:textSize="14dp" />
-
-                <TextView
-                    android:id="@+id/p2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginRight="20dp"
-                    android:gravity="center_vertical"
-                    android:text=")"
-                    android:textSize="14dp" />
-            </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/bottomBar"
