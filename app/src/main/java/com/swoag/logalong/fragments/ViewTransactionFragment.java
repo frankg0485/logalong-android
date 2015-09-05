@@ -18,6 +18,7 @@ import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
@@ -27,11 +28,12 @@ import java.text.SimpleDateFormat;
 public class ViewTransactionFragment extends LFragment implements View.OnClickListener {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
-    private ListView listView, altListView;
+    private ListView listView;
+    private Cursor logsCursor;
+    private MyCursorAdapter adapter;
     private TextView balanceTV, incomeTV, expenseTV, altBalanceTV, altIncomeTV, altExpenseTV;
-    private Cursor altLogsCursor, logsCursor;
-    private MyCursorAdapter adapter, altAdapter;
     private LAccountSummary summary, altSummary;
+    private LSectionSummary sectionSummary;
 
     private ViewFlipper viewFlipper, listViewFlipper;
     private View rootView, prevView, nextView, filterView;
@@ -39,13 +41,10 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private void initListView(boolean alt) {
         if (alt) {
-            altLogsCursor = DBAccess.getAllActiveItemsCursor();
-            altAdapter = new MyCursorAdapter(getActivity(), altLogsCursor);
-            altListView.setAdapter(altAdapter);
             altSummary = new LAccountSummary();
         } else {
             logsCursor = DBAccess.getAllActiveItemsCursor();
-            adapter = new MyCursorAdapter(getActivity(), logsCursor);
+            adapter = new MyCursorAdapter(getActivity(), logsCursor, sectionSummary);
             listView.setAdapter(adapter);
             listView.post(new Runnable() {
                 @Override
@@ -74,16 +73,19 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         listViewFlipper.setAnimateFirstView(false);
         listViewFlipper.setDisplayedChild(1);
 
+        listView = (ListView) rootView.findViewById(R.id.logsList);
 
-        listView = (ListView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.logsList);
-        balanceTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.balance);
-        expenseTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.expense);
-        incomeTV = (TextView) listViewFlipper.findViewById(R.id.logs).findViewById(R.id.income);
+        View tmp = listViewFlipper.findViewById(R.id.logs);
+        balanceTV = (TextView) tmp.findViewById(R.id.balance);
+        expenseTV = (TextView) tmp.findViewById(R.id.expense);
+        incomeTV = (TextView) tmp.findViewById(R.id.income);
 
-        altListView = (ListView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.logsList);
-        altBalanceTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.balance);
-        altExpenseTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.expense);
-        altIncomeTV = (TextView) listViewFlipper.findViewById(R.id.logsAlt).findViewById(R.id.income);
+        tmp = listViewFlipper.findViewById(R.id.logsAlt);
+        altBalanceTV = (TextView) tmp.findViewById(R.id.balance);
+        altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
+        altIncomeTV = (TextView) tmp.findViewById(R.id.income);
+
+        sectionSummary = new LSectionSummary();
 
         initListView(true);
         initListView(false);
@@ -163,13 +165,22 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
             TransactionEdit.TransitionEditItf {
         private LItem item;
-
+        private LSectionSummary sectionSummary;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
             //      using LoaderManager with a CursorLoader.
             //super(context, cursor, 0);
             super(context, cursor, false);
+            sectionSummary = null;
+        }
+
+        public MyCursorAdapter(Context context, Cursor cursor, LSectionSummary sectionSummary) {
+            //TODO: deprecated API is used here for max OS compatibility, provide alternative
+            //      using LoaderManager with a CursorLoader.
+            //super(context, cursor, 0);
+            super(context, cursor, false);
+            this.sectionSummary = sectionSummary;
         }
 
         /**
@@ -177,7 +188,10 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
          */
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            TextView tv = (TextView) view.findViewById(R.id.category);
+            View mainView = view.findViewById(R.id.mainView);
+            View sectionView = view.findViewById(R.id.sectionView);
+
+            TextView tv = (TextView) mainView.findViewById(R.id.category);
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
 
@@ -189,7 +203,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             str += category;
             tv.setText(str);
 
-            tv = (TextView) view.findViewById(R.id.note);
+            tv = (TextView) mainView.findViewById(R.id.note);
             int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
             String vendor = DBAccess.getVendorNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE));
@@ -198,11 +212,11 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             else if (!note.isEmpty()) vendor = note;
             tv.setText(vendor);
 
-            tv = (TextView) view.findViewById(R.id.date);
+            tv = (TextView) mainView.findViewById(R.id.date);
             long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP));
             tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
-            tv = (TextView) view.findViewById(R.id.dollor);
+            tv = (TextView) mainView.findViewById(R.id.dollor);
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
             Resources rsc = getActivity().getResources();
             switch (type) {
@@ -219,8 +233,13 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
             tv.setText(String.format("%.2f", dollar));
 
-            view.setOnClickListener(this);
-            view.setTag(new VTag(cursor.getLong(0)));
+            mainView.setOnClickListener(this);
+            long id = cursor.getLong(0);
+            mainView.setTag(new VTag(id));
+
+            if (sectionSummary.hasId(id)) {
+                sectionView.setVisibility(View.VISIBLE);
+            }
         }
 
         /**
@@ -318,15 +337,6 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         isAltView = !isAltView;
 
         if (isAltView) {
-            altLogsCursor = DBAccess.getAllActiveItemsCursor();
-            altAdapter.swapCursor(altLogsCursor);
-            altAdapter.notifyDataSetChanged();
-            altListView.post(new Runnable() {
-                @Override
-                public void run() {
-                    altListView.setSelection(altAdapter.getCount() - 1);
-                }
-            });
         } else {
             logsCursor = DBAccess.getAllActiveItemsCursor();
             adapter.swapCursor(logsCursor);

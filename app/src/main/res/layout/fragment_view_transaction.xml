@@ -17,19 +17,27 @@
             <ViewFlipper
                 android:id="@+id/listViewFlipper"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/bottomBar"
+                android:layout_height="25dp"
                 android:layout_alignParentTop="true"
                 android:layout_marginTop="1dp">
 
                 <include
                     android:id="@+id/logs"
-                    layout="@layout/logs_listview" />
+                    layout="@layout/balance_header" />
 
                 <include
                     android:id="@+id/logsAlt"
-                    layout="@layout/logs_listview" />
+                    layout="@layout/balance_header" />
             </ViewFlipper>
+
+            <ListView
+                android:id="@+id/logsList"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_above="@id/bottomBar"
+                android:layout_below="@+id/listViewFlipper"
+                android:divider="@android:color/transparent"
+                android:dividerHeight="1dp" />
 
             <RelativeLayout
                 android:id="@+id/bottomBar"
