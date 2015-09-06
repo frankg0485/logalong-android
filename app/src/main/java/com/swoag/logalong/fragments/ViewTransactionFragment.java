@@ -26,7 +26,9 @@ import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class ViewTransactionFragment extends LFragment implements View.OnClickListener {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
@@ -34,8 +36,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private ListView listView;
     private Cursor logsCursor;
     private MyCursorAdapter adapter;
-    private TextView balanceTV, incomeTV, expenseTV, altBalanceTV, altIncomeTV, altExpenseTV;
-    private LAccountSummary summary, altSummary;
+    private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
 
     private ViewFlipper viewFlipper, listViewFlipper;
@@ -44,29 +45,47 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private LAllBalances allBalances;
 
-    private void initListView(boolean alt) {
-        if (alt) {
-            altSummary = new LAccountSummary();
-        } else {
-            logsCursor = DBAccess.getAllActiveItemsCursor();
-            adapter = new MyCursorAdapter(getActivity(), logsCursor, sectionSummary);
-            listView.setAdapter(adapter);
-            listView.post(new Runnable() {
-                @Override
-                public void run() {
-                    listView.setSelection(adapter.getCount() - 1);
-                }
-            });
-            summary = new LAccountSummary();
-            showBalance();
+    private long getMs(int year, int month) {
+        Calendar now = Calendar.getInstance();
+        now.clear();
+        now.set(year, month, 1);
+        return now.getTimeInMillis();
+    }
+
+    private void getLogsCursor() {
+        if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
+            Calendar now = Calendar.getInstance();
+            AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
+            AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
         }
+
+        if (AppPersistency.viewTransactionFilter == AppPersistency.TRANSACTION_FILTER_ALL) {
+            logsCursor = DBAccess.getActiveItemsCursorInRange(
+                    getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                    getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+        }
+    }
+
+    private void initListView() {
+        getLogsCursor();
+
+        adapter = new MyCursorAdapter(getActivity(), logsCursor, sectionSummary);
+        listView.setAdapter(adapter);
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                listView.setSelection(adapter.getCount() - 1);
+            }
+        });
+
+        showBalance(false);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
 
-        allBalances = LAllBalances.getInstance(true);
+        allBalances = LAllBalances.getInstance();
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
@@ -78,24 +97,25 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
         listViewFlipper = (ViewFlipper) rootView.findViewById(R.id.listViewFlipper);
         listViewFlipper.setAnimateFirstView(false);
-        listViewFlipper.setDisplayedChild(1);
+        listViewFlipper.setDisplayedChild(0);
 
         listView = (ListView) rootView.findViewById(R.id.logsList);
 
         View tmp = listViewFlipper.findViewById(R.id.logs);
+        monthTV = (TextView) tmp.findViewById(R.id.month);
         balanceTV = (TextView) tmp.findViewById(R.id.balance);
         expenseTV = (TextView) tmp.findViewById(R.id.expense);
         incomeTV = (TextView) tmp.findViewById(R.id.income);
 
         tmp = listViewFlipper.findViewById(R.id.logsAlt);
+        altMonthTV = (TextView) tmp.findViewById(R.id.month);
         altBalanceTV = (TextView) tmp.findViewById(R.id.balance);
         altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
         altIncomeTV = (TextView) tmp.findViewById(R.id.income);
 
         sectionSummary = new LSectionSummary();
 
-        initListView(true);
-        initListView(false);
+        initListView();
 
         return rootView;
     }
@@ -130,7 +150,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         //LLog.d(TAG, "onSelected" + selected);
         if (selected && AppPersistency.transactionChanged) {
             AppPersistency.transactionChanged = false;
-            logsCursor = DBAccess.getAllActiveItemsCursor();
+
+            getLogsCursor();
             adapter.swapCursor(logsCursor);
             adapter.notifyDataSetChanged();
             listView.post(new Runnable() {
@@ -139,7 +160,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     listView.setSelection(adapter.getCount() - 1);
                 }
             });
-            showBalance();
+            showBalance(isAltView);
         }
     }
 
@@ -318,43 +339,77 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         return false;
     }
 
-    private void showBalance() {
-        getBalance();
+    private void showBalance(boolean altView) {
+        LAccountSummary summary = new LAccountSummary();
+        getBalance(summary);
+        TextView mtv, btv, itv, etv;
+        if (altView) {
+            mtv = altMonthTV;
+            btv = altBalanceTV;
+            itv = altIncomeTV;
+            etv = altExpenseTV;
+        } else {
+            mtv = monthTV;
+            btv = balanceTV;
+            itv = incomeTV;
+            etv = expenseTV;
+        }
 
         if (summary.getBalance() < 0) {
-            balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
+            btv.setTextColor(getActivity().getResources().getColor(R.color.base_red));
         } else {
-            balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
+            btv.setTextColor(getActivity().getResources().getColor(R.color.base_green));
         }
-        balanceTV.setText(String.format("%.2f", summary.getBalance()));
+        btv.setText(String.format("%.2f", Math.abs(summary.getBalance())));
 
-        incomeTV.setText(String.format("%.2f", summary.getIncome()));
-        expenseTV.setText(String.format("%.2f", summary.getExpense()));
+        itv.setText(String.format("%.2f", summary.getIncome()));
+        etv.setText(String.format("%.2f", summary.getExpense()));
+
+        mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
     }
 
-    private void getBalance() {
-        DBAccess.getSummaryForAll(summary);
-        DBAccess.getSummaryForAll(altSummary);
+    private void getBalance(LAccountSummary summary) {
+        DBAccess.getAccountSummaryForCurrentCursor(summary, 0, logsCursor);
     }
 
     private boolean isAltView = false;
     private ListView lv;
 
-    private void showPrevNext(boolean prev) {
-        isAltView = !isAltView;
+    private boolean prevNextMonth(boolean prev) {
+        int year = AppPersistency.viewTransactionYear;
+        int month = AppPersistency.viewTransactionMonth;
+        boolean ret = true;
 
-        if (isAltView) {
+        if (prev) {
+            AppPersistency.viewTransactionMonth--;
+            if (AppPersistency.viewTransactionMonth < 0) {
+                AppPersistency.viewTransactionYear--;
+                AppPersistency.viewTransactionMonth = 11;
+            }
         } else {
-            logsCursor = DBAccess.getAllActiveItemsCursor();
-            adapter.swapCursor(logsCursor);
-            adapter.notifyDataSetChanged();
-            listView.post(new Runnable() {
-                @Override
-                public void run() {
-                    listView.setSelection(adapter.getCount() - 1);
-                }
-            });
+            AppPersistency.viewTransactionMonth++;
+            if (AppPersistency.viewTransactionMonth > 11) {
+                AppPersistency.viewTransactionYear++;
+                AppPersistency.viewTransactionMonth = 0;
+            }
         }
+
+        long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+        if (ym < allBalances.getStartDate() || ym > allBalances.getEndDate()) {
+            AppPersistency.viewTransactionYear = year;
+            AppPersistency.viewTransactionMonth = month;
+            return false;
+        }
+        return true;
+    }
+
+    private void showPrevNext(boolean prev) {
+        if (!prevNextMonth(prev)) return;
+
+        getLogsCursor();
+
+        isAltView = !isAltView;
+        showBalance(isAltView);
 
         if (prev) {
             listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
@@ -365,6 +420,15 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
             listViewFlipper.showNext();
         }
+
+        adapter.swapCursor(logsCursor);
+        adapter.notifyDataSetChanged();
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                listView.setSelection(adapter.getCount() - 1);
+            }
+        });
     }
 
     private View setViewListener(View v, int id) {

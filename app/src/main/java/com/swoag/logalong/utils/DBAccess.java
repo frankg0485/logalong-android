@@ -203,10 +203,21 @@ public class DBAccess {
     }
 
     //TODO: not thread safe?
-    public static Cursor getAllActiveItemsCursor() {
+    /*public static Cursor getAllActiveItemsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME + " WHERE State=?",
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+                        + " WHERE State=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
                 new String[]{"" + LItem.LOG_STATE_ACTIVE});
+        return cur;
+    }*/
+
+    public static Cursor getActiveItemsCursorInRange(long start, long end) {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+                        + " WHERE State=? AND "
+                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ">=? AND "
+                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + LItem.LOG_STATE_ACTIVE, "" + start, "" + end});
         return cur;
     }
 
@@ -641,7 +652,30 @@ public class DBAccess {
         return 0;
     }
 
-    public static void getSummaryForAll(LAccountSummary summary) {
+    public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, long id, Cursor cursor) {
+        double income = 0;
+        double expense = 0;
+
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            do {
+                double value = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
+                int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+                long to = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TO));
+                if (type == LItem.LOG_TYPE_INCOME) income += value;
+                else if (type == LItem.LOG_TYPE_EXPENSE) expense += value;
+                else if (id != 0) {
+                    if (to == id) income += value;
+                    else expense += value;
+                }
+            } while (cursor.moveToNext());
+        }
+        summary.setBalance(income - expense);
+        summary.setIncome(income);
+        summary.setExpense(expense);
+    }
+
+    /*public static void getSummaryForAll(LAccountSummary summary) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         double income = 0;
@@ -668,7 +702,7 @@ public class DBAccess {
         summary.setBalance(income - expense);
         summary.setIncome(income);
         summary.setExpense(expense);
-    }
+    }*/
 
     public static void addVendorCategory(long vendor, long category) {
         boolean exists = false;
@@ -783,6 +817,7 @@ public class DBAccess {
                     new String[]{"" + id, "" + year});
             if (csr != null) {
                 if (csr.getCount() > 0) {
+                    csr.moveToFirst();
                     rowId = csr.getInt(0);
                     exists = true;
                 }

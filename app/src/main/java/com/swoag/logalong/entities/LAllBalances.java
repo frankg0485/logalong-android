@@ -12,6 +12,8 @@ import java.util.HashSet;
 public class LAllBalances {
     HashSet<Long> ids;
     HashMap<Long, LAccountBalance> balances;
+    long startDate, endDate;
+
     private static LAllBalances instance;
 
     public static LAllBalances getInstance() {
@@ -40,13 +42,26 @@ public class LAllBalances {
     }
 
     private LAllBalances(boolean forceScan) {
-        getAllAccountIds();
+        startDate = Long.MAX_VALUE;
+        endDate = 0;
 
+        getAllAccountIds();
         balances = new HashMap<Long, LAccountBalance>();
         for (long id : ids) {
             LAccountBalance balance = new LAccountBalance(id);
             if (forceScan) balance.scanBalance();
             balances.put(id, balance);
+
+            if (startDate > balance.getStartDate()) startDate = balance.getStartDate();
+            if (endDate < balance.getEndDate()) endDate = balance.getEndDate();
         }
+    }
+
+    public long getStartDate() {
+        return startDate;
+    }
+
+    public long getEndDate() {
+        return endDate;
     }
 }

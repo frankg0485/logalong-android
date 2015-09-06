@@ -13,8 +13,8 @@
         android:layout_marginLeft="15dp"
         android:layout_toLeftOf="@+id/balance"
         android:gravity="center_vertical"
-        android:text="Balance:"
-        android:textSize="14dp" />
+        android:textSize="14dp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/balance"
@@ -65,7 +65,7 @@
         android:layout_height="match_parent"
         android:layout_alignParentRight="true"
         android:layout_marginLeft="5dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginRight="15dp"
         android:gravity="center_vertical"
         android:text=")"
         android:textSize="14dp" />

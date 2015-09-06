@@ -12,10 +12,13 @@ import java.util.HashMap;
 public class LAccountBalance {
     HashMap<Integer, double[]> balances;
     long accountId;
+    long startDate, endDate;
 
     public LAccountBalance(long accountId) {
         this.balances = new HashMap<Integer, double[]>();
         this.accountId = accountId;
+        startDate = Long.MAX_VALUE;
+        endDate = 0;
 
         ArrayList<String> b = DBAccess.getAccountBalance(accountId);
         for (int ii = 0; ii < b.size() / 2; ii++) {
@@ -24,6 +27,36 @@ public class LAccountBalance {
         }
         if (balances.size() == 0) {
             scanBalance();
+        }
+        // set start end date
+        for (Integer year : balances.keySet()) {
+            Calendar now = Calendar.getInstance();
+            now.clear();
+            double[] bal = balances.get(year);
+            int ii;
+            boolean empty = true;
+            for (ii = 0; ii < 12; ii++) {
+                if (bal[ii] != 0) {
+                    empty = false;
+                    break;
+                }
+            }
+            if (ii == 12) ii = 11;
+
+            if (!empty) {
+                now.set(year, ii, 1);
+                long ms = now.getTimeInMillis();
+                now.clear();
+                if (ii == 11) {
+                    ii = 0;
+                    year++;
+                } else ii++;
+                now.set(year, ii, 1);
+                long me = now.getTimeInMillis();
+
+                if (startDate > ms) startDate = ms;
+                if (endDate < me) endDate = me;
+            }
         }
     }
 
@@ -71,8 +104,28 @@ public class LAccountBalance {
             double[] balance = new double[]{
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             };
-            setYearBalance(year, balance);
+            balances.put(year, balance);
         }
+
+        // update DB
+        for (Integer yr : balances.keySet()) {
+            double[] bal = balances.get(yr);
+            String str = "";
+            for (int ii = 0; ii < bal.length - 1; ii++) {
+                str += String.valueOf(bal[ii]) + ",";
+            }
+            str += String.valueOf(bal[bal.length - 1]);
+            DBAccess.updateAccountBalance(accountId, yr, str);
+        }
+
         return true;
+    }
+
+    public long getStartDate() {
+        return startDate;
+    }
+
+    public long getEndDate() {
+        return endDate;
     }
 }
