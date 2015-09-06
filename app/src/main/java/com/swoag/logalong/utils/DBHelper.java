@@ -12,10 +12,11 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final int STATE_DELETED = 20;
 
     public static final String DATABASE_NAME = "LogAlongDB";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_NAME = "Name";
+    public static final String TABLE_COLUMN_ACCOUNT = "Account";
     public static final String TABLE_COLUMN_CATEGORY = "Category";
     public static final String TABLE_COLUMN_VENDOR = "Vendor";
     public static final String TABLE_COLUMN_TAG = "Tag";
@@ -50,6 +51,10 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_ACCOUNT_COLUMN_NUMBER = "Number";
     public static final String TABLE_ACCOUNT_COLUMN_INFO = "Info";
 
+    public static final String TABLE_ACCOUNT_BALANCE_NAME = "LAccountBalance";
+    public static final String TABLE_COLUMN_YEAR = "Year";
+    public static final String TABLE_COLUMN_BALANCE = "Balance";
+
     public static final String TABLE_LOG_NAME = "LLog";
     public static final String TABLE_LOG_COLUMN_TYPE = "Type";
     public static final String TABLE_LOG_COLUMN_FROM = "FromAccountId";
@@ -80,6 +85,13 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_reservedText2 + " TEXT," +
             TABLE_COLUMN_reservedText3 + " TEXT," +
             TABLE_COLUMN_reservedText4 + " TEXT" +
+            ");";
+
+    private static final String CREATE_TABLE_ACCOUNT_BALANCE = "CREATE TABLE " + TABLE_ACCOUNT_BALANCE_NAME +
+            "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_ACCOUNT + " INTEGER," +
+            TABLE_COLUMN_YEAR + " INTEGER," +
+            TABLE_COLUMN_BALANCE + " TEXT" +
             ");";
 
     private static final String CREATE_TABLE_LOG = "CREATE TABLE " + TABLE_LOG_NAME +
@@ -180,6 +192,9 @@ public class DBHelper extends SQLiteOpenHelper {
         LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
         if (oldVersion == 1 && newVersion == 2) {
             db.execSQL(CREATE_TABLE_VENDOR_CATEGORY);
+        }
+        if (oldVersion == 2 && newVersion == 3) {
+            db.execSQL(CREATE_TABLE_ACCOUNT_BALANCE);
         }
     }
 }

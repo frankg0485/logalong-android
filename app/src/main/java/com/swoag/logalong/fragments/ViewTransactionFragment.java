@@ -16,7 +16,10 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
+import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LItem;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
@@ -39,6 +42,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private View rootView, prevView, nextView, filterView;
     private TransactionEdit edit;
 
+    private LAllBalances allBalances;
+
     private void initListView(boolean alt) {
         if (alt) {
             altSummary = new LAccountSummary();
@@ -60,6 +65,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
+
+        allBalances = LAllBalances.getInstance(true);
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);

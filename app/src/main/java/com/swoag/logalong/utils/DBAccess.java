@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LItem;
@@ -14,8 +15,10 @@ import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class DBAccess {
@@ -723,5 +726,142 @@ public class DBAccess {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
         return cats;
+    }
+
+    public static ArrayList<String> getAccountBalance(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        ArrayList<String> balance = new ArrayList<String>();
+        try {
+            csr = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=?",
+                    new String[]{"" + id});
+            if (csr != null && csr.getCount() > 0) {
+                csr.moveToFirst();
+                do {
+                    balance.add("" + csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_YEAR)));
+                    balance.add(csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE)));
+                } while (csr.moveToNext());
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+        return balance;
+    }
+
+    public static String getAccountBalance(long id, int year) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        String balance = "";
+        try {
+            csr = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? AND "
+                            + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + id, "" + year});
+            if (csr != null) {
+                csr.moveToFirst();
+                balance = csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE));
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+        return balance;
+    }
+
+    public static boolean updateAccountBalance(long id, int year, String balance) {
+        boolean exists = false;
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        boolean ret = false;
+
+        try {
+            long rowId = 0;
+            csr = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? AND "
+                            + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + id, "" + year});
+            if (csr != null) {
+                if (csr.getCount() > 0) {
+                    rowId = csr.getInt(0);
+                    exists = true;
+                }
+                csr.close();
+            }
+
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, id);
+            cv.put(DBHelper.TABLE_COLUMN_YEAR, year);
+            cv.put(DBHelper.TABLE_COLUMN_BALANCE, balance);
+
+            synchronized (dbLock) {
+                db = getWriteDb();
+                if (!exists) {
+                    db.insert(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, "", cv);
+
+                } else {
+                    db.update(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, cv, "_id=?", new String[]{"" + rowId});
+                }
+                ret = true;
+            }
+            dirty = true;
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+
+        return ret;
+    }
+
+    public static HashMap<Integer, double[]> scanAccountById(long id) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        long timestamp;
+        HashMap<Integer, double[]> balance = new HashMap<Integer, double[]>();
+        try {
+            csr = db.rawQuery("SELECT "
+                            + DBHelper.TABLE_LOG_COLUMN_VALUE + ","
+                            + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ","
+                            + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
+                            + DBHelper.TABLE_LOG_COLUMN_TO + " FROM "
+                            + DBHelper.TABLE_LOG_NAME + " WHERE "
+                            + DBHelper.TABLE_LOG_COLUMN_FROM + "=? OR "
+                            + DBHelper.TABLE_LOG_COLUMN_TO + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + id, "" + id, "" + LItem.LOG_STATE_ACTIVE});
+            if (csr != null && csr.getCount() > 0) {
+                csr.moveToFirst();
+                Calendar now = Calendar.getInstance();
+                do {
+                    int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+                    double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
+                    switch (type) {
+                        case LItem.LOG_TYPE_EXPENSE:
+                            v = -v;
+                            break;
+                        case LItem.LOG_TYPE_TRNASACTION:
+                            if (csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TO)) != id) {
+                                v = -v;
+                            }
+                            break;
+                    }
+
+                    timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP));
+                    now.setTimeInMillis(timestamp);
+
+                    int year = now.get(Calendar.YEAR);
+                    double[] amount = balance.get(year);
+                    if (amount == null) {
+                        amount = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                        balance.put(year, amount);
+                    }
+
+                    amount[now.get(Calendar.MONTH)] += v;
+                } while (csr.moveToNext());
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get log record: " + e.getMessage());
+        }
+        return balance;
     }
 }
