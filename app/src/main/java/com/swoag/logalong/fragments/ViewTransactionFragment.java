@@ -26,6 +26,8 @@ import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 
+import org.w3c.dom.Text;
+
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -53,16 +55,117 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     }
 
     private void getLogsCursor() {
+        String column = "";
         if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
             Calendar now = Calendar.getInstance();
             AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
         }
 
-        if (AppPersistency.viewTransactionFilter == AppPersistency.TRANSACTION_FILTER_ALL) {
-            logsCursor = DBAccess.getActiveItemsCursorInRange(
-                    getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                    getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+        switch (AppPersistency.viewTransactionFilter) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                logsCursor = DBAccess.getActiveItemsCursorInRange(
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                column = DBHelper.TABLE_COLUMN_ACCOUNT;
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByAccount(
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                column = DBHelper.TABLE_COLUMN_CATEGORY;
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByCategory(
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                column = DBHelper.TABLE_COLUMN_TAG;
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByTag(
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                column = DBHelper.TABLE_COLUMN_VENDOR;
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByVendor(
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
+                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                break;
+        }
+
+        sectionSummary.clear();
+        // generate section summary
+        if (AppPersistency.TRANSACTION_FILTER_ALL == AppPersistency.viewTransactionFilter) return;
+        if (logsCursor == null || logsCursor.getCount() <= 0) return;
+
+        LAccountSummary summary;
+        boolean hasLog = false;
+        long lastId = 0;
+        long lastIndex = 0;
+        long id;
+        double v, income = 0, expense = 0;
+        int type;
+        logsCursor.moveToFirst();
+        do {
+            v = logsCursor.getDouble(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
+            type = logsCursor.getInt(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+            id = logsCursor.getLong(logsCursor.getColumnIndexOrThrow(column));
+
+            if (hasLog && id != lastId) {
+                summary = new LAccountSummary();
+                summary.setExpense(expense);
+                summary.setIncome(income);
+                summary.setBalance(income - expense);
+
+                switch (AppPersistency.viewTransactionFilter) {
+                    case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                        summary.setName(DBAccess.getAccountNameById(lastId));
+                        break;
+                    case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                        summary.setName(DBAccess.getCategoryNameById(lastId));
+                        break;
+                    case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                        summary.setName(DBAccess.getTagNameById(lastId));
+                        break;
+                    case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                        summary.setName(DBAccess.getVendorNameById(lastId));
+                        break;
+                }
+                sectionSummary.addSummary(lastIndex, summary);
+                hasLog = false;
+                income = 0;
+                expense = 0;
+                lastId = id;
+            }
+
+            lastIndex = logsCursor.getLong(0);
+            if (type == LItem.LOG_TYPE_EXPENSE) expense += v;
+            else income += v;
+            if (!hasLog) lastId = id;
+            hasLog = true;
+        } while (logsCursor.moveToNext());
+
+        if (hasLog) {
+            summary = new LAccountSummary();
+            switch (AppPersistency.viewTransactionFilter) {
+                case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                    summary.setName(DBAccess.getAccountNameById(id));
+                    break;
+                case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                    summary.setName(DBAccess.getCategoryNameById(id));
+                    break;
+                case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                    summary.setName(DBAccess.getTagNameById(id));
+                    break;
+                case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                    summary.setName(DBAccess.getVendorNameById(id));
+                    break;
+            }
+            summary.setExpense(expense);
+            summary.setIncome(income);
+            summary.setBalance(income - expense);
+            sectionSummary.addSummary(lastIndex, summary);
         }
     }
 
@@ -149,18 +252,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     public void onSelected(boolean selected) {
         //LLog.d(TAG, "onSelected" + selected);
         if (selected && AppPersistency.transactionChanged) {
-            AppPersistency.transactionChanged = false;
-
-            getLogsCursor();
-            adapter.swapCursor(logsCursor);
-            adapter.notifyDataSetChanged();
-            listView.post(new Runnable() {
-                @Override
-                public void run() {
-                    listView.setSelection(adapter.getCount() - 1);
-                }
-            });
-            showBalance(isAltView);
+            refreshLogs();
         }
     }
 
@@ -178,6 +270,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.filter:
+                changeFilter();
                 break;
             case R.id.prev:
                 showPrevNext(true);
@@ -266,7 +359,18 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             mainView.setTag(new VTag(id));
 
             if (sectionSummary.hasId(id)) {
+                tv = (TextView) sectionView.findViewById(R.id.sortName);
+                LAccountSummary summary = sectionSummary.getSummaryById(id);
+                tv.setText(summary.getName());
+
+                tv = (TextView) sectionView.findViewById(R.id.income);
+                tv.setText(String.format("%.2f", summary.getIncome()));
+                tv = (TextView) sectionView.findViewById(R.id.expense);
+                tv.setText(String.format("%.2f", summary.getExpense()));
+
                 sectionView.setVisibility(View.VISIBLE);
+            } else {
+                sectionView.setVisibility(View.GONE);
             }
         }
 
@@ -403,6 +507,21 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         return true;
     }
 
+    private void refreshLogs() {
+        AppPersistency.transactionChanged = false;
+
+        getLogsCursor();
+        adapter.swapCursor(logsCursor);
+        adapter.notifyDataSetChanged();
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                listView.setSelection(adapter.getCount() - 1);
+            }
+        });
+        showBalance(isAltView);
+    }
+
     private void showPrevNext(boolean prev) {
         if (!prevNextMonth(prev)) return;
 
@@ -435,6 +554,31 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         View view = v.findViewById(id);
         view.setOnClickListener(this);
         return view;
+    }
+
+    private void nextFilter() {
+        switch (AppPersistency.viewTransactionFilter) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+//                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT;
+//                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_CATEGORY;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_TAG;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_VENDOR;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_ALL;
+                break;
+        }
+    }
+
+    private void changeFilter() {
+        nextFilter();
+        refreshLogs();
     }
 }
 

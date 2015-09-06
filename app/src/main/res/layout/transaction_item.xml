@@ -78,6 +78,17 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
+        <TextView
+            android:id="@+id/sortName"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="15dp"
+            android:layout_toLeftOf="@+id/balance"
+            android:gravity="center_vertical"
+            android:textSize="14dp"
+            android:textStyle="bold" />
+
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -118,7 +129,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:layout_marginLeft="5dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginRight="15dp"
             android:gravity="center_vertical"
             android:text=")"
             android:textSize="14dp" />

@@ -3,10 +3,10 @@ package com.swoag.logalong.utils;
 
 public class AppPersistency {
     public static final int TRANSACTION_FILTER_BY_ACCOUNT = 10;
-    public static final int TRANSACTION_FILTER_BY_CATEGORY = 10;
-    public static final int TRANSACTION_FILTER_BY_TAG = 10;
-    public static final int TRANSACTION_FILTER_BY_VENDOR = 10;
-    public static final int TRANSACTION_FILTER_ALL = 10;
+    public static final int TRANSACTION_FILTER_BY_CATEGORY = 20;
+    public static final int TRANSACTION_FILTER_BY_TAG = 30;
+    public static final int TRANSACTION_FILTER_BY_VENDOR = 40;
+    public static final int TRANSACTION_FILTER_ALL = 50;
 
     public static boolean transactionChanged = false;
     public static int viewTransactionYear = -1;

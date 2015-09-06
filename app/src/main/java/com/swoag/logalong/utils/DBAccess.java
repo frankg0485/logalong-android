@@ -221,6 +221,34 @@ public class DBAccess {
         return cur;
     }
 
+    private static Cursor getActiveItemsCursorInRangeSortBy(String column, long start, long end) {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+                        + " WHERE State=? AND "
+                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ">=? AND "
+                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + "<? ORDER BY "
+                        + column + " ASC, "
+                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + LItem.LOG_STATE_ACTIVE, "" + start, "" + end});
+        return cur;
+    }
+
+    public static Cursor getActiveItemsCursorInRangeSortByAccount(long start, long end) {
+        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_ACCOUNT, start, end);
+    }
+
+    public static Cursor getActiveItemsCursorInRangeSortByCategory(long start, long end) {
+        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_CATEGORY, start, end);
+    }
+
+    public static Cursor getActiveItemsCursorInRangeSortByTag(long start, long end) {
+        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_TAG, start, end);
+    }
+
+    public static Cursor getActiveItemsCursorInRangeSortByVendor(long start, long end) {
+        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_VENDOR, start, end);
+    }
+
     public static int getAllActiveItems(ArrayList<LItem> LItems, boolean sort) {
         synchronized (dbLock) {
             /*

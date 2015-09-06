@@ -5,11 +5,23 @@ public class LAccountSummary {
     private double balance;
     private double expense;
     private double income;
+    private String name;
+    private long id;
 
     public LAccountSummary() {
         this.balance = 0;
         this.expense = 0;
         this.income = 0;
+        this.id = 0;
+        this.name = "";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public double getBalance() {
@@ -34,5 +46,13 @@ public class LAccountSummary {
 
     public void setIncome(double income) {
         this.income = income;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

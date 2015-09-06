@@ -13,6 +13,10 @@ public class LSectionSummary {
         map = new HashMap<Long, LAccountSummary>();
     }
 
+    public void clear() {
+        map.clear();
+    }
+
     public boolean addSummary(long id, LAccountSummary summary) {
         map.put(id, summary);
         return true;
