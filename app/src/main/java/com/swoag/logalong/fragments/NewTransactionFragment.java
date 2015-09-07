@@ -11,7 +11,7 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
-import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 
@@ -23,7 +23,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
 
     private View rootView;
     private TransactionEdit edit;
-    private LItem item;
+    private LTransaction item;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,13 +69,13 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.expense:
-                newLog(LItem.LOG_TYPE_EXPENSE);
+                newLog(LTransaction.TRANSACTION_TYPE_EXPENSE);
                 break;
             case R.id.income:
-                newLog(LItem.LOG_TYPE_INCOME);
+                newLog(LTransaction.TRANSACTION_TYPE_INCOME);
                 break;
             case R.id.transaction:
-                newLog(LItem.LOG_TYPE_TRNASACTION);
+                newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 break;
 
             default:
@@ -115,7 +115,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
     }
 
     private void newLog(int type) {
-        item = new LItem();
+        item = new LTransaction();
         item.setType(type);
         item.setAccount(4);
         item.setCategory(2);

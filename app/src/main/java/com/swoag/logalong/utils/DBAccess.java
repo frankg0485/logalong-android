@@ -7,10 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
 
@@ -83,7 +82,7 @@ public class DBAccess {
         dirty = false;
     }
 
-    private static LItem gLogItem;
+    private static LTransaction gLogItem;
 
     private static ContentValues setCategoryValues(LCategory category) {
         ContentValues cv = new ContentValues();
@@ -133,7 +132,7 @@ public class DBAccess {
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
     }
 
-    private static ContentValues setItemValues(LItem item) {
+    private static ContentValues setItemValues(LTransaction item) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_TYPE, item.getType());
         cv.put(DBHelper.TABLE_COLUMN_STATE, item.getState());
@@ -149,7 +148,7 @@ public class DBAccess {
         return cv;
     }
 
-    private static void getItemValues(Cursor cur, LItem item) {
+    private static void getItemValues(Cursor cur, LTransaction item) {
         item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
         item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
         item.setAccount(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT)));
@@ -161,15 +160,15 @@ public class DBAccess {
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
     }
 
-    private static int getItemList(ArrayList<LItem> LItems, Cursor cur, boolean sort) {
+    private static int getItemList(ArrayList<LTransaction> LTransactions, Cursor cur, boolean sort) {
         while (cur.moveToNext()) {
-            LItem LItem = new LItem();
-            getItemValues(cur, LItem);
-            LItems.add(LItem);
+            LTransaction LTransaction = new LTransaction();
+            getItemValues(cur, LTransaction);
+            LTransactions.add(LTransaction);
         }
         if (sort) {
-            Collections.sort(LItems, new Comparator<LItem>() {
-                public int compare(LItem c1, LItem c2) {
+            Collections.sort(LTransactions, new Comparator<LTransaction>() {
+                public int compare(LTransaction c1, LTransaction c2) {
                     int ret;
                     if (c1.getTimeStamp() > c2.getTimeStamp()) ret = 1;
                     else if (c1.getTimeStamp() == c2.getTimeStamp()) ret = 0;
@@ -178,20 +177,20 @@ public class DBAccess {
                 }
             });
         }
-        //LItems.add(yaventLItem());
+        //LTransactions.add(yaventLItem());
         return 0;
     }
 
-    public static int getAllItems(ArrayList<LItem> LItems, boolean sort) {
+    public static int getAllItems(ArrayList<LTransaction> LTransactions, boolean sort) {
         synchronized (dbLock) {
             /*
             SQLiteDatabase db = getReadDb();
             Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LItemS_NAME, null);
-            getLItemList(LItems, cur, sort);
-            int ii = LItems.size();
+            getLItemList(LTransactions, cur, sort);
+            int ii = LTransactions.size();
             while (ii-- > 0) {
-                if (LItems.get(ii).status == LItem.STATUS_GROUP_INVITE) {
-                    LItems.remove(ii);
+                if (LTransactions.get(ii).status == LTransaction.STATUS_GROUP_INVITE) {
+                    LTransactions.remove(ii);
                 }
             }
             cur.close();
@@ -205,7 +204,7 @@ public class DBAccess {
         SQLiteDatabase db = getReadDb();
         Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
                         + " WHERE State=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + LItem.LOG_STATE_ACTIVE});
+                new String[]{"" + LTransaction.LOG_STATE_ACTIVE});
         return cur;
     }*/
 
@@ -247,23 +246,23 @@ public class DBAccess {
         return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_VENDOR, start, end);
     }
 
-    public static int getAllActiveItems(ArrayList<LItem> LItems, boolean sort) {
+    public static int getAllActiveItems(ArrayList<LTransaction> LTransactions, boolean sort) {
         synchronized (dbLock) {
             /*
             SQLiteDatabase db = getReadDb();
             Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LItemS_NAME + " WHERE Status=?",
-                    new String[]{"" + LItem.STATUS_ACTIVE});
-            getLItemList(LItems, cur, sort);
+                    new String[]{"" + LTransaction.STATUS_ACTIVE});
+            getLItemList(LTransactions, cur, sort);
             cur.close();
             */
             return 0;
         }
     }
 
-    public static LItem getItemByAccountId(int id) {
+    public static LTransaction getItemByAccountId(int id) {
         synchronized (dbLock) {
 
-            LItem LItem = null;
+            LTransaction LTransaction = null;
             /*
             if (id == 0) return yaventLItem();
             YLog.d(TAG, "ID: " + id);
@@ -273,17 +272,17 @@ public class DBAccess {
             if (cur.getCount() > 0) {
                 YLog.d(TAG, "count: " + cur.getCount());
                 cur.moveToFirst();
-                LItem = new LItem();
-                getLItemValues(cur, LItem);
+                LTransaction = new LTransaction();
+                getLItemValues(cur, LTransaction);
             }
 
             cur.close();
                         */
-            return LItem;
+            return LTransaction;
         }
     }
 
-    public static void addItem(LItem item) {
+    public static void addItem(LTransaction item) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setItemValues(item);
@@ -292,7 +291,7 @@ public class DBAccess {
         }
     }
 
-    public static void updateItem(LItem item) {
+    public static void updateItem(LTransaction item) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setItemValues(item);
@@ -302,7 +301,7 @@ public class DBAccess {
     }
 
     public static void deleteItemById(long id) {
-        LItem item = getLogItemById(id);
+        LTransaction item = getLogItemById(id);
         if (item != null) {
             item.setState(DBHelper.STATE_DELETED);
             updateItem(item);
@@ -335,11 +334,11 @@ public class DBAccess {
         updateStateById(DBHelper.TABLE_TAG_NAME, id, LTag.TAG_STATE_DELETED);
     }
 
-    public static LItem getLogItemById(long id) {
+    public static LTransaction getLogItemById(long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         String str = "";
-        LItem item = new LItem();
+        LTransaction item = new LTransaction();
         try {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE _id=?", new String[]{"" + id});
             if (csr.getCount() != 1) {
@@ -687,8 +686,8 @@ public class DBAccess {
             do {
                 double value = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
                 int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-                if (type == LItem.LOG_TYPE_INCOME) income += value;
-                else if (type == LItem.LOG_TYPE_EXPENSE) expense += value;
+                if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += value;
+                else if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += value;
             } while (cursor.moveToNext());
         }
         summary.setBalance(income - expense);
@@ -706,14 +705,14 @@ public class DBAccess {
                             + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
                             + DBHelper.TABLE_LOG_COLUMN_VALUE + " FROM "
                             + DBHelper.TABLE_LOG_NAME + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + LItem.LOG_STATE_ACTIVE});
+                    new String[]{"" + LTransaction.LOG_STATE_ACTIVE});
 
             csr.moveToFirst();
             do {
                 double value = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
                 int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
-                if (type == LItem.LOG_TYPE_INCOME) income += value;
-                else if (type == LItem.LOG_TYPE_EXPENSE) expense += value;
+                if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += value;
+                else if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += value;
             } while (csr.moveToNext());
         } catch (Exception e) {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
@@ -889,7 +888,7 @@ public class DBAccess {
                 do {
                     int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-                    if (type == LItem.LOG_TYPE_EXPENSE) v = -v;
+                    if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) v = -v;
                     timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
                     now.setTimeInMillis(timestamp);
 

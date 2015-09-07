@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
-import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LLog;
@@ -28,8 +28,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private Activity activity;
     private View rootView;
     private boolean bCreate;
-    private LItem item;
-    private LItem savedItem;
+    private LTransaction item;
+    private LTransaction savedItem;
     private TransitionEditItf callback;
 
     private View view0, view1, view2, view3, view4, view5, view6, view7, view8, view9;
@@ -54,14 +54,14 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         public void onTransactionEditExit(int action, boolean changed);
     }
 
-    public TransactionEdit(Activity activity, View rootView, LItem item, boolean bCreate,
+    public TransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate,
                            TransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
         this.item = item;
         this.callback = callback;
 
-        this.savedItem = new LItem(item);
+        this.savedItem = new LTransaction(item);
 
         this.bCreate = bCreate;
         create();

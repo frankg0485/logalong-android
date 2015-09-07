@@ -3,12 +3,12 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.utils.DBHelper;
 
-public class LItem {
-    private static final String TAG = LItem.class.getSimpleName();
+public class LTransaction {
+    private static final String TAG = LTransaction.class.getSimpleName();
 
-    public static final int LOG_TYPE_EXPENSE = 10;
-    public static final int LOG_TYPE_INCOME = 20;
-    public static final int LOG_TYPE_TRNASACTION = 30;
+    public static final int TRANSACTION_TYPE_EXPENSE = 10;
+    public static final int TRANSACTION_TYPE_INCOME = 20;
+    public static final int TRANSACTION_TYPE_TRANSFER = 30;
 
     double value;
     int type;
@@ -22,7 +22,7 @@ public class LItem {
     String note;
     long timeStamp;
 
-    public LItem() {
+    public LTransaction() {
         this.timeStamp = System.currentTimeMillis();
         this.value = 0;
         this.note = "";
@@ -30,7 +30,7 @@ public class LItem {
         this.state = DBHelper.STATE_ACTIVE;
     }
 
-    public LItem(LItem item) {
+    public LTransaction(LTransaction item) {
         this.timeStamp = item.timeStamp;
         this.value = item.value;
         this.type = item.type;
@@ -42,7 +42,7 @@ public class LItem {
         this.note = item.note;
     }
 
-    public boolean isEqual(LItem item) {
+    public boolean isEqual(LTransaction item) {
         return (this.timeStamp == item.timeStamp &&
                 this.value == item.value &&
                 this.type == item.type &&
@@ -54,8 +54,8 @@ public class LItem {
                 this.note == item.note);
     }
 
-    public LItem(double value, int type, int category, int vendor, int tag,
-                 int account, int by, String note) {
+    public LTransaction(double value, int type, int category, int vendor, int tag,
+                        int account, int by, String note) {
         this.timeStamp = System.currentTimeMillis();
         this.value = value;
         this.type = type;
@@ -67,8 +67,8 @@ public class LItem {
         this.vendor = vendor;
     }
 
-    public LItem(double value, int type, int category,
-                 int account, int by, String note, long timeStamp) {
+    public LTransaction(double value, int type, int category,
+                        int account, int by, String note, long timeStamp) {
         this.value = value;
         this.type = type;
         this.category = category;

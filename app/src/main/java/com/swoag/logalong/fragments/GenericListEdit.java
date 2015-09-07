@@ -3,39 +3,28 @@ package com.swoag.logalong.fragments;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.swoag.logalong.LApp;
-import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
-import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LLog;
-import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
 import com.swoag.logalong.views.LNewAccountDialog;
 import com.swoag.logalong.views.LRenameDialog;
-import com.swoag.logalong.views.LSelectionDialog;
 
-import java.text.SimpleDateFormat;
 import java.util.HashSet;
 
 public class GenericListEdit implements View.OnClickListener,
@@ -177,7 +166,7 @@ public class GenericListEdit implements View.OnClickListener,
             GenericListOptionDialog.GenericListOptionDialogItf,
             LRenameDialog.LRenameDialogItf,
             LMultiSelectionDialog.OnMultiSelectionDialogItf {
-        private LItem item;
+        private LTransaction item;
         GenericListOptionDialog optionDialog;
 
         public MyCursorAdapter(Context context, Cursor cursor) {

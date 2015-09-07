@@ -1,13 +1,9 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import com.swoag.logalong.entities.LItem;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = DBHelper.class.getSimpleName();
@@ -201,7 +197,7 @@ public class DBHelper extends SQLiteOpenHelper {
             db.execSQL(CREATE_TABLE_TRANSACTION);
             Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
                             + " WHERE State=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + LItem.LOG_STATE_ACTIVE});
+                    new String[]{"" + LTransaction.LOG_STATE_ACTIVE});
             if (cur != null && cur.getCount() > 0) {
                 cur.moveToFirst();
                 do  {

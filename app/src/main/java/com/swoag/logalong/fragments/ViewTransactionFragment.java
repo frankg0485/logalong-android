@@ -16,17 +16,13 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
-import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
-import com.swoag.logalong.entities.LItem;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
-
-import org.w3c.dom.Text;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
@@ -140,7 +136,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             }
 
             lastIndex = logsCursor.getLong(0);
-            if (type == LItem.LOG_TYPE_EXPENSE) expense += v;
+            if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
             else income += v;
             if (!hasLog) lastId = id;
             hasLog = true;
@@ -285,7 +281,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
             TransactionEdit.TransitionEditItf {
-        private LItem item;
+        private LTransaction item;
         private LSectionSummary sectionSummary;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
@@ -344,13 +340,13 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
             Resources rsc = getActivity().getResources();
             switch (type) {
-                case LItem.LOG_TYPE_EXPENSE:
+                case LTransaction.TRANSACTION_TYPE_EXPENSE:
                     tv.setTextColor(rsc.getColor(R.color.base_red));
                     break;
-                case LItem.LOG_TYPE_INCOME:
+                case LTransaction.TRANSACTION_TYPE_INCOME:
                     tv.setTextColor(rsc.getColor(R.color.base_green));
                     break;
-                case LItem.LOG_TYPE_TRNASACTION:
+                case LTransaction.TRANSACTION_TYPE_TRANSFER:
                     tv.setTextColor(rsc.getColor(R.color.base_blue));
                     break;
             }
