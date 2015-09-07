@@ -1,9 +1,13 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.swoag.logalong.entities.LItem;
 
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = DBHelper.class.getSimpleName();
@@ -12,7 +16,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final int STATE_DELETED = 20;
 
     public static final String DATABASE_NAME = "LogAlongDB";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_NAME = "Name";
@@ -20,6 +24,13 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_CATEGORY = "Category";
     public static final String TABLE_COLUMN_VENDOR = "Vendor";
     public static final String TABLE_COLUMN_TAG = "Tag";
+
+    public static final String TABLE_COLUMN_TYPE = "Type";
+    public static final String TABLE_COLUMN_MADEBY = "MadeBy";
+    public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
+    public static final String TABLE_COLUMN_AMOUNT = "Amount";
+    public static final String TABLE_COLUMN_NOTE = "Note";
+
 
     public static final String TABLE_reserved1 = "TabReserved1";
     public static final String TABLE_reserved2 = "TabReserved2";
@@ -55,15 +66,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_YEAR = "Year";
     public static final String TABLE_COLUMN_BALANCE = "Balance";
 
-    public static final String TABLE_LOG_NAME = "LLog";
-    public static final String TABLE_LOG_COLUMN_TYPE = "Type";
-    public static final String TABLE_LOG_COLUMN_FROM = "FromAccountId";
-    public static final String TABLE_LOG_COLUMN_TO = "ToAccountId";
-    public static final String TABLE_LOG_COLUMN_BY = "MadeBy";
-    public static final String TABLE_LOG_COLUMN_TIMESTAMP = "TimeStmp";
-    public static final String TABLE_LOG_COLUMN_VALUE = "Dollar";
-    public static final String TABLE_LOG_COLUMN_NOTE = "Note";
-
+    public static final String TABLE_TRANSACTION_NAME = "LTrans";
 
     public static final String TABLE_CATEGORY_NAME = "LCategory";
     public static final String TABLE_TAG_NAME = "LTag";
@@ -94,19 +97,18 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_BALANCE + " TEXT" +
             ");";
 
-    private static final String CREATE_TABLE_LOG = "CREATE TABLE " + TABLE_LOG_NAME +
+    private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
-            TABLE_LOG_COLUMN_VALUE + " REAL," +
+            TABLE_COLUMN_AMOUNT + " REAL," +
             TABLE_COLUMN_CATEGORY + " INTEGER," +
-            TABLE_LOG_COLUMN_FROM + " INTEGER," +
-            TABLE_LOG_COLUMN_TO + " INTEGER," +
-            TABLE_LOG_COLUMN_BY + " INTEGER," +
-            TABLE_LOG_COLUMN_TIMESTAMP + " INTEGER," +
-            TABLE_LOG_COLUMN_TYPE + " INTEGER," +
+            TABLE_COLUMN_ACCOUNT + " INTEGER," +
             TABLE_COLUMN_TAG + " INTEGER," +
             TABLE_COLUMN_VENDOR + " INTEGER," +
+            TABLE_COLUMN_TIMESTAMP + " INTEGER," +
+            TABLE_COLUMN_TYPE + " INTEGER," +
             TABLE_COLUMN_STATE + " INTEGER," +
-            TABLE_LOG_COLUMN_NOTE + " TEXT," +
+            TABLE_COLUMN_MADEBY + " TEXT," +
+            TABLE_COLUMN_NOTE + " TEXT," +
             TABLE_COLUMN_reservedInteger1 + " INTEGER," +
             TABLE_COLUMN_reservedInteger2 + " INTEGER," +
             TABLE_COLUMN_reservedInteger3 + " INTEGER," +
@@ -177,10 +179,12 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_ACCOUNT);
-        db.execSQL(CREATE_TABLE_LOG);
+        db.execSQL(CREATE_TABLE_ACCOUNT_BALANCE);
         db.execSQL(CREATE_TABLE_CATEGORY);
         db.execSQL(CREATE_TABLE_TAG);
         db.execSQL(CREATE_TABLE_VENDOR);
+        db.execSQL(CREATE_TABLE_VENDOR_CATEGORY);
+        db.execSQL(CREATE_TABLE_TRANSACTION);
         db.execSQL("CREATE TABLE " + TABLE_reserved1 + CREATE_TABLE_RESERVED);
         db.execSQL("CREATE TABLE " + TABLE_reserved2 + CREATE_TABLE_RESERVED);
         db.execSQL("CREATE TABLE " + TABLE_reserved3 + CREATE_TABLE_RESERVED);
@@ -190,11 +194,30 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
-        if (oldVersion == 1 && newVersion == 2) {
-            db.execSQL(CREATE_TABLE_VENDOR_CATEGORY);
-        }
-        if (oldVersion == 2 && newVersion == 3) {
-            db.execSQL(CREATE_TABLE_ACCOUNT_BALANCE);
+        if (oldVersion == 4 && newVersion == 5) {
+            db.execSQL("DROP TABLE IF EXISTS LLog");
+
+            /*
+            db.execSQL(CREATE_TABLE_TRANSACTION);
+            Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+                            + " WHERE State=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + LItem.LOG_STATE_ACTIVE});
+            if (cur != null && cur.getCount() > 0) {
+                cur.moveToFirst();
+                do  {
+                    ContentValues cv = new ContentValues();
+                    cv.put(DBHelper.TABLE_COLUMN_TYPE, cur.getInt(cur.getColumnIndexOrThrow(TABLE_LOG_COLUMN_TYPE)));
+                    cv.put(DBHelper.TABLE_COLUMN_STATE, STATE_ACTIVE);
+                    cv.put(DBHelper.TABLE_COLUMN_CATEGORY, cur.getLong(cur.getColumnIndexOrThrow(TABLE_COLUMN_CATEGORY)));
+                    cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, cur.getLong(cur.getColumnIndexOrThrow(TABLE_LOG_COLUMN_TO)));
+                    cv.put(DBHelper.TABLE_COLUMN_AMOUNT, cur.getDouble(cur.getColumnIndexOrThrow(TABLE_LOG_COLUMN_VALUE)));
+                    cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, cur.getLong(cur.getColumnIndexOrThrow(TABLE_LOG_COLUMN_TIMESTAMP)));
+                    cv.put(DBHelper.TABLE_COLUMN_VENDOR, cur.getLong(cur.getColumnIndexOrThrow(TABLE_COLUMN_VENDOR)));
+
+                    db.insert(TABLE_TRANSACTION_NAME, "", cv);
+                } while(cur.moveToNext());
+            }
+            */
         }
     }
 }

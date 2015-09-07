@@ -69,7 +69,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void updateItemDisplay() {
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
-        accountTV.setText(DBAccess.getAccountNameById(item.getTo()));
+        accountTV.setText(DBAccess.getAccountNameById(item.getAccount()));
         categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
 
         String tmp = DBAccess.getVendorNameById(item.getVendor());
@@ -248,7 +248,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getTo()), DLG_ID_ACCOUNT);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount()), DLG_ID_ACCOUNT);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -340,7 +340,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     public void onSelectionDialogExit(int dlgId, long selectedId) {
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
-                item.setTo(selectedId);
+                item.setAccount(selectedId);
                 break;
             case DLG_ID_CATEGORY:
                 item.setCategory(selectedId);

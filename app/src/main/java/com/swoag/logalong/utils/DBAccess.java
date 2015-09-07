@@ -135,15 +135,14 @@ public class DBAccess {
 
     private static ContentValues setItemValues(LItem item) {
         ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_LOG_COLUMN_TYPE, item.getType());
+        cv.put(DBHelper.TABLE_COLUMN_TYPE, item.getType());
         cv.put(DBHelper.TABLE_COLUMN_STATE, item.getState());
         cv.put(DBHelper.TABLE_COLUMN_CATEGORY, item.getCategory());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_FROM, item.getFrom());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_TO, item.getTo());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_BY, item.getBy());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_VALUE, item.getValue());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP, item.getTimeStamp());
-        cv.put(DBHelper.TABLE_LOG_COLUMN_NOTE, item.getNote());
+        cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount());
+        cv.put(DBHelper.TABLE_COLUMN_MADEBY, item.getBy());
+        cv.put(DBHelper.TABLE_COLUMN_AMOUNT, item.getValue());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, item.getTimeStamp());
+        cv.put(DBHelper.TABLE_COLUMN_NOTE, item.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, item.getTag());
         cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getVendor());
 
@@ -151,16 +150,15 @@ public class DBAccess {
     }
 
     private static void getItemValues(Cursor cur, LItem item) {
-        item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TYPE)));
+        item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
         item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
-        item.setFrom(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_FROM)));
-        item.setTo(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_TO)));
+        item.setAccount(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT)));
         item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_CATEGORY)));
         item.setTag(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
         item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
-        item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_LOG_COLUMN_VALUE)));
-        item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE)));
-        item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP)));
+        item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_COLUMN_AMOUNT)));
+        item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
+        item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
     }
 
     private static int getItemList(ArrayList<LItem> LItems, Cursor cur, boolean sort) {
@@ -213,23 +211,23 @@ public class DBAccess {
 
     public static Cursor getActiveItemsCursorInRange(long start, long end) {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
                         + " WHERE State=? AND "
-                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ">=? AND "
-                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + LItem.LOG_STATE_ACTIVE, "" + start, "" + end});
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
         return cur;
     }
 
     private static Cursor getActiveItemsCursorInRangeSortBy(String column, long start, long end) {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
                         + " WHERE State=? AND "
-                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ">=? AND "
-                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + "<? ORDER BY "
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
                         + column + " ASC, "
-                        + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + LItem.LOG_STATE_ACTIVE, "" + start, "" + end});
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
         return cur;
     }
 
@@ -289,7 +287,7 @@ public class DBAccess {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setItemValues(item);
-            db.insert(DBHelper.TABLE_LOG_NAME, "", cv);
+            db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
             dirty = true;
         }
     }
@@ -298,7 +296,7 @@ public class DBAccess {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setItemValues(item);
-            db.update(DBHelper.TABLE_LOG_NAME, cv, "_id=?", new String[]{"" + item.getId()});
+            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + item.getId()});
             dirty = true;
         }
     }
@@ -306,7 +304,7 @@ public class DBAccess {
     public static void deleteItemById(long id) {
         LItem item = getLogItemById(id);
         if (item != null) {
-            item.setState(LItem.LOG_STATE_DELETED);
+            item.setState(DBHelper.STATE_DELETED);
             updateItem(item);
         }
     }
@@ -343,7 +341,7 @@ public class DBAccess {
         String str = "";
         LItem item = new LItem();
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME + " WHERE _id=?", new String[]{"" + id});
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE _id=?", new String[]{"" + id});
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find id: " + id + " from log table");
                 csr.close();
@@ -687,15 +685,10 @@ public class DBAccess {
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {
-                double value = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
-                int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
-                long to = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TO));
+                double value = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                 if (type == LItem.LOG_TYPE_INCOME) income += value;
                 else if (type == LItem.LOG_TYPE_EXPENSE) expense += value;
-                else if (id != 0) {
-                    if (to == id) income += value;
-                    else expense += value;
-                }
             } while (cursor.moveToNext());
         }
         summary.setBalance(income - expense);
@@ -882,33 +875,22 @@ public class DBAccess {
         HashMap<Integer, double[]> balance = new HashMap<Integer, double[]>();
         try {
             csr = db.rawQuery("SELECT "
-                            + DBHelper.TABLE_LOG_COLUMN_VALUE + ","
-                            + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + ","
-                            + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
-                            + DBHelper.TABLE_LOG_COLUMN_TO + " FROM "
-                            + DBHelper.TABLE_LOG_NAME + " WHERE "
-                            + DBHelper.TABLE_LOG_COLUMN_FROM + "=? OR "
-                            + DBHelper.TABLE_LOG_COLUMN_TO + "=? AND "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + id, "" + id, "" + LItem.LOG_STATE_ACTIVE});
+                            + DBHelper.TABLE_COLUMN_AMOUNT + ","
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
+                            + DBHelper.TABLE_COLUMN_TYPE + ","
+                            + DBHelper.TABLE_COLUMN_ACCOUNT + " FROM "
+                            + DBHelper.TABLE_TRANSACTION_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + id, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() > 0) {
                 csr.moveToFirst();
                 Calendar now = Calendar.getInstance();
                 do {
-                    int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
-                    double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
-                    switch (type) {
-                        case LItem.LOG_TYPE_EXPENSE:
-                            v = -v;
-                            break;
-                        case LItem.LOG_TYPE_TRNASACTION:
-                            if (csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TO)) != id) {
-                                v = -v;
-                            }
-                            break;
-                    }
-
-                    timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP));
+                    int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                    double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                    if (type == LItem.LOG_TYPE_EXPENSE) v = -v;
+                    timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
                     now.setTimeInMillis(timestamp);
 
                     int year = now.get(Calendar.YEAR);

@@ -108,8 +108,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         int type;
         logsCursor.moveToFirst();
         do {
-            v = logsCursor.getDouble(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
-            type = logsCursor.getInt(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+            v = logsCursor.getDouble(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+            type = logsCursor.getInt(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
             id = logsCursor.getLong(logsCursor.getColumnIndexOrThrow(column));
 
             if (hasLog && id != lastId) {
@@ -327,18 +327,21 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             tv = (TextView) mainView.findViewById(R.id.note);
             int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
             String vendor = DBAccess.getVendorNameById(vendorId);
-            String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_NOTE));
+            String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
-            if ((!note.isEmpty()) && (!vendor.isEmpty())) vendor += " - " + note;
-            else if (!note.isEmpty()) vendor = note;
+            if (vendor.isEmpty()) {
+                if ((note != null) && (!note.isEmpty())) vendor = note;
+            } else {
+                if ((note != null) && (!note.isEmpty())) vendor += " - " + note;
+            }
             tv.setText(vendor);
 
             tv = (TextView) mainView.findViewById(R.id.date);
-            long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TIMESTAMP));
+            long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
             tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
             tv = (TextView) mainView.findViewById(R.id.dollor);
-            int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
+            int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
             Resources rsc = getActivity().getResources();
             switch (type) {
                 case LItem.LOG_TYPE_EXPENSE:
@@ -351,7 +354,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     tv.setTextColor(rsc.getColor(R.color.base_blue));
                     break;
             }
-            double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
+            double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             tv.setText(String.format("%.2f", dollar));
 
             mainView.setOnClickListener(this);
@@ -559,8 +562,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     private void nextFilter() {
         switch (AppPersistency.viewTransactionFilter) {
             case AppPersistency.TRANSACTION_FILTER_ALL:
-//                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT;
-//                break;
+                AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT;
+                break;
             case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                 AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_BY_CATEGORY;
                 break;

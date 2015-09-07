@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import com.swoag.logalong.utils.DBHelper;
+
 public class LItem {
     private static final String TAG = LItem.class.getSimpleName();
 
@@ -8,16 +10,12 @@ public class LItem {
     public static final int LOG_TYPE_INCOME = 20;
     public static final int LOG_TYPE_TRNASACTION = 30;
 
-    public static final int LOG_STATE_ACTIVE = 100;
-    public static final int LOG_STATE_DELETED = 200;
-
     double value;
     int type;
     int state;
     long id;
     long category;
-    long from;
-    long to;
+    long account;
     long by;
     long tag;
     long vendor;
@@ -29,7 +27,7 @@ public class LItem {
         this.value = 0;
         this.note = "";
         this.id = 0;
-        this.state = LOG_STATE_ACTIVE;
+        this.state = DBHelper.STATE_ACTIVE;
     }
 
     public LItem(LItem item) {
@@ -37,8 +35,7 @@ public class LItem {
         this.value = item.value;
         this.type = item.type;
         this.category = item.category;
-        this.from = item.from;
-        this.to = item.to;
+        this.account = item.account;
         this.by = item.by;
         this.tag = item.tag;
         this.vendor = item.vendor;
@@ -50,8 +47,7 @@ public class LItem {
                 this.value == item.value &&
                 this.type == item.type &&
                 this.category == item.category &&
-                this.from == item.from &&
-                this.to == item.to &&
+                this.account == item.account &&
                 this.by == item.by &&
                 this.tag == item.tag &&
                 this.vendor == item.vendor &&
@@ -59,13 +55,12 @@ public class LItem {
     }
 
     public LItem(double value, int type, int category, int vendor, int tag,
-                 int from, int to, int by, String note) {
+                 int account, int by, String note) {
         this.timeStamp = System.currentTimeMillis();
         this.value = value;
         this.type = type;
         this.category = category;
-        this.from = from;
-        this.to = to;
+        this.account = account;
         this.by = by;
         this.note = note;
         this.tag = tag;
@@ -73,12 +68,11 @@ public class LItem {
     }
 
     public LItem(double value, int type, int category,
-                 int from, int to, int by, String note, long timeStamp) {
+                 int account, int by, String note, long timeStamp) {
         this.value = value;
         this.type = type;
         this.category = category;
-        this.from = from;
-        this.to = to;
+        this.account = account;
         this.by = by;
         this.note = note;
         this.timeStamp = timeStamp;
@@ -114,22 +108,6 @@ public class LItem {
 
     public void setCategory(long category) {
         this.category = category;
-    }
-
-    public long getFrom() {
-        return from;
-    }
-
-    public void setFrom(long from) {
-        this.from = from;
-    }
-
-    public long getTo() {
-        return to;
-    }
-
-    public void setTo(long to) {
-        this.to = to;
     }
 
     public long getBy() {
@@ -178,5 +156,13 @@ public class LItem {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getAccount() {
+        return account;
+    }
+
+    public void setAccount(long account) {
+        this.account = account;
     }
 }

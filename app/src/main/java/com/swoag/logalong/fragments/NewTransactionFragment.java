@@ -117,7 +117,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
     private void newLog(int type) {
         item = new LItem();
         item.setType(type);
-        item.setTo(4);
+        item.setAccount(4);
         item.setCategory(2);
 
         edit = new TransactionEdit(getActivity(), rootView, item, true, this);
