@@ -48,13 +48,28 @@ public class LAllBalances {
         getAllAccountIds();
         balances = new HashMap<Long, LAccountBalance>();
         for (long id : ids) {
-            LAccountBalance balance = new LAccountBalance(id);
-            if (forceScan) balance.scanBalance();
+            LAccountBalance balance = new LAccountBalance(id, forceScan);
+
             balances.put(id, balance);
 
             if (startDate > balance.getStartDate()) startDate = balance.getStartDate();
             if (endDate < balance.getEndDate()) endDate = balance.getEndDate();
         }
+    }
+
+    public double getBalance(int year, int month) {
+        double val = 0;
+        getAllAccountIds();
+        for (long id : ids) {
+            LAccountBalance balance = balances.get(id);
+            double[] b = balance.getYearBalance(year);
+            val += b[month];
+        }
+        return val;
+    }
+
+    public void getBalance(long accountId, int year, int month) {
+
     }
 
     public long getStartDate() {

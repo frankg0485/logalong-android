@@ -184,7 +184,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
 
-        allBalances = LAllBalances.getInstance();
+        //allBalances = LAllBalances.getInstance();
+        allBalances = LAllBalances.getInstance(true);
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
@@ -446,6 +447,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         LAccountSummary summary = new LAccountSummary();
         getBalance(summary);
         TextView mtv, btv, itv, etv;
+
         if (altView) {
             mtv = altMonthTV;
             btv = altBalanceTV;
@@ -473,6 +475,9 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private void getBalance(LAccountSummary summary) {
         DBAccess.getAccountSummaryForCurrentCursor(summary, 0, logsCursor);
+        //get balance for All accounts at current year/month
+        summary.setBalance(allBalances.getBalance(
+                AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
     }
 
     private boolean isAltView = false;

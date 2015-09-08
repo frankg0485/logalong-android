@@ -7,7 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
+import com.swoag.logalong.entities.LBoxer;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LTag;
@@ -782,20 +784,29 @@ public class DBAccess {
         return cats;
     }
 
-    public static ArrayList<String> getAccountBalance(long id) {
+    public static ArrayList<String> getAccountBalance(long id, LBoxer boxer) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         ArrayList<String> balance = new ArrayList<String>();
         try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=?",
+            csr = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_YEAR + ","
+                            + DBHelper.TABLE_COLUMN_BALANCE + " FROM "
+                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? ORDER BY "
+                            + DBHelper.TABLE_COLUMN_YEAR + " ASC",
                     new String[]{"" + id});
+            int startYear = -1, endYear = -1;
             if (csr != null && csr.getCount() > 0) {
                 csr.moveToFirst();
                 do {
-                    balance.add("" + csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_YEAR)));
+                    int year = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_YEAR));
+                    if (startYear == -1) startYear = year;
+                    endYear = year;
+                    balance.add("" + year);
                     balance.add(csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE)));
                 } while (csr.moveToNext());
+                csr.close();
+                boxer.x = startYear;
+                boxer.y = endYear;
             }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
@@ -867,11 +878,13 @@ public class DBAccess {
         return ret;
     }
 
-    public static HashMap<Integer, double[]> scanAccountById(long id) {
+    // scans through transaction to compile account monthly balances, from the very first transaction to the latest, in that order.
+    public static HashMap<Integer, double[]> scanAccountBalanceById(long id, LBoxer boxer) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
+        HashMap<Integer, double[]> balances = new HashMap<Integer, double[]>();
+
         long timestamp;
-        HashMap<Integer, double[]> balance = new HashMap<Integer, double[]>();
         try {
             csr = db.rawQuery("SELECT "
                             + DBHelper.TABLE_COLUMN_AMOUNT + ","
@@ -884,28 +897,77 @@ public class DBAccess {
                     new String[]{"" + id, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() > 0) {
                 csr.moveToFirst();
+
                 Calendar now = Calendar.getInstance();
+                double acc = 0;
+                int lastMonth = -1;
+                int lastYear = -1;
+                int month;
+                double[] lastAmount;
+                boxer.x = -1; //startYear
+                boxer.y = -1; //endYear
                 do {
                     int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
                     if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) v = -v;
                     timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+
                     now.setTimeInMillis(timestamp);
 
                     int year = now.get(Calendar.YEAR);
-                    double[] amount = balance.get(year);
+                    double[] amount = balances.get(year);
                     if (amount == null) {
                         amount = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-                        balance.put(year, amount);
+                        balances.put(year, amount);
+                    }
+                    acc += v;
+                    month = now.get(Calendar.MONTH);
+
+                    // fill up months in between
+                    if (((lastMonth != -1) && (lastMonth != month))
+                            || ((lastYear != -1) && (lastYear != year))) {
+                        int nextMonth = lastMonth + 1;
+                        int nextYear = lastYear;
+                        if (nextMonth > 11) {
+                            nextMonth = 0;
+                            nextYear++;
+                        }
+
+                        while (((nextMonth != month) || (nextYear != year))) {
+                            double[] am = balances.get(nextYear);
+                            if (am == null) {
+                                am = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                            }
+                            am[nextMonth] = acc;
+                            balances.put(nextYear, am);
+
+                            nextMonth++;
+                            if (nextMonth > 11) {
+                                nextYear++;
+                                nextMonth = 0;
+                            }
+                        }
                     }
 
-                    amount[now.get(Calendar.MONTH)] += v;
+                    amount[month] = acc;
+                    lastMonth = month;
+                    lastYear = year;
+                    lastAmount = amount;
+
+                    if (boxer.x == -1) boxer.x = year;
+                    boxer.y = year;
                 } while (csr.moveToNext());
                 csr.close();
+
+                // it is possible that the rest of months within the latest transaction year carry
+                // balance of zero, let's fix them now.
+                for (month = lastMonth + 1; month < 12; month++) {
+                    lastAmount[month] = acc;
+                }
             }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
-        return balance;
+        return balances;
     }
 }
