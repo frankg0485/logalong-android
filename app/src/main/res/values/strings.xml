@@ -3,10 +3,12 @@
     <string name="accounts">Accounts</string>
     <string name="action_settings">settings</string>
     <string name="additional_note_here">Additional note here</string>
+    <string name="annually">annually</string>
     <string name="app_name">LogAlong</string>
     <string name="categories">Categories</string>
     <string name="edit">Edit</string>
     <string name="login">Log In</string>
+    <string name="monthly">monthly</string>
     <string name="new_account">New Account</string>
     <string name="new_category">New Category</string>
     <string name="new_log">Logalong</string>

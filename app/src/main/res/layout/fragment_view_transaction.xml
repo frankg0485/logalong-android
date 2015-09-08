@@ -60,6 +60,17 @@
                     android:paddingTop="6dp"
                     android:src="@drawable/ic_menu_sort_by_size" />
 
+                <TextView
+                    android:id="@+id/monthly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:text="@string/monthly"
+                    android:textColor="#ccc"
+                    android:textSize="14dp"
+                    android:textStyle="bold" />
+
                 <ImageView
                     android:id="@+id/prev"
                     android:layout_width="60dp"

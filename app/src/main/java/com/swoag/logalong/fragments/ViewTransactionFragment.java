@@ -23,6 +23,7 @@ import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
@@ -39,9 +40,11 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private ViewFlipper viewFlipper, listViewFlipper;
     private View rootView, prevView, nextView, filterView;
+    private TextView monthlyView;
     private TransactionEdit edit;
 
     private LAllBalances allBalances;
+    private boolean bMonthly;
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
@@ -52,41 +55,41 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private void getLogsCursor() {
         String column = "";
+        long startMs, endMs;
+
         if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
             Calendar now = Calendar.getInstance();
             AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
         }
 
+        if (bMonthly) {
+            startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+            endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
+        } else {
+            startMs = -1;
+            endMs = -1;
+        }
+
         switch (AppPersistency.viewTransactionFilter) {
             case AppPersistency.TRANSACTION_FILTER_ALL:
-                logsCursor = DBAccess.getActiveItemsCursorInRange(
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                logsCursor = DBAccess.getActiveItemsCursorInRange(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                 column = DBHelper.TABLE_COLUMN_ACCOUNT;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByAccount(
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByAccount(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                 column = DBHelper.TABLE_COLUMN_CATEGORY;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByCategory(
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByCategory(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_TAG:
                 column = DBHelper.TABLE_COLUMN_TAG;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByTag(
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByTag(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
                 column = DBHelper.TABLE_COLUMN_VENDOR;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByVendor(
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth),
-                        getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1));
+                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByVendor(startMs, endMs);
                 break;
         }
 
@@ -190,6 +193,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
         filterView = setViewListener(rootView, R.id.filter);
+        monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
+        bMonthly = true;
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -225,6 +230,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         prevView = null;
         nextView = null;
         filterView = null;
+        monthlyView = null;
 
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
@@ -274,6 +280,19 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 break;
             case R.id.next:
                 showPrevNext(false);
+                break;
+            case R.id.monthly:
+                bMonthly = !bMonthly;
+                if (bMonthly) {
+                    monthlyView.setText(getActivity().getString(R.string.monthly));
+                    prevView.setEnabled(true);
+                    nextView.setEnabled(true);
+                } else {
+                    monthlyView.setText(getActivity().getString(R.string.annually));
+                    prevView.setEnabled(false);
+                    nextView.setEnabled(false);
+                }
+                refreshLogs();
                 break;
             default:
                 break;

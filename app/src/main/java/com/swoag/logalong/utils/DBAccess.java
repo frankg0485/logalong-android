@@ -212,23 +212,39 @@ public class DBAccess {
 
     public static Cursor getActiveItemsCursorInRange(long start, long end) {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE State=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        Cursor cur;
+        if (start == -1 || end == -1) {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE State=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE});
+        } else {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE State=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        }
         return cur;
     }
 
     private static Cursor getActiveItemsCursorInRangeSortBy(String column, long start, long end) {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE State=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
-                        + column + " ASC, "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        Cursor cur;
+        if (start == -1 || end == -1) {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE State=? ORDER BY "
+                            + column + " ASC, "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE});
+        } else {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE State=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
+                            + column + " ASC, "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        }
         return cur;
     }
 
