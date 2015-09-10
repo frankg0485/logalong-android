@@ -234,9 +234,7 @@ public class MainActivity extends LFragmentActivity {
             "Credit:Discover",
             "Credit:Master",
             "Credit:Visa",
-            "Credit:American Express",
-            "Giftcard:Panera",
-            "Giftcard:AMC30"
+            "Credit:American Express"
     };
 
     private static String[] categories = {
@@ -246,10 +244,12 @@ public class MainActivity extends LFragmentActivity {
             "Fuel",
             "Gift",
             "Grocery",
+            "Health",
+            "House",
             "Kids",
             "Sports",
-            "Travel",
-            "General"
+            "Other",
+            "Travel"
     };
 
     /*private static String[] tags = {
@@ -258,20 +258,7 @@ public class MainActivity extends LFragmentActivity {
 
     private static String[] vendors = {
             "Amazon",
-            "Billy Beef",
-            "Blaze Pizza",
-            "Chiptole",
-            "Corner Bakery",
-            "Costco",
-            "JCPenny",
-            "Jersy Mikes",
-            "Jimmy Johns",
-            "Kohls",
-            "NufNuf",
-            "Panera",
-            "Sam's Club",
-            "Shure Cafe",
-            "Walmart"
+            "Chiptole"
     };
 
     public static void addAccounts() {
@@ -324,7 +311,7 @@ public class MainActivity extends LFragmentActivity {
     }
 
     private void doOneTimeInit() {
-        initDb();
+        //initDb();
         /*if (LPreferences.getOneTimeInit()) return;
         LPreferences.setOneTimeInit(true);*/
     }

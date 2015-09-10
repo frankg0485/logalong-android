@@ -202,13 +202,13 @@ public class DBAccess {
     }
 
     //TODO: not thread safe?
-    /*public static Cursor getAllActiveItemsCursor() {
+    public static Cursor getAllActiveItemsCursor() {
         SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LOG_NAME
-                        + " WHERE State=? ORDER BY " + DBHelper.TABLE_LOG_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + LTransaction.LOG_STATE_ACTIVE});
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                        + " WHERE State=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + DBHelper.STATE_ACTIVE});
         return cur;
-    }*/
+    }
 
     public static Cursor getActiveItemsCursorInRange(long start, long end) {
         SQLiteDatabase db = getReadDb();

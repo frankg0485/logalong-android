@@ -14,6 +14,8 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBPorter;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
@@ -76,6 +78,8 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 break;
             case R.id.transaction:
                 newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
+                //DBPorter.importDb("logalong" + (DBHelper.DB_VERSION + 3) + ".db");
                 break;
 
             default:
