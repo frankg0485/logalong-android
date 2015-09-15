@@ -12,6 +12,7 @@ import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
@@ -77,9 +78,11 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 newLog(LTransaction.TRANSACTION_TYPE_INCOME);
                 break;
             case R.id.transaction:
-                newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                //newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
                 //DBPorter.importDb("logalong" + (DBHelper.DB_VERSION + 3) + ".db");
+                LProtocol.ui.connect();
+                LProtocol.ui.ping();
                 break;
 
             default:
