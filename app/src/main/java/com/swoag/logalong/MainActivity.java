@@ -13,6 +13,7 @@ import com.swoag.logalong.com.swoag.logalong.views.LViewPager;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LVendor;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
@@ -50,6 +51,7 @@ public class MainActivity extends LFragmentActivity {
         //AppPersistency.reauthenticate = true;
 
         //LNotification.dismiss();
+        LProtocol.ui.connect();
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -209,6 +211,7 @@ public class MainActivity extends LFragmentActivity {
 			loginReceiver = null;
 		}
 		LNotification.dismiss();*/
+        LProtocol.ui.disconnect();
         super.onDestroy();
     }
 

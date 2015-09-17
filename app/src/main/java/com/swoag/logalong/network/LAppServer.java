@@ -108,6 +108,7 @@ public class LAppServer {
                                 netLock.notifyAll();
                             }
 
+                            netTxBufPool.enable(true);
                             Thread netThread = new Thread(new NetThread());
                             netThread.start();
                         } catch (Exception e) {
@@ -130,6 +131,7 @@ public class LAppServer {
         synchronized (netLock) {
             while (netThreadState != STATE_EXIT) {
                 netThreadState = STATE_OFF;
+                netTxBufPool.enable(false);
                 netLock.notifyAll();
 
                 try {
@@ -157,7 +159,7 @@ public class LAppServer {
 
                             netTxBufPool.flush();
                             closeSockets();
-                            continue;
+                            break;
                         }
                         try {
                             netLock.wait();
@@ -214,6 +216,8 @@ public class LAppServer {
                 }
             }
 
+            // signal the end of connection.
+            lProtocol.parse(null);
             synchronized (netLock) {
                 netLock.notifyAll();
             }

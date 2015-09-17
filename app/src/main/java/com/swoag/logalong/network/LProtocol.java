@@ -61,6 +61,7 @@ public class LProtocol {
 
             case RSPS | RQST_SCRAMBLER_SEED:
                 LLog.d(TAG, "channel scrambler seed sent");
+                connected = true;
                 break;
         }
 
@@ -84,6 +85,11 @@ public class LProtocol {
 
     // parser runs in Network receiving thread, thus no GUI update here.
     public void parse(LBuffer buf) {
+        if (null == buf) {
+            connected = false;
+            return;
+        }
+
         if (pktBuf.getLen() > 0) {
             LLog.d(TAG, "packet pipe fragmented");
             pktBuf.append(buf);

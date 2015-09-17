@@ -41,6 +41,7 @@ public class LTransport {
         buf.putShortAutoInc((short) 0);
         buf.setLen(12);
 
+        buf.setBufOffset(0);
         scramble(buf, scrambler);
         server.putNetBuffer(buf);
         return true;
@@ -55,6 +56,7 @@ public class LTransport {
         buf.putShortAutoInc(rqst);
         buf.setLen(8);
 
+        buf.setBufOffset(0);
         scramble(buf, scrambler);
         server.putNetBuffer(buf);
         return true;

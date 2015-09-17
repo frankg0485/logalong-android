@@ -81,7 +81,6 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 //newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
                 //DBPorter.importDb("logalong" + (DBHelper.DB_VERSION + 3) + ".db");
-                LProtocol.ui.connect();
                 LProtocol.ui.ping();
                 break;
 
