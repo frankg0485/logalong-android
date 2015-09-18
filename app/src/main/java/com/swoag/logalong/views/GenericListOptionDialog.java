@@ -19,20 +19,20 @@ public class GenericListOptionDialog extends Dialog implements
 
     private Object context;
     private String title;
-    private boolean showCategories;
+    private int listId;
     private GenericListOptionDialogItf callback;
 
     public interface GenericListOptionDialogItf {
         public boolean onGenericListOptionDialogExit(final Object context, int viewId);
     }
 
-    public GenericListOptionDialog(Context parent, final Object context, String title, boolean showCategories,
+    public GenericListOptionDialog(Context parent, final Object context, String title, int listId,
                                    GenericListOptionDialogItf callback) {
         super(parent, android.R.style.Theme_Translucent_NoTitleBar);
         this.context = context;
         this.title = title;
         this.callback = callback;
-        this.showCategories = showCategories;
+        this.listId = listId;
     }
 
     @Override
@@ -48,10 +48,19 @@ public class GenericListOptionDialog extends Dialog implements
         findViewById(R.id.closeDialog).setOnClickListener(this);
         findViewById(R.id.remove).setOnClickListener(this);
         findViewById(R.id.rename).setOnClickListener(this);
-        View view = findViewById(R.id.associated_categories);
-        if (showCategories) {
-            view.setVisibility(View.VISIBLE);
-            view.setOnClickListener(this);
+        View view;
+        switch (listId) {
+            case R.id.vendors:
+                view = findViewById(R.id.associated_categories);
+                view.setVisibility(View.VISIBLE);
+                view.setOnClickListener(this);
+                break;
+
+            case R.id.accounts:
+                view = findViewById(R.id.share);
+                view.setVisibility(View.VISIBLE);
+                view.setOnClickListener(this);
+                break;
         }
     }
 

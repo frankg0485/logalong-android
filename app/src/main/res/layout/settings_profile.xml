@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/userView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:paddingTop="10dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/user_name"
+            android:textColor="@color/gray_text_color"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/userName"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:ellipsize="end"
+            android:gravity="center_vertical|right"
+            android:hint="@string/user_name_hint"
+            android:imeOptions="flagNoExtractUi"
+            android:singleLine="true"
+            android:textColor="@color/base_text_color" />
+
+        <ImageView
+            android:id="@+id/cancelName"
+            android:layout_width="45dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="10dp"
+            android:clickable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_action_cancel" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/passView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginRight="15dp"
+            android:gravity="center_vertical"
+            android:text="@string/password"
+            android:textColor="@color/gray_text_color"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/userPass"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:ellipsize="end"
+            android:gravity="center_vertical|right"
+            android:hint="@string/password_hint"
+            android:imeOptions="flagNoExtractUi"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColor="@color/base_text_color" />
+
+        <ImageView
+            android:id="@+id/cancelPass"
+            android:layout_width="45dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="10dp"
+            android:clickable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_action_cancel" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="15dp"
+        android:paddingLeft="10dp">
+
+        <CheckBox
+            android:id="@+id/showPass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@drawable/btn_check_holo_light"
+            android:text="@string/show_password"
+            android:textColor="@color/light_gray_text_color" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/errorMsg"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="20dp"
+        android:singleLine="false"
+        android:textColor="@color/red_text_color"
+        android:textSize="16sp"
+        android:visibility="invisible" />
+</LinearLayout>
+
+

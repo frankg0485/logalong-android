@@ -16,7 +16,7 @@ public class SettingsFragment extends LFragment implements
     private static final String TAG = SettingsFragment.class.getSimpleName();
 
     ViewFlipper viewFlipper;
-    View accountsV, categoriesV, vendorsV, tagsV;
+    View profileV, accountsV, categoriesV, vendorsV, tagsV;
     View backV, editV, addV;
 
     @Override
@@ -28,6 +28,7 @@ public class SettingsFragment extends LFragment implements
         viewFlipper.setDisplayedChild(0);
 
         View view = rootView.findViewById(R.id.settings);
+        profileV = setViewListener(view, R.id.profile);
         accountsV = setViewListener(view, R.id.accounts);
         categoriesV = setViewListener(view, R.id.categories);
         vendorsV = setViewListener(view, R.id.vendors);
@@ -70,14 +71,39 @@ public class SettingsFragment extends LFragment implements
 
     @Override
     public void onClick(View v) {
+        View tmpView;
+        View viewSettings = viewFlipper.findViewById(R.id.viewSettings);
         MainActivity actv;
         switch (v.getId()) {
+            case R.id.profile:
+                viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
+                viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
+                viewSettings.findViewById(R.id.save).setVisibility(View.VISIBLE);
+                tmpView = viewSettings.findViewById(R.id.profileSettings);
+                tmpView.setVisibility(View.VISIBLE);
+
+                ProfileEdit profileEdit = new ProfileEdit(getActivity(), viewSettings);
+
+                viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+                viewFlipper.showNext();
+
+                actv = (MainActivity) getActivity();
+                actv.disablePager();
+                break;
+
             case R.id.accounts:
             case R.id.categories:
             case R.id.vendors:
             case R.id.tags:
+                viewSettings.findViewById(R.id.listView).setVisibility(View.VISIBLE);
+                viewSettings.findViewById(R.id.add).setVisibility(View.VISIBLE);
+                viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
+                viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
+
                 GenericListEdit listEdit = new GenericListEdit(getActivity(),
-                        viewFlipper.findViewById(R.id.viewSettings), v.getId(), this);
+                        viewSettings, v.getId(), this);
+
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
                 viewFlipper.showNext();

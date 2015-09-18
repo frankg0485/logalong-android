@@ -12,4 +12,6 @@ public class AppPersistency {
     public static int viewTransactionYear = -1;
     public static int viewTransactionMonth = -1;
     public static int viewTransactionFilter = TRANSACTION_FILTER_ALL;
+
+    public static boolean profileSet = false;
 }
