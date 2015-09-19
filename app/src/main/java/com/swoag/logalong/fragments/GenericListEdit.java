@@ -314,30 +314,25 @@ public class GenericListEdit implements View.OnClickListener,
                     return true;
 
                 case R.id.share:
-                    if (AppPersistency.profileSet) {
-                        ids = new int[]{
-                                R.layout.account_share_dialog,
-                                R.layout.account_share_item,
-                                R.id.title,
-                                R.id.save,
-                                R.id.cancel,
-                                R.id.selectall,
-                                R.id.checkBox1,
-                                R.id.name,
-                                R.id.list,
-                                R.string.select_categories};
-                        columns = new String[]{
-                                DBHelper.TABLE_COLUMN_NAME
-                        };
+                    ids = new int[]{
+                            R.layout.account_share_dialog,
+                            R.layout.account_share_item,
+                            R.id.title,
+                            R.id.save,
+                            R.id.cancel,
+                            R.id.selectall,
+                            R.id.checkBox1,
+                            R.id.name,
+                            R.id.list,
+                            R.string.select_categories};
+                    columns = new String[]{
+                            DBHelper.TABLE_COLUMN_NAME
+                    };
 
-                        selectedIds = DBAccess.getVendorCategories(tag.id);
-                        LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                                (activity, context, selectedIds, this, ids, columns);
-                        shareAccountDialog.show();
-                    } else {
-                        LReminderDialog reminderDialog = new LReminderDialog(activity, activity.getString(R.string.reminder_empty_profile), this);
-                        reminderDialog.show();
-                    }
+                    selectedIds = DBAccess.getVendorCategories(tag.id);
+                    LShareAccountDialog shareAccountDialog = new LShareAccountDialog
+                            (activity, context, selectedIds, this, ids, columns);
+                    shareAccountDialog.show();
                     return true;
             }
             return false;

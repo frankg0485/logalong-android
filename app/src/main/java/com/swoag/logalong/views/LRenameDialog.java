@@ -31,7 +31,7 @@ public class LRenameDialog extends Dialog implements
     private Object id;
 
     public interface LRenameDialogItf {
-        public void onRenameDialogExit(Object id, boolean renamed, String hint);
+        public void onRenameDialogExit(Object id, boolean renamed, String name);
     }
 
     public LRenameDialog(Context context, Object id, LRenameDialogItf callback,

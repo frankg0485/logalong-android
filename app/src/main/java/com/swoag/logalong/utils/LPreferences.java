@@ -4,11 +4,30 @@ package com.swoag.logalong.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.swoag.logalong.LApp;
+
 public class LPreferences {
     private static final String SHARED_PREF_NAME = "LogAlong";
+    private static final String USER_NAME = "UserName";
+    private static final String USER_ID = "UserId";
 
-    static final String N_A = "N_A";
+    public static int getUserId() {
+        return getPreference(LApp.ctx, USER_ID, (int) 0);
+    }
 
+    public static void setUserId(int userId) {
+        savePreference(LApp.ctx, USER_ID, userId);
+    }
+
+    public static String getUserName() {
+        return getPreference(LApp.ctx, USER_NAME, "");
+    }
+
+    public static void setUserName(String userName) {
+        savePreference(LApp.ctx, USER_NAME, userName);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////
     public static String getPreference(Context context, String key, String defaultValue) {
         try {
             SharedPreferences settings = getPreferences(context);

@@ -16,6 +16,7 @@ import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 public class MainActivity extends LFragmentActivity {
@@ -52,6 +53,9 @@ public class MainActivity extends LFragmentActivity {
 
         //LNotification.dismiss();
         LProtocol.ui.connect();
+        if (LPreferences.getUserName().isEmpty()) {
+            LProtocol.ui.requestUserName();
+        }
 
         doOneTimeInit();
         setContentView(R.layout.top);

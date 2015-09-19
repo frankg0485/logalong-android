@@ -2,11 +2,13 @@ package com.swoag.logalong.network;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Random;
 
@@ -15,26 +17,33 @@ public class LProtocol {
     private static int scrambler;
     private static boolean connected;
 
+    //////////////////////////////////////////////////////////////////////
+    public static final String INTENT_CREATE_USER_DONE = "com.swoag.logalong.create_user_done";
+
     public static final int PACKET_MAX_PAYLOAD_LEN = 1456;
     public static final int PACKET_MAX_LEN = (PACKET_MAX_PAYLOAD_LEN + 4);
 
     public static final short PACKET_SIGNATURE1 = (short) 0xffaa;
 
     private static final short PAYLOAD_DIRECTION_RQST = 0;
-    private static final short PAYLOAD_DIRECTION_RSPS = (short)0x8000;
+    private static final short PAYLOAD_DIRECTION_RSPS = (short) 0x8000;
 
     private static final short PAYLOAD_TYPE_MASK = 0x1800;
     private static final short PAYLOAD_TYPE_SHIFT = 11;
-    private static final short PAYLOAD_VALUE_MASK =  0x07ff;
+    private static final short PAYLOAD_VALUE_MASK = 0x07ff;
 
-    public static final short  PLAYLOAD_TYPE_SYS = (short)(2 << PAYLOAD_TYPE_SHIFT);
-    public static final short  PLAYLOAD_TYPE_USER = (short)(3 << PAYLOAD_TYPE_SHIFT);
+    public static final short PLAYLOAD_TYPE_SYS = (short) (2 << PAYLOAD_TYPE_SHIFT);
+    public static final short PLAYLOAD_TYPE_USER = (short) (3 << PAYLOAD_TYPE_SHIFT);
 
-	private static final short RQST_SYS = PLAYLOAD_TYPE_SYS | PAYLOAD_DIRECTION_RQST;
+    private static final short RQST_SYS = PLAYLOAD_TYPE_SYS | PAYLOAD_DIRECTION_RQST;
     private static final short RQST_USER = PLAYLOAD_TYPE_USER | PAYLOAD_DIRECTION_RQST;
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
 
+    private static final short RSPS_OK = (short) 0x0010;
+    private static final short RSPS_ERROR = (short) 0xffff;
+
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
+    private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
 
@@ -62,6 +71,28 @@ public class LProtocol {
             case RSPS | RQST_SCRAMBLER_SEED:
                 LLog.d(TAG, "channel scrambler seed sent");
                 connected = true;
+                break;
+
+            case RSPS | RQST_CREATE_USER:
+                LTransport.scramble(pkt, scrambler);
+                pkt.skip(6);
+                status = pkt.getShortAutoInc();
+                if (status == RSPS_OK) {
+                    int userId = pkt.getIntAutoInc();
+                    short bytes = pkt.getShortAutoInc();
+                    String userName = pkt.getStringAutoInc(bytes);
+                    LLog.d(TAG, "user created as: " + userName);
+
+                    LPreferences.setUserId(userId);
+                    LPreferences.setUserName(userName);
+
+                    //rspsIntent = new Intent(INTENT_CREATE_USER_DONE);
+                    //rspsIntent.putExtra("UserId", userId);
+                    //rspsIntent.putExtra("UserName", userName);
+                    //LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                } else {
+                    LLog.w(TAG, "unable to create user");
+                }
                 break;
         }
 
@@ -160,6 +191,10 @@ public class LProtocol {
 
         public static boolean ping() {
             return LTransport.send_rqst(server, RQST_PING, 0);
+        }
+
+        public static boolean requestUserName() {
+            return LTransport.send_rqst(server, RQST_CREATE_USER, 0);
         }
     }
 }

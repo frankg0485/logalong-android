@@ -6,6 +6,7 @@
     <string name="annually">annually</string>
     <string name="app_name">LogAlong</string>
     <string name="categories">Categories</string>
+    <string name="change_user_name">Change User Name</string>
     <string name="edit">Edit</string>
     <string name="login">Log In</string>
     <string name="monthly">monthly</string>
@@ -13,13 +14,13 @@
     <string name="new_category">New Category</string>
     <string name="new_log">Logalong</string>
     <string name="new_tag">New Tag</string>
+    <string name="new_user_name">New User Name</string>
     <string name="new_vendor">New Vendor</string>
     <string name="password">Password</string>
     <string name="password_hint">password</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="reminder">Reminder</string>
-    <string name="reminder_empty_profile">Please go to \'Settings -> Profile\' to complete the settings there then come back ...</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
     <string name="rename_account">Rename Account</string>

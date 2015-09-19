@@ -18,7 +18,7 @@ import java.net.Socket;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    private static final String serverIp = "192.168.1.108";
+    private static final String serverIp = "192.168.1.107";
     private static final int serverPort = 1723;
 
     private Socket socket = null;
