@@ -6,6 +6,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.utils.AppPersistency;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -18,8 +19,6 @@ public class LProtocol {
     private static boolean connected;
 
     //////////////////////////////////////////////////////////////////////
-    public static final String INTENT_CREATE_USER_DONE = "com.swoag.logalong.create_user_done";
-
     public static final int PACKET_MAX_PAYLOAD_LEN = 1456;
     public static final int PACKET_MAX_LEN = (PACKET_MAX_PAYLOAD_LEN + 4);
 
@@ -35,6 +34,10 @@ public class LProtocol {
     public static final short PLAYLOAD_TYPE_SYS = (short) (2 << PAYLOAD_TYPE_SHIFT);
     public static final short PLAYLOAD_TYPE_USER = (short) (3 << PAYLOAD_TYPE_SHIFT);
 
+    public static int PACKET_PAYLOAD_LENGTH(int payloadLen) {
+        return ((((payloadLen) + 3) / 4) * 4);
+    }
+
     private static final short RQST_SYS = PLAYLOAD_TYPE_SYS | PAYLOAD_DIRECTION_RQST;
     private static final short RQST_USER = PLAYLOAD_TYPE_USER | PAYLOAD_DIRECTION_RQST;
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
@@ -44,6 +47,8 @@ public class LProtocol {
 
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
+    private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
+    private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
 
@@ -85,14 +90,44 @@ public class LProtocol {
 
                     LPreferences.setUserId(userId);
                     LPreferences.setUserName(userName);
-
-                    //rspsIntent = new Intent(INTENT_CREATE_USER_DONE);
-                    //rspsIntent.putExtra("UserId", userId);
-                    //rspsIntent.putExtra("UserName", userName);
-                    //LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 } else {
                     LLog.w(TAG, "unable to create user");
                 }
+                break;
+            case RSPS | RQST_GET_SHARE_USER_BY_ID:
+                LTransport.scramble(pkt, scrambler);
+                pkt.skip(6);
+                status = pkt.getShortAutoInc();
+                rspsIntent = new Intent(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_ID);
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                if (status == RSPS_OK) {
+                    int userId = pkt.getIntAutoInc();
+                    short bytes = pkt.getShortAutoInc();
+                    String userName = pkt.getStringAutoInc(bytes);
+                    rspsIntent.putExtra("id", userId);
+                    rspsIntent.putExtra("name", userName);
+                    LLog.d(TAG, "user returned as: " + userName);
+                }
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                break;
+
+            case RSPS | RQST_GET_SHARE_USER_BY_NAME:
+                LTransport.scramble(pkt, scrambler);
+                pkt.skip(6);
+                status = pkt.getShortAutoInc();
+                rspsIntent = new Intent(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME);
+                if (status == RSPS_OK) {
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)0);
+                    int userId = pkt.getIntAutoInc();
+                    short bytes = pkt.getShortAutoInc();
+                    String userName = pkt.getStringAutoInc(bytes);
+                    rspsIntent.putExtra("id", userId);
+                    rspsIntent.putExtra("name", userName);
+                    LLog.d(TAG, "user returned as: " + userName);
+                } else {
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)status);
+                }
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
         }
 
@@ -195,6 +230,14 @@ public class LProtocol {
 
         public static boolean requestUserName() {
             return LTransport.send_rqst(server, RQST_CREATE_USER, 0);
+        }
+
+        public static boolean getShareUserById(int id) {
+            return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_ID, id, scrambler);
+        }
+
+        public static boolean getShareUserByName(String name) {
+            return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
         }
     }
 }

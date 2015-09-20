@@ -47,4 +47,6 @@
     <string name="user_name">User Name</string>
     <string name="user_name_hint">user name</string>
     <string name="vendors">Vendors</string>
+    <string name="warning_get_share_user_time_out">Unable to connect to server</string>
+    <string name="warning_unable_to_find_share_user">Unable to find user</string>
 </resources>

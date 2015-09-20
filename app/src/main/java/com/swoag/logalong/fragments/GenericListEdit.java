@@ -228,17 +228,6 @@ public class GenericListEdit implements View.OnClickListener,
                     break;
 
                 case R.id.share:
-                    int[] ids = new int[]{
-                            R.layout.account_share_dialog,
-                            R.layout.account_share_item,
-                            R.id.title,
-                            R.id.save,
-                            R.id.cancel,
-                            R.id.selectall,
-                            R.id.checkBox1,
-                            R.id.name,
-                            R.id.list,
-                            R.string.share_account_with};
                     ArrayList<LUser> users = new ArrayList<LUser>();
                     HashSet<Integer> userSet = DBAccess.getAllAccountsShareUser();
                     for (int ii : userSet) {
@@ -254,7 +243,7 @@ public class GenericListEdit implements View.OnClickListener,
                     }
 
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                            (activity, null, selectedUsers, this, ids, users);
+                            (activity, null, selectedUsers, this, users);
                     shareAccountDialog.show();
             }
         }
