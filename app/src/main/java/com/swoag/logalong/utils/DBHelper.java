@@ -19,7 +19,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_BALANCE = "Balance";
     public static final String TABLE_COLUMN_CATEGORY = "Category";
     public static final String TABLE_COLUMN_ICON = "Icon";
-    public static final String TABLE_COLUMN_INFO = "Info";
+    public static final String TABLE_COLUMN_SHARE = "Share";
     public static final String TABLE_COLUMN_MADEBY = "MadeBy";
     public static final String TABLE_COLUMN_NAME = "Name";
     public static final String TABLE_COLUMN_NUMBER = "Number";
@@ -41,10 +41,10 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_ACCOUNT = "CREATE TABLE " + TABLE_ACCOUNT_NAME +
             "( _id integer primary key autoincrement," +
-            TABLE_COLUMN_NAME + " TEXT," +
-            TABLE_COLUMN_INFO + " TEXT," +
-            TABLE_COLUMN_NUMBER + " INTEGER," +
             TABLE_COLUMN_STATE + " INTEGER," +
+            TABLE_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_SHARE + " TEXT," +
+            TABLE_COLUMN_NUMBER + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
 

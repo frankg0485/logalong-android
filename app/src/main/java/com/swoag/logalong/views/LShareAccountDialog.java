@@ -14,24 +14,28 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AlphabetIndexer;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.utils.LLog;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class LShareAccountDialog extends Dialog
         implements AdapterView.OnItemClickListener, View.OnClickListener {
     private static final String TAG = LShareAccountDialog.class.getSimpleName();
-    private Cursor mCursor;
-    private int idColumnIndex;
-
     public Context context;
     private ListView mList;
 
@@ -50,39 +54,32 @@ public class LShareAccountDialog extends Dialog
     private int[] ids;
     private LShareAccountDialog.LShareAccountDialogItf callback;
 
-    /* 0: mainEntryColumn;
-     * 1: subEntryColumn;
-     */
-    private String[] columns;
-    private HashSet<Long> selectedIds;
+    private ArrayList<LUser> users;
+    private HashSet<Integer> selectedIds;
     private Object obj;
+    private EditText editText;
 
-    private void init(Context context, Object obj, HashSet<Long> selectedIds,
+    private void init(Context context, Object obj, HashSet<Integer> selectedIds,
                       LShareAccountDialog.LShareAccountDialogItf callback,
-                      int[] ids, String[] columns) {
+                      int[] ids, ArrayList<LUser> users) {
         this.context = context;
         this.callback = callback;
         this.obj = obj;
         this.selectedIds = selectedIds;
 
-        this.mCursor = callback.onMultiSelectionGetCursor("");
-        this.idColumnIndex = this.mCursor.getColumnIndex("_id");
-
         this.ids = ids;
-        this.columns = columns;
+        this.users = users;
     }
 
     public interface LShareAccountDialogItf {
-        public Cursor onMultiSelectionGetCursor(String column);
-
-        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections);
+        public void onShareAccountDialogExit(Object obj, HashSet<Integer> selections);
     }
 
-    public LShareAccountDialog(Context context, Object obj, HashSet<Long> selectedIds,
+    public LShareAccountDialog(Context context, Object obj, HashSet<Integer> selectedIds,
                                LShareAccountDialog.LShareAccountDialogItf callback,
-                               int[] ids, String[] columns) {
+                               int[] ids, ArrayList<LUser> users) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        init(context, obj, selectedIds, callback, ids, columns);
+        init(context, obj, selectedIds, callback, ids, users);
     }
 
     @Override
@@ -90,20 +87,23 @@ public class LShareAccountDialog extends Dialog
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(ids[0]);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         ((LinearLayout) findViewById(ids[5])).setOnClickListener(this);
         ((TextView) findViewById(ids[3])).setOnClickListener(this);
         ((TextView) findViewById(ids[4])).setOnClickListener(this);
         ((TextView) findViewById(ids[2])).setText(context.getString(ids[9]));
+        editText = (EditText) findViewById(R.id.newname);
 
         try {
             mList = (ListView) findViewById(ids[8]);
             mList.setOnItemClickListener(this);
 
             mList.setFastScrollEnabled(true);
-            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                    mCursor, ids[1], columns[0], null/*columns[1]*/,
-                    ids[7], ids[6]));
+            //mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
+            //        mCursor, ids[1], columns[0], null/*columns[1]*/,
+            //        ids[7], ids[6]));
+            mList.setAdapter(new MyArrayAdapter(context.getApplicationContext(), users, ids[1], ids[7], ids[6]));
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -152,15 +152,13 @@ public class LShareAccountDialog extends Dialog
                 CheckBox cb = (CheckBox) v.findViewById(ids[6]);
                 cb.setChecked(!cb.isChecked());
 
-                this.mCursor.moveToFirst();
-                for (int ii = 0; ii < this.mCursor.getCount(); ii++) {
+                for (int ii = 0; ii < this.users.size(); ii++) {
 
                     if (cb.isChecked()) {
-                        selectedIds.add(this.mCursor.getLong(idColumnIndex));
+                        selectedIds.add(users.get(ii).getId());
                     } else {
-                        selectedIds.remove(this.mCursor.getLong(idColumnIndex));
+                        selectedIds.remove(users.get(ii).getId());
                     }
-                    this.mCursor.moveToNext();
                 }
                 mList.invalidateViews();
             } catch (Exception e) {
@@ -176,8 +174,7 @@ public class LShareAccountDialog extends Dialog
 
     @Override
     public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-        this.mCursor.moveToPosition(arg2);
-        long id = this.mCursor.getLong(idColumnIndex);
+        int id = users.get(arg2).getId();
         boolean checked = !selectedIds.contains(id);
         if (checked) {
             selectedIds.add(id);
@@ -191,92 +188,47 @@ public class LShareAccountDialog extends Dialog
     }
 
     private void leave() {
-        callback.onMultiSelectionDialogExit(obj, selectedIds);
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+        } catch (Exception e) {
+        }
+        callback.onShareAccountDialogExit(obj, selectedIds);
         dismiss();
     }
 
-    /**
-     * Adapter that exposes data from a Cursor to a ListView widget.
-     */
-    private class MyCursorAdapter extends CursorAdapter implements SectionIndexer {
-        private AlphabetIndexer mAlphabetIndexer;
+    private class MyArrayAdapter extends ArrayAdapter<LUser> {
+        private ArrayList<LUser> users;
+        private LayoutInflater inflater;
         private int layoutId;
-        private String column1;
-        private String column2;
-        private String column3;
-        private int textId1;
-        private int checkboxId;
+        int textId1;
+        int checkboxId;
 
-        private void init(Context context, Cursor cursor,
-                          int layoutId, String column1, String column2,
-                          int textId1, int checkboxId) {
+        public MyArrayAdapter(Context context, ArrayList<LUser> users, int layoutId, int textId1, int checkboxId) {
+            super(context, 0, users);
+            inflater = LayoutInflater.from(context);
             this.layoutId = layoutId;
-            this.column1 = column1;
-            this.column2 = column2;
-            this.textId1 = textId1;
-            this.checkboxId = checkboxId;
-            mAlphabetIndexer = new AlphabetIndexer(cursor, cursor.getColumnIndex(column1),
-                    " ABCDEFGHIJKLMNOPQRTSUVWXYZ");
-            mAlphabetIndexer.setCursor(cursor);
         }
 
-        public MyCursorAdapter(Context context, Cursor cursor,
-                               int layoutId, String column1, String column2,
-                               int textId1, int checkboxId) {
-            //TODO: deprecated API is used here for max OS compatibility, provide alternative
-            //      using LoaderManager with a CursorLoader.
-            //super(context, cursor, 0);
-            super(context, cursor, false);
-
-            init(context, cursor, layoutId, column1, column2, textId1, checkboxId);
-        }
-
-        /**
-         * Performs a binary search or cache lookup
-         * to find the first row that matches a given section's starting letter.
-         */
         @Override
-        public int getPositionForSection(int sectionIndex) {
-            return mAlphabetIndexer.getPositionForSection(sectionIndex);
+        public boolean isEnabled(int position) {
+            return false;
         }
 
-        /**
-         * Returns the section index for a given position in the list
-         * by querying the item and comparing it with all items in the section array.
-         */
         @Override
-        public int getSectionForPosition(int position) {
-            return mAlphabetIndexer.getSectionForPosition(position);
-        }
+        public View getView(int position, View convertView, ViewGroup parent) {
+            LUser user = getItem(position);
+            if (null == convertView) {
+                convertView = inflater.inflate(layoutId, null);
+            }
 
-        /**
-         * Returns the section array constructed from the alphabet provided in the constructor.
-         */
-        @Override
-        public Object[] getSections() {
-            return mAlphabetIndexer.getSections();
-        }
+            TextView txtView = (TextView) convertView.findViewById(textId1);
+            txtView.setText(user.getName());
 
-        /**
-         * Bind an existing view to the data pointed to by cursor
-         */
-        @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            TextView txtView = (TextView) view.findViewById(textId1);
-            txtView.setText(cursor.getString(cursor.getColumnIndex(column1)));
+            CheckBox cb = (CheckBox) convertView.findViewById(checkboxId);
+            cb.setChecked(selectedIds.contains(user.getId()));
 
-            CheckBox cb = (CheckBox) view.findViewById(checkboxId);
-            cb.setChecked(selectedIds.contains(cursor.getLong(idColumnIndex)));
-        }
-
-        /**
-         * Makes a new view to hold the data pointed to by cursor.
-         */
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            LayoutInflater inflater = LayoutInflater.from(context);
-            View newView = inflater.inflate(layoutId, parent, false);
-            return newView;
+            return convertView;
         }
     }
 }

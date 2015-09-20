@@ -119,28 +119,6 @@
                         android:textSize="@dimen/settings_option_text_size"
                         android:textStyle="bold" />
                 </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/share"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/list_item_height"
-                    android:layout_marginTop="2dp"
-                    android:background="@drawable/row_selector"
-                    android:clickable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:padding="10dp"
-                        android:text="@string/share"
-                        android:textColor="@color/base_text_color"
-                        android:textSize="@dimen/settings_option_text_size"
-                        android:textStyle="bold" />
-                </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </RelativeLayout>

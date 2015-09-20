@@ -10,12 +10,21 @@
     android:paddingLeft="5dp"
     android:paddingTop="10dp">
 
+    <ImageView
+        android:id="@+id/share"
+        android:layout_width="30dp"
+        android:layout_height="@dimen/list_item_height"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp"
+        android:src="@drawable/ic_action_share"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
         android:layout_weight="1"
         android:ellipsize="marquee"
         android:gravity="center_vertical"

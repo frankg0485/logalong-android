@@ -27,6 +27,14 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME, userName);
     }
 
+    public static String getShareUserName (int userId) {
+        return getPreference(LApp.ctx, USER_NAME + "." + userId, "");
+    }
+
+    public static void setShareUserName (int userId, String name) {
+        savePreference(LApp.ctx, USER_NAME + "." + userId, name);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////
     public static String getPreference(Context context, String key, String defaultValue) {
         try {

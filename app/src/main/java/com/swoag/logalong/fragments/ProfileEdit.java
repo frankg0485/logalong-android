@@ -41,9 +41,11 @@ public class ProfileEdit implements View.OnClickListener,
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.userName:
+                /*
                 LRenameDialog dialog = new LRenameDialog(activity, null, this, activity.getString(R.string.change_user_name),
                         userName, activity.getString(R.string.new_user_name));
                 dialog.show();
+                */
                 break;
         }
     }

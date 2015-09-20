@@ -55,12 +55,6 @@ public class GenericListOptionDialog extends Dialog implements
                 view.setVisibility(View.VISIBLE);
                 view.setOnClickListener(this);
                 break;
-
-            case R.id.accounts:
-                view = findViewById(R.id.share);
-                view.setVisibility(View.VISIBLE);
-                view.setOnClickListener(this);
-                break;
         }
     }
 

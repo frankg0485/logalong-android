@@ -16,11 +16,13 @@ import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
 import com.swoag.logalong.views.LNewAccountDialog;
@@ -28,6 +30,8 @@ import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LShareAccountDialog;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class GenericListEdit implements View.OnClickListener,
@@ -191,7 +195,15 @@ public class GenericListEdit implements View.OnClickListener,
 
             View v = view.findViewById(R.id.option);
             v.setOnClickListener(this);
-            v.setTag(new VTag(cursor.getLong(0), name));
+            VTag tag = new VTag(cursor.getLong(0), name);
+            v.setTag(tag);
+
+            if (listId == R.id.accounts) {
+                v = view.findViewById(R.id.share);
+                v.setVisibility(View.VISIBLE);
+                v.setOnClickListener(this);
+                v.setTag(tag);
+            }
         }
 
         /**
@@ -207,9 +219,52 @@ public class GenericListEdit implements View.OnClickListener,
         public void onClick(View v) {
             VTag tag = (VTag) v.getTag();
 
-            optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
-                    listId, this);
-            optionDialog.show();
+            switch (v.getId()) {
+                case R.id.option:
+
+                    optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
+                            listId, this);
+                    optionDialog.show();
+                    break;
+
+                case R.id.share:
+                    int[] ids = new int[]{
+                            R.layout.account_share_dialog,
+                            R.layout.account_share_item,
+                            R.id.title,
+                            R.id.save,
+                            R.id.cancel,
+                            R.id.selectall,
+                            R.id.checkBox1,
+                            R.id.name,
+                            R.id.list,
+                            R.string.share_account_with};
+                    ArrayList<LUser> users = new ArrayList<LUser>();
+                    HashSet<Integer> userSet = DBAccess.getAllAccountsShareUser();
+                    for (int ii : userSet) {
+                        users.add(new LUser(LPreferences.getShareUserName(ii), ii));
+                    }
+
+                    LAccount account = DBAccess.getAccountById(tag.id);
+                    HashSet<Integer> selectedUsers = new HashSet<Integer>();
+                    if (account.getShareIds() != null) {
+                        for (int ii : account.getShareIds()) {
+                            selectedUsers.add(ii);
+                        }
+                    }
+
+                    LShareAccountDialog shareAccountDialog = new LShareAccountDialog
+                            (activity, null, selectedUsers, this, ids, users);
+                    shareAccountDialog.show();
+            }
+        }
+
+
+        @Override
+        public void onShareAccountDialogExit(Object obj, HashSet<Integer> selections) {
+            for (Integer ii : selections) {
+                //
+            }
         }
 
         @Override
@@ -311,28 +366,6 @@ public class GenericListEdit implements View.OnClickListener,
                     LMultiSelectionDialog dialog = new LMultiSelectionDialog
                             (activity, context, selectedIds, this, ids, columns);
                     dialog.show();
-                    return true;
-
-                case R.id.share:
-                    ids = new int[]{
-                            R.layout.account_share_dialog,
-                            R.layout.account_share_item,
-                            R.id.title,
-                            R.id.save,
-                            R.id.cancel,
-                            R.id.selectall,
-                            R.id.checkBox1,
-                            R.id.name,
-                            R.id.list,
-                            R.string.select_categories};
-                    columns = new String[]{
-                            DBHelper.TABLE_COLUMN_NAME
-                    };
-
-                    selectedIds = DBAccess.getVendorCategories(tag.id);
-                    LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                            (activity, context, selectedIds, this, ids, columns);
-                    shareAccountDialog.show();
                     return true;
             }
             return false;

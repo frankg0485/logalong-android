@@ -14,7 +14,6 @@
         android:layout_height="wrap_content"
         android:layout_weight="@integer/dialog_width_weight"
         android:background="@drawable/button_bgd"
-        android:minHeight="180dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -92,6 +91,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/editbox_bgd"
                     android:gravity="top"
+                    android:hint="@string/hint_user_name"
                     android:imeOptions="flagNoExtractUi"
                     android:padding="10dp"
                     android:singleLine="true"

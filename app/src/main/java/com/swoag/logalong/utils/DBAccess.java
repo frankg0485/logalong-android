@@ -126,12 +126,14 @@ public class DBAccess {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
+        cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         return cv;
     }
 
     private static void getAccountValues(Cursor cur, LAccount account) {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
     }
 
     private static ContentValues setItemValues(LTransaction item) {
@@ -548,6 +550,32 @@ public class DBAccess {
         return id;
     }
 
+    public static HashSet<Integer> getAllAccountsShareUser() {
+        LAccount account = new LAccount();
+        HashSet<Integer> set = new HashSet<Integer>();
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                String str = cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE));
+                if (str != null) {
+                    account.setSharedIdsString(str);
+                    if (account.getShareIds() != null) {
+                        for (int ii : account.getShareIds()) {
+                            set.add(ii);
+                        }
+                    }
+                }
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
+    }
+
     public static Cursor getAllAccountsCursor() {
         SQLiteDatabase db = getReadDb();
         Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME
@@ -633,6 +661,7 @@ public class DBAccess {
             return -1;
         }
         account.setName(name);
+        //account.setState(DBHelper.STATE_ACTIVE);
 
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
