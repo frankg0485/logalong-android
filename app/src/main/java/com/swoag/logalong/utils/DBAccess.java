@@ -498,6 +498,7 @@ public class DBAccess {
 
             csr.moveToFirst();
             getAccountValues(csr, account);
+            account.setId(id);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
             account = null;
@@ -877,6 +878,21 @@ public class DBAccess {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
         return balance;
+    }
+
+    public static boolean updateAccount(LAccount account) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = setAccountValues(account);
+                db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + account.getId()});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean updateAccountBalance(long id, int year, String balance) {

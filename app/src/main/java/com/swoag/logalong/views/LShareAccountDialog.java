@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.Image;
@@ -34,11 +35,14 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
+import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 import org.w3c.dom.Text;
@@ -48,7 +52,7 @@ import java.util.HashSet;
 
 public class LShareAccountDialog extends Dialog
         implements AdapterView.OnItemClickListener, View.OnClickListener, TextWatcher,
-        LBroadcastReceiver.BroadcastReceiverListener {
+        LBroadcastReceiver.BroadcastReceiverListener, DialogInterface.OnDismissListener {
     private static final String TAG = LShareAccountDialog.class.getSimpleName();
     public Context context;
     private ListView mList;
@@ -64,8 +68,11 @@ public class LShareAccountDialog extends Dialog
     private ImageView addIV;
     private CountDownTimer countDownTimer;
     private MyArrayAdapter myArrayAdapter;
+    private BroadcastReceiver broadcastReceiver;
 
-    private void init(Context context, Object obj, HashSet<Integer> selectedIds,
+    private LAccount account;
+
+    private void init(Context context, LAccount account, HashSet<Integer> selectedIds,
                       LShareAccountDialog.LShareAccountDialogItf callback,
                       ArrayList<LUser> users) {
         this.context = context;
@@ -73,17 +80,18 @@ public class LShareAccountDialog extends Dialog
         this.obj = obj;
         this.selectedIds = selectedIds;
         this.users = users;
+        this.account = account;
     }
 
     public interface LShareAccountDialogItf {
         public void onShareAccountDialogExit(Object obj, HashSet<Integer> selections);
     }
 
-    public LShareAccountDialog(Context context, Object obj, HashSet<Integer> selectedIds,
+    public LShareAccountDialog(Context context, LAccount account, HashSet<Integer> selectedIds,
                                LShareAccountDialog.LShareAccountDialogItf callback,
                                ArrayList<LUser> users) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        init(context, obj, selectedIds, callback, users);
+        init(context, account, selectedIds, callback, users);
     }
 
     @Override
@@ -93,7 +101,7 @@ public class LShareAccountDialog extends Dialog
         setContentView(R.layout.account_share_dialog);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        LBroadcastReceiver.getInstance().register(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME, this);
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME, this);
 
         findViewById(R.id.selectall).setOnClickListener(this);
         findViewById(R.id.save).setOnClickListener(this);
@@ -125,6 +133,14 @@ public class LShareAccountDialog extends Dialog
     }
 
     @Override
+    public void onDismiss(DialogInterface dialog) {
+        if (broadcastReceiver != null) {
+            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
+            broadcastReceiver = null;
+        }
+    }
+
+    @Override
     public void onBroadcastReceiverReceive(String action, int ret, Intent intent) {
         countDownTimer.cancel();
 
@@ -134,8 +150,11 @@ public class LShareAccountDialog extends Dialog
             LUser user = new LUser(name, id);
             users.add(user);
             selectedIds.add(id);
-
             myArrayAdapter.notifyDataSetChanged();
+
+            account.addShareUser(user.getId());
+            DBAccess.updateAccount(account);
+            LPreferences.setShareUserName(id, name);
 
             editText.setText("");
             hideIME();

@@ -16,9 +16,6 @@ public class LBroadcastReceiver {
     public static final String ACTION_GET_SHARE_USER_BY_ID = "com.swoag.logalong.gsubi";
     public static final String ACTION_GET_SHARE_USER_BY_NAME = "com.swoag.logalong.gsubn";
 
-    private BroadcastReceiver broadcastReceiver;
-    private HashMap<String, BroadcastReceiverListener> listenerHashMap;
-
     private static LBroadcastReceiver instance;
 
     public static LBroadcastReceiver getInstance() {
@@ -33,22 +30,33 @@ public class LBroadcastReceiver {
     }
 
     private LBroadcastReceiver() {
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                int ret = intent.getIntExtra(EXTRA_RET_CODE, (int) 0);
-                listenerHashMap.get(action).onBroadcastReceiverReceive(action, ret, intent);
-            }
-        };
-        listenerHashMap = new HashMap<String, BroadcastReceiverListener>();
     }
 
-    public void register(String action, BroadcastReceiverListener listener) {
-        listenerHashMap.put(action, listener);
+    private class MyBroadcastReceiver extends BroadcastReceiver {
+        private BroadcastReceiverListener listener;
+
+        private MyBroadcastReceiver(BroadcastReceiverListener listener) {
+            this.listener = listener;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            int ret = intent.getIntExtra(EXTRA_RET_CODE, (int) 0);
+            listener.onBroadcastReceiverReceive(action, ret, intent);
+        }
+    }
+
+    public BroadcastReceiver register(String action, BroadcastReceiverListener listener) {
+        BroadcastReceiver broadcastReceiver = new MyBroadcastReceiver(listener);
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(action);
         LocalBroadcastManager.getInstance(LApp.ctx).registerReceiver(broadcastReceiver, intentFilter);
+        return broadcastReceiver;
+    }
+
+    public void unregister(BroadcastReceiver receiver) {
+        LocalBroadcastManager.getInstance(LApp.ctx).unregisterReceiver(receiver);
     }
 }

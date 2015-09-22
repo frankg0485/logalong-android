@@ -243,7 +243,7 @@ public class GenericListEdit implements View.OnClickListener,
                     }
 
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                            (activity, null, selectedUsers, this, users);
+                            (activity, account, selectedUsers, this, users);
                     shareAccountDialog.show();
             }
         }
