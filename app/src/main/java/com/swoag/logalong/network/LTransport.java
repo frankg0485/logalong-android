@@ -30,6 +30,33 @@ public class LTransport {
         scramble(buf.getBuf(), buf.getBufOffset() + 6, len - 6, scrambler);
     }
 
+    public static boolean send_rqst(LAppServer server, short rqst, int datai, String datas, int scrambler) {
+        LBuffer buf = server.getNetBuffer();
+        if (buf == null) return false;
+        buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
+        buf.putShortAutoInc((short) 0);
+        buf.putShortAutoInc(rqst);
+        buf.putIntAutoInc(datai);
+
+        int len = 0;
+        try {
+            len = (short) datas.getBytes("UTF-8").length;
+        } catch (Exception e) {
+        }
+
+        buf.putShortAutoInc((short) len);
+        buf.putStringAutoInc(datas);
+
+        len = LProtocol.PACKET_PAYLOAD_LENGTH(buf.getBufOffset());
+        buf.putShortAt((short) len, 2);
+        buf.setLen(len);
+
+        buf.setBufOffset(0);
+        scramble(buf, scrambler);
+        server.putNetBuffer(buf);
+        return true;
+    }
+
     public static boolean send_rqst(LAppServer server, short rqst, String data, int scrambler) {
         LBuffer buf = server.getNetBuffer();
         if (buf == null) return false;

@@ -101,7 +101,9 @@ public class LShareAccountDialog extends Dialog
         setContentView(R.layout.account_share_dialog);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
-        broadcastReceiver = LBroadcastReceiver.getInstance().register(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME, this);
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME,
+                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER}, this);
 
         findViewById(R.id.selectall).setOnClickListener(this);
         findViewById(R.id.save).setOnClickListener(this);
@@ -141,29 +143,50 @@ public class LShareAccountDialog extends Dialog
     }
 
     @Override
-    public void onBroadcastReceiverReceive(String action, int ret, Intent intent) {
+    public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         countDownTimer.cancel();
+        switch (action) {
+            case LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME:
+                if (ret == LProtocol.RSPS_OK) {
+                    int id = intent.getIntExtra("id", 0);
+                    String name = intent.getStringExtra("name");
+                    LProtocol.ui.shareAccountWithUser(id, account.getName());
+                } else {
+                    displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_find_share_user));
+                    progressBar.setVisibility(View.GONE);
+                    addIV.setVisibility(View.VISIBLE);
+                    editText.setEnabled(true);
+                }
+                break;
 
-        if (ret == 0) {
-            int id = intent.getIntExtra("id", 0);
-            String name = intent.getStringExtra("name");
-            LUser user = new LUser(name, id);
-            users.add(user);
-            selectedIds.add(id);
-            myArrayAdapter.notifyDataSetChanged();
+            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
+                if (ret == LProtocol.RSPS_OK) {
+                    int id = intent.getIntExtra("id", 0);
+                    String name = LPreferences.getShareUserName(id);
+                    String accountName = intent.getStringExtra("accountName");
+                    if (!accountName.contentEquals(account.getName())) {
+                        LLog.w(TAG, "spurious event");
+                        break;
+                    }
 
-            account.addShareUser(user.getId());
-            DBAccess.updateAccount(account);
-            LPreferences.setShareUserName(id, name);
+                    LUser user = new LUser(name, id);
+                    users.add(user);
+                    selectedIds.add(id);
+                    myArrayAdapter.notifyDataSetChanged();
 
-            editText.setText("");
-            hideIME();
-        } else {
-            displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_find_share_user));
+                    account.addShareUser(user.getId(), LAccount.ACCOUNT_SHARE_INVITED);
+                    DBAccess.updateAccount(account);
+                    LPreferences.setShareUserName(id, name);
+
+                    editText.setText("");
+                    hideIME();
+                } else {
+                    displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
+                }
+                progressBar.setVisibility(View.GONE);
+                addIV.setVisibility(View.VISIBLE);
+                editText.setEnabled(true);
         }
-        progressBar.setVisibility(View.GONE);
-        addIV.setVisibility(View.VISIBLE);
-        editText.setEnabled(true);
     }
 
     private void do_add_share_user(String name) {

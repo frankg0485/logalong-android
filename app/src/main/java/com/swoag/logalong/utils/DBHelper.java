@@ -65,7 +65,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_TIMESTAMP + " INTEGER," +
             TABLE_COLUMN_TYPE + " INTEGER," +
             TABLE_COLUMN_STATE + " INTEGER," +
-            TABLE_COLUMN_MADEBY + " TEXT," +
+            TABLE_COLUMN_MADEBY + " INTEGER," +
             TABLE_COLUMN_NOTE + " TEXT," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";

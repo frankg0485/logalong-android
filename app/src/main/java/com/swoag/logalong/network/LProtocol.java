@@ -42,13 +42,15 @@ public class LProtocol {
     private static final short RQST_USER = PLAYLOAD_TYPE_USER | PAYLOAD_DIRECTION_RQST;
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
 
-    private static final short RSPS_OK = (short) 0x0010;
-    private static final short RSPS_ERROR = (short) 0xffff;
+    public static final short RSPS_OK = (short) 0x0010;
+    public static final short RSPS_ERROR = (short) 0xffff;
 
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
     private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
     private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
+    private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
+    private static final short RQST_POLL = RQST_SYS | 0x777;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
 
@@ -66,7 +68,11 @@ public class LProtocol {
         int origOffset = pkt.getBufOffset();
         short total = pkt.getShortAt(origOffset + 2);
         short rsps = pkt.getShortAt(origOffset + 4);
-        short status;
+        int status;
+
+        LTransport.scramble(pkt, scrambler);
+        pkt.skip(6);
+        status = pkt.getShortAutoInc();
 
         switch (rsps) {
             case RSPS | RQST_PING:
@@ -79,9 +85,6 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_CREATE_USER:
-                LTransport.scramble(pkt, scrambler);
-                pkt.skip(6);
-                status = pkt.getShortAutoInc();
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
@@ -95,10 +98,7 @@ public class LProtocol {
                 }
                 break;
             case RSPS | RQST_GET_SHARE_USER_BY_ID:
-                LTransport.scramble(pkt, scrambler);
-                pkt.skip(6);
-                status = pkt.getShortAutoInc();
-                rspsIntent = new Intent(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_ID);
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_ID));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
@@ -112,23 +112,32 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:
-                LTransport.scramble(pkt, scrambler);
-                pkt.skip(6);
-                status = pkt.getShortAutoInc();
-                rspsIntent = new Intent(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME);
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME));
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)0);
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
                     rspsIntent.putExtra("id", userId);
                     rspsIntent.putExtra("name", userName);
                     LLog.d(TAG, "user returned as: " + userName);
-                } else {
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)status);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
+
+            case RSPS | RQST_SHARE_ACCOUNT_WITH_USER:
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER));
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                if (status == RSPS_OK) {
+                    int userId = pkt.getIntAutoInc();
+                    short bytes = pkt.getShortAutoInc();
+                    String accountName = pkt.getStringAutoInc(bytes);
+                    rspsIntent.putExtra("id", userId);
+                    rspsIntent.putExtra("accountName", accountName);
+                }
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                break;
+
         }
 
         pkt.setBufOffset(origOffset);
@@ -238,6 +247,10 @@ public class LProtocol {
 
         public static boolean getShareUserByName(String name) {
             return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
+        }
+
+        public static boolean shareAccountWithUser(int userId, String accountName) {
+            return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName, scrambler);
         }
     }
 }

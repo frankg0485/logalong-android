@@ -12,11 +12,17 @@ import com.swoag.logalong.LApp;
 import java.util.HashMap;
 
 public class LBroadcastReceiver {
-    public static final String EXTRA_RET_CODE = "drt";
-    public static final String ACTION_GET_SHARE_USER_BY_ID = "com.swoag.logalong.gsubi";
-    public static final String ACTION_GET_SHARE_USER_BY_NAME = "com.swoag.logalong.gsubn";
+    public static final String EXTRA_RET_CODE = "ert";
+    private static final String ACTION_BASE = "com.swoag.logalong.action.";
+    public static final int ACTION_GET_SHARE_USER_BY_ID = 1;
+    public static final int ACTION_GET_SHARE_USER_BY_NAME = 2;
+    public static final int ACTION_SHARE_ACCOUNT_WITH_USER = 3;
 
     private static LBroadcastReceiver instance;
+
+    public static String action(int id) {
+        return ACTION_BASE + id;
+    }
 
     public static LBroadcastReceiver getInstance() {
         if (instance == null) {
@@ -26,7 +32,7 @@ public class LBroadcastReceiver {
     }
 
     public interface BroadcastReceiverListener {
-        public void onBroadcastReceiverReceive(String action, int ret, Intent intent);
+        public void onBroadcastReceiverReceive(int action, int ret, Intent intent);
     }
 
     private LBroadcastReceiver() {
@@ -41,17 +47,30 @@ public class LBroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
+            String str = intent.getAction();
+            String ss[] = str.split("\\.");
+            int action = Integer.parseInt(ss[ss.length - 1]);
             int ret = intent.getIntExtra(EXTRA_RET_CODE, (int) 0);
             listener.onBroadcastReceiverReceive(action, ret, intent);
         }
     }
 
-    public BroadcastReceiver register(String action, BroadcastReceiverListener listener) {
+    public BroadcastReceiver register(int action, BroadcastReceiverListener listener) {
         BroadcastReceiver broadcastReceiver = new MyBroadcastReceiver(listener);
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(action);
+        intentFilter.addAction(ACTION_BASE + action);
+        LocalBroadcastManager.getInstance(LApp.ctx).registerReceiver(broadcastReceiver, intentFilter);
+        return broadcastReceiver;
+    }
+
+    public BroadcastReceiver register(int[] actions, BroadcastReceiverListener listener) {
+        BroadcastReceiver broadcastReceiver = new MyBroadcastReceiver(listener);
+
+        IntentFilter intentFilter = new IntentFilter();
+        for (int act : actions) {
+            intentFilter.addAction(ACTION_BASE + act);
+        }
         LocalBroadcastManager.getInstance(LApp.ctx).registerReceiver(broadcastReceiver, intentFilter);
         return broadcastReceiver;
     }

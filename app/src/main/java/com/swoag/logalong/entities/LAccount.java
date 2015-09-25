@@ -114,17 +114,20 @@ public class LAccount {
         }
     }
 
-    public void addShareUser(int id) {
+    public void addShareUser(int id, int state) {
         if (shareIds == null || shareStates == null) {
             shareIds = new ArrayList<Integer>();
             shareStates = new ArrayList<Integer>();
         }
 
         for (int ii = 0; ii < shareIds.size(); ii++) {
-            if (shareIds.get(ii) == id) return;
+            if (shareIds.get(ii) == id) {
+                shareStates.set(ii, state);
+                return;
+            }
         }
 
-        shareStates.add(ACCOUNT_SHARE_INVITED);
+        shareStates.add(state);
         shareIds.add(id);
     }
 

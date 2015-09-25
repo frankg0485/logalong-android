@@ -161,6 +161,7 @@ public class DBAccess {
         item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
         item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_COLUMN_AMOUNT)));
         item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
+        item.setBy(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
     }
 

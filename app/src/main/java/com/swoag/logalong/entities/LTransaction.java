@@ -12,6 +12,7 @@ public class LTransaction {
 
     double value;
     int type;
+    int by;
     int state;
     long id;
     long category;
@@ -19,14 +20,14 @@ public class LTransaction {
     long tag;
     long vendor;
     long timeStamp;
-    String by;
+
     String note;
 
     public LTransaction() {
         this.timeStamp = System.currentTimeMillis();
         this.value = 0;
         this.note = "";
-        this.by = "";
+        this.by = 0;
         this.id = 0;
         this.state = DBHelper.STATE_ACTIVE;
     }
@@ -67,11 +68,11 @@ public class LTransaction {
         this.vendor = vendor;
         this.timeStamp = timeStamp;
         this.note = "";
-        this.by = "";
+        this.by = 0;
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
-                        long account, String by, String note) {
+                        long account, int by, String note) {
         this.timeStamp = System.currentTimeMillis();
         this.state = DBHelper.STATE_ACTIVE;
 
@@ -157,11 +158,11 @@ public class LTransaction {
         this.timeStamp = timeStamp;
     }
 
-    public String getBy() {
+    public int getBy() {
         return by;
     }
 
-    public void setBy(String by) {
+    public void setBy(int by) {
         this.by = by;
     }
 
