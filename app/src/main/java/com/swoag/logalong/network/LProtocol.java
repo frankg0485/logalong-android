@@ -47,6 +47,7 @@ public class LProtocol {
 
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
+    private static final short RQST_LOGIN = RQST_SYS | 0x105;
     private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
     private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
@@ -97,6 +98,15 @@ public class LProtocol {
                     LLog.w(TAG, "unable to create user");
                 }
                 break;
+
+            case RSPS | RQST_LOGIN:
+                if (status == RSPS_OK) {
+                    LLog.d(TAG, "user logged in");
+                } else {
+                    LLog.w(TAG, "unable to login");
+                }
+                break;
+
             case RSPS | RQST_GET_SHARE_USER_BY_ID:
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_ID));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
@@ -239,6 +249,10 @@ public class LProtocol {
 
         public static boolean requestUserName() {
             return LTransport.send_rqst(server, RQST_CREATE_USER, 0);
+        }
+
+        public static boolean login() {
+            return LTransport.send_rqst(server, RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
         }
 
         public static boolean getShareUserById(int id) {

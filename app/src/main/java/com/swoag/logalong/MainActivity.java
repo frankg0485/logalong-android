@@ -55,6 +55,8 @@ public class MainActivity extends LFragmentActivity {
         LProtocol.ui.connect();
         if (LPreferences.getUserName().isEmpty()) {
             LProtocol.ui.requestUserName();
+        } else {
+            LProtocol.ui.login();
         }
 
         doOneTimeInit();
