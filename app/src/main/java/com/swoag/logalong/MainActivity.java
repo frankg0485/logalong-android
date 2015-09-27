@@ -1,7 +1,10 @@
 package com.swoag.logalong;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.BroadcastReceiver;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.view.View;
@@ -9,17 +12,20 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.swoag.logalong.adapters.LPagerAdapter;
-import com.swoag.logalong.com.swoag.logalong.views.LViewPager;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LViewPager;
 
-public class MainActivity extends LFragmentActivity {
+
+public class MainActivity extends LFragmentActivity
+        implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     FragmentManager fragmentManager;
@@ -29,6 +35,11 @@ public class MainActivity extends LFragmentActivity {
     View spinner;
     TextView errorMsgV;
     //LoginReceiverHelper loginReceiver;
+
+    Handler pollHandler;
+    Runnable pollRunnable;
+    static final int NETWORK_POLLING_MS = 5000;
+    private BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +69,19 @@ public class MainActivity extends LFragmentActivity {
         } else {
             LProtocol.ui.login();
         }
+
+        pollHandler = new Handler() {
+        };
+        pollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                LProtocol.ui.poll();
+                pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+            }
+        };
+        pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH}, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -211,6 +235,14 @@ public class MainActivity extends LFragmentActivity {
 
     @Override
     protected void onDestroy() {
+        pollHandler.removeCallbacks(pollRunnable);
+        pollRunnable = null;
+        pollHandler = null;
+        if (broadcastReceiver != null) {
+            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
+            broadcastReceiver = null;
+        }
+
         LLog.d(TAG, "destroyed");
         /*if (loginReceiver != null) {
             loginReceiver.unregister();
@@ -323,5 +355,17 @@ public class MainActivity extends LFragmentActivity {
         //initDb();
         /*if (LPreferences.getOneTimeInit()) return;
         LPreferences.setOneTimeInit(true);*/
+    }
+
+    @Override
+    public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
+        switch (action) {
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+                int userId = intent.getIntExtra("id", 0);
+                String userName = intent.getStringExtra("userName");
+                String accountName = intent.getStringExtra("accountName");
+                //TODO: ask for user confirmation
+
+        }
     }
 }

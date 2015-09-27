@@ -1,4 +1,4 @@
-package com.swoag.logalong.com.swoag.logalong.views;
+package com.swoag.logalong.views;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;

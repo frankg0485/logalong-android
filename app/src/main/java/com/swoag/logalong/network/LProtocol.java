@@ -54,6 +54,7 @@ public class LProtocol {
     private static final short RQST_POLL = RQST_SYS | 0x777;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
+    private static final short CMD_SHARE_ACCOUNT_REQUEST = 0x0004;
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -148,6 +149,30 @@ public class LProtocol {
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
+            case RSPS | RQST_POLL:
+                if (status == RSPS_OK) {
+                    int cacheId = pkt.getIntAutoInc();
+                    short cmd = pkt.getShortAutoInc();
+                    switch (cmd) {
+                        case CMD_SHARE_ACCOUNT_REQUEST:
+                            int userId = pkt.getIntAutoInc();
+                            short bytes = pkt.getShortAutoInc();
+                            String userName = pkt.getStringAutoInc(bytes);
+                            bytes = pkt.getShortAutoInc();
+                            String accountName = pkt.getStringAutoInc(bytes);
+                            LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName);
+
+                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH));
+                            rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                            rspsIntent.putExtra("id", userId);
+                            rspsIntent.putExtra("userName", userName);
+                            rspsIntent.putExtra("accountName", accountName);
+                            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                            break;
+                    }
+                } else {
+                    LLog.d(TAG, "idle");
+                }
         }
 
         pkt.setBufOffset(origOffset);
@@ -265,6 +290,10 @@ public class LProtocol {
 
         public static boolean shareAccountWithUser(int userId, String accountName) {
             return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName, scrambler);
+        }
+
+        public static boolean poll() {
+            return LTransport.send_rqst(server, RQST_POLL, scrambler);
         }
     }
 }

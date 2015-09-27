@@ -71,7 +71,7 @@
                 android:layout_height="1dp"
                 android:background="@color/base_bgd_separator_color" />
 
-            <com.swoag.logalong.com.swoag.logalong.views.LViewPager
+            <com.swoag.logalong.views.LViewPager
                 android:id="@+id/pager"
                 android:layout_width="match_parent"
                 android:layout_height="fill_parent" />

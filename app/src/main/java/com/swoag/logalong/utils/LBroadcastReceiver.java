@@ -17,6 +17,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_GET_SHARE_USER_BY_ID = 1;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 2;
     public static final int ACTION_SHARE_ACCOUNT_WITH_USER = 3;
+    public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 4;
 
     private static LBroadcastReceiver instance;
 
