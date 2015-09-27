@@ -81,7 +81,8 @@ public class MainActivity extends LFragmentActivity
         };
         pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH}, this);
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
+                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE}, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -361,11 +362,53 @@ public class MainActivity extends LFragmentActivity
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+                int cacheId = intent.getIntExtra("cacheId", 0);
                 int userId = intent.getIntExtra("id", 0);
                 String userName = intent.getStringExtra("userName");
                 String accountName = intent.getStringExtra("accountName");
                 //TODO: ask for user confirmation
 
+                LPreferences.setShareUserName(userId, userName);
+                LAccount account = DBAccess.getAccountByName(accountName);
+                if (account == null) {
+                    account = new LAccount();
+                    account.setName(accountName);
+                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                    DBAccess.addAccount(account);
+                } else {
+                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                    DBAccess.updateAccount(account);
+                }
+
+                LProtocol.ui.pollAck(cacheId);
+                LProtocol.ui.confirmAccountShare(userId, accountName);
+
+                // now push all existing records
+
+                break;
+
+            case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                userId = intent.getIntExtra("id", 0);
+                userName = intent.getStringExtra("userName");
+                accountName = intent.getStringExtra("accountName");
+                //TODO: notify user
+
+                LPreferences.setShareUserName(userId, userName);
+                account = DBAccess.getAccountByName(accountName);
+                if (account == null) {
+                    //TODO: the account name has been changed??
+                    LLog.w(TAG, "warning: account renamed, account sharing ignored");
+                } else {
+                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                    DBAccess.updateAccount(account);
+                }
+
+                LProtocol.ui.pollAck(cacheId);
+
+                // now push all existing records
+
+                break;
         }
     }
 }

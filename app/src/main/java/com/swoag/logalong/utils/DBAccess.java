@@ -508,6 +508,31 @@ public class DBAccess {
         return account;
     }
 
+    public static LAccount getAccountByName(String name) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LAccount account = new LAccount();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getAccountValues(csr, account);
+            account.setId(csr.getLong(0));
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with name: " + name + ":" + e.getMessage());
+            account = null;
+        }
+        if (csr != null) csr.close();
+        return account;
+    }
+
     public static long addCategory(LCategory category) {
         long id = -1;
         synchronized (dbLock) {
