@@ -267,6 +267,14 @@ public class DBAccess {
         return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_VENDOR, start, end);
     }
 
+    public static Cursor getActiveItemsCursorByAccount(long accountId) {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                        + " WHERE State=? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+        return cur;
+    }
+
     public static int getAllActiveItems(ArrayList<LTransaction> LTransactions, boolean sort) {
         synchronized (dbLock) {
             /*
@@ -301,6 +309,27 @@ public class DBAccess {
                         */
             return LTransaction;
         }
+    }
+
+    public static LTransaction getItemByUserTimestamp(int madeBy, long timestamp) {
+        SQLiteDatabase db = getReadDb();
+
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
+                        DBHelper.TABLE_COLUMN_MADEBY + " =? AND " +
+                        DBHelper.TABLE_COLUMN_TIMESTAMP + " =?",
+                new String[]{"" + madeBy, "" + timestamp});
+        if (cur != null && cur.getCount() > 0) {
+            if (cur.getCount() != 1) {
+                LLog.e(TAG, "unexpected error: duplicated record");
+            }
+            cur.moveToFirst();
+            LTransaction item = new LTransaction();
+            getItemValues(cur, item);
+            cur.close();
+            return item;
+        }
+        if (cur != null) cur.close();
+        return null;
     }
 
     public static void addItem(LTransaction item) {
@@ -531,6 +560,56 @@ public class DBAccess {
         }
         if (csr != null) csr.close();
         return account;
+    }
+
+    public static LCategory getCategoryByName(String name) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LCategory category = new LCategory();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getCategoryValues(csr, category);
+            category.setId(csr.getLong(0));
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get category with name: " + name + ":" + e.getMessage());
+            category = null;
+        }
+        if (csr != null) csr.close();
+        return category;
+    }
+
+    public static LVendor getVendorByName(String name) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LVendor vendor = new LVendor();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getVendorValues(csr, vendor);
+            vendor.setId(csr.getLong(0));
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
+            vendor = null;
+        }
+        if (csr != null) csr.close();
+        return vendor;
     }
 
     public static long addCategory(LCategory category) {

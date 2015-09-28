@@ -3,6 +3,7 @@ package com.swoag.logalong;
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
@@ -14,14 +15,19 @@ import android.widget.TextView;
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LViewPager;
+
+import java.util.HashMap;
 
 
 public class MainActivity extends LFragmentActivity
@@ -38,7 +44,7 @@ public class MainActivity extends LFragmentActivity
 
     Handler pollHandler;
     Runnable pollRunnable;
-    static final int NETWORK_POLLING_MS = 5000;
+    static final int NETWORK_POLLING_MS = 30000;
     private BroadcastReceiver broadcastReceiver;
 
     @Override
@@ -81,8 +87,11 @@ public class MainActivity extends LFragmentActivity
         };
         pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_POLL_ACKED,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
-                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE}, this);
+                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
+                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE,
+                LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD}, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -358,9 +367,56 @@ public class MainActivity extends LFragmentActivity
         LPreferences.setOneTimeInit(true);*/
     }
 
+    private void pushAllAccountRecords(int userId, LAccount account) {
+        Cursor cursor = DBAccess.getActiveItemsCursorByAccount(account.getId());
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            do {
+                String category, vendor;
+                category = DBAccess.getCategoryNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
+                vendor = DBAccess.getVendorNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+                int madeBy = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY));
+                if (madeBy == 0) {
+                    madeBy = LPreferences.getUserId();
+                }
+
+                String record = DBHelper.TABLE_COLUMN_TYPE + "=" + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)) + ","
+                        + DBHelper.TABLE_COLUMN_AMOUNT + "=" + cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ","
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "=" + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
+                        + DBHelper.TABLE_COLUMN_MADEBY + "=" + madeBy + ","
+                        + DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ","
+                        + DBHelper.TABLE_COLUMN_CATEGORY + "=" + category + ","
+                        + DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor;
+                LProtocol.ui.shareTransitionRecord(userId, record);
+            } while (cursor.moveToNext());
+        }
+    }
+
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
+            case LBroadcastReceiver.ACTION_POLL_ACKED:
+                pollHandler.removeCallbacks(pollRunnable);
+                pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+                LProtocol.ui.poll();
+                break;
+
+            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
+                if (ret == LProtocol.RSPS_OK) {
+                    int id = intent.getIntExtra("id", 0);
+                    String name = LPreferences.getShareUserName(id);
+                    String accountName = intent.getStringExtra("accountName");
+
+                    LAccount account = DBAccess.getAccountByName(accountName);
+                    account.addShareUser(id, LAccount.ACCOUNT_SHARE_INVITED);
+                    DBAccess.updateAccount(account);
+                    LPreferences.setShareUserName(id, name);
+                } else {
+                    LLog.w(TAG, "unable to complete share request");
+                    //displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
+                }
+                break;
+
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
                 int cacheId = intent.getIntExtra("cacheId", 0);
                 int userId = intent.getIntExtra("id", 0);
@@ -384,7 +440,7 @@ public class MainActivity extends LFragmentActivity
                 LProtocol.ui.confirmAccountShare(userId, accountName);
 
                 // now push all existing records
-
+                pushAllAccountRecords(userId, account);
                 break;
 
             case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE:
@@ -407,7 +463,65 @@ public class MainActivity extends LFragmentActivity
                 LProtocol.ui.pollAck(cacheId);
 
                 // now push all existing records
+                pushAllAccountRecords(userId, account);
+                break;
 
+            case LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                String record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+
+                String[] splitRecords = record.split(",", -1);
+                double amount = 0;
+                int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
+                int madeBy = 0;
+                long timestamp = 0, accountId = 0, categoryId = 0, vendorId = 0;
+
+                for (String str : splitRecords) {
+                    String[] ss = str.split("=", -1);
+                    if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
+                        type = Integer.valueOf(ss[1]);
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_MADEBY)) {
+                        madeBy = Integer.valueOf(ss[1]);
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT)) {
+                        amount = Double.valueOf(ss[1]);
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP)) {
+                        timestamp = Long.valueOf(ss[1]);
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
+                        LAccount account1 = DBAccess.getAccountByName(ss[1]);
+                        if (null == account1) {
+                            accountId = DBAccess.addAccount(new LAccount(ss[1]));
+                        } else {
+                            accountId = account1.getId();
+                        }
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
+                        LCategory category1 = DBAccess.getCategoryByName(ss[1]);
+                        if (null == category1) {
+                            categoryId = DBAccess.addCategory(new LCategory(ss[1]));
+                        } else {
+                            categoryId = category1.getId();
+                        }
+                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
+                        LVendor vendor1 = DBAccess.getVendorByName(ss[1]);
+                        if (null == vendor1) {
+                            vendorId = DBAccess.addVendor(new LVendor(ss[1]));
+                        } else {
+                            vendorId = vendor1.getId();
+                        }
+                    }
+                }
+
+                LTransaction item = DBAccess.getItemByUserTimestamp(madeBy, timestamp);
+                if (item != null) {
+                    item.setValue(amount);
+                    item.setType(type);
+                    item.setAccount(accountId);
+                    item.setCategory(categoryId);
+                    item.setVendor(vendorId);
+                    DBAccess.updateItem(item);
+                } else {
+                    DBAccess.addItem(new LTransaction(amount, type, categoryId, vendorId, 0, accountId, madeBy, timestamp));
+                }
                 break;
         }
     }

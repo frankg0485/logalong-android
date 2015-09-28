@@ -18,6 +18,7 @@ import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
@@ -33,6 +34,7 @@ import com.swoag.logalong.views.LShareAccountDialog;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class GenericListEdit implements View.OnClickListener,
         LNewAccountDialog.LNewAccountDialogItf {
@@ -231,15 +233,25 @@ public class GenericListEdit implements View.OnClickListener,
                     ArrayList<LUser> users = new ArrayList<LUser>();
                     HashSet<Integer> userSet = DBAccess.getAllAccountsShareUser();
                     for (int ii : userSet) {
-                        users.add(new LUser(LPreferences.getShareUserName(ii), ii));
+                        if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                            users.add(new LUser(LPreferences.getShareUserName(ii), ii));
+                        }
                     }
 
+                    boolean updateAccount = false;
                     LAccount account = DBAccess.getAccountById(tag.id);
                     HashSet<Integer> selectedUsers = new HashSet<Integer>();
                     if (account.getShareIds() != null) {
                         for (int ii : account.getShareIds()) {
-                            selectedUsers.add(ii);
+                            if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                                selectedUsers.add(ii);
+                            } else updateAccount = true;
                         }
+                    }
+
+                    if (updateAccount) {
+                        account.setShareIds(new ArrayList<Integer>(selectedUsers));
+                        DBAccess.updateAccount(account);
                     }
 
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
@@ -250,9 +262,23 @@ public class GenericListEdit implements View.OnClickListener,
 
 
         @Override
-        public void onShareAccountDialogExit(Object obj, HashSet<Integer> selections) {
+        public void onShareAccountDialogExit(boolean ok, LAccount account, HashSet<Integer> selections, HashSet<Integer> origSelections) {
+            if (!ok) return;
+
             for (Integer ii : selections) {
-                //
+                if (!origSelections.contains(ii)) {
+                    // new share
+                    LProtocol.ui.shareAccountWithUser(ii, account.getName());
+                }
+            }
+
+            for (Integer ii : origSelections) {
+                if (!selections.contains(ii)) {
+                    account.removeShareUser(ii);
+                    DBAccess.updateAccount(account);
+                    // unshare
+                    LLog.d(TAG, "TODO: unshare with user: " + ii + " " + LPreferences.getShareUserName(ii));
+                }
             }
         }
 

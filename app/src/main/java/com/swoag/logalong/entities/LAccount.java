@@ -15,6 +15,9 @@ public class LAccount {
     public static final int ACCOUNT_SHARE_CONFIRMED = 2;
     public static final int ACCOUNT_SHARE_DECLINED = 3;
 
+    //added to local database, but not yet invited, this is for GUI update only
+    public static final int ACCOUNT_SHARE_PREPARED = 4;
+
     int state;
     String name;
     ArrayList<Integer> shareIds;

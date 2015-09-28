@@ -72,18 +72,18 @@ public class LTransaction {
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
-                        long account, int by, String note) {
-        this.timeStamp = System.currentTimeMillis();
+                        long account, int by, long timeStamp) {
         this.state = DBHelper.STATE_ACTIVE;
 
         this.value = value;
         this.type = type;
         this.category = category;
+        this.vendor = vendor;
+        this.tag = tag;
         this.account = account;
         this.by = by;
-        this.note = note;
-        this.tag = tag;
-        this.vendor = vendor;
+        this.timeStamp = timeStamp;
+        this.note = "";
     }
 
     public double getValue() {

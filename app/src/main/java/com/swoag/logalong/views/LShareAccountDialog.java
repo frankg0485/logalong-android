@@ -61,7 +61,7 @@ public class LShareAccountDialog extends Dialog
 
     private ArrayList<LUser> users;
     private HashSet<Integer> selectedIds;
-    private Object obj;
+    private HashSet<Integer> origSelectedIds;
     private EditText editText;
     private TextView errorMsgV;
     private ProgressBar progressBar;
@@ -77,14 +77,14 @@ public class LShareAccountDialog extends Dialog
                       ArrayList<LUser> users) {
         this.context = context;
         this.callback = callback;
-        this.obj = obj;
-        this.selectedIds = selectedIds;
+        this.origSelectedIds = selectedIds;
+        this.selectedIds = new HashSet<Integer>(selectedIds);
         this.users = users;
         this.account = account;
     }
 
     public interface LShareAccountDialogItf {
-        public void onShareAccountDialogExit(Object obj, HashSet<Integer> selections);
+        public void onShareAccountDialogExit(boolean ok, LAccount account, HashSet<Integer> selections, HashSet<Integer> origiSelections);
     }
 
     public LShareAccountDialog(Context context, LAccount account, HashSet<Integer> selectedIds,
@@ -102,8 +102,7 @@ public class LShareAccountDialog extends Dialog
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME,
-                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER}, this);
+                LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME}, this);
 
         findViewById(R.id.selectall).setOnClickListener(this);
         findViewById(R.id.save).setOnClickListener(this);
@@ -150,42 +149,26 @@ public class LShareAccountDialog extends Dialog
                 if (ret == LProtocol.RSPS_OK) {
                     int id = intent.getIntExtra("id", 0);
                     String name = intent.getStringExtra("name");
-                    LProtocol.ui.shareAccountWithUser(id, account.getName());
-                } else {
-                    displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_find_share_user));
-                    progressBar.setVisibility(View.GONE);
-                    addIV.setVisibility(View.VISIBLE);
-                    editText.setEnabled(true);
-                }
-                break;
-
-            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
-                if (ret == LProtocol.RSPS_OK) {
-                    int id = intent.getIntExtra("id", 0);
-                    String name = LPreferences.getShareUserName(id);
-                    String accountName = intent.getStringExtra("accountName");
-                    if (!accountName.contentEquals(account.getName())) {
-                        LLog.w(TAG, "spurious event");
-                        break;
-                    }
 
                     LUser user = new LUser(name, id);
                     users.add(user);
                     selectedIds.add(id);
                     myArrayAdapter.notifyDataSetChanged();
 
-                    account.addShareUser(user.getId(), LAccount.ACCOUNT_SHARE_INVITED);
+                    account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
                     DBAccess.updateAccount(account);
                     LPreferences.setShareUserName(id, name);
 
                     editText.setText("");
                     hideIME();
                 } else {
-                    displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
+                    displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_find_share_user));
                 }
+
                 progressBar.setVisibility(View.GONE);
                 addIV.setVisibility(View.VISIBLE);
                 editText.setEnabled(true);
+                break;
         }
     }
 
@@ -251,8 +234,7 @@ public class LShareAccountDialog extends Dialog
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            //bitSet.clear();
-            leave();
+            leave(false);
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -306,11 +288,10 @@ public class LShareAccountDialog extends Dialog
                 }
                 break;
             case R.id.save:
-                leave();
+                leave(true);
                 break;
             case R.id.cancel:
-                selectedIds.clear();
-                leave();
+                leave(false);
                 break;
             case R.id.add:
                 do_add_share_user(editText.getText().toString().trim());
@@ -341,9 +322,9 @@ public class LShareAccountDialog extends Dialog
         }
     }
 
-    private void leave() {
+    private void leave(boolean ok) {
         hideIME();
-        callback.onShareAccountDialogExit(obj, selectedIds);
+        callback.onShareAccountDialogExit(ok, account, selectedIds, origSelectedIds);
         dismiss();
     }
 

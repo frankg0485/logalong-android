@@ -7,6 +7,7 @@ public class LCategory {
     public static final int CATEGORY_STATE_ACTIVE = 10;
     public static final int CATEGORY_STATE_DELETED = 20;
 
+    long id;
     int state;
     String name;
 
@@ -23,6 +24,14 @@ public class LCategory {
     public LCategory(int state, String name) {
         this.state = state;
         this.name = name;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public int getState() {
