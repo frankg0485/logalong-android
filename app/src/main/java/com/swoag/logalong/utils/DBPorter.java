@@ -110,8 +110,11 @@ public class DBPorter {
 
                     ll = vendorMap.get(vendor);
                     if (null == ll) {
-                        vendorId = DBAccess.addVendor(new LVendor(vendor));
-                        vendorMap.put(vendor, vendorId);
+                        if (vendor.isEmpty()) vendorId = 0;
+                        else {
+                            vendorId = DBAccess.addVendor(new LVendor(vendor));
+                            vendorMap.put(vendor, vendorId);
+                        }
                     } else {
                         vendorId = ll.longValue();
                     }

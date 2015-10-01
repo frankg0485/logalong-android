@@ -20,25 +20,39 @@ public class LTransaction {
     long tag;
     long vendor;
     long timeStamp;
+    long timeStampLast;
 
     String note;
 
-    public LTransaction() {
-        this.timeStamp = System.currentTimeMillis();
+    private void init() {
+        this.timeStampLast = this.timeStamp = System.currentTimeMillis();
         this.value = 0;
-        this.note = "";
+        this.type = TRANSACTION_TYPE_EXPENSE;
         this.by = 0;
-        this.id = 0;
         this.state = DBHelper.STATE_ACTIVE;
+        this.id = 0;
+        this.category = 0;
+        this.account = 0;
+        this.tag = 0;
+        this.vendor = 0;
+
+        this.note = "";
+    }
+
+    public LTransaction() {
+        init();
     }
 
     public LTransaction(LTransaction item) {
         this.timeStamp = item.timeStamp;
+        this.timeStampLast = item.timeStampLast;
         this.value = item.value;
         this.type = item.type;
+        this.by = item.by;
+        this.state = item.state;
+        this.id = item.id;
         this.category = item.category;
         this.account = item.account;
-        this.by = item.by;
         this.tag = item.tag;
         this.vendor = item.vendor;
         this.note = item.note;
@@ -46,34 +60,33 @@ public class LTransaction {
 
     public boolean isEqual(LTransaction item) {
         return (this.timeStamp == item.timeStamp &&
+                this.timeStampLast == item.timeStampLast &&
                 this.value == item.value &&
                 this.type == item.type &&
+                this.by == item.by &&
                 this.category == item.category &&
                 this.account == item.account &&
-                this.by == item.by &&
                 this.tag == item.tag &&
                 this.vendor == item.vendor &&
-                this.note == item.note);
+                this.note.contentEquals(item.note));
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
                         long account, long timeStamp) {
-        this.state = DBHelper.STATE_ACTIVE;
+        init();
 
         this.value = value;
         this.type = type;
         this.category = category;
-        this.account = account;
-        this.tag = tag;
         this.vendor = vendor;
+        this.tag = tag;
+        this.account = account;
         this.timeStamp = timeStamp;
-        this.note = "";
-        this.by = 0;
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
-                        long account, int by, long timeStamp) {
-        this.state = DBHelper.STATE_ACTIVE;
+                        long account, int by, long timeStamp, long timeStampLast) {
+        init();
 
         this.value = value;
         this.type = type;
@@ -83,7 +96,7 @@ public class LTransaction {
         this.account = account;
         this.by = by;
         this.timeStamp = timeStamp;
-        this.note = "";
+        this.timeStampLast = timeStampLast;
     }
 
     public double getValue() {
@@ -148,6 +161,14 @@ public class LTransaction {
 
     public void setVendor(long vendor) {
         this.vendor = vendor;
+    }
+
+    public long getTimeStampLast() {
+        return timeStampLast;
+    }
+
+    public void setTimeStampLast(long timeStampLast) {
+        this.timeStampLast = timeStampLast;
     }
 
     public long getTimeStamp() {

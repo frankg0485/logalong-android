@@ -268,7 +268,7 @@ public class GenericListEdit implements View.OnClickListener,
             for (Integer ii : selections) {
                 if (!origSelections.contains(ii)) {
                     // new share
-                    LProtocol.ui.shareAccountWithUser(ii, account.getName());
+                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid().toString());
                 }
             }
 

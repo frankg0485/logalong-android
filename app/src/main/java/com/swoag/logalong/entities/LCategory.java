@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import java.util.UUID;
+
 public class LCategory {
     private static final String TAG = LCategory.class.getSimpleName();
 
@@ -10,18 +12,33 @@ public class LCategory {
     long id;
     int state;
     String name;
+    UUID rid;
+    long timeStampLast;
 
-    public LCategory() {
+    private void init() {
         this.state = CATEGORY_STATE_ACTIVE;
+        this.timeStampLast = System.currentTimeMillis();
+        this.rid = UUID.randomUUID();
         this.name = "";
     }
 
+    public LCategory() {
+        init();
+    }
+
     public LCategory(String name) {
-        this.state = CATEGORY_STATE_ACTIVE;
+        init();
         this.name = name;
     }
 
+    public LCategory(String name, UUID rid) {
+        init();
+        this.name = name;
+        this.rid = rid;
+    }
+
     public LCategory(int state, String name) {
+        init();
         this.state = state;
         this.name = name;
     }
@@ -48,5 +65,21 @@ public class LCategory {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public UUID getRid() {
+        return rid;
+    }
+
+    public void setRid(UUID rid) {
+        this.rid = rid;
+    }
+
+    public long getTimeStampLast() {
+        return timeStampLast;
+    }
+
+    public void setTimeStampLast(long timeStampLast) {
+        this.timeStampLast = timeStampLast;
     }
 }

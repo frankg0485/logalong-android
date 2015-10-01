@@ -143,9 +143,9 @@ public class LShareAccountDialog extends Dialog
 
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
-        countDownTimer.cancel();
         switch (action) {
             case LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME:
+                if (countDownTimer != null) countDownTimer.cancel();
                 if (ret == LProtocol.RSPS_OK) {
                     int id = intent.getIntExtra("id", 0);
                     String name = intent.getStringExtra("name");
@@ -178,8 +178,6 @@ public class LShareAccountDialog extends Dialog
         progressBar.setVisibility(View.VISIBLE);
         addIV.setVisibility(View.GONE);
 
-        LProtocol.ui.getShareUserByName(name);
-
         countDownTimer = new CountDownTimer(15000, 15000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -194,6 +192,7 @@ public class LShareAccountDialog extends Dialog
                 editText.setEnabled(true);
             }
         }.start();
+        LProtocol.ui.getShareUserByName(name);
     }
 
     private void hideErrorMsg() {

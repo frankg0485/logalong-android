@@ -3,6 +3,7 @@ package com.swoag.logalong.entities;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class LAccount {
     private static final String TAG = LAccount.class.getSimpleName();
@@ -20,32 +21,45 @@ public class LAccount {
 
     int state;
     String name;
+    UUID rid;
+    long timeStampLast;
+
     ArrayList<Integer> shareIds;
     ArrayList<Integer> shareStates;
     long id;
 
-    public LAccount() {
+    private void init() {
         this.state = ACCOUNT_STATE_ACTIVE;
+        this.timeStampLast = System.currentTimeMillis();
+        this.rid = UUID.randomUUID();
         this.name = "";
         this.shareIds = new ArrayList<Integer>();
         this.shareStates = new ArrayList<Integer>();
     }
 
+    public LAccount() {
+        init();
+    }
+
     public LAccount(String name) {
-        this.state = ACCOUNT_STATE_ACTIVE;
+        init();
         this.name = name;
-        this.shareIds = new ArrayList<Integer>();
-        this.shareStates = new ArrayList<Integer>();
+    }
+
+    public LAccount(String name, UUID rid) {
+        init();
+        this.name = name;
+        this.rid = rid;
     }
 
     public LAccount(int state, String name) {
+        init();
         this.state = state;
         this.name = name;
-        this.shareIds = new ArrayList<Integer>();
-        this.shareStates = new ArrayList<Integer>();
     }
 
     public LAccount(int state, String name, ArrayList<Integer> shareIds, ArrayList<Integer> shareStates) {
+        init();
         this.state = state;
         this.name = name;
         this.shareIds = shareIds;
@@ -157,5 +171,21 @@ public class LAccount {
             }
         }
         return ACCOUNT_SHARE_NA;
+    }
+
+    public UUID getRid() {
+        return rid;
+    }
+
+    public void setRid(UUID rid) {
+        this.rid = rid;
+    }
+
+    public long getTimeStampLast() {
+        return timeStampLast;
+    }
+
+    public void setTimeStampLast(long timeStampLast) {
+        this.timeStampLast = timeStampLast;
     }
 }

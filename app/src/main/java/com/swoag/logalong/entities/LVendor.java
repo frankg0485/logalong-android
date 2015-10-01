@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import java.util.UUID;
+
 public class LVendor {
     private static final String TAG = LVendor.class.getSimpleName();
 
@@ -10,18 +12,33 @@ public class LVendor {
     long id;
     int state;
     String name;
+    UUID rid;
+    long timeStampLast;
 
-    public LVendor() {
+    private void init() {
         this.state = VENDOR_STATE_ACTIVE;
+        this.timeStampLast = System.currentTimeMillis();
+        this.rid = UUID.randomUUID();
         this.name = "";
     }
 
+    public LVendor() {
+        init();
+    }
+
     public LVendor(String name) {
-        this.state = VENDOR_STATE_ACTIVE;
+        init();
         this.name = name;
     }
 
+    public LVendor(String name, UUID rid) {
+        init();
+        this.name = name;
+        this.rid = rid;
+    }
+
     public LVendor(int state, String name) {
+        init();
         this.state = state;
         this.name = name;
     }
@@ -48,5 +65,21 @@ public class LVendor {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public UUID getRid() {
+        return rid;
+    }
+
+    public void setRid(UUID rid) {
+        this.rid = rid;
+    }
+
+    public long getTimeStampLast() {
+        return timeStampLast;
+    }
+
+    public void setTimeStampLast(long timeStampLast) {
+        this.timeStampLast = timeStampLast;
     }
 }

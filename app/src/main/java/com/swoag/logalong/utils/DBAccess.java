@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();
@@ -90,36 +91,51 @@ public class DBAccess {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
+        cv.put(DBHelper.TABLE_COLUMN_RID, category.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, category.getTimeStampLast());
         return cv;
     }
 
     private static void getCategoryValues(Cursor cur, LCategory category) {
         category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        category.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        category.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        category.setId(cur.getLong(0));
     }
 
     private static ContentValues setTagValues(LTag tag) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, tag.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, tag.getTimeStampLast());
+        cv.put(DBHelper.TABLE_COLUMN_RID, tag.getRid().toString());
         return cv;
     }
 
     private static void getTagValues(Cursor cur, LTag tag) {
         tag.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         tag.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        tag.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        tag.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        tag.setId(cur.getLong(0));
     }
 
     private static ContentValues setVendorValues(LVendor vendor) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
+        cv.put(DBHelper.TABLE_COLUMN_RID, vendor.getRid().toString());
         return cv;
     }
 
     private static void getVendorValues(Cursor cur, LVendor vendor) {
         vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        vendor.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        vendor.setId(cur.getLong(0));
     }
 
     private static ContentValues setAccountValues(LAccount account) {
@@ -127,6 +143,8 @@ public class DBAccess {
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
+        cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid().toString());
         return cv;
     }
 
@@ -134,6 +152,9 @@ public class DBAccess {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
+        account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        account.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        account.setId(cur.getLong(0));
     }
 
     private static ContentValues setItemValues(LTransaction item) {
@@ -145,6 +166,7 @@ public class DBAccess {
         cv.put(DBHelper.TABLE_COLUMN_MADEBY, item.getBy());
         cv.put(DBHelper.TABLE_COLUMN_AMOUNT, item.getValue());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, item.getTimeStamp());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, item.getTimeStampLast());
         cv.put(DBHelper.TABLE_COLUMN_NOTE, item.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, item.getTag());
         cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getVendor());
@@ -163,6 +185,7 @@ public class DBAccess {
         item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
         item.setBy(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+        item.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
     }
 
     private static int getItemList(ArrayList<LTransaction> LTransactions, Cursor cur, boolean sort) {
@@ -346,6 +369,16 @@ public class DBAccess {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setItemValues(item);
             db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + item.getId()});
+            dirty = true;
+        }
+    }
+
+    public static void updateItemOwnerById(int madeBy, long id) {
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_MADEBY, madeBy);
+            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + id});
             dirty = true;
         }
     }
@@ -546,7 +579,7 @@ public class DBAccess {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
                     + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
             if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with name: " + name);
+                LLog.w(TAG, "unable to find account with name: " + name);
                 csr.close();
                 return null;
             }
@@ -593,7 +626,7 @@ public class DBAccess {
         LVendor vendor = new LVendor();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
                     + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with name: " + name);
@@ -603,7 +636,6 @@ public class DBAccess {
 
             csr.moveToFirst();
             getVendorValues(csr, vendor);
-            vendor.setId(csr.getLong(0));
         } catch (Exception e) {
             LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
             vendor = null;
@@ -983,6 +1015,36 @@ public class DBAccess {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
         return balance;
+    }
+
+    public static boolean updateCategory(LCategory category) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = setCategoryValues(category);
+                db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + category.getId()});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean updateVendor(LVendor vendor) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = setVendorValues(vendor);
+                db.update(DBHelper.TABLE_VENDOR_NAME, cv, "_id=?", new String[]{"" + vendor.getId()});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
 
     public static boolean updateAccount(LAccount account) {

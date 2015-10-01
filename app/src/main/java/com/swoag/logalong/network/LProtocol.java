@@ -70,7 +70,29 @@ public class LProtocol {
         shorts = new short[PACKET_MAX_LEN];
     }
 
-    private void handleAccountShare(LBuffer pkt, int status, int action, int cacheId) {
+    private void handleAccountShareRequest(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int userId = pkt.getIntAutoInc();
+        short bytes = pkt.getShortAutoInc();
+        String userName = pkt.getStringAutoInc(bytes);
+        bytes = pkt.getShortAutoInc();
+        String str = pkt.getStringAutoInc(bytes);
+        String[] ss = str.split(",");
+        String accountName = ss[0];
+        String uuid = ss[1];
+        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " " + uuid);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("id", userId);
+        rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("accountName", accountName);
+        rspsIntent.putExtra("UUID", uuid);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    private void handleAccountShareConfirm(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
         int userId = pkt.getIntAutoInc();
         short bytes = pkt.getShortAutoInc();
@@ -183,9 +205,11 @@ public class LProtocol {
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
-                    String accountName = pkt.getStringAutoInc(bytes);
+                    String str = pkt.getStringAutoInc(bytes);
+                    String[] ss = str.split(",");
                     rspsIntent.putExtra("id", userId);
-                    rspsIntent.putExtra("accountName", accountName);
+                    rspsIntent.putExtra("accountName", ss[0]);
+                    rspsIntent.putExtra("UUID", ss[1]);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
@@ -202,11 +226,11 @@ public class LProtocol {
                     short cmd = pkt.getShortAutoInc();
                     switch (cmd) {
                         case CMD_SHARE_ACCOUNT_REQUEST:
-                            handleAccountShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
+                            handleAccountShareRequest(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
                             break;
 
                         case CMD_CONFIRMED_ACCOUNT_SHARE:
-                            handleAccountShare(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE, cacheId);
+                            handleAccountShareConfirm(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE, cacheId);
                             break;
 
                         case CMD_SHARED_TRANSITION_RECORD:
@@ -337,8 +361,8 @@ public class LProtocol {
             return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
         }
 
-        public static boolean shareAccountWithUser(int userId, String accountName) {
-            return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName, scrambler);
+        public static boolean shareAccountWithUser(int userId, String accountName, String uuid) {
+            return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName + "," + uuid, scrambler);
         }
 
         public static boolean shareTransitionRecord(int userId, String record) {

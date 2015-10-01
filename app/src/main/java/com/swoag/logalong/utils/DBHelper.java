@@ -24,9 +24,11 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_NAME = "Name";
     public static final String TABLE_COLUMN_NUMBER = "Number";
     public static final String TABLE_COLUMN_NOTE = "Note";
+    public static final String TABLE_COLUMN_RID = "Rid";
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
     public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
+    public static final String TABLE_COLUMN_TIMESTAMP_LAST_CHANGE = "TimeStmpLast";
     public static final String TABLE_COLUMN_TYPE = "Type";
     public static final String TABLE_COLUMN_VENDOR = "Vendor";
     public static final String TABLE_COLUMN_YEAR = "Year";
@@ -39,22 +41,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_VENDOR_NAME = "LVendor";
     public static final String TABLE_VENDOR_CATEGORY_NAME = "LVendorCategory";
 
-    private static final String CREATE_TABLE_ACCOUNT = "CREATE TABLE " + TABLE_ACCOUNT_NAME +
-            "( _id integer primary key autoincrement," +
-            TABLE_COLUMN_STATE + " INTEGER," +
-            TABLE_COLUMN_NAME + " TEXT," +
-            TABLE_COLUMN_SHARE + " TEXT," +
-            TABLE_COLUMN_NUMBER + " INTEGER," +
-            TABLE_COLUMN_ICON + " BLOB" +
-            ");";
-
-    private static final String CREATE_TABLE_ACCOUNT_BALANCE = "CREATE TABLE " + TABLE_ACCOUNT_BALANCE_NAME +
-            "( _id integer primary key autoincrement," +
-            TABLE_COLUMN_ACCOUNT + " INTEGER," +
-            TABLE_COLUMN_YEAR + " INTEGER," +
-            TABLE_COLUMN_BALANCE + " TEXT" +
-            ");";
-
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
             TABLE_COLUMN_AMOUNT + " REAL," +
@@ -63,6 +49,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_TAG + " INTEGER," +
             TABLE_COLUMN_VENDOR + " INTEGER," +
             TABLE_COLUMN_TIMESTAMP + " INTEGER," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_TYPE + " INTEGER," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_MADEBY + " INTEGER," +
@@ -70,10 +57,31 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
 
+    private static final String CREATE_TABLE_ACCOUNT_BALANCE = "CREATE TABLE " + TABLE_ACCOUNT_BALANCE_NAME +
+            "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_ACCOUNT + " INTEGER," +
+            TABLE_COLUMN_YEAR + " INTEGER," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
+            TABLE_COLUMN_BALANCE + " TEXT" +
+            ");";
+
+    private static final String CREATE_TABLE_ACCOUNT = "CREATE TABLE " + TABLE_ACCOUNT_NAME +
+            "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_STATE + " INTEGER," +
+            TABLE_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_SHARE + " TEXT," +
+            TABLE_COLUMN_NUMBER + " INTEGER," +
+            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
+            TABLE_COLUMN_ICON + " BLOB" +
+            ");";
+
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY_NAME +
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
 
@@ -81,6 +89,8 @@ public class DBHelper extends SQLiteOpenHelper {
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
 
@@ -88,6 +98,8 @@ public class DBHelper extends SQLiteOpenHelper {
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
+            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
 
