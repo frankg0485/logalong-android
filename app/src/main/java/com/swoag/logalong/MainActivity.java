@@ -93,7 +93,9 @@ public class MainActivity extends LFragmentActivity
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
                 LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE,
-                LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD}, this);
+                LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD,
+                LBroadcastReceiver.ACTION_JOURNAL_POSTED,
+                LBroadcastReceiver.ACTION_JOURNAL_RECEIVED}, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -395,6 +397,8 @@ public class MainActivity extends LFragmentActivity
                 if (vendor != null && (!vendor.getName().isEmpty())) {
                     record += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
                 }
+                String rid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                record += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
                 record += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
 
                 LProtocol.ui.shareTransitionRecord(userId, record);
@@ -404,6 +408,88 @@ public class MainActivity extends LFragmentActivity
         int madeBy = LPreferences.getUserId();
         for (long id : itemsMissingOwner) {
             DBAccess.updateItemOwnerById(madeBy, id);
+        }
+    }
+
+    private void addItemFromRecord(String record) {
+        String[] splitRecords = record.split(",", -1);
+        String rid = "";
+        double amount = 0;
+        int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
+        int madeBy = 0;
+        long timestamp = 0, timestampLast = 0, accountId = 0, categoryId = 0, vendorId = 0;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
+                type = Integer.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_MADEBY)) {
+                madeBy = Integer.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT)) {
+                amount = Double.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP)) {
+                timestamp = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
+                String[] sss = ss[1].split(";");
+
+                LAccount account1 = DBAccess.getAccountByName(sss[0]);
+                if (null == account1) {
+                    accountId = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
+                        account1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateAccount(account1);
+                    }
+
+                    accountId = account1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
+                String[] sss = ss[1].split(";");
+
+                LCategory category1 = DBAccess.getCategoryByName(sss[0]);
+                if (null == category1) {
+                    categoryId = DBAccess.addCategory(new LCategory(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
+                        category1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateCategory(category1);
+                    }
+                    categoryId = category1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
+                String[] sss = ss[1].split(";");
+
+                LVendor vendor1 = DBAccess.getVendorByName(sss[0]);
+                if (null == vendor1) {
+                    vendorId = DBAccess.addVendor(new LVendor(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > vendor1.getTimeStampLast()) {
+                        vendor1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateVendor(vendor1);
+                    }
+
+                    vendorId = vendor1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            }
+        }
+
+        LTransaction item = DBAccess.getItemByRid(rid);
+        if (item != null) {
+            if (item.getTimeStampLast() < timestampLast) {
+                item.setValue(amount);
+                item.setType(type);
+                item.setAccount(accountId);
+                item.setCategory(categoryId);
+                item.setVendor(vendorId);
+                item.setTimeStampLast(timestampLast);
+                DBAccess.updateItem(item);
+            }
+        } else {
+            DBAccess.addItem(new LTransaction(rid, amount, type, categoryId, vendorId, 0, accountId, madeBy, timestamp, timestampLast));
         }
     }
 
@@ -489,81 +575,24 @@ public class MainActivity extends LFragmentActivity
                 String record = intent.getStringExtra("record");
                 LProtocol.ui.pollAck(cacheId);
 
-                String[] splitRecords = record.split(",", -1);
-                double amount = 0;
-                int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
-                int madeBy = 0;
-                long timestamp = 0, timestampLast = 0, accountId = 0, categoryId = 0, vendorId = 0;
+                addItemFromRecord(record);
+                break;
 
-                for (String str : splitRecords) {
-                    String[] ss = str.split("=", -1);
-                    if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
-                        type = Integer.valueOf(ss[1]);
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_MADEBY)) {
-                        madeBy = Integer.valueOf(ss[1]);
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT)) {
-                        amount = Double.valueOf(ss[1]);
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP)) {
-                        timestamp = Long.valueOf(ss[1]);
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
-                        timestampLast = Long.valueOf(ss[1]);
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
-                        String[] sss = ss[1].split(";");
-
-                        LAccount account1 = DBAccess.getAccountByName(sss[0]);
-                        if (null == account1) {
-                            accountId = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
-                        } else {
-                            if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
-                                account1.setRid(UUID.fromString(sss[1]));
-                                DBAccess.updateAccount(account1);
-                            }
-
-                            accountId = account1.getId();
-                        }
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
-                        String[] sss = ss[1].split(";");
-
-                        LCategory category1 = DBAccess.getCategoryByName(sss[0]);
-                        if (null == category1) {
-                            categoryId = DBAccess.addCategory(new LCategory(sss[0], UUID.fromString(sss[1])));
-                        } else {
-                            if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
-                                category1.setRid(UUID.fromString(sss[1]));
-                                DBAccess.updateCategory(category1);
-                            }
-                            categoryId = category1.getId();
-                        }
-                    } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
-                        String[] sss = ss[1].split(";");
-
-                        LVendor vendor1 = DBAccess.getVendorByName(sss[0]);
-                        if (null == vendor1) {
-                            vendorId = DBAccess.addVendor(new LVendor(sss[0], UUID.fromString(sss[1])));
-                        } else {
-                            if (Long.parseLong(sss[2]) > vendor1.getTimeStampLast()) {
-                                vendor1.setRid(UUID.fromString(sss[1]));
-                                DBAccess.updateVendor(vendor1);
-                            }
-
-                            vendorId = vendor1.getId();
-                        }
-                    }
+            case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
+                if (ret == LProtocol.RSPS_OK) {
+                    long journalId = intent.getLongExtra("journalId", 0);
+                    DBAccess.deleteJournalById(journalId);
                 }
+                break;
 
-                LTransaction item = DBAccess.getItemByUserTimestamp(madeBy, timestamp);
-                if (item != null) {
-                    if (item.getTimeStampLast() < timestampLast) {
-                        item.setValue(amount);
-                        item.setType(type);
-                        item.setAccount(accountId);
-                        item.setCategory(categoryId);
-                        item.setVendor(vendorId);
-                        item.setTimeStampLast(timestampLast);
-                        DBAccess.updateItem(item);
-                    }
-                } else {
-                    DBAccess.addItem(new LTransaction(amount, type, categoryId, vendorId, 0, accountId, madeBy, timestamp, timestampLast));
+            case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
+                if (ret == LProtocol.RSPS_OK) {
+                    userId = intent.getIntExtra("id", 0);
+                    userName = intent.getStringExtra("userName");
+                    LLog.d(TAG, "received journal from: " + userId + "@" + userName);
+                    record = intent.getStringExtra("record");
+                    String[] ss = record.split(":", 3);
+                    addItemFromRecord(ss[2]);
                 }
                 break;
         }

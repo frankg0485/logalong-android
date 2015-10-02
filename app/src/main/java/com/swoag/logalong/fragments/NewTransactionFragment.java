@@ -11,6 +11,7 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
@@ -96,6 +97,10 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 AppPersistency.transactionChanged = changed;
                 DBAccess.addItem(item);
+
+                LJournal journal = new LJournal();
+                journal.addItem(item);
+
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;

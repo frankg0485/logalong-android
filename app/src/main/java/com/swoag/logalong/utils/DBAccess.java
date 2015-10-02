@@ -11,6 +11,7 @@ import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LBoxer;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
@@ -170,7 +171,7 @@ public class DBAccess {
         cv.put(DBHelper.TABLE_COLUMN_NOTE, item.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, item.getTag());
         cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getVendor());
-
+        cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid().toString());
         return cv;
     }
 
@@ -186,6 +187,8 @@ public class DBAccess {
         item.setBy(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
         item.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        item.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        item.setId(cur.getLong(0));
     }
 
     private static int getItemList(ArrayList<LTransaction> LTransactions, Cursor cur, boolean sort) {
@@ -332,6 +335,26 @@ public class DBAccess {
                         */
             return LTransaction;
         }
+    }
+
+    public static LTransaction getItemByRid(String rid) {
+        SQLiteDatabase db = getReadDb();
+
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
+                        DBHelper.TABLE_COLUMN_RID + " =?",
+                new String[]{rid});
+        if (cur != null && cur.getCount() > 0) {
+            if (cur.getCount() != 1) {
+                LLog.e(TAG, "unexpected error: duplicated record");
+            }
+            cur.moveToFirst();
+            LTransaction item = new LTransaction();
+            getItemValues(cur, item);
+            cur.close();
+            return item;
+        }
+        if (cur != null) cur.close();
+        return null;
     }
 
     public static LTransaction getItemByUserTimestamp(int madeBy, long timestamp) {
@@ -1197,5 +1220,62 @@ public class DBAccess {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
         return balances;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Journal support
+    private static ContentValues setJournalValues(LJournal journal) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, journal.getState());
+        cv.put(DBHelper.TABLE_COLUMN_RECORD, journal.getRecord());
+        return cv;
+    }
+
+    private static void getJournalValues(Cursor cur, LJournal journal) {
+        journal.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
+        journal.setRecord(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD)));
+        journal.setId(cur.getLong(0));
+    }
+
+    public static long addJournal(LJournal journal) {
+        long id = -1;
+        synchronized (dbLock) {
+            SQLiteDatabase db = getWriteDb();
+            ContentValues cv = setJournalValues(journal);
+            id = db.insert(DBHelper.TABLE_JOURNAL_NAME, "", cv);
+            dirty = true;
+        }
+        return id;
+    }
+
+    public static boolean updateJournal(LJournal journal) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = setJournalValues(journal);
+                db.update(DBHelper.TABLE_JOURNAL_NAME, cv, "_id=?", new String[]{"" + journal.getId()});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean deleteJournalById(long id) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = new ContentValues();
+                cv.put(DBHelper.TABLE_COLUMN_STATE, LJournal.JOURNAL_STATE_DELETED);
+                db.update(DBHelper.TABLE_JOURNAL_NAME, cv, "_id=?", new String[]{"" + id});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
 }

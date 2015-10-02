@@ -102,8 +102,11 @@ public class DBPorter {
 
                     ll = categoryMap.get(category);
                     if (null == ll) {
-                        categoryId = DBAccess.addCategory(new LCategory(category));
-                        categoryMap.put(category, categoryId);
+                        if (category.isEmpty()) categoryId = 0;
+                        else {
+                            categoryId = DBAccess.addCategory(new LCategory(category));
+                            categoryMap.put(category, categoryId);
+                        }
                     } else {
                         categoryId = ll.longValue();
                     }

@@ -3,6 +3,8 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.utils.DBHelper;
 
+import java.util.UUID;
+
 public class LTransaction {
     private static final String TAG = LTransaction.class.getSimpleName();
 
@@ -21,7 +23,7 @@ public class LTransaction {
     long vendor;
     long timeStamp;
     long timeStampLast;
-
+    UUID rid;
     String note;
 
     private void init() {
@@ -35,6 +37,7 @@ public class LTransaction {
         this.account = 0;
         this.tag = 0;
         this.vendor = 0;
+        this.rid = UUID.randomUUID();
 
         this.note = "";
     }
@@ -74,7 +77,6 @@ public class LTransaction {
     public LTransaction(double value, int type, long category, long vendor, long tag,
                         long account, long timeStamp) {
         init();
-
         this.value = value;
         this.type = type;
         this.category = category;
@@ -84,10 +86,10 @@ public class LTransaction {
         this.timeStamp = timeStamp;
     }
 
-    public LTransaction(double value, int type, long category, long vendor, long tag,
+    public LTransaction(String rid, double value, int type, long category, long vendor, long tag,
                         long account, int by, long timeStamp, long timeStampLast) {
         init();
-
+        this.rid = UUID.fromString(rid);
         this.value = value;
         this.type = type;
         this.category = category;
@@ -193,5 +195,13 @@ public class LTransaction {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public UUID getRid() {
+        return rid;
+    }
+
+    public void setRid(UUID rid) {
+        this.rid = rid;
     }
 }

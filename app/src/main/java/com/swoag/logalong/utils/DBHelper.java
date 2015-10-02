@@ -24,6 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_NAME = "Name";
     public static final String TABLE_COLUMN_NUMBER = "Number";
     public static final String TABLE_COLUMN_NOTE = "Note";
+    public static final String TABLE_COLUMN_RECORD = "Record";
     public static final String TABLE_COLUMN_RID = "Rid";
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
@@ -40,6 +41,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_TAG_NAME = "LTag";
     public static final String TABLE_VENDOR_NAME = "LVendor";
     public static final String TABLE_VENDOR_CATEGORY_NAME = "LVendorCategory";
+    public static final String TABLE_JOURNAL_NAME = "LJournal";
 
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
@@ -53,6 +55,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_TYPE + " INTEGER," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_MADEBY + " INTEGER," +
+            TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_NOTE + " TEXT," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
@@ -71,7 +74,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_NAME + " TEXT," +
             TABLE_COLUMN_SHARE + " TEXT," +
             TABLE_COLUMN_NUMBER + " INTEGER," +
-            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
@@ -80,7 +83,7 @@ public class DBHelper extends SQLiteOpenHelper {
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
-            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
@@ -89,7 +92,7 @@ public class DBHelper extends SQLiteOpenHelper {
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
-            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
@@ -98,7 +101,7 @@ public class DBHelper extends SQLiteOpenHelper {
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_NAME + " TEXT," +
-            TABLE_COLUMN_RID +  " TEXT," +
+            TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB" +
             ");";
@@ -108,6 +111,12 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_VENDOR + " INTEGER," +
             TABLE_COLUMN_CATEGORY + " INTEGER" +
+            ");";
+
+    private static final String CREATE_TABLE_JOURNAL = "CREATE TABLE " + TABLE_JOURNAL_NAME +
+            "( _id integer primary key autoincrement ," +
+            TABLE_COLUMN_STATE + " INTEGER," +
+            TABLE_COLUMN_RECORD + " TEXT" +
             ");";
 
     public DBHelper(Context context, int version) {
@@ -123,13 +132,14 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_TAG);
         db.execSQL(CREATE_TABLE_VENDOR);
         db.execSQL(CREATE_TABLE_VENDOR_CATEGORY);
+        db.execSQL(CREATE_TABLE_JOURNAL);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
-        if (oldVersion == 4 && newVersion == 5) {
-            //db.execSQL("DROP TABLE IF EXISTS " + TABLE_reserved1);
-        }
+        //LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
+        //if (oldVersion == 4 && newVersion == 5) {
+        //db.execSQL("DROP TABLE IF EXISTS " + TABLE_reserved1);
+        //}
     }
 }

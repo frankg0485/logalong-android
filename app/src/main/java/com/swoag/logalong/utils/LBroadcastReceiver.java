@@ -21,7 +21,8 @@ public class LBroadcastReceiver {
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
     public static final int ACTION_CONFIRMED_ACCOUNT_SHARE = 50;
     public static final int ACTION_SHARED_TRANSITION_RECORD = 60;
-
+    public static final int ACTION_JOURNAL_POSTED = 70;
+    public static final int ACTION_JOURNAL_RECEIVED = 71;
 
     private static LBroadcastReceiver instance;
 

@@ -66,6 +66,17 @@ public class LAccount {
         this.shareStates = shareStates;
     }
 
+    public boolean isShared() {
+        if (shareIds == null || shareStates == null || shareIds.size() < 1 || shareStates.size() < 1)
+            return false;
+        for (int ii = 0; ii < shareStates.size(); ii++) {
+            if ((shareStates.get(ii) == ACCOUNT_SHARE_CONFIRMED) || (shareStates.get(ii) == ACCOUNT_SHARE_INVITED)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public long getId() {
         return id;
     }

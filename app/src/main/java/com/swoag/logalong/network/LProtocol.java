@@ -53,6 +53,7 @@ public class LProtocol {
     private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
     private static final short RQST_CONFIRM_ACCOUNT_SHARE = RQST_SYS | 0x10d;
     private static final short RQST_SHARE_TRANSITION_RECORD = RQST_SYS | 0x110;
+    private static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     private static final short RQST_POLL = RQST_SYS | 0x777;
     private static final short RQST_POLL_ACK = RQST_SYS | 0x778;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
@@ -60,6 +61,7 @@ public class LProtocol {
     private static final short CMD_SHARE_ACCOUNT_REQUEST = 0x0004;
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008;
     private static final short CMD_SHARED_TRANSITION_RECORD = 0x000c;
+    private static final short CMD_RECEIVED_JOURNAL = 0x0010;
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -68,6 +70,22 @@ public class LProtocol {
     public LProtocol() {
         pktBuf = new LBuffer(PACKET_MAX_LEN * 2);
         shorts = new short[PACKET_MAX_LEN];
+    }
+
+    private void handleJournalReceive(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int userId = pkt.getIntAutoInc();
+        short bytes = pkt.getShortAutoInc();
+        String userName = pkt.getStringAutoInc(bytes);
+        bytes = pkt.getShortAutoInc();
+        String record = pkt.getStringAutoInc(bytes);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("record", record);
+        rspsIntent.putExtra("id", userId);
+        rspsIntent.putExtra("userName", userName);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
     private void handleAccountShareRequest(LBuffer pkt, int status, int action, int cacheId) {
@@ -89,7 +107,6 @@ public class LProtocol {
         rspsIntent.putExtra("userName", userName);
         rspsIntent.putExtra("accountName", accountName);
         rspsIntent.putExtra("UUID", uuid);
-        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
     private void handleAccountShareConfirm(LBuffer pkt, int status, int action, int cacheId) {
@@ -220,6 +237,20 @@ public class LProtocol {
             case RSPS | RQST_SHARE_TRANSITION_RECORD:
                 break;
 
+            case RSPS | RQST_POST_JOURNAL:
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_JOURNAL_POSTED));
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                if (status == RSPS_OK) {
+                    int userId = pkt.getIntAutoInc();
+                    short bytes = pkt.getShortAutoInc();
+                    String str = pkt.getStringAutoInc(bytes);
+                    String[] ss = str.split(":");
+                    long journalId = Long.parseLong(ss[0]);
+                    rspsIntent.putExtra("journalId", journalId);
+                }
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                break;
+
             case RSPS | RQST_POLL:
                 if (status == RSPS_OK) {
                     int cacheId = pkt.getIntAutoInc();
@@ -235,6 +266,10 @@ public class LProtocol {
 
                         case CMD_SHARED_TRANSITION_RECORD:
                             handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD, cacheId);
+                            break;
+
+                        case CMD_RECEIVED_JOURNAL:
+                            handleJournalReceive(pkt, status, LBroadcastReceiver.ACTION_JOURNAL_RECEIVED, cacheId);
                             break;
                     }
                 } else {
@@ -379,6 +414,10 @@ public class LProtocol {
 
         public static boolean confirmAccountShare(int userId, String accountName) {
             return LTransport.send_rqst(server, RQST_CONFIRM_ACCOUNT_SHARE, userId, accountName, scrambler);
+        }
+
+        public static boolean postJournal(int userId, String record) {
+            return LTransport.send_rqst(server, RQST_POST_JOURNAL, userId, record, scrambler);
         }
     }
 }
