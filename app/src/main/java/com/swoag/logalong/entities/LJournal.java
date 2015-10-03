@@ -2,11 +2,14 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 
+import android.database.Cursor;
+
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class LJournal {
     private static final String TAG = LJournal.class.getSimpleName();
@@ -14,10 +17,15 @@ public class LJournal {
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
 
-    public static final int ACTION_ADD_ITEM = 1;
+    private static final int ACTION_UPDATE_ITEM = 1;
+    private static final int ACTION_UPDATE_ACCOUNT = 2;
+    private static final int ACTION_UPDATE_CATEGORY = 3;
+    private static final int ACTION_UPDATE_VENDOR = 4;
+    private static final int ACTION_UPDATE_TAG = 5;
 
     long id;
     int state;
+    int userId;
     String record;
 
     private void init() {
@@ -40,19 +48,37 @@ public class LJournal {
         this.record = record;
     }
 
+    public static void flush() {
+        Cursor cursor = DBAccess.getAllActiveJournalCursor();
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            do {
+                int userId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER));
+                String rec = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD));
+                long id = cursor.getLong(0);
+                LProtocol.ui.postJournal(userId, id + ":" + rec);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+    }
+
     private void post(int userId) {
+        this.userId = userId;
         this.id = DBAccess.addJournal(this);
         LProtocol.ui.postJournal(userId, this.id + ":" + this.record);
     }
 
-    public boolean addItem(LTransaction item) {
+    public boolean updateItem(LTransaction item) {
         LAccount account = DBAccess.getAccountById(item.getAccount());
         if (!account.isShared()) return false;
 
         LCategory category = DBAccess.getCategoryById(item.getCategory());
         LVendor vendor = DBAccess.getVendorById(item.getVendor());
+        LTag tag = DBAccess.getTagById(item.getTag());
 
-        record = ACTION_ADD_ITEM + ":" + DBHelper.TABLE_COLUMN_TYPE + "=" + item.getType() + ","
+        record = ACTION_UPDATE_ITEM + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + item.getState() + ","
+                + DBHelper.TABLE_COLUMN_TYPE + "=" + item.getType() + ","
                 + DBHelper.TABLE_COLUMN_AMOUNT + "=" + item.getValue() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP + "=" + item.getTimeStamp() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + item.getTimeStampLast() + ","
@@ -64,8 +90,15 @@ public class LJournal {
         if (vendor != null && (!vendor.getName().isEmpty())) {
             record += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
         }
+        if (tag != null && (!tag.getName().isEmpty())) {
+            record += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName() + ";" + tag.getRid() + ";" + tag.getTimeStampLast() + ",";
+        }
 
-        record += DBHelper.TABLE_COLUMN_RID + "=" + item.getRid().toString() + ",";
+        if (!item.getNote().isEmpty()) {
+            record += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
+        }
+
+        record += DBHelper.TABLE_COLUMN_RID + "=" + item.getRid() + ",";
         record += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
 
         ArrayList<Integer> ids = account.getShareIds();
@@ -100,5 +133,130 @@ public class LJournal {
 
     public void setRecord(String record) {
         this.record = record;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    public static void updateItemFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        String note = "";
+        double amount = 0;
+        int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
+        int madeBy = 0;
+        int state = DBHelper.STATE_ACTIVE;
+        long timestamp = 0, timestampLast = 0, accountId = 0, categoryId = 0, vendorId = 0, tagId = 0;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
+                type = Integer.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_MADEBY)) {
+                madeBy = Integer.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT)) {
+                amount = Double.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP)) {
+                timestamp = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
+                String[] sss = ss[1].split(";");
+
+                LAccount account1 = DBAccess.getAccountByName(sss[0]);
+                if (null == account1) {
+                    accountId = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
+                        account1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateAccount(account1);
+                    }
+
+                    accountId = account1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
+                String[] sss = ss[1].split(";");
+
+                LCategory category1 = DBAccess.getCategoryByName(sss[0]);
+                if (null == category1) {
+                    categoryId = DBAccess.addCategory(new LCategory(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
+                        category1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateCategory(category1);
+                    }
+                    categoryId = category1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
+                String[] sss = ss[1].split(";");
+
+                LVendor vendor1 = DBAccess.getVendorByName(sss[0]);
+                if (null == vendor1) {
+                    vendorId = DBAccess.addVendor(new LVendor(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > vendor1.getTimeStampLast()) {
+                        vendor1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateVendor(vendor1);
+                    }
+
+                    vendorId = vendor1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TAG)) {
+                String[] sss = ss[1].split(";");
+
+                LTag tag1 = DBAccess.getTagByName(sss[0]);
+                if (null == tag1) {
+                    tagId = DBAccess.addTag(new LTag(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > tag1.getTimeStampLast()) {
+                        tag1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateTag(tag1);
+                    }
+
+                    tagId = tag1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NOTE)) {
+                note = ss[1];
+            }
+        }
+
+        LTransaction item = DBAccess.getItemByRid(rid);
+        if (item != null) {
+            if (item.getTimeStampLast() < timestampLast) {
+                item.setState(state);
+                item.setValue(amount);
+                item.setType(type);
+                item.setAccount(accountId);
+                item.setCategory(categoryId);
+                item.setVendor(vendorId);
+                item.setTag(tagId);
+                item.setTimeStamp(timestamp);
+                item.setTimeStampLast(timestampLast);
+                item.setNote(note);
+                DBAccess.updateItem(item);
+            }
+        } else {
+            DBAccess.addItem(new LTransaction(rid, amount, type, categoryId, vendorId, tagId, accountId, madeBy, timestamp, timestampLast, note));
+        }
+    }
+
+    public static void receive(String recvRecord) {
+        String[] ss = recvRecord.split(":", 3);
+        int action = Integer.parseInt(ss[1]);
+        switch (action) {
+            case ACTION_UPDATE_ITEM:
+                updateItemFromReceivedRecord(ss[2]);
+                break;
+        }
     }
 }

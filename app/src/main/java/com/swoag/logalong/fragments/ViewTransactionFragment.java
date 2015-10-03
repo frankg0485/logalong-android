@@ -18,6 +18,7 @@ import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
@@ -424,7 +425,11 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 case TransactionEdit.TransitionEditItf.EXIT_OK:
                     AppPersistency.transactionChanged = changed;
                     if (changed) {
+                        item.setTimeStampLast(System.currentTimeMillis());
                         DBAccess.updateItem(item);
+                        LJournal journal = new LJournal();
+                        journal.updateItem(item);
+
                         onSelected(true);
                     }
                     break;
@@ -432,7 +437,13 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     break;
                 case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                     AppPersistency.transactionChanged = true;
-                    DBAccess.deleteItemById(item.getId());
+
+                    item.setTimeStampLast(System.currentTimeMillis());
+                    item.setState(DBHelper.STATE_DELETED);
+                    DBAccess.updateItem(item);
+                    LJournal journal = new LJournal();
+                    journal.updateItem(item);
+
                     onSelected(true);
                     break;
             }

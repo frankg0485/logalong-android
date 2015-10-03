@@ -87,7 +87,7 @@ public class LTransaction {
     }
 
     public LTransaction(String rid, double value, int type, long category, long vendor, long tag,
-                        long account, int by, long timeStamp, long timeStampLast) {
+                        long account, int by, long timeStamp, long timeStampLast, String note) {
         init();
         this.rid = UUID.fromString(rid);
         this.value = value;
@@ -99,6 +99,7 @@ public class LTransaction {
         this.by = by;
         this.timeStamp = timeStamp;
         this.timeStampLast = timeStampLast;
+        this.note = note;
     }
 
     public double getValue() {

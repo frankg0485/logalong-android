@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
@@ -89,6 +90,7 @@ public class MainActivity extends LFragmentActivity
         };
         pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_LOGIN,
                 LBroadcastReceiver.ACTION_POLL_ACKED,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
@@ -411,91 +413,18 @@ public class MainActivity extends LFragmentActivity
         }
     }
 
-    private void addItemFromRecord(String record) {
-        String[] splitRecords = record.split(",", -1);
-        String rid = "";
-        double amount = 0;
-        int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
-        int madeBy = 0;
-        long timestamp = 0, timestampLast = 0, accountId = 0, categoryId = 0, vendorId = 0;
-
-        for (String str : splitRecords) {
-            String[] ss = str.split("=", -1);
-            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
-                type = Integer.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_MADEBY)) {
-                madeBy = Integer.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT)) {
-                amount = Double.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP)) {
-                timestamp = Long.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
-                timestampLast = Long.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
-                String[] sss = ss[1].split(";");
-
-                LAccount account1 = DBAccess.getAccountByName(sss[0]);
-                if (null == account1) {
-                    accountId = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
-                } else {
-                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
-                        account1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateAccount(account1);
-                    }
-
-                    accountId = account1.getId();
-                }
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
-                String[] sss = ss[1].split(";");
-
-                LCategory category1 = DBAccess.getCategoryByName(sss[0]);
-                if (null == category1) {
-                    categoryId = DBAccess.addCategory(new LCategory(sss[0], UUID.fromString(sss[1])));
-                } else {
-                    if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
-                        category1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateCategory(category1);
-                    }
-                    categoryId = category1.getId();
-                }
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
-                String[] sss = ss[1].split(";");
-
-                LVendor vendor1 = DBAccess.getVendorByName(sss[0]);
-                if (null == vendor1) {
-                    vendorId = DBAccess.addVendor(new LVendor(sss[0], UUID.fromString(sss[1])));
-                } else {
-                    if (Long.parseLong(sss[2]) > vendor1.getTimeStampLast()) {
-                        vendor1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateVendor(vendor1);
-                    }
-
-                    vendorId = vendor1.getId();
-                }
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
-                rid = ss[1];
-            }
-        }
-
-        LTransaction item = DBAccess.getItemByRid(rid);
-        if (item != null) {
-            if (item.getTimeStampLast() < timestampLast) {
-                item.setValue(amount);
-                item.setType(type);
-                item.setAccount(accountId);
-                item.setCategory(categoryId);
-                item.setVendor(vendorId);
-                item.setTimeStampLast(timestampLast);
-                DBAccess.updateItem(item);
-            }
-        } else {
-            DBAccess.addItem(new LTransaction(rid, amount, type, categoryId, vendorId, 0, accountId, madeBy, timestamp, timestampLast));
-        }
-    }
-
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
+            case LBroadcastReceiver.ACTION_LOGIN:
+                if (ret == LProtocol.RSPS_OK) {
+                    LLog.d(TAG, "user logged in");
+                    LJournal.flush();
+                } else {
+                    LLog.w(TAG, "unable to login");
+                }
+                break;
+
             case LBroadcastReceiver.ACTION_POLL_ACKED:
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
@@ -575,7 +504,7 @@ public class MainActivity extends LFragmentActivity
                 String record = intent.getStringExtra("record");
                 LProtocol.ui.pollAck(cacheId);
 
-                addItemFromRecord(record);
+                LJournal.updateItemFromReceivedRecord(record);
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
@@ -586,13 +515,14 @@ public class MainActivity extends LFragmentActivity
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                LProtocol.ui.pollAck(cacheId);
+
                 if (ret == LProtocol.RSPS_OK) {
                     userId = intent.getIntExtra("id", 0);
                     userName = intent.getStringExtra("userName");
                     LLog.d(TAG, "received journal from: " + userId + "@" + userName);
-                    record = intent.getStringExtra("record");
-                    String[] ss = record.split(":", 3);
-                    addItemFromRecord(ss[2]);
+                    LJournal.receive(intent.getStringExtra("record"));
                 }
                 break;
         }

@@ -667,6 +667,30 @@ public class DBAccess {
         return vendor;
     }
 
+    public static LTag getTagByName(String name) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getTagValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with name: " + name + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
     public static long addCategory(LCategory category) {
         long id = -1;
         synchronized (dbLock) {
@@ -1070,6 +1094,21 @@ public class DBAccess {
         return true;
     }
 
+    public static boolean updateTag(LTag tag) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = setTagValues(tag);
+                db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + tag.getId()});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static boolean updateAccount(LAccount account) {
         try {
             synchronized (dbLock) {
@@ -1227,12 +1266,14 @@ public class DBAccess {
     private static ContentValues setJournalValues(LJournal journal) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_STATE, journal.getState());
+        cv.put(DBHelper.TABLE_COLUMN_TO_USER, journal.getUserId());
         cv.put(DBHelper.TABLE_COLUMN_RECORD, journal.getRecord());
         return cv;
     }
 
     private static void getJournalValues(Cursor cur, LJournal journal) {
         journal.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
+        journal.setUserId(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER)));
         journal.setRecord(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD)));
         journal.setId(cur.getLong(0));
     }
@@ -1277,5 +1318,12 @@ public class DBAccess {
         }
 
         return true;
+    }
+
+    public static Cursor getAllActiveJournalCursor() {
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_JOURNAL_NAME
+                + " WHERE State=?", new String[]{"" + DBHelper.STATE_ACTIVE});
+        return cur;
     }
 }

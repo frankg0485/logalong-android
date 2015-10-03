@@ -30,6 +30,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_TAG = "Tag";
     public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
     public static final String TABLE_COLUMN_TIMESTAMP_LAST_CHANGE = "TimeStmpLast";
+    public static final String TABLE_COLUMN_TO_USER = "ToUser";
     public static final String TABLE_COLUMN_TYPE = "Type";
     public static final String TABLE_COLUMN_VENDOR = "Vendor";
     public static final String TABLE_COLUMN_YEAR = "Year";
@@ -116,6 +117,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private static final String CREATE_TABLE_JOURNAL = "CREATE TABLE " + TABLE_JOURNAL_NAME +
             "( _id integer primary key autoincrement ," +
             TABLE_COLUMN_STATE + " INTEGER," +
+            TABLE_COLUMN_TO_USER + " INTEGER," +
             TABLE_COLUMN_RECORD + " TEXT" +
             ");";
 

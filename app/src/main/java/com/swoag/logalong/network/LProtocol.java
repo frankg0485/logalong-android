@@ -82,9 +82,10 @@ public class LProtocol {
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-        rspsIntent.putExtra("record", record);
+        rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("record", record);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -107,6 +108,7 @@ public class LProtocol {
         rspsIntent.putExtra("userName", userName);
         rspsIntent.putExtra("accountName", accountName);
         rspsIntent.putExtra("UUID", uuid);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
     private void handleAccountShareConfirm(LBuffer pkt, int status, int action, int cacheId) {
@@ -181,11 +183,9 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_LOGIN:
-                if (status == RSPS_OK) {
-                    LLog.d(TAG, "user logged in");
-                } else {
-                    LLog.w(TAG, "unable to login");
-                }
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOGIN));
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_ID:

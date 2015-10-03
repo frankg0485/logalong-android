@@ -96,10 +96,12 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         switch (action) {
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 AppPersistency.transactionChanged = changed;
+
+                item.setTimeStampLast(System.currentTimeMillis());
                 DBAccess.addItem(item);
 
                 LJournal journal = new LJournal();
-                journal.addItem(item);
+                journal.updateItem(item);
 
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:

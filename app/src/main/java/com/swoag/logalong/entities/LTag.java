@@ -37,6 +37,12 @@ public class LTag {
         this.name = name;
     }
 
+    public LTag(String name, UUID rid) {
+        init();
+        this.name = name;
+        this.rid = rid;
+    }
+
     public int getState() {
         return state;
     }
