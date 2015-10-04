@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LUser;
@@ -135,15 +136,31 @@ public class GenericListEdit implements View.OnClickListener,
                 case R.id.accounts:
                     DBAccess.addAccount(new LAccount(name));
                     break;
+
                 case R.id.categories:
-                    DBAccess.addCategory(new LCategory(name));
+                    LCategory category = new LCategory(name);
+                    DBAccess.addCategory(category);
+
+                    LJournal journal = new LJournal();
+                    journal.updateCategory(category);
                     break;
+
                 case R.id.vendors:
-                    DBAccess.addVendor(new LVendor(name));
+                    LVendor vendor = new LVendor(name);
+                    DBAccess.addVendor(vendor);
+
+                    journal = new LJournal();
+                    journal.updateVendor(vendor);
                     break;
+
                 case R.id.tags:
-                    DBAccess.addTag(new LTag(name));
+                    LTag tag = new LTag(name);
+                    DBAccess.addTag(tag);
+
+                    journal = new LJournal();
+                    journal.updateTag(tag);
                     break;
+
                 default:
                     break;
             }
@@ -176,7 +193,6 @@ public class GenericListEdit implements View.OnClickListener,
             LRenameDialog.LRenameDialogItf, LReminderDialog.LReminderDialogItf,
             LShareAccountDialog.LShareAccountDialogItf,
             LMultiSelectionDialog.OnMultiSelectionDialogItf {
-        private LTransaction item;
         GenericListOptionDialog optionDialog;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
@@ -299,16 +315,42 @@ public class GenericListEdit implements View.OnClickListener,
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
-                        DBAccess.updateAccountNameById(tag.id, newName);
+                        LAccount account = DBAccess.getAccountById(tag.id);
+                        account.setName(newName);
+                        account.setTimeStampLast(System.currentTimeMillis());
+                        DBAccess.updateAccount(account);
+
+                        LJournal journal = new LJournal();
+                        journal.updateAccount(account);
                         break;
+
                     case R.id.categories:
-                        DBAccess.updateCategoryNameById(tag.id, newName);
+                        LCategory category = DBAccess.getCategoryById(tag.id);
+                        category.setName(newName);
+                        category.setTimeStampLast(System.currentTimeMillis());
+                        DBAccess.updateCategory(category);
+
+                        journal = new LJournal();
+                        journal.updateCategory(category);
                         break;
+
                     case R.id.vendors:
-                        DBAccess.updateVendorNameById(tag.id, newName);
+                        LVendor vendor = DBAccess.getVendorById(tag.id);
+                        vendor.setName(newName);
+                        vendor.setTimeStampLast(System.currentTimeMillis());
+                        DBAccess.updateVendor(vendor);
+
+                        journal = new LJournal();
+                        journal.updateVendor(vendor);
                         break;
                     case R.id.tags:
-                        DBAccess.updateTagNameById(tag.id, newName);
+                        LTag tag1 = DBAccess.getTagById(tag.id);
+                        tag1.setName(newName);
+                        tag1.setTimeStampLast(System.currentTimeMillis());
+                        DBAccess.updateTag(tag1);
+
+                        journal = new LJournal();
+                        journal.updateTag(tag1);
                         break;
 
                 }

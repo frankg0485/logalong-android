@@ -43,6 +43,13 @@ public class LCategory {
         this.name = name;
     }
 
+    public LCategory(String name, UUID rid, long timeStampLast) {
+        init();
+        this.name = name;
+        this.rid = rid;
+        this.timeStampLast = timeStampLast;
+    }
+
     public long getId() {
         return id;
     }

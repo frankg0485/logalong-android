@@ -7,8 +7,10 @@ import android.database.Cursor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LLog;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.UUID;
 
 public class LJournal {
@@ -108,6 +110,67 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
+        return true;
+    }
+
+    public boolean updateAccount(LAccount account) {
+        if (!account.isShared()) return false;
+
+        record = ACTION_UPDATE_ACCOUNT + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
+                + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
+                + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
+                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + account.getTimeStampLast();
+
+        ArrayList<Integer> ids = account.getShareIds();
+        ArrayList<Integer> states = account.getShareStates();
+        for (int ii = 0; ii < states.size(); ii++) {
+            if ((states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) || (states.get(ii) == LAccount.ACCOUNT_SHARE_INVITED)) {
+                post(ids.get(ii));
+            }
+        }
+        return true;
+    }
+
+    public boolean updateCategory(LCategory category) {
+        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
+        if (users.size() < 1) return false;
+
+        record = ACTION_UPDATE_CATEGORY + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
+                + DBHelper.TABLE_COLUMN_NAME + "=" + category.getName() + ","
+                + DBHelper.TABLE_COLUMN_RID + "=" + category.getRid() + ","
+                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
+
+        for (int user : users) post(user);
+        return true;
+    }
+
+    public boolean updateVendor(LVendor vendor) {
+        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
+        if (users.size() < 1) return false;
+
+        record = ACTION_UPDATE_VENDOR + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
+                + DBHelper.TABLE_COLUMN_NAME + "=" + vendor.getName() + ","
+                + DBHelper.TABLE_COLUMN_RID + "=" + vendor.getRid() + ","
+                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
+
+        for (int user : users) post(user);
+        return true;
+    }
+
+    public boolean updateTag(LTag tag) {
+        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
+        if (users.size() < 1) return false;
+
+        record = ACTION_UPDATE_TAG + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
+                + DBHelper.TABLE_COLUMN_NAME + "=" + tag.getName() + ","
+                + DBHelper.TABLE_COLUMN_RID + "=" + tag.getRid() + ","
+                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
+
+        for (int user : users) post(user);
         return true;
     }
 
@@ -250,12 +313,179 @@ public class LJournal {
         }
     }
 
+    public static void updateAccountFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        int state = DBHelper.STATE_ACTIVE;
+        long timestampLast = 0;
+        String name = "";
+        boolean stateFound = false;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+                stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
+                name = ss[1];
+            }
+        }
+
+        if (!rid.isEmpty()) {
+            LAccount account = DBAccess.getAccountByUuid(UUID.fromString(rid));
+            if (account == null) {
+                LLog.w(TAG, "account removed?");
+            } else {
+                if (account.getTimeStampLast() < timestampLast) {
+                    if (!name.isEmpty()) account.setName(name);
+                    if (stateFound) account.setState(state);
+                    account.setTimeStampLast(timestampLast);
+                    DBAccess.updateAccount(account);
+                }
+            }
+        }
+    }
+
+    public static void updateCategoryFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        int state = DBHelper.STATE_ACTIVE;
+        long timestampLast = 0;
+        String name = "";
+        boolean stateFound = false;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+                stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
+                name = ss[1];
+            }
+        }
+
+        if (!rid.isEmpty()) {
+            LCategory category = DBAccess.getCategoryByUuid(UUID.fromString(rid));
+            if (category == null) {
+                category = new LCategory(name, UUID.fromString(rid), timestampLast);
+                DBAccess.addCategory(category);
+            } else {
+                if (category.getTimeStampLast() < timestampLast) {
+                    if (!name.isEmpty()) category.setName(name);
+                    if (stateFound) category.setState(state);
+                    category.setTimeStampLast(timestampLast);
+                    DBAccess.updateCategory(category);
+                }
+            }
+        }
+    }
+
+    public static void updateVendorFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        int state = DBHelper.STATE_ACTIVE;
+        long timestampLast = 0;
+        String name = "";
+        boolean stateFound = false;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+                stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
+                name = ss[1];
+            }
+        }
+
+        if (!rid.isEmpty()) {
+            LVendor vendor = DBAccess.getVendorByUuid(UUID.fromString(rid));
+            if (vendor == null) {
+                vendor = new LVendor(name, UUID.fromString(rid), timestampLast);
+                DBAccess.addVendor(vendor);
+            } else {
+                if (vendor.getTimeStampLast() < timestampLast) {
+                    if (!name.isEmpty()) vendor.setName(name);
+                    if (stateFound) vendor.setState(state);
+                    vendor.setTimeStampLast(timestampLast);
+                    DBAccess.updateVendor(vendor);
+                }
+            }
+        }
+    }
+
+    public static void updateTagFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        int state = DBHelper.STATE_ACTIVE;
+        long timestampLast = 0;
+        String name = "";
+        boolean stateFound = false;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+                stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
+                name = ss[1];
+            }
+        }
+
+        if (!rid.isEmpty()) {
+            LTag tag = DBAccess.getTagByUuid(UUID.fromString(rid));
+            if (tag == null) {
+                tag = new LTag(name, UUID.fromString(rid), timestampLast);
+                DBAccess.addTag(tag);
+            } else {
+                if (tag.getTimeStampLast() < timestampLast) {
+                    if (!name.isEmpty()) tag.setName(name);
+                    if (stateFound) tag.setState(state);
+                    tag.setTimeStampLast(timestampLast);
+                    DBAccess.updateTag(tag);
+                }
+            }
+        }
+    }
+
     public static void receive(String recvRecord) {
         String[] ss = recvRecord.split(":", 3);
         int action = Integer.parseInt(ss[1]);
         switch (action) {
             case ACTION_UPDATE_ITEM:
                 updateItemFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_ACCOUNT:
+                updateAccountFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_CATEGORY:
+                updateCategoryFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_VENDOR:
+                updateVendorFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_TAG:
+                updateTagFromReceivedRecord(ss[2]);
                 break;
         }
     }

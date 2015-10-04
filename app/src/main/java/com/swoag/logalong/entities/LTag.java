@@ -43,6 +43,13 @@ public class LTag {
         this.rid = rid;
     }
 
+    public LTag(String name, UUID rid, long timeStampLast) {
+        init();
+        this.name = name;
+        this.rid = rid;
+        this.timeStampLast = timeStampLast;
+    }
+
     public int getState() {
         return state;
     }

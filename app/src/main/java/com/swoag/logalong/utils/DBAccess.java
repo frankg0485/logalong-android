@@ -593,6 +593,78 @@ public class DBAccess {
         return account;
     }
 
+    public static LCategory getCategoryByUuid(UUID uuid) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LCategory category = new LCategory();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with UUID: " + uuid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getCategoryValues(csr, category);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get category with UUID: " + uuid + ":" + e.getMessage());
+            category = null;
+        }
+        if (csr != null) csr.close();
+        return category;
+    }
+
+    public static LVendor getVendorByUuid(UUID uuid) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LVendor vendor = new LVendor();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find vendor with UUID: " + uuid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getVendorValues(csr, vendor);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get vendor with UUID: " + uuid + ":" + e.getMessage());
+            vendor = null;
+        }
+        if (csr != null) csr.close();
+        return vendor;
+    }
+
+    public static LTag getTagByUuid(UUID uuid) {
+        SQLiteDatabase db = getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with UUID: " + uuid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getTagValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with UUID: " + uuid + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
     public static LAccount getAccountByUuid(UUID uuid) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -775,6 +847,34 @@ public class DBAccess {
                     if (account.getShareIds() != null) {
                         for (int ii : account.getShareIds()) {
                             set.add(ii);
+                        }
+                    }
+                }
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
+    }
+
+    public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
+        LAccount account = new LAccount();
+        HashSet<Integer> set = new HashSet<Integer>();
+        SQLiteDatabase db = getReadDb();
+        Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                String str = cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE));
+                if (str != null) {
+                    account.setSharedIdsString(str);
+                    if (account.getShareIds() != null) {
+                        for (int ii = 0; ii < account.getShareIds().size(); ii++) {
+                            if (account.getShareStates().get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                                set.add(account.getShareIds().get(ii));
+                            }
                         }
                     }
                 }
