@@ -15,7 +15,11 @@ import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LSelectionDialog;
@@ -322,12 +326,13 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     @Override
     public Cursor onGetCursor(String table, String column) {
         if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))
-            return DBAccess.getAllAccountsCursor();
+            return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
-            return DBAccess.getAllCategoriesCursor();
+            return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME))
-            return DBAccess.getAllVendorsCursor();
-        else if (table.contentEquals(DBHelper.TABLE_TAG_NAME)) return DBAccess.getAllTagsCursor();
+            return DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+        else if (table.contentEquals(DBHelper.TABLE_TAG_NAME))
+            return DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         return null;
     }
 

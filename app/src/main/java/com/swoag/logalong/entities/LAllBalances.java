@@ -4,6 +4,7 @@ package com.swoag.logalong.entities;
 import android.database.Cursor;
 
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBHelper;
 
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class LAllBalances {
     private void getAllAccountIds() {
         ids = new HashSet<Long>();
 
-        Cursor cursor = DBAccess.getAllAccountsCursor();
+        Cursor cursor = DBAccount.getCursorSortedBy(null);
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {

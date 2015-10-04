@@ -5,6 +5,8 @@ package com.swoag.logalong.views;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
@@ -13,12 +15,13 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class LNewAccountDialog extends Dialog implements
-        View.OnClickListener {
+        View.OnClickListener, TextWatcher {
     private static final String TAG = LNewAccountDialog.class.getSimpleName();
 
     LNewAccountDialogItf callback;
@@ -27,10 +30,14 @@ public class LNewAccountDialog extends Dialog implements
     private EditText text;
     private Context context;
     private Object id;
+    private View okView;
+    private boolean isNameAvailable;
 
     public interface LNewAccountDialogItf {
         // return FALSE to keep this dialog alive.
         public boolean onNewAccountDialogExit(Object id, boolean created, String name);
+
+        public boolean isNewAccountNameAvailable(String name);
     }
 
     public LNewAccountDialog(Context context, Object id, LNewAccountDialogItf callback,
@@ -51,12 +58,44 @@ public class LNewAccountDialog extends Dialog implements
         setContentView(R.layout.new_account_dialog);
 
         findViewById(R.id.cancelDialog).setOnClickListener(this);
-        findViewById(R.id.confirmDialog).setOnClickListener(this);
+        okView = findViewById(R.id.confirmDialog);
+        okView.setOnClickListener(this);
+
+        isNameAvailable = false;
+        okView.setClickable(false);
+        LViewUtils.setAlpha(okView, 0.5f);
+
         findViewById(R.id.closeDialog).setOnClickListener(this);
 
         ((TextView) findViewById(R.id.title)).setText(title);
         text = (EditText) findViewById(R.id.newname);
         text.setHint((hint != null) ? hint : "");
+        text.addTextChangedListener(this);
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        if (callback.isNewAccountNameAvailable(text.getText().toString().trim())) {
+            if (!isNameAvailable) {
+                isNameAvailable = true;
+                okView.setClickable(true);
+                LViewUtils.setAlpha(okView, 1.0f);
+            }
+        } else {
+            if (isNameAvailable) {
+                isNameAvailable = false;
+                okView.setClickable(false);
+                LViewUtils.setAlpha(okView, 0.5f);
+            }
+        }
     }
 
     @Override

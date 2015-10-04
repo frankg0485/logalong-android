@@ -44,7 +44,7 @@ public class DBAccess {
         }
     }
 
-    private static SQLiteDatabase getReadDb() {
+    public static SQLiteDatabase getReadDb() {
         if (dirty) {
             if (dbWrite != null) {
                 dbWrite.close();
@@ -66,7 +66,7 @@ public class DBAccess {
         return dbRead;
     }
 
-    private static SQLiteDatabase getWriteDb() {
+    public static SQLiteDatabase getWriteDb() {
         if (dbWrite == null) {
             open();
             dbWrite = helper.getWritableDatabase();
@@ -884,38 +884,6 @@ public class DBAccess {
         return set;
     }
 
-    public static Cursor getAllAccountsCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
-        return cur;
-    }
-
-    public static Cursor getAllCategoriesCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LCategory.CATEGORY_STATE_ACTIVE});
-        return cur;
-    }
-
-    public static Cursor getAllVendorsCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LVendor.VENDOR_STATE_ACTIVE});
-        return cur;
-    }
-
-    public static Cursor getAllTagsCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LTag.TAG_STATE_ACTIVE});
-        return cur;
-    }
-
     private static int getDbIndexById(String table, String state, int actvState, long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -1448,5 +1416,27 @@ public class DBAccess {
         Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_JOURNAL_NAME
                 + " WHERE State=?", new String[]{"" + DBHelper.STATE_ACTIVE});
         return cur;
+    }
+
+
+    ////////////////
+    public static boolean isNameAvailable(String table, String name) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        try {
+            Cursor csr = db.rawQuery("SELECT "
+                            + DBHelper.TABLE_COLUMN_NAME + ","
+                            + DBHelper.TABLE_COLUMN_STATE + " FROM "
+                            + table + " WHERE UPPER("
+                            + DBHelper.TABLE_COLUMN_NAME + ") =? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name.toUpperCase(), "" + DBHelper.STATE_ACTIVE});
+            if (csr != null) {
+                boolean ret = (csr.getCount() < 1);
+                csr.close();
+                return ret;
+            }
+        } catch (Exception e) {
+        }
+        return true;
     }
 }

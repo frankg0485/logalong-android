@@ -22,7 +22,11 @@ import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
@@ -66,16 +70,16 @@ public class GenericListEdit implements View.OnClickListener,
         Cursor csr = null;
         switch (listId) {
             case R.id.accounts:
-                csr = DBAccess.getAllAccountsCursor();
+                csr = DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.categories:
-                csr = DBAccess.getAllCategoriesCursor();
+                csr = DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.vendors:
-                csr = DBAccess.getAllVendorsCursor();
+                csr = DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.tags:
-                csr = DBAccess.getAllTagsCursor();
+                csr = DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
         }
         return csr;
@@ -127,6 +131,35 @@ public class GenericListEdit implements View.OnClickListener,
                 newAccountDialog.show();
                 break;
         }
+    }
+
+    @Override
+    public boolean isNewAccountNameAvailable(String name) {
+        if (name != null && !name.isEmpty()) {
+            String table;
+            switch (listId) {
+                case R.id.accounts:
+                    table = DBHelper.TABLE_ACCOUNT_NAME;
+                    break;
+
+                case R.id.categories:
+                    table = DBHelper.TABLE_CATEGORY_NAME;
+                    break;
+
+                case R.id.vendors:
+                    table = DBHelper.TABLE_VENDOR_NAME;
+                    break;
+
+                case R.id.tags:
+                    table = DBHelper.TABLE_TAG_NAME;
+                    break;
+
+                default:
+                    return false;
+            }
+            return DBAccess.isNameAvailable(table, name);
+        }
+        return false;
     }
 
     @Override
@@ -455,7 +488,7 @@ public class GenericListEdit implements View.OnClickListener,
 
         @Override
         public Cursor onMultiSelectionGetCursor(String column) {
-            return DBAccess.getAllCategoriesCursor();
+            return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         }
 
         private class VTag {
