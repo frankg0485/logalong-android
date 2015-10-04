@@ -75,7 +75,7 @@ public class LTransaction {
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
-                        long account, long timeStamp) {
+                        long account, long timeStamp, String note) {
         init();
         this.value = value;
         this.type = type;
@@ -84,6 +84,7 @@ public class LTransaction {
         this.tag = tag;
         this.account = account;
         this.timeStamp = timeStamp;
+        this.note = note;
     }
 
     public LTransaction(String rid, double value, int type, long category, long vendor, long tag,

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LVendor;
 
@@ -33,21 +34,27 @@ public class DBPorter {
                     + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
                     + DBHelper.TABLE_COLUMN_ACCOUNT + ","
                     + DBHelper.TABLE_COLUMN_CATEGORY + ","
-                    + DBHelper.TABLE_COLUMN_VENDOR);
+                    + DBHelper.TABLE_COLUMN_VENDOR + ","
+                    + DBHelper.TABLE_COLUMN_TAG + ","
+                    + DBHelper.TABLE_COLUMN_NOTE);
             if (cursor != null && cursor.getCount() > 0) {
                 cursor.moveToFirst();
                 do {
-                    String account, category, vendor;
+                    String account, category, vendor, tag, note;
                     account = DBAccess.getAccountNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
                     category = DBAccess.getCategoryNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
                     vendor = DBAccess.getVendorNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+                    tag = DBAccess.getTagNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
+                    note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
                     String row = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)) + ","
                             + cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ","
                             + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
                             + account + ","
                             + category + ","
-                            + vendor;
+                            + vendor + ","
+                            + tag + ","
+                            + note;
                     myCSV.add(row);
                 } while (cursor.moveToNext());
             }
@@ -72,6 +79,7 @@ public class DBPorter {
             HashMap<String, Long> accountMap = new HashMap<String, Long>();
             HashMap<String, Long> categoryMap = new HashMap<String, Long>();
             HashMap<String, Long> vendorMap = new HashMap<String, Long>();
+            HashMap<String, Long> tagMap = new HashMap<String, Long>();
 
             boolean header = true;
             for (String str : myCSV.getCsv()) {
@@ -82,8 +90,8 @@ public class DBPorter {
                     String[] ss = str.split(",", -1);
                     double amount;
                     int type;
-                    long timestamp, accountId, categoryId, vendorId;
-                    String account, category, vendor;
+                    long timestamp, accountId, categoryId, vendorId, tagId;
+                    String account, category, vendor, tag, note;
 
                     type = Integer.valueOf(ss[0]);
                     amount = Double.valueOf(ss[1]);
@@ -91,6 +99,8 @@ public class DBPorter {
                     account = ss[3];
                     category = ss[4];
                     vendor = ss[5];
+                    tag = ss[6];
+                    note = ss[7];
 
                     Long ll = accountMap.get(account);
                     if (null == ll) {
@@ -122,7 +132,18 @@ public class DBPorter {
                         vendorId = ll.longValue();
                     }
 
-                    DBAccess.addItem(new LTransaction(amount, type, categoryId, vendorId, 0, accountId, timestamp));
+                    ll = tagMap.get(tag);
+                    if (null == ll) {
+                        if (tag.isEmpty()) tagId = 0;
+                        else {
+                            tagId = DBAccess.addTag(new LTag(tag));
+                            tagMap.put(tag, tagId);
+                        }
+                    } else {
+                        tagId = ll.longValue();
+                    }
+
+                    DBAccess.addItem(new LTransaction(amount, type, categoryId, vendorId, tagId, accountId, timestamp, note));
                 }
             }
 

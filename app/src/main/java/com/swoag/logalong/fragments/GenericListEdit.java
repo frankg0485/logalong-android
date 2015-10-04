@@ -268,7 +268,7 @@ public class GenericListEdit implements View.OnClickListener,
             for (Integer ii : selections) {
                 if (!origSelections.contains(ii)) {
                     // new share
-                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid().toString());
+                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid().toString(), true);
                 }
             }
 
@@ -276,7 +276,18 @@ public class GenericListEdit implements View.OnClickListener,
                 if (!selections.contains(ii)) {
                     account.removeShareUser(ii);
                     DBAccess.updateAccount(account);
-                    // unshare
+
+                    // notify the other party
+                    LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid().toString());
+
+                    ArrayList<Integer> ids = account.getShareIds();
+                    ArrayList<Integer> states = account.getShareStates();
+                    for (int jj = 0; jj < ids.size(); jj++) {
+                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                            LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid().toString());
+                        }
+                    }
+
                     LLog.d(TAG, "TODO: unshare with user: " + ii + " " + LPreferences.getShareUserName(ii));
                 }
             }

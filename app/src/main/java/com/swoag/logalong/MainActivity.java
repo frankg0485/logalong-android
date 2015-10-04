@@ -28,6 +28,7 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LViewPager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
@@ -97,7 +98,8 @@ public class MainActivity extends LFragmentActivity
                 LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE,
                 LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD,
                 LBroadcastReceiver.ACTION_JOURNAL_POSTED,
-                LBroadcastReceiver.ACTION_JOURNAL_RECEIVED}, this);
+                LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
+                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE}, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -453,6 +455,7 @@ public class MainActivity extends LFragmentActivity
                 String userName = intent.getStringExtra("userName");
                 String accountName = intent.getStringExtra("accountName");
                 String uuid = intent.getStringExtra("UUID");
+                byte requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
                 //TODO: ask for user confirmation
 
                 LPreferences.setShareUserName(userId, userName);
@@ -468,9 +471,20 @@ public class MainActivity extends LFragmentActivity
                     account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                     DBAccess.updateAccount(account);
                 }
-
                 LProtocol.ui.pollAck(cacheId);
-                LProtocol.ui.confirmAccountShare(userId, accountName);
+
+                // inform all existing peers about this new user if confirmation were required
+                if (requireConfirmation == 1) {
+                    LProtocol.ui.confirmAccountShare(userId, accountName);
+
+                    ArrayList<Integer> ids = account.getShareIds();
+                    ArrayList<Integer> states = account.getShareStates();
+                    for (int jj = 0; jj < ids.size(); jj++) {
+                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED && jj != userId) {
+                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
+                        }
+                    }
+                }
 
                 // now push all existing records
                 pushAllAccountRecords(userId, account);
@@ -489,6 +503,14 @@ public class MainActivity extends LFragmentActivity
                     //TODO: the account name has been changed??
                     LLog.w(TAG, "warning: account renamed, account sharing ignored");
                 } else {
+                    ArrayList<Integer> ids = account.getShareIds();
+                    ArrayList<Integer> states = account.getShareStates();
+                    for (int jj = 0; jj < ids.size(); jj++) {
+                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
+                        }
+                    }
+
                     account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                     DBAccess.updateAccount(account);
                 }
@@ -518,11 +540,43 @@ public class MainActivity extends LFragmentActivity
                 cacheId = intent.getIntExtra("cacheId", 0);
                 LProtocol.ui.pollAck(cacheId);
 
-                if (ret == LProtocol.RSPS_OK) {
-                    userId = intent.getIntExtra("id", 0);
-                    userName = intent.getStringExtra("userName");
-                    LLog.d(TAG, "received journal from: " + userId + "@" + userName);
-                    LJournal.receive(intent.getStringExtra("record"));
+                userId = intent.getIntExtra("id", 0);
+                userName = intent.getStringExtra("userName");
+                LLog.d(TAG, "received journal from: " + userId + "@" + userName);
+                LJournal.receive(intent.getStringExtra("record"));
+                break;
+
+            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE:
+                // this is from our shared peer, informing status change for one of the existng shared user
+                // or newly added user
+                cacheId = intent.getIntExtra("cacheId", 0);
+                LProtocol.ui.pollAck(cacheId);
+
+                userId = intent.getIntExtra("id", 0);
+                userName = intent.getStringExtra("userName");
+                LLog.d(TAG, "received account share user change from: " + userId + "@" + userName);
+
+                int changeUserId = intent.getIntExtra("changeUserId", 0);
+                byte change = intent.getByteExtra("change", (byte) 0);
+                accountName = intent.getStringExtra("accountName");
+                uuid = intent.getStringExtra("UUID");
+
+                account = DBAccess.getAccountByUuid(UUID.fromString(uuid));
+                if (account == null) {
+                    LLog.w(TAG, "warning: account removed?");
+                } else {
+                    if (change == 1) {
+                        account.addShareUser(changeUserId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                        DBAccess.updateAccount(account);
+                        LProtocol.ui.shareAccountWithUser(changeUserId, accountName, uuid, false);
+                    } else {
+                        if (changeUserId == LPreferences.getUserId()) {
+                            account.removeAllShareUsers();
+                        } else {
+                            account.removeShareUser(changeUserId);
+                        }
+                        DBAccess.updateAccount(account);
+                    }
                 }
                 break;
         }

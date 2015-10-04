@@ -172,6 +172,11 @@ public class LAccount {
         }
     }
 
+    public void removeAllShareUsers() {
+        shareIds.clear();
+        shareStates.clear();
+    }
+
     public int getShareUserState(int id) {
         if (shareIds == null || shareStates == null) {
             return ACCOUNT_SHARE_NA;
