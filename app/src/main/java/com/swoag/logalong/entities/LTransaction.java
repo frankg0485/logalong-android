@@ -63,7 +63,6 @@ public class LTransaction {
 
     public boolean isEqual(LTransaction item) {
         return (this.timeStamp == item.timeStamp &&
-                this.timeStampLast == item.timeStampLast &&
                 this.value == item.value &&
                 this.type == item.type &&
                 this.by == item.by &&

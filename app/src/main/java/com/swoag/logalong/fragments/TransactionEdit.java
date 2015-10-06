@@ -2,12 +2,15 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -25,8 +28,10 @@ import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LSelectionDialog;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf {
+public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf,
+        DatePickerDialog.OnDateSetListener {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -40,7 +45,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
     private View viewAccount, viewCategory, viewVendor, viewTag;
     private View viewClear, viewBack, viewDiscard, viewCancel, viewOk;
-    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV, dateTV;
+    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV;
+    private TextView dateTV;
     private EditText noteET;
 
     private LSelectionDialog mSelectionDialog;
@@ -123,6 +129,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
 
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
+
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
         categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
@@ -180,9 +187,24 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     @Override
+    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, monthOfYear, dayOfMonth);
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
+        item.setTimeStamp(calendar.getTimeInMillis());
+    }
+
+    @Override
     public void onClick(View v) {
         hideIME();
         switch (v.getId()) {
+            case R.id.tvDate:
+                final Calendar c = Calendar.getInstance();
+                DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
+                        this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+                datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                datePickerDialog.show();
+                break;
             case R.id.b0:
                 appendToString(0);
                 break;
@@ -601,6 +623,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         item.setValue(string2value(inputString));
 
         boolean changed = !item.isEqual(savedItem);
+        if (changed) item.setTimeStampLast(System.currentTimeMillis());
         destroy();
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
     }
