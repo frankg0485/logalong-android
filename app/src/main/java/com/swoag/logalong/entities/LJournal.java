@@ -6,7 +6,9 @@ import android.database.Cursor;
 
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ public class LJournal {
     private static final int ACTION_UPDATE_CATEGORY = 3;
     private static final int ACTION_UPDATE_VENDOR = 4;
     private static final int ACTION_UPDATE_TAG = 5;
+    private static final int ACTION_UPDATE_VENDOR_CATEGORY = 6;
 
     long id;
     int state;
@@ -74,8 +77,8 @@ public class LJournal {
         LAccount account = DBAccess.getAccountById(item.getAccount());
         if (!account.isShared()) return false;
 
-        LCategory category = DBAccess.getCategoryById(item.getCategory());
-        LVendor vendor = DBAccess.getVendorById(item.getVendor());
+        LCategory category = DBCategory.getById(item.getCategory());
+        LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBAccess.getTagById(item.getTag());
 
         record = ACTION_UPDATE_ITEM + ":"
@@ -169,6 +172,19 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_NAME + "=" + tag.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + tag.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
+
+        for (int user : users) post(user);
+        return true;
+    }
+
+    public boolean updateVendorCategory(boolean add, UUID vendor, UUID category) {
+        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
+        if (users.size() < 1) return false;
+
+        record = ACTION_UPDATE_VENDOR_CATEGORY + ":"
+                + DBHelper.TABLE_COLUMN_STATE + "=" + (add ? DBHelper.STATE_ACTIVE : DBHelper.STATE_DELETED) + ","
+                + DBHelper.TABLE_COLUMN_RID + ".vendor=" + vendor + ","
+                + DBHelper.TABLE_COLUMN_RID + ".category=" + category;
 
         for (int user : users) post(user);
         return true;
@@ -464,6 +480,29 @@ public class LJournal {
         }
     }
 
+    private static void updateVendorCategoryFromReceivedRecord(String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String vendorRid = "", categoryRid = "";
+        int state = DBHelper.STATE_ACTIVE;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID + ".vendor")) {
+                vendorRid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID + ".category")) {
+                categoryRid = ss[1];
+            }
+        }
+
+        if ((!vendorRid.isEmpty()) && (!categoryRid.isEmpty())) {
+            long vendor = DBVendor.getIdByRid(UUID.fromString(vendorRid));
+            long category = DBCategory.getIdByRid(UUID.fromString(categoryRid));
+            DBVendor.updateCategory(vendor, category, state == DBHelper.STATE_ACTIVE);
+        }
+    }
+
     public static void receive(String recvRecord) {
         String[] ss = recvRecord.split(":", 3);
         int action = Integer.parseInt(ss[1]);
@@ -486,6 +525,10 @@ public class LJournal {
 
             case ACTION_UPDATE_TAG:
                 updateTagFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_VENDOR_CATEGORY:
+                updateVendorCategoryFromReceivedRecord(ss[2]);
                 break;
         }
     }

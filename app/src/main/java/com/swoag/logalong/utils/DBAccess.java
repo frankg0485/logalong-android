@@ -30,8 +30,9 @@ public class DBAccess {
     private static DBHelper helper;
     private static SQLiteDatabase dbRead;
     private static SQLiteDatabase dbWrite;
-    private static boolean dirty;
-    private static final Object dbLock = new Object();
+
+    public static boolean dirty;
+    public static final Object dbLock = new Object();
 
     private static void open() {
         if (helper == null) helper = new DBHelper(LApp.ctx, DBHelper.DB_VERSION);
@@ -500,53 +501,7 @@ public class DBAccess {
         return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
-    public static LCategory getCategoryById(long id) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LCategory category = new LCategory();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE _id=?", new String[]{"" + id});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with id: " + id);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getCategoryValues(csr, category);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get category with id: " + id + ":" + e.getMessage());
-            category = null;
-        }
-        if (csr != null) csr.close();
-        return category;
-    }
-
-    public static LVendor getVendorById(long id) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LVendor vendor = new LVendor();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE _id=?", new String[]{"" + id});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find vendor with id: " + id);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getVendorValues(csr, vendor);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with id: " + id + ":" + e.getMessage());
-            vendor = null;
-        }
-        if (csr != null) csr.close();
-        return vendor;
-    }
-
-    public static LTag getTagById(long id) {
+        public static LTag getTagById(long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         LTag tag = new LTag();
@@ -949,7 +904,7 @@ public class DBAccess {
     }
 
 
-    public static int updateCategoryNameById(long id, String name) {
+    /*public static int updateCategoryNameById(long id, String name) {
         LCategory category = getCategoryById(id);
         if (category == null) {
             LLog.e(TAG, "category no longer exists: " + id);
@@ -964,9 +919,9 @@ public class DBAccess {
             dirty = true;
         }
         return 0;
-    }
+    }*/
 
-    public static int updateVendorNameById(long id, String name) {
+    /*public static int updateVendorNameById(long id, String name) {
         LVendor vendor = getVendorById(id);
         if (vendor == null) {
             LLog.e(TAG, "vendor no longer exists: " + id);
@@ -981,7 +936,7 @@ public class DBAccess {
             dirty = true;
         }
         return 0;
-    }
+    }*/
 
     public static int updateTagNameById(long id, String name) {
         LTag tag = getTagById(id);
@@ -1046,64 +1001,6 @@ public class DBAccess {
         summary.setIncome(income);
         summary.setExpense(expense);
     }*/
-
-    public static void addVendorCategory(long vendor, long category) {
-        boolean exists = false;
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                            + DBHelper.TABLE_COLUMN_VENDOR + "=? AND "
-                            + DBHelper.TABLE_COLUMN_CATEGORY + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor, "" + category});
-            if (csr != null) {
-                if (csr.getCount() > 0) exists = true;
-                csr.close();
-            }
-
-            if (!exists) {
-                synchronized (dbLock) {
-                    db = getWriteDb();
-                    ContentValues cv = new ContentValues();
-                    cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
-                    cv.put(DBHelper.TABLE_COLUMN_VENDOR, vendor);
-                    cv.put(DBHelper.TABLE_COLUMN_CATEGORY, category);
-                    db.insert(DBHelper.TABLE_VENDOR_CATEGORY_NAME, "", cv);
-                    dirty = true;
-                }
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get log record: " + e.getMessage());
-        }
-    }
-
-    public static HashSet<Long> getVendorCategories(long vendor) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        HashSet<Long> cats = new HashSet<Long>();
-        try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                            + DBHelper.TABLE_COLUMN_VENDOR + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor});
-            if (csr != null) {
-                if (csr.getCount() > 0) {
-                    csr.moveToFirst();
-                    do {
-                        cats.add(csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-                    } while (csr.moveToNext());
-                    return cats;
-                }
-                csr.close();
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get log record: " + e.getMessage());
-        }
-        return cats;
-    }
 
     public static ArrayList<String> getAccountBalance(long id, LBoxer boxer) {
         SQLiteDatabase db = getReadDb();
@@ -1438,5 +1335,28 @@ public class DBAccess {
         } catch (Exception e) {
         }
         return true;
+    }
+
+    public static long getIdByRid(String table, UUID rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        long id = 0;
+
+        try {
+            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?",
+                    new String[]{"" + rid.toString()});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+                csr.close();
+                return 0;
+            }
+
+            csr.moveToFirst();
+            id = csr.getLong(0);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+        }
+        if (csr != null) csr.close();
+        return id;
     }
 }

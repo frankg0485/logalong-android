@@ -21,7 +21,9 @@ import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -381,8 +383,8 @@ public class MainActivity extends LFragmentActivity
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {
-                LCategory category = DBAccess.getCategoryById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-                LVendor vendor = DBAccess.getVendorById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+                LCategory category = DBCategory.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
+                LVendor vendor = DBVendor.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
 
                 int madeBy = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY));
                 if (madeBy == 0) {

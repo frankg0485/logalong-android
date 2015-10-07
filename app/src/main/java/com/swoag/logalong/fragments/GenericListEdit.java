@@ -358,7 +358,7 @@ public class GenericListEdit implements View.OnClickListener,
                         break;
 
                     case R.id.categories:
-                        LCategory category = DBAccess.getCategoryById(tag.id);
+                        LCategory category = DBCategory.getById(tag.id);
                         category.setName(newName);
                         category.setTimeStampLast(System.currentTimeMillis());
                         DBAccess.updateCategory(category);
@@ -368,7 +368,7 @@ public class GenericListEdit implements View.OnClickListener,
                         break;
 
                     case R.id.vendors:
-                        LVendor vendor = DBAccess.getVendorById(tag.id);
+                        LVendor vendor = DBVendor.getById(tag.id);
                         vendor.setName(newName);
                         vendor.setTimeStampLast(System.currentTimeMillis());
                         DBAccess.updateVendor(vendor);
@@ -463,7 +463,7 @@ public class GenericListEdit implements View.OnClickListener,
                             DBHelper.TABLE_COLUMN_NAME
                     };
 
-                    HashSet<Long> selectedIds = DBAccess.getVendorCategories(tag.id);
+                    HashSet<Long> selectedIds = DBVendor.getCategories(tag.id);
                     LMultiSelectionDialog dialog = new LMultiSelectionDialog
                             (activity, context, selectedIds, this, ids, columns);
                     dialog.show();
@@ -480,9 +480,8 @@ public class GenericListEdit implements View.OnClickListener,
         @Override
         public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections) {
             VTag tag = (VTag) obj;
-            for (Long ii : selections) {
-                DBAccess.addVendorCategory(tag.id, ii);
-            }
+
+            DBVendor.setCategories(tag.id, selections);
             optionDialog.dismiss();
         }
 

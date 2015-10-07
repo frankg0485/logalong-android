@@ -137,6 +137,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         updateItemDisplay();
 
         noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
+        noteET.setText(item.getNote());
 
         valueTV = (TextView) rootView.findViewById(R.id.value);
         clearInputString();
@@ -621,6 +622,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void doSaveLog() {
         item.setValue(string2value(inputString));
+        item.setNote(noteET.getText().toString());
 
         boolean changed = !item.isEqual(savedItem);
         if (changed) item.setTimeStampLast(System.currentTimeMillis());
