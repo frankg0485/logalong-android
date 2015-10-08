@@ -25,13 +25,14 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LSelectionDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf,
-        DatePickerDialog.OnDateSetListener {
+        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -41,20 +42,14 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private LTransaction savedItem;
     private TransitionEditItf callback;
 
-    private View view0, view1, view2, view3, view4, view5, view6, view7, view8, view9;
-    private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
-    private View viewAccount, viewCategory, viewVendor, viewTag;
-    private View viewClear, viewBack, viewDiscard, viewCancel, viewOk;
-    private TextView valueTV, accountTV, categoryTV, vendorTV, tagTV;
+    private View viewAmount, viewAccount, viewCategory, viewVendor, viewTag;
+    private View viewBack, viewDiscard, viewCancel, viewSave;
+    private TextView amountTV, accountTV, categoryTV, vendorTV, tagTV;
     private TextView dateTV;
     private EditText noteET;
 
     private LSelectionDialog mSelectionDialog;
-
-    private String inputString = "";
-    private double lastValue;
-    private int lastValueEnd;
-    private int mathOperator;
+    private boolean firstTimeAmountPicker = true;
 
     public interface TransitionEditItf {
         public static final int EXIT_DELETE = 10;
@@ -98,38 +93,18 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private void create() {
-        view0 = setViewListener(rootView, R.id.b0);
-        view1 = setViewListener(rootView, R.id.b1);
-        view2 = setViewListener(rootView, R.id.b2);
-        view3 = setViewListener(rootView, R.id.b3);
-        view4 = setViewListener(rootView, R.id.b4);
-        view5 = setViewListener(rootView, R.id.b5);
-        view6 = setViewListener(rootView, R.id.b6);
-        view7 = setViewListener(rootView, R.id.b7);
-        view8 = setViewListener(rootView, R.id.b8);
-        view9 = setViewListener(rootView, R.id.b9);
-        viewBackSpace = setViewListener(rootView, R.id.backspace);
-        viewDot = setViewListener(rootView, R.id.dot);
-        viewPlus = setViewListener(rootView, R.id.plus);
-        viewMinus = setViewListener(rootView, R.id.minus);
-        viewMultiply = setViewListener(rootView, R.id.multiply);
-        viewDivide = setViewListener(rootView, R.id.divide);
-        viewClear = setViewListener(rootView, R.id.clear);
-        viewCancel = setViewListener(rootView, R.id.cancel);
-        viewBack = setViewListener(rootView, R.id.back);
-        viewOk = setViewListener(rootView, R.id.ok);
+        viewBack = setViewListener(rootView, R.id.goback);
+        viewSave = setViewListener(rootView, R.id.save);
+        viewAmount = setViewListener(rootView, R.id.amountRow);
         viewAccount = setViewListener(rootView, R.id.accountRow);
         viewCategory = setViewListener(rootView, R.id.categoryRow);
         viewVendor = setViewListener(rootView, R.id.vendorRow);
         viewTag = setViewListener(rootView, R.id.tagRow);
 
-        if (!bCreate) {
-            viewDiscard = setViewListener(rootView, R.id.discard);
-            viewDiscard.setVisibility(View.VISIBLE);
-        }
 
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
 
+        amountTV = (TextView) rootView.findViewById(R.id.tvAmount);
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
         categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
@@ -139,38 +114,28 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
         noteET.setText(item.getNote());
 
-        valueTV = (TextView) rootView.findViewById(R.id.value);
         clearInputString();
-        inputString = value2string(item.getValue());
+        String inputString = value2string(item.getValue());
         if (inputString.isEmpty()) {
-            valueTV.setText("0.0");
+            amountTV.setText("0.0");
         } else {
-            valueTV.setText(inputString);
-            enableDot(false);
+            amountTV.setText(inputString);
             enableOk(true);
+        }
+
+        if (bCreate) {
+            LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
+            picker.show();
+        } else {
+            viewDiscard = setViewListener(rootView, R.id.discard);
+            viewDiscard.setVisibility(View.VISIBLE);
         }
     }
 
     private void destroy() {
-        view0 = null;
-        view1 = null;
-        view2 = null;
-        view3 = null;
-        view4 = null;
-        view5 = null;
-        view6 = null;
-        view7 = null;
-        view8 = null;
-        view9 = null;
-        viewBackSpace = null;
-        viewDot = null;
-        viewPlus = null;
-        viewMultiply = null;
-        viewDivide = null;
-        viewClear = null;
-        viewCancel = null;
         viewBack = null;
-        viewOk = null;
+        viewSave = null;
+        viewAmount = null;
         viewAccount = null;
         viewCategory = null;
         viewVendor = null;
@@ -178,7 +143,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         viewDiscard = null;
 
         noteET = null;
-        valueTV = null;
         accountTV = null;
         categoryTV = null;
         vendorTV = null;
@@ -196,6 +160,28 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     @Override
+    public void onDollarAmountPickerExit(double value, boolean save) {
+        if (save) {
+            item.setValue(value);
+            String inputString = value2string(value);
+            if (inputString.isEmpty()) {
+                amountTV.setText("0.0");
+                enableOk(false);
+            } else {
+                amountTV.setText(inputString);
+                enableOk(true);
+            }
+        } else if (firstTimeAmountPicker) {
+            if (bCreate) {
+                destroy();
+                callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+            }
+        }
+
+        if (firstTimeAmountPicker) firstTimeAmountPicker = false;
+    }
+
+    @Override
     public void onClick(View v) {
         hideIME();
         switch (v.getId()) {
@@ -205,57 +191,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                         this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
                 datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
                 datePickerDialog.show();
-                break;
-            case R.id.b0:
-                appendToString(0);
-                break;
-            case R.id.b1:
-                appendToString(1);
-                break;
-            case R.id.b2:
-                appendToString(2);
-                break;
-            case R.id.b3:
-                appendToString(3);
-                break;
-            case R.id.b4:
-                appendToString(4);
-                break;
-            case R.id.b5:
-                appendToString(5);
-                break;
-            case R.id.b6:
-                appendToString(6);
-                break;
-            case R.id.b7:
-                appendToString(7);
-                break;
-            case R.id.b8:
-                appendToString(8);
-                break;
-            case R.id.b9:
-                appendToString(9);
-                break;
-            case R.id.dot:
-                appendToString(-1);
-                break;
-            case R.id.backspace:
-                removeLastDigitFromString();
-                break;
-            case R.id.clear:
-                clearInputString();
-                break;
-            case R.id.plus:
-                doMathToString(0);
-                break;
-            case R.id.minus:
-                doMathToString(1);
-                break;
-            case R.id.multiply:
-                doMathToString(2);
-                break;
-            case R.id.divide:
-                doMathToString(3);
                 break;
 
             case R.id.noteEditText:
@@ -267,6 +202,11 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     }
                 } catch (Exception e) {
                 }
+                break;
+
+            case R.id.amountRow:
+                LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
+                picker.show();
                 break;
 
             case R.id.accountRow:
@@ -326,13 +266,12 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
                 break;
 
-            case R.id.back:
-            case R.id.cancel:
+            case R.id.goback:
                 destroy();
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                 break;
 
-            case R.id.ok:
+            case R.id.save:
                 saveLog();
                 break;
 
@@ -402,162 +341,14 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private void enableOk(boolean yes) {
-        viewOk.setEnabled(yes);
-        if (yes) LViewUtils.setAlpha((View) viewOk, 1.0f);
-        else LViewUtils.setAlpha((View) viewOk, 0.5f);
-    }
-
-    private void enableMath(boolean yes) {
-        viewPlus.setEnabled(yes);
-        viewMinus.setEnabled(yes);
-        viewMultiply.setEnabled(yes);
-        viewDivide.setEnabled(yes);
-
-        if (yes) {
-            LViewUtils.setAlpha((View) viewPlus, 1.0f);
-            LViewUtils.setAlpha((View) viewMinus, 1.0f);
-            LViewUtils.setAlpha((View) viewMultiply, 1.0f);
-            LViewUtils.setAlpha((View) viewDivide, 1.0f);
-        } else {
-            LViewUtils.setAlpha((View) viewPlus, 0.5f);
-            LViewUtils.setAlpha((View) viewMinus, 0.5f);
-            LViewUtils.setAlpha((View) viewMultiply, 0.5f);
-            LViewUtils.setAlpha((View) viewDivide, 0.5f);
-        }
-    }
-
-    private void enableDot(boolean yes) {
-        viewDot.setEnabled(yes);
-        if (yes) LViewUtils.setAlpha((View) viewDot, 1.0f);
-        else LViewUtils.setAlpha((View) viewDot, 0.5f);
+        viewSave.setEnabled(yes);
+        if (yes) LViewUtils.setAlpha((View) viewSave, 1.0f);
+        else LViewUtils.setAlpha((View) viewSave, 0.5f);
     }
 
     private void clearInputString() {
-        inputString = "";
-        valueTV.setText("0.0");
-        ((Button) viewOk).setText(LApp.ctx.getString(android.R.string.ok));
-
-        mathOperator = -1;
-        lastValue = 0;
+        amountTV.setText("0.0");
         enableOk(false);
-        enableDot(true);
-        enableMath(false);
-    }
-
-    private void appendToString(int digit) {
-        if (digit == -1) {
-            if (inputString.isEmpty()) {
-                inputString = "0.";
-            } else {
-                inputString += '.';
-            }
-            enableDot(false);
-        } else {
-            if (inputString.isEmpty() && digit == 0) {
-                inputString = "0.";
-                enableDot(false);
-            } else {
-                inputString = inputString + digit;
-            }
-        }
-
-        validateStringAndUpdateDisplay();
-        valueTV.setText(inputString);
-    }
-
-    private void removeLastDigitFromString() {
-        if (inputString.isEmpty()) {
-            clearInputString();
-        } else {
-            char lastDigit = inputString.charAt(inputString.length() - 1);
-            if (lastDigit == '.') {
-                enableDot(true);
-            } else {
-                if (lastDigit == '+' || lastDigit == '-' || lastDigit == '*' || lastDigit == '/') {
-                    mathOperator = -1;
-                    ((Button) viewOk).setText(LApp.ctx.getString(android.R.string.ok));
-                }
-            }
-
-            inputString = inputString.substring(0, inputString.length() - 1);
-            int len = inputString.length();
-            while (true && len > 0) {
-                lastDigit = inputString.charAt(len - 1);
-                if ((!Character.isDigit(lastDigit)) && lastDigit != '.'
-                        && lastDigit != '+'
-                        && lastDigit != '-'
-                        && lastDigit != '*'
-                        && lastDigit != '/') {
-                    inputString = inputString.substring(0, len - 1);
-                    len--;
-                } else break;
-            }
-            if (len == 0) clearInputString();
-            else {
-                validateStringAndUpdateDisplay();
-                valueTV.setText(inputString);
-            }
-        }
-    }
-
-    private String validateString(String str) {
-        if (str.isEmpty()) return str;
-        char ch0 = str.charAt(0);
-        if (ch0 == '.') return "0.";
-        if (str.length() == 1) {
-            if (ch0 == '-') return "0.0";
-            else return str;
-        }
-
-        char ch1 = str.charAt(1);
-        if (ch0 == '0' && ch1 != '.') return str.substring(1);
-
-        return str;
-    }
-
-    private void validateStringAndUpdateDisplay() {
-        String tmp = (mathOperator >= 0) ? inputString.substring(lastValueEnd) : inputString;
-        tmp = validateString(tmp);
-        if (mathOperator < 0) inputString = tmp;
-        else inputString = inputString.substring(0, lastValueEnd) + tmp;
-
-        if (string2value(tmp) != 0) {
-            enableOk(true);
-            enableMath(true);
-        } else {
-            if (mathOperator == 3 || mathOperator < 0) enableOk(false);
-            if (mathOperator < 0) enableMath(false);
-        }
-    }
-
-    private void doMathToString(int operator) {
-        if (mathOperator >= 0) {
-            saveLog();
-        }
-
-        switch (operator) {
-            case 0:
-                inputString += '+';
-                break;
-            case 1:
-                inputString += '-';
-                break;
-            case 2:
-                inputString += '*';
-                break;
-            case 3:
-                inputString += '/';
-                break;
-        }
-
-        lastValueEnd = inputString.length();
-        lastValue = string2value(inputString.substring(0, lastValueEnd - 1));
-        enableMath(false);
-        ((Button) viewOk).setText("=");
-        enableDot(true);
-
-        mathOperator = operator;
-        valueTV.setText(inputString);
     }
 
     private String value2string(double value) {
@@ -568,47 +359,12 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         return str;
     }
 
-    private double string2value(String str) {
-        if (str.isEmpty()) return 0f;
-
-        char lastDigit = str.charAt(str.length() - 1);
-        if (lastDigit == '.'
-                || lastDigit == '+'
-                || lastDigit == '-'
-                || lastDigit == '*'
-                || lastDigit == '/') {
-            return (Double.parseDouble(str.substring(0, str.length() - 1)));
-        }
-        return Double.parseDouble(str);
-    }
-
     private void saveLog() {
-        if (mathOperator >= 0) {
-            double curValue = string2value(inputString.substring(lastValueEnd, inputString.length()));
-            switch (mathOperator) {
-                case 0:
-                    curValue = lastValue + curValue;
-                    break;
-                case 1:
-                    curValue = lastValue - curValue;
-                    break;
-                case 2:
-                    curValue = lastValue * curValue;
-                    break;
-                case 3:
-                    if (curValue != 0) curValue = lastValue / curValue;
-                    break;
-            }
-
-            clearInputString();
-            inputString = String.format("%.2f", curValue);
-
-            validateStringAndUpdateDisplay();
-            valueTV.setText(inputString);
-            enableDot(false); //math result always has '.' in it.
-        } else {
-            doSaveLog();
-        }
+        item.setNote(noteET.getText().toString());
+        boolean changed = !item.isEqual(savedItem);
+        if (changed) item.setTimeStampLast(System.currentTimeMillis());
+        destroy();
+        callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
     }
 
     private void hideIME() {
@@ -618,15 +374,5 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             noteET.setCursorVisible(false);
         } catch (Exception e) {
         }
-    }
-
-    private void doSaveLog() {
-        item.setValue(string2value(inputString));
-        item.setNote(noteET.getText().toString());
-
-        boolean changed = !item.isEqual(savedItem);
-        if (changed) item.setTimeStampLast(System.currentTimeMillis());
-        destroy();
-        callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
     }
 }
