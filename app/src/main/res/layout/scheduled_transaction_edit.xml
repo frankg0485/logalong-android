@@ -120,13 +120,6 @@
                     android:paddingRight="15dp"
                     android:textSize="18dp"
                     android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/discard"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/ic_action_discard"
-                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
@@ -273,6 +266,14 @@
                 android:paddingBottom="6dp"
                 android:paddingTop="6dp"
                 android:src="@drawable/ic_action_left" />
+
+            <ImageView
+                android:id="@+id/discard"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/ic_action_discard_dark"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/save"

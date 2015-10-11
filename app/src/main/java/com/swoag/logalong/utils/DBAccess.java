@@ -415,7 +415,7 @@ public class DBAccess {
         }
     }
 
-    private static void updateStateById(String table, long id, int state) {
+    public static void updateStateById(String table, long id, int state) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = new ContentValues();
@@ -501,7 +501,7 @@ public class DBAccess {
         return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
-        public static LTag getTagById(long id) {
+    public static LTag getTagById(long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         LTag tag = new LTag();

@@ -25,7 +25,11 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_NUMBER = "Number";
     public static final String TABLE_COLUMN_NOTE = "Note";
     public static final String TABLE_COLUMN_RECORD = "Record";
+    public static final String TABLE_COLUMN_REPEAT_INTERVAL = "RptInterval";
+    public static final String TABLE_COLUMN_REPEAT_UNIT = "RptUnit";
+    public static final String TABLE_COLUMN_REPEAT_COUNT = "RptCount";
     public static final String TABLE_COLUMN_RID = "Rid";
+    public static final String TABLE_COLUMN_SCHEDULE_TIMESTAMP = "SchTimeStmp";
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
     public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
@@ -38,6 +42,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_ACCOUNT_NAME = "LAccount";
     public static final String TABLE_ACCOUNT_BALANCE_NAME = "LAccountBalance";
     public static final String TABLE_TRANSACTION_NAME = "LTrans";
+    public static final String TABLE_SCHEDULED_TRANSACTION_NAME = "LScheduledTrans";
     public static final String TABLE_CATEGORY_NAME = "LCategory";
     public static final String TABLE_TAG_NAME = "LTag";
     public static final String TABLE_VENDOR_NAME = "LVendor";
@@ -46,6 +51,29 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_AMOUNT + " REAL," +
+            TABLE_COLUMN_CATEGORY + " INTEGER," +
+            TABLE_COLUMN_ACCOUNT + " INTEGER," +
+            TABLE_COLUMN_TAG + " INTEGER," +
+            TABLE_COLUMN_VENDOR + " INTEGER," +
+            TABLE_COLUMN_TIMESTAMP + " INTEGER," +
+            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
+            TABLE_COLUMN_TYPE + " INTEGER," +
+            TABLE_COLUMN_STATE + " INTEGER," +
+            TABLE_COLUMN_MADEBY + " INTEGER," +
+            TABLE_COLUMN_RID + " TEXT," +
+            TABLE_COLUMN_NOTE + " TEXT," +
+            TABLE_COLUMN_ICON + " BLOB" +
+            ");";
+
+    private static final String CREATE_TABLE_SCHEDULED_TRANSACTION = "CREATE TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
+            "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_REPEAT_INTERVAL + " INTEGER," +
+            TABLE_COLUMN_REPEAT_UNIT + " INTEGER," +
+            TABLE_COLUMN_REPEAT_COUNT + " INTEGER," +
+            TABLE_COLUMN_SCHEDULE_TIMESTAMP + " INTEGER," +
+
+            // plus TABLE_TRANSACTION columns
             TABLE_COLUMN_AMOUNT + " REAL," +
             TABLE_COLUMN_CATEGORY + " INTEGER," +
             TABLE_COLUMN_ACCOUNT + " INTEGER," +
@@ -130,6 +158,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_ACCOUNT);
         db.execSQL(CREATE_TABLE_ACCOUNT_BALANCE);
         db.execSQL(CREATE_TABLE_TRANSACTION);
+        db.execSQL(CREATE_TABLE_SCHEDULED_TRANSACTION);
         db.execSQL(CREATE_TABLE_CATEGORY);
         db.execSQL(CREATE_TABLE_TAG);
         db.execSQL(CREATE_TABLE_VENDOR);

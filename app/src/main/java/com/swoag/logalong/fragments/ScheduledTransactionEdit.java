@@ -14,6 +14,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
@@ -36,9 +37,9 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private Activity activity;
     private View rootView;
     private boolean bCreate;
-    private LTransaction item;
-    private LTransaction savedItem;
-    private TransitionEditItf callback;
+    private LScheduledTransaction scheduledItem;
+    private LScheduledTransaction savedScheduledItem;
+    private ScheduledTransitionEditItf callback;
 
     private View viewAmount, viewAccount, viewCategory, viewVendor, viewTag;
     private View viewBack, viewDiscard, viewCancel, viewSave;
@@ -48,28 +49,29 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private LSelectionDialog mSelectionDialog;
     private boolean firstTimeAmountPicker = true;
 
-    public interface TransitionEditItf {
+    public interface ScheduledTransitionEditItf {
         public static final int EXIT_DELETE = 10;
         public static final int EXIT_OK = 20;
         public static final int EXIT_CANCEL = 30;
 
-        public void onTransactionEditExit(int action, boolean changed);
+        public void onScheduledTransactionEditExit(int action, boolean changed);
     }
 
-    public ScheduledTransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate,
-                                    TransitionEditItf callback) {
+    public ScheduledTransactionEdit(Activity activity, View rootView, LScheduledTransaction item, boolean bCreate,
+                                    ScheduledTransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
-        this.item = item;
+        this.scheduledItem = item;
         this.callback = callback;
 
-        this.savedItem = new LTransaction(item);
+        this.savedScheduledItem = new LScheduledTransaction(item);
 
         this.bCreate = bCreate;
         create();
     }
 
     private void updateItemDisplay() {
+        LTransaction item = scheduledItem.getItem();
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
         accountTV.setText(DBAccess.getAccountNameById(item.getAccount()));
         categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
@@ -109,7 +111,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
         updateItemDisplay();
 
         clearInputString();
-        String inputString = value2string(item.getValue());
+        String inputString = value2string(scheduledItem.getItem().getValue());
         if (inputString.isEmpty()) {
             amountTV.setText("0.0");
         } else {
@@ -134,14 +136,17 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
         viewCategory = null;
         viewVendor = null;
         viewTag = null;
-        viewDiscard = null;
+        if (viewDiscard != null) {
+            viewDiscard.setVisibility(View.GONE);
+            viewDiscard = null;
+        }
 
         accountTV = null;
         categoryTV = null;
         vendorTV = null;
         tagTV = null;
         dateTV = null;
-        savedItem = null;
+        savedScheduledItem = null;
     }
 
     @Override
@@ -149,13 +154,13 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, monthOfYear, dayOfMonth);
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
-        item.setTimeStamp(calendar.getTimeInMillis());
+        scheduledItem.getItem().setTimeStamp(calendar.getTimeInMillis());
     }
 
     @Override
     public void onDollarAmountPickerExit(double value, boolean save) {
         if (save) {
-            item.setValue(value);
+            scheduledItem.getItem().setValue(value);
             String inputString = value2string(value);
             if (inputString.isEmpty()) {
                 amountTV.setText("0.0");
@@ -167,7 +172,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
                 destroy();
-                callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
             }
         }
 
@@ -176,6 +181,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
 
     @Override
     public void onClick(View v) {
+        LTransaction item = scheduledItem.getItem();
         switch (v.getId()) {
             case R.id.tvDate:
                 final Calendar c = Calendar.getInstance();
@@ -244,12 +250,12 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
                 break;
             case R.id.discard:
                 destroy();
-                callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
+                callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_DELETE, false);
                 break;
 
             case R.id.goback:
                 destroy();
-                callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
                 break;
 
             case R.id.save:
@@ -263,7 +269,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
 
     public void dismiss() {
         destroy();
-        callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+        callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
     }
 
     @Override
@@ -286,6 +292,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
 
     @Override
     public void onSelectionDialogExit(int dlgId, long selectedId) {
+        LTransaction item = scheduledItem.getItem();
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
                 item.setAccount(selectedId);
@@ -341,9 +348,9 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     }
 
     private void saveLog() {
-        boolean changed = !item.isEqual(savedItem);
-        if (changed) item.setTimeStampLast(System.currentTimeMillis());
+        boolean changed = !scheduledItem.isEqual(savedScheduledItem);
+        if (changed) scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
         destroy();
-        callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
+        callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_OK, changed);
     }
 }
