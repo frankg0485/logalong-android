@@ -34,6 +34,14 @@ public class LScheduledTransaction {
         this.item = item;
     }
 
+    public LScheduledTransaction(int repeatInterval, int repeatUnit, int repeatCount, long timestamp, LTransaction item) {
+        this.repeatInterval = repeatInterval;
+        this.repeatUnit = repeatUnit;
+        this.repeatCount = repeatCount;
+        this.timestamp = timestamp;
+        this.item = item;
+    }
+
     public LScheduledTransaction(LScheduledTransaction sch) {
         this.repeatUnit = sch.getRepeatUnit();
         this.repeatInterval = sch.getRepeatInterval();

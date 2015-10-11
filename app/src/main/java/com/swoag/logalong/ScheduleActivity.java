@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.fragments.ScheduledTransactionEdit;
@@ -78,9 +79,10 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
 
                 scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
                 if (createNew) DBScheduledTransaction.add(scheduledItem);
+                else DBScheduledTransaction.update(scheduledItem);
 
-                //LJournal journal = new LJournal();
-                //journal.updateItem(item);
+                LJournal journal = new LJournal();
+                journal.updateScheduledItem(scheduledItem);
                 break;
 
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
@@ -88,6 +90,7 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
 
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                 DBScheduledTransaction.deleteById(scheduledItem.getItem().getId());
+                //TODO: journal support
                 break;
         }
 

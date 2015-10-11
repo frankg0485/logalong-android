@@ -8,6 +8,7 @@ import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 
@@ -21,12 +22,13 @@ public class LJournal {
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
 
-    private static final int ACTION_UPDATE_ITEM = 1;
-    private static final int ACTION_UPDATE_ACCOUNT = 2;
-    private static final int ACTION_UPDATE_CATEGORY = 3;
-    private static final int ACTION_UPDATE_VENDOR = 4;
-    private static final int ACTION_UPDATE_TAG = 5;
-    private static final int ACTION_UPDATE_VENDOR_CATEGORY = 6;
+    private static final int ACTION_UPDATE_ITEM = 10;
+    private static final int ACTION_UPDATE_SCHEDULED_ITEM = 15;
+    private static final int ACTION_UPDATE_ACCOUNT = 20;
+    private static final int ACTION_UPDATE_CATEGORY = 30;
+    private static final int ACTION_UPDATE_VENDOR = 40;
+    private static final int ACTION_UPDATE_TAG = 50;
+    private static final int ACTION_UPDATE_VENDOR_CATEGORY = 60;
 
     long id;
     int state;
@@ -73,16 +75,14 @@ public class LJournal {
         LProtocol.ui.postJournal(userId, this.id + ":" + this.record);
     }
 
-    public boolean updateItem(LTransaction item) {
+    private String transactionItemString(LTransaction item) {
         LAccount account = DBAccess.getAccountById(item.getAccount());
-        if (!account.isShared()) return false;
 
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBAccess.getTagById(item.getTag());
 
-        record = ACTION_UPDATE_ITEM + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + item.getState() + ","
+        String str = DBHelper.TABLE_COLUMN_STATE + "=" + item.getState() + ","
                 + DBHelper.TABLE_COLUMN_TYPE + "=" + item.getType() + ","
                 + DBHelper.TABLE_COLUMN_AMOUNT + "=" + item.getValue() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP + "=" + item.getTimeStamp() + ","
@@ -90,21 +90,52 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_MADEBY + "=" + item.getBy() + ",";
 
         if (category != null && (!category.getName().isEmpty())) {
-            record += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName() + ";" + category.getRid() + ";" + category.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName() + ";" + category.getRid() + ";" + category.getTimeStampLast() + ",";
         }
         if (vendor != null && (!vendor.getName().isEmpty())) {
-            record += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
         }
         if (tag != null && (!tag.getName().isEmpty())) {
-            record += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName() + ";" + tag.getRid() + ";" + tag.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName() + ";" + tag.getRid() + ";" + tag.getTimeStampLast() + ",";
         }
 
         if (!item.getNote().isEmpty()) {
-            record += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
+            str += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
         }
 
-        record += DBHelper.TABLE_COLUMN_RID + "=" + item.getRid() + ",";
-        record += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
+        str += DBHelper.TABLE_COLUMN_RID + "=" + item.getRid() + ",";
+        str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
+
+        return str;
+    }
+
+    public boolean updateItem(LTransaction item) {
+        LAccount account = DBAccess.getAccountById(item.getAccount());
+        if (!account.isShared()) return false;
+
+        record = ACTION_UPDATE_ITEM + ":" + transactionItemString(item);
+
+        ArrayList<Integer> ids = account.getShareIds();
+        ArrayList<Integer> states = account.getShareStates();
+        for (int ii = 0; ii < states.size(); ii++) {
+            if ((states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) || (states.get(ii) == LAccount.ACCOUNT_SHARE_INVITED)) {
+                post(ids.get(ii));
+            }
+        }
+        return true;
+    }
+
+    public boolean updateScheduledItem(LScheduledTransaction sch) {
+        LTransaction item = sch.getItem();
+        LAccount account = DBAccess.getAccountById(item.getAccount());
+        if ((null == account) || (!account.isShared())) return false;
+
+        record = ACTION_UPDATE_SCHEDULED_ITEM + ":" + transactionItemString(item);
+        record += ","
+                + DBHelper.TABLE_COLUMN_REPEAT_COUNT + "=" + sch.getRepeatCount() + ","
+                + DBHelper.TABLE_COLUMN_REPEAT_INTERVAL + "=" + sch.getRepeatInterval() + ","
+                + DBHelper.TABLE_COLUMN_REPEAT_UNIT + "=" + sch.getRepeatUnit() + ","
+                + DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + "=" + sch.getTimestamp();
 
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
@@ -223,7 +254,9 @@ public class LJournal {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public static void updateItemFromReceivedRecord(String receivedRecord) {
+    private static LTransaction parseItemFromReceivedRecord(String receivedRecord) {
+        LTransaction item = new LTransaction();
+
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         String note = "";
@@ -309,23 +342,100 @@ public class LJournal {
             }
         }
 
-        LTransaction item = DBAccess.getItemByRid(rid);
+        item.setState(state);
+        item.setValue(amount);
+        item.setType(type);
+        item.setAccount(accountId);
+        item.setCategory(categoryId);
+        item.setVendor(vendorId);
+        item.setTag(tagId);
+        item.setTimeStamp(timestamp);
+        item.setTimeStampLast(timestampLast);
+        item.setNote(note);
+        item.setRid(UUID.fromString(rid));
+        item.setBy(madeBy);
+
+        return item;
+    }
+
+    public static void updateItemFromReceivedRecord(String receivedRecord) {
+        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
+
+        LTransaction item = DBAccess.getItemByRid(receivedItem.getRid().toString());
         if (item != null) {
-            if (item.getTimeStampLast() < timestampLast) {
-                item.setState(state);
-                item.setValue(amount);
-                item.setType(type);
-                item.setAccount(accountId);
-                item.setCategory(categoryId);
-                item.setVendor(vendorId);
-                item.setTag(tagId);
-                item.setTimeStamp(timestamp);
-                item.setTimeStampLast(timestampLast);
-                item.setNote(note);
+            if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
+                item.setState(receivedItem.getState());
+                item.setValue(receivedItem.getValue());
+                item.setType(receivedItem.getType());
+                item.setAccount(receivedItem.getAccount());
+                item.setCategory(receivedItem.getCategory());
+                item.setVendor(receivedItem.getVendor());
+                item.setTag(receivedItem.getTag());
+                item.setTimeStamp(receivedItem.getTimeStamp());
+                item.setTimeStampLast(receivedItem.getTimeStampLast());
+                item.setNote(receivedItem.getNote());
                 DBAccess.updateItem(item);
             }
         } else {
-            DBAccess.addItem(new LTransaction(rid, amount, type, categoryId, vendorId, tagId, accountId, madeBy, timestamp, timestampLast, note));
+            DBAccess.addItem(new LTransaction(receivedItem.getRid().toString(),
+                    receivedItem.getValue(),
+                    receivedItem.getType(),
+                    receivedItem.getCategory(),
+                    receivedItem.getVendor(),
+                    receivedItem.getTag(),
+                    receivedItem.getAccount(),
+                    receivedItem.getBy(),
+                    receivedItem.getTimeStamp(),
+                    receivedItem.getTimeStampLast(),
+                    receivedItem.getNote()));
+        }
+    }
+
+    public static void updateScheduledItemFromReceivedRecord(String receivedRecord) {
+        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
+
+        String[] splitRecords = receivedRecord.split(",", -1);
+        long timestamp = 0;
+        int repeatUnit = LScheduledTransaction.REPEAT_UNIT_MONTH;
+        int repeatInterval = 1;
+        int repeatCount = 0;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_COUNT)) {
+                repeatCount = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL)) {
+                repeatInterval = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_UNIT)) {
+                repeatUnit = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)) {
+                timestamp = Long.parseLong(ss[1]);
+            }
+        }
+
+        LScheduledTransaction sch = DBScheduledTransaction.getByRid(receivedItem.getRid());
+        if (sch != null) {
+            LTransaction item = sch.getItem();
+            if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
+                item.setState(receivedItem.getState());
+                item.setValue(receivedItem.getValue());
+                item.setType(receivedItem.getType());
+                item.setAccount(receivedItem.getAccount());
+                item.setCategory(receivedItem.getCategory());
+                item.setVendor(receivedItem.getVendor());
+                item.setTag(receivedItem.getTag());
+                item.setTimeStamp(receivedItem.getTimeStamp());
+                item.setTimeStampLast(receivedItem.getTimeStampLast());
+                item.setNote(receivedItem.getNote());
+
+                sch.setTimestamp(timestamp);
+                sch.setRepeatUnit(repeatUnit);
+                sch.setRepeatInterval(repeatInterval);
+                sch.setRepeatCount(repeatCount);
+                DBScheduledTransaction.update(sch);
+            }
+        } else {
+            DBScheduledTransaction.add(new LScheduledTransaction(repeatInterval, repeatUnit, repeatCount, timestamp, receivedItem));
         }
     }
 
@@ -509,6 +619,10 @@ public class LJournal {
         switch (action) {
             case ACTION_UPDATE_ITEM:
                 updateItemFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_UPDATE_SCHEDULED_ITEM:
+                updateScheduledItemFromReceivedRecord(ss[2]);
                 break;
 
             case ACTION_UPDATE_ACCOUNT:

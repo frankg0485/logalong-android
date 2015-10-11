@@ -167,12 +167,12 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
                 enableOk(false);
             } else {
                 amountTV.setText(inputString);
-                enableOk(true);
+                if (scheduledItem.getItem().getAccount() != 0) enableOk(true);
             }
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
-                destroy();
                 callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
+                destroy();
             }
         }
 
@@ -296,6 +296,9 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
                 item.setAccount(selectedId);
+                if (item.getValue() != 0) {
+                    enableOk(true);
+                }
                 break;
             case DLG_ID_CATEGORY:
                 item.setCategory(selectedId);
@@ -350,7 +353,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private void saveLog() {
         boolean changed = !scheduledItem.isEqual(savedScheduledItem);
         if (changed) scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
-        destroy();
         callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_OK, changed);
+        destroy();
     }
 }

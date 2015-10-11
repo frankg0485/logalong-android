@@ -63,7 +63,18 @@ public class DBScheduledTransaction {
             id = db.insert(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, "", cv);
             DBAccess.dirty = true;
         }
+        sch.getItem().setId(id);
         return id;
+    }
+
+    public static boolean update(LScheduledTransaction sch) {
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = setValues(sch);
+            db.update(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + sch.getItem().getId()});
+            DBAccess.dirty = true;
+        }
+        return true;
     }
 
     public static LScheduledTransaction getById(long id) {
@@ -74,6 +85,27 @@ public class DBScheduledTransaction {
         try {
             cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
                     + " WHERE _id=?", new String[]{"" + id});
+            if (cur != null && cur.getCount() > 0) {
+                cur.moveToFirst();
+                sch = new LScheduledTransaction();
+                getValues(cur, sch);
+            }
+
+            if (cur != null) cur.close();
+        } catch (Exception e) {
+        }
+
+        return sch;
+    }
+
+    public static LScheduledTransaction getByRid(UUID rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        LScheduledTransaction sch = null;
+        Cursor cur = null;
+
+        try {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
+                    + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{"" + rid.toString()});
             if (cur != null && cur.getCount() > 0) {
                 cur.moveToFirst();
                 sch = new LScheduledTransaction();

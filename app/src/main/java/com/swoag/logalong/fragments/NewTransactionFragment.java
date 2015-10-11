@@ -18,6 +18,8 @@ import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.ScheduleActivity;
+import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBPorter;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
