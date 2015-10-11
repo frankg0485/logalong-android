@@ -51,6 +51,11 @@
                     android:id="@+id/transaction"
                     style="@style/setTimeButtons"
                     android:text="+ Transaction" />
+
+                <Button
+                    android:id="@+id/schedule"
+                    style="@style/setTimeButtons"
+                    android:text="+ Schedule" />
             </LinearLayout>
 
         </LinearLayout>

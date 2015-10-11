@@ -1,6 +1,7 @@
 package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,13 +17,12 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBPorter;
+import com.swoag.logalong.ScheduleActivity;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
 
-    private Button btnExpense, btnIncome, btnTransaction;
+    private Button btnExpense, btnIncome, btnTransaction, btnSchedule;
     private ViewFlipper viewFlipper;
 
     private View rootView;
@@ -40,7 +40,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         btnExpense = setBtnListener(rootView, R.id.expense);
         btnIncome = setBtnListener(rootView, R.id.income);
         btnTransaction = setBtnListener(rootView, R.id.transaction);
-
+        btnSchedule = setBtnListener(rootView, R.id.schedule);
         return rootView;
     }
 
@@ -83,6 +83,10 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
                 //DBPorter.importDb("logalong" + DBHelper.DB_VERSION + ".db");
                 LProtocol.ui.ping();
+                break;
+
+            case R.id.schedule:
+                startActivity(new Intent(getActivity(), ScheduleActivity.class));
                 break;
 
             default:
