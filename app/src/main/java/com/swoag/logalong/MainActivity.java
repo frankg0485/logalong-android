@@ -50,7 +50,7 @@ public class MainActivity extends LFragmentActivity
 
     Handler pollHandler;
     Runnable pollRunnable;
-    static final int NETWORK_POLLING_MS = 3000;
+    static final int NETWORK_POLLING_MS = 10000;
     private BroadcastReceiver broadcastReceiver;
 
     @Override

@@ -34,7 +34,7 @@
                     android:textSize="16dp" />
 
                 <TextView
-                    android:id="@+id/repeatNum"
+                    android:id="@+id/repeatInterval"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -76,7 +76,7 @@
                     android:textSize="16dp" />
 
                 <TextView
-                    android:id="@+id/repeatLimit"
+                    android:id="@+id/repeatCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"

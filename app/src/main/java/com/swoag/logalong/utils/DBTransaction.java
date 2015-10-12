@@ -38,7 +38,7 @@ public class DBTransaction {
         trans.setBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
         trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        trans.setRid(UUID.fromString(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        trans.setRid(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
         trans.setId(cursor.getLong(0));
     }
 

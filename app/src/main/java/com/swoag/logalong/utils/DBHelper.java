@@ -10,6 +10,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static final int STATE_ACTIVE = 10;
     public static final int STATE_DELETED = 20;
+    public static final int STATE_DISABLED = 30;
 
     public static final String DATABASE_NAME = "LogAlongDB";
     public static final int DB_VERSION = 1;

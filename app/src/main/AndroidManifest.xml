@@ -29,6 +29,8 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden|adjustResize">
         </activity>
+
+        <receiver android:name="com.swoag.logalong.receivers.LAlarmReceiver" />
     </application>
 
 </manifest>

@@ -10,6 +10,8 @@
     <string name="edit">Edit</string>
     <string name="hint_user_name">User Name</string>
     <string name="login">Log In</string>
+    <string name="month">month</string>
+    <string name="months">months</string>
     <string name="monthly">monthly</string>
     <string name="new_account">New Account</string>
     <string name="new_category">New Category</string>
@@ -46,6 +48,7 @@
     <string name="start_on">start on</string>
     <string name="tags">Tags</string>
     <string name="undo">Undo</string>
+    <string name="unlimited">unlimited</string>
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="user_name">User Name</string>
@@ -54,4 +57,6 @@
     <string name="warning_get_share_user_time_out">Unable to connect to server</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
+    <string name="week">week</string>
+    <string name="weeks">weeks</string>
 </resources>

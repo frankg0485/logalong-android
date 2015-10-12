@@ -44,7 +44,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private View viewAmount, viewAccount, viewCategory, viewVendor, viewTag;
     private View viewBack, viewDiscard, viewCancel, viewSave;
     private TextView amountTV, accountTV, categoryTV, vendorTV, tagTV;
-    private TextView dateTV;
+    private TextView dateTV, weekMonthTV, intervalTV, countTV;
 
     private LSelectionDialog mSelectionDialog;
     private boolean firstTimeAmountPicker = true;
@@ -71,7 +71,12 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     }
 
     private void updateItemDisplay() {
+        intervalTV.setText("" + scheduledItem.getRepeatInterval());
+        weekMonthTV.setText(activity.getString(savedScheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK? R.string.week : R.string.month));
+        countTV.setText(activity.getString(R.string.unlimited));
+
         LTransaction item = scheduledItem.getItem();
+
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
         accountTV.setText(DBAccess.getAccountNameById(item.getAccount()));
         categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
@@ -94,7 +99,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private void create() {
         viewBack = setViewListener(rootView, R.id.goback);
         viewSave = setViewListener(rootView, R.id.save);
-        viewAmount = setViewListener(rootView, R.id.amountRow);
+                viewAmount = setViewListener(rootView, R.id.amountRow);
         viewAccount = setViewListener(rootView, R.id.accountRow);
         viewCategory = setViewListener(rootView, R.id.categoryRow);
         viewVendor = setViewListener(rootView, R.id.vendorRow);
@@ -102,6 +107,10 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
 
 
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
+
+        intervalTV = (TextView) rootView.findViewById(R.id.repeatInterval);
+        countTV = (TextView) rootView.findViewById(R.id.repeatCount);
+        weekMonthTV = (TextView) rootView.findViewById(R.id.repeatWeekMonth);
 
         amountTV = (TextView) rootView.findViewById(R.id.tvAmount);
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
@@ -131,6 +140,11 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private void destroy() {
         viewBack = null;
         viewSave = null;
+
+        intervalTV = null;
+        countTV = null;
+        weekMonthTV = null;
+
         viewAmount = null;
         viewAccount = null;
         viewCategory = null;

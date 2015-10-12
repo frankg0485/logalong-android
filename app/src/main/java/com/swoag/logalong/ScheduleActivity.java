@@ -25,6 +25,7 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class ScheduleActivity extends Activity implements View.OnClickListener,
         ScheduledTransactionEdit.ScheduledTransitionEditItf {
@@ -76,19 +77,30 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
 
         switch (action) {
             case TransactionEdit.TransitionEditItf.EXIT_OK:
+                if (changed) {
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(scheduledItem.getItem().getTimeStamp());
+                    calendar.set(Calendar.HOUR_OF_DAY, 23);
+                    calendar.set(Calendar.MINUTE, 59);
+                    calendar.set(Calendar.SECOND, 59);
+                    scheduledItem.calculateNextTimeMs(calendar.getTimeInMillis());
 
-                scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
-                if (createNew) DBScheduledTransaction.add(scheduledItem);
-                else DBScheduledTransaction.update(scheduledItem);
+                    scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
+                    if (createNew) DBScheduledTransaction.add(scheduledItem);
+                    else DBScheduledTransaction.update(scheduledItem);
 
-                LJournal journal = new LJournal();
-                journal.updateScheduledItem(scheduledItem);
+                    scheduledItem.setAlarm();
+
+                    LJournal journal = new LJournal();
+                    journal.updateScheduledItem(scheduledItem);
+                }
                 break;
 
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 return;
 
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                scheduledItem.cancelAlarm();
                 DBScheduledTransaction.deleteById(scheduledItem.getItem().getId());
                 //TODO: journal support
                 break;
@@ -171,7 +183,7 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
             tv.setText(vendor);
 
             tv = (TextView) mainView.findViewById(R.id.date);
-            long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+            long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP));
             tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
             tv = (TextView) mainView.findViewById(R.id.dollor);

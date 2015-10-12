@@ -352,7 +352,7 @@ public class LJournal {
         item.setTimeStamp(timestamp);
         item.setTimeStampLast(timestampLast);
         item.setNote(note);
-        item.setRid(UUID.fromString(rid));
+        item.setRid(rid);
         item.setBy(madeBy);
 
         return item;
@@ -361,7 +361,7 @@ public class LJournal {
     public static void updateItemFromReceivedRecord(String receivedRecord) {
         LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
 
-        LTransaction item = DBAccess.getItemByRid(receivedItem.getRid().toString());
+        LTransaction item = DBAccess.getItemByRid(receivedItem.getRid());
         if (item != null) {
             if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());

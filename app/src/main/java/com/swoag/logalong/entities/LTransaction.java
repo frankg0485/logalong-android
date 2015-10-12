@@ -12,19 +12,19 @@ public class LTransaction {
     public static final int TRANSACTION_TYPE_INCOME = 20;
     public static final int TRANSACTION_TYPE_TRANSFER = 30;
 
-    double value;
-    int type;
-    int by;
-    int state;
-    long id;
-    long category;
-    long account;
-    long tag;
-    long vendor;
-    long timeStamp;
-    long timeStampLast;
-    UUID rid;
-    String note;
+    private double value;
+    private int type;
+    private int by;
+    private int state;
+    private long id;
+    private long category;
+    private long account;
+    private long tag;
+    private long vendor;
+    private long timeStamp;
+    private long timeStampLast;
+    private String rid;
+    private String note;
 
     private void init() {
         this.timeStampLast = this.timeStamp = System.currentTimeMillis();
@@ -37,7 +37,7 @@ public class LTransaction {
         this.account = 0;
         this.tag = 0;
         this.vendor = 0;
-        this.rid = UUID.randomUUID();
+        this.rid = UUID.randomUUID().toString();
 
         this.note = "";
     }
@@ -46,7 +46,7 @@ public class LTransaction {
         init();
     }
 
-    public LTransaction(LTransaction item) {
+    public void copy (LTransaction item) {
         this.timeStamp = item.timeStamp;
         this.timeStampLast = item.timeStampLast;
         this.value = item.value;
@@ -59,6 +59,11 @@ public class LTransaction {
         this.tag = item.tag;
         this.vendor = item.vendor;
         this.note = item.note;
+        this.rid = item.rid;
+    }
+
+    public LTransaction(LTransaction item) {
+        copy(item);
     }
 
     public boolean isEqual(LTransaction item) {
@@ -89,7 +94,7 @@ public class LTransaction {
     public LTransaction(String rid, double value, int type, long category, long vendor, long tag,
                         long account, int by, long timeStamp, long timeStampLast, String note) {
         init();
-        this.rid = UUID.fromString(rid);
+        this.rid = rid;
         this.value = value;
         this.type = type;
         this.category = category;
@@ -198,11 +203,11 @@ public class LTransaction {
         this.note = note;
     }
 
-    public UUID getRid() {
+    public String getRid() {
         return rid;
     }
 
-    public void setRid(UUID rid) {
+    public void setRid(String rid) {
         this.rid = rid;
     }
 }

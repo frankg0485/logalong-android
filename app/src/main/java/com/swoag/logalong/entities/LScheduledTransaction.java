@@ -2,7 +2,12 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.LAlarm;
+import com.swoag.logalong.utils.LLog;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 public class LScheduledTransaction {
@@ -57,6 +62,30 @@ public class LScheduledTransaction {
                 this.repeatUnit == sch.getRepeatUnit() &&
                 this.timestamp == sch.getTimestamp() &&
                 this.item.isEqual(sch.getItem()));
+    }
+
+    public void calculateNextTimeMs(long baseTimeMs) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTimeMs);
+        while (baseTimeMs <= System.currentTimeMillis()) {
+            calendar.add(Calendar.MONTH, 1);
+            baseTimeMs = calendar.getTimeInMillis();
+        }
+
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        timestamp = calendar.getTimeInMillis();
+    }
+
+    public void cancelAlarm() {
+        LAlarm.cancelAlarm((int) item.getId());
+    }
+
+    public void setAlarm() {
+        LLog.d(TAG, "alarm " + item.getId() + " set: " + (new Date(timestamp)));
+        cancelAlarm();
+        LAlarm.setAlarm((int) item.getId(), timestamp);
     }
 
     public LTransaction getItem() {

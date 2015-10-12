@@ -98,14 +98,14 @@ public class DBScheduledTransaction {
         return sch;
     }
 
-    public static LScheduledTransaction getByRid(UUID rid) {
+    public static LScheduledTransaction getByRid(String rid) {
         SQLiteDatabase db = DBAccess.getReadDb();
         LScheduledTransaction sch = null;
         Cursor cur = null;
 
         try {
             cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                    + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{"" + rid.toString()});
+                    + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{"" + rid});
             if (cur != null && cur.getCount() > 0) {
                 cur.moveToFirst();
                 sch = new LScheduledTransaction();
@@ -118,6 +118,30 @@ public class DBScheduledTransaction {
 
         return sch;
     }
+
+    /*
+    public static LScheduledTransaction getFirst() {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        LScheduledTransaction sch = null;
+        Cursor cur = null;
+
+        try {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
+                    + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY "
+                    + DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + " ASC", new String[]{"" + DBHelper.STATE_ACTIVE});
+            if (cur != null && cur.getCount() > 0) {
+                cur.moveToFirst();
+                sch = new LScheduledTransaction();
+                getValues(cur, sch);
+            }
+
+            if (cur != null) cur.close();
+        } catch (Exception e) {
+        }
+
+        return sch;
+    }
+    */
 
     public static void deleteById(long id) {
         DBAccess.updateStateById(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, id, DBHelper.STATE_DELETED);

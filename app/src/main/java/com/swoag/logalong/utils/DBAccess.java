@@ -188,7 +188,7 @@ public class DBAccess {
         item.setBy(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
         item.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        item.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        item.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
         item.setId(cur.getLong(0));
     }
 
