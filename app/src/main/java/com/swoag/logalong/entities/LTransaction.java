@@ -1,6 +1,7 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import com.swoag.logalong.R;
 import com.swoag.logalong.utils.DBHelper;
 
 import java.util.UUID;
@@ -11,6 +12,15 @@ public class LTransaction {
     public static final int TRANSACTION_TYPE_EXPENSE = 10;
     public static final int TRANSACTION_TYPE_INCOME = 20;
     public static final int TRANSACTION_TYPE_TRANSFER = 30;
+
+    public static int getTypeStringId(int type) {
+        switch (type) {
+            case TRANSACTION_TYPE_EXPENSE: break;
+            case TRANSACTION_TYPE_INCOME: return R.string.income;
+            case TRANSACTION_TYPE_TRANSFER: return R.string.transfer;
+        }
+        return R.string.expense;
+    }
 
     private double value;
     private int type;

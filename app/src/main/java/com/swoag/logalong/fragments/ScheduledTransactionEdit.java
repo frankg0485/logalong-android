@@ -42,7 +42,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     private ScheduledTransitionEditItf callback;
 
     private View viewAmount, viewAccount, viewCategory, viewVendor, viewTag;
-    private View viewBack, viewDiscard, viewCancel, viewSave;
+    private View viewDiscard, viewCancel, viewSave;
     private TextView amountTV, accountTV, categoryTV, vendorTV, tagTV;
     private TextView dateTV, weekMonthTV, intervalTV, countTV;
 
@@ -72,7 +72,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
 
     private void updateItemDisplay() {
         intervalTV.setText("" + scheduledItem.getRepeatInterval());
-        weekMonthTV.setText(activity.getString(savedScheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK? R.string.week : R.string.month));
+        weekMonthTV.setText(activity.getString(savedScheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK ? R.string.week : R.string.month));
         countTV.setText(activity.getString(R.string.unlimited));
 
         LTransaction item = scheduledItem.getItem();
@@ -97,9 +97,9 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     }
 
     private void create() {
-        viewBack = setViewListener(rootView, R.id.goback);
+        setViewListener(rootView, R.id.goback);
         viewSave = setViewListener(rootView, R.id.save);
-                viewAmount = setViewListener(rootView, R.id.amountRow);
+        viewAmount = setViewListener(rootView, R.id.amountRow);
         viewAccount = setViewListener(rootView, R.id.accountRow);
         viewCategory = setViewListener(rootView, R.id.categoryRow);
         viewVendor = setViewListener(rootView, R.id.vendorRow);
@@ -138,7 +138,6 @@ public class ScheduledTransactionEdit implements View.OnClickListener, LSelectio
     }
 
     private void destroy() {
-        viewBack = null;
         viewSave = null;
 
         intervalTV = null;

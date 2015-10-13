@@ -8,7 +8,15 @@
     <string name="categories">Categories</string>
     <string name="change_user_name">Change User Name</string>
     <string name="edit">Edit</string>
+    <string name="expense">Expense</string>
+    <string name="hint_additional_note">Additional note here</string>
+    <string name="hint_category_not_specified">Category not specified</string>
+    <string name="hint_choose_account">Choose account</string>
+    <string name="hint_payee_not_specified">Payee not specified</string>
+    <string name="hint_payer_not_specified">Payer not specified</string>
+    <string name="hint_tag_not_specified">Tag not specified</string>
     <string name="hint_user_name">User Name</string>
+    <string name="income">Income</string>
     <string name="login">Log In</string>
     <string name="month">month</string>
     <string name="months">months</string>
@@ -47,6 +55,9 @@
     <string name="show_password">show password</string>
     <string name="start_on">start on</string>
     <string name="tags">Tags</string>
+    <string name="transfer">Transfer</string>
+    <string name="transfer_from">FROM:</string>
+    <string name="transfer_to">TO:</string>
     <string name="undo">Undo</string>
     <string name="unlimited">unlimited</string>
     <string name="unspecified_tag">Tag not specified</string>

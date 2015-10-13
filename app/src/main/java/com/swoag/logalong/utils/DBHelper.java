@@ -50,6 +50,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_VENDOR_CATEGORY_NAME = "LVendorCategory";
     public static final String TABLE_JOURNAL_NAME = "LJournal";
 
+    //transaction table: VENDOR carries to_account for transfer.
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
             TABLE_COLUMN_AMOUNT + " REAL," +

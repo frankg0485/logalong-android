@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.WindowManager;
@@ -42,9 +44,9 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private LTransaction savedItem;
     private TransitionEditItf callback;
 
-    private View viewAmount, viewAccount, viewCategory, viewVendor, viewTag;
-    private View viewBack, viewDiscard, viewCancel, viewSave;
-    private TextView amountTV, accountTV, categoryTV, vendorTV, tagTV;
+    private View viewDiscard, viewSave, viewFrom, viewTo, viewAccount2, viewCategory, viewVendor, viewTag;
+    private TextView amountTV, accountTV, account2TV, categoryTV, vendorTV, tagTV;
+
     private TextView dateTV;
     private EditText noteET;
 
@@ -74,38 +76,62 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void updateItemDisplay() {
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
+
+        accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
         accountTV.setText(DBAccess.getAccountNameById(item.getAccount()));
-        categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
 
-        String tmp = DBAccess.getVendorNameById(item.getVendor());
-        if (tmp.isEmpty()) {
-            vendorTV.setText(activity.getString(R.string.unspecified_vendor));
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            account2TV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
+            account2TV.setText(DBAccess.getAccountNameById(item.getVendor()));
         } else {
-            vendorTV.setText(tmp);
+            categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
+            categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
+
+            vendorTV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
+            if (item.getType() == LTransaction.TRANSACTION_TYPE_EXPENSE) {
+                vendorTV.setHint(activity.getString(R.string.hint_payee_not_specified));
+            } else if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME) {
+                vendorTV.setHint(activity.getString(R.string.hint_payer_not_specified));
+            }
+            vendorTV.setText(DBAccess.getVendorNameById(item.getVendor()));
+
+            tagTV.setTypeface(null, item.getTag() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
+            tagTV.setText(DBAccess.getTagNameById(item.getTag()));
         }
+        updateOkDisplay();
+    }
 
-        tmp = DBAccess.getTagNameById(item.getTag());
-        if (tmp.isEmpty()) {
-            tagTV.setText(activity.getString(R.string.unspecified_tag));
+    private void updateOkDisplay() {
+        if ((item.getAccount() > 0) && (item.getValue() > 0)
+                && ((item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER) ||
+                (item.getVendor() > 0 && item.getVendor() != item.getAccount()))) {
+            enableOk(true);
         } else {
-            tagTV.setText(tmp);
+            enableOk(false);
         }
     }
 
     private void create() {
-        viewBack = setViewListener(rootView, R.id.goback);
+        setViewListener(rootView, R.id.goback);
+        setViewListener(rootView, R.id.back);
+
         viewSave = setViewListener(rootView, R.id.save);
-        viewAmount = setViewListener(rootView, R.id.amountRow);
-        viewAccount = setViewListener(rootView, R.id.accountRow);
+
+        setViewListener(rootView, R.id.amountRow);
+        setViewListener(rootView, R.id.accountRow);
         viewCategory = setViewListener(rootView, R.id.categoryRow);
         viewVendor = setViewListener(rootView, R.id.vendorRow);
         viewTag = setViewListener(rootView, R.id.tagRow);
-
+        viewAccount2 = setViewListener(rootView, R.id.account2Row);
 
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
 
+        TextView typeTV = (TextView) rootView.findViewById(R.id.type);
+        typeTV.setText(activity.getString(LTransaction.getTypeStringId(item.getType())));
+
         amountTV = (TextView) rootView.findViewById(R.id.tvAmount);
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);
+        account2TV = (TextView) rootView.findViewById(R.id.tvAccount2);
         categoryTV = (TextView) rootView.findViewById(R.id.tvCategory);
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
         tagTV = (TextView) rootView.findViewById(R.id.tvTag);
@@ -116,11 +142,35 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
         clearInputString();
         String inputString = value2string(item.getValue());
+
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            viewAccount2.setVisibility(View.VISIBLE);
+            viewCategory.setVisibility(View.GONE);
+            viewVendor.setVisibility(View.GONE);
+            viewTag.setVisibility(View.GONE);
+            rootView.findViewById(R.id.from).setVisibility(View.VISIBLE);
+            rootView.findViewById(R.id.to).setVisibility(View.VISIBLE);
+
+            amountTV.setTextColor(activity.getResources().getColor(R.color.base_blue));
+        } else {
+            viewAccount2.setVisibility(View.GONE);
+            viewCategory.setVisibility(View.VISIBLE);
+            viewVendor.setVisibility(View.VISIBLE);
+            viewTag.setVisibility(View.VISIBLE);
+            rootView.findViewById(R.id.from).setVisibility(View.GONE);
+            rootView.findViewById(R.id.to).setVisibility(View.GONE);
+
+            if (item.getType() == LTransaction.TRANSACTION_TYPE_EXPENSE) {
+                amountTV.setTextColor(activity.getResources().getColor(R.color.base_red));
+            } else {
+                amountTV.setTextColor(activity.getResources().getColor(R.color.base_green));
+            }
+        }
+
         if (inputString.isEmpty()) {
             amountTV.setText("0.0");
         } else {
             amountTV.setText(inputString);
-            enableOk(true);
         }
 
         if (bCreate) {
@@ -133,14 +183,13 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private void destroy() {
-        viewBack = null;
         viewSave = null;
-        viewAmount = null;
-        viewAccount = null;
+        viewDiscard = null;
+
         viewCategory = null;
         viewVendor = null;
         viewTag = null;
-        viewDiscard = null;
+        viewAccount2 = null;
 
         noteET = null;
         accountTV = null;
@@ -166,10 +215,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             String inputString = value2string(value);
             if (inputString.isEmpty()) {
                 amountTV.setText("0.0");
-                enableOk(false);
             } else {
                 amountTV.setText(inputString);
-                enableOk(true);
             }
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
@@ -179,6 +226,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
 
         if (firstTimeAmountPicker) firstTimeAmountPicker = false;
+        updateOkDisplay();
     }
 
     @Override
@@ -209,6 +257,19 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                 picker.show();
                 break;
 
+            case R.id.account2Row:
+                try {
+                    ids[9] = R.string.select_account;
+                    mSelectionDialog = new LSelectionDialog
+                            (activity, this, ids,
+                                    DBHelper.TABLE_ACCOUNT_NAME,
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getVendor()), DLG_ID_ACCOUNT2);
+                    mSelectionDialog.show();
+                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                } catch (Exception e) {
+                }
+                break;
+
             case R.id.accountRow:
                 try {
                     ids[9] = R.string.select_account;
@@ -219,9 +280,9 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
-                    LLog.w(TAG, "unable to open phone database");
                 }
                 break;
+
             case R.id.categoryRow:
                 try {
                     ids[9] = R.string.select_category;
@@ -232,7 +293,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
-                    LLog.w(TAG, "unable to open phone database");
                 }
                 break;
             case R.id.vendorRow:
@@ -245,7 +305,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
-                    LLog.w(TAG, "unable to open phone database");
                 }
                 break;
             case R.id.tagRow:
@@ -258,7 +317,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
-                    LLog.w(TAG, "unable to open phone database");
                 }
                 break;
             case R.id.discard:
@@ -267,8 +325,9 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                 break;
 
             case R.id.goback:
-                destroy();
+            case R.id.back:
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                destroy();
                 break;
 
             case R.id.save:
@@ -281,8 +340,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     public void dismiss() {
-        destroy();
         callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+        destroy();
     }
 
     @Override
@@ -299,6 +358,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private static final int DLG_ID_ACCOUNT = 10;
+    private static final int DLG_ID_ACCOUNT2 = 15;
     private static final int DLG_ID_CATEGORY = 20;
     private static final int DLG_ID_VENDOR = 30;
     private static final int DLG_ID_TAG = 40;
@@ -307,7 +367,18 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     public void onSelectionDialogExit(int dlgId, long selectedId) {
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
+                if (selectedId == item.getVendor() && item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    selectedId = -1;
+                }
                 item.setAccount(selectedId);
+                updateOkDisplay();
+                break;
+            case DLG_ID_ACCOUNT2:
+                if (selectedId == item.getAccount() && item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    selectedId = -1;
+                }
+                item.setVendor(selectedId);
+                updateOkDisplay();
                 break;
             case DLG_ID_CATEGORY:
                 item.setCategory(selectedId);

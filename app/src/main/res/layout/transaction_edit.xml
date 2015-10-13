@@ -31,18 +31,20 @@
                     android:background="@drawable/ic_action_left" />
 
                 <TextView
+                    android:id="@+id/type"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
-                    android:text="Expense on"
+                    android:text="Expense"
                     android:textSize="18dp" />
 
                 <TextView
                     android:id="@+id/tvDate"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="15dp"
                     android:layout_weight="1"
+                    android:gravity="right"
                     android:textSize="18dp"
                     android:textStyle="bold" />
 
@@ -84,12 +86,51 @@
                 android:paddingRight="5dp">
 
                 <TextView
+                    android:id="@+id/from"
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transfer_from"
+                    android:textSize="12dp" />
+
+                <TextView
                     android:id="@+id/tvAccount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_choose_account"
+                    android:textSize="16dp" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginLeft="30dp"
+                    android:background="@drawable/ic_action_right" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/account2Row"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/list_item_height_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="42dp"
+                android:paddingRight="5dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/to"
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transfer_to"
+                    android:textSize="12dp" />
+
+                <TextView
+                    android:id="@+id/tvAccount2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/hint_choose_account"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -112,8 +153,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_category_not_specified"
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -136,9 +178,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#aaa"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -161,9 +202,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#aaa"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_tag_not_specified"
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -189,8 +230,7 @@
                 android:maxLines="2"
                 android:padding="10dp"
                 android:singleLine="false"
-                android:textColor="#fff"
-                android:textColorHint="#d8d8d8"></EditText>
+                android:textColorHint="#ccc"></EditText>
         </LinearLayout>
     </ScrollView>
 

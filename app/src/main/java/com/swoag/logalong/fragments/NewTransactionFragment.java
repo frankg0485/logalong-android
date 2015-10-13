@@ -81,10 +81,10 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 newLog(LTransaction.TRANSACTION_TYPE_INCOME);
                 break;
             case R.id.transaction:
-                //newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
                 //DBPorter.importDb("logalong" + DBHelper.DB_VERSION + ".db");
-                LProtocol.ui.ping();
+                //LProtocol.ui.ping();
                 break;
 
             case R.id.schedule:
@@ -136,8 +136,9 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
     private void newLog(int type) {
         item = new LTransaction();
         item.setType(type);
-        item.setAccount(4);
-        item.setCategory(2);
+        //TODO: default account/category support.
+        //item.setAccount(4);
+        //item.setCategory(2);
 
         edit = new TransactionEdit(getActivity(), rootView, item, true, this);
 
