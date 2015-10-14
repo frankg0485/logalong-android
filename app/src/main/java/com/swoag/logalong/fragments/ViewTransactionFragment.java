@@ -409,7 +409,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
             item = DBAccess.getLogItemById(tag.id);
 
-            edit = new TransactionEdit(getActivity(), rootView, item, false, this);
+            edit = new TransactionEdit(getActivity(), rootView, item, false, false, this);
 
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);

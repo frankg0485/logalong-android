@@ -40,6 +40,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     private Activity activity;
     private View rootView;
     private boolean bCreate;
+    private boolean bScheduleMode;
     private LTransaction item;
     private LTransaction savedItem;
     private TransitionEditItf callback;
@@ -61,7 +62,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         public void onTransactionEditExit(int action, boolean changed);
     }
 
-    public TransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate,
+    public TransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate, boolean bScheduleMode,
                            TransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
@@ -71,6 +72,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         this.savedItem = new LTransaction(item);
 
         this.bCreate = bCreate;
+        this.bScheduleMode = bScheduleMode;
         create();
     }
 
@@ -113,7 +115,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void create() {
         setViewListener(rootView, R.id.goback);
-        setViewListener(rootView, R.id.back);
+        if (!bScheduleMode) setViewListener(rootView, R.id.back);
 
         viewSave = setViewListener(rootView, R.id.save);
 
@@ -137,8 +139,10 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         tagTV = (TextView) rootView.findViewById(R.id.tvTag);
         updateItemDisplay();
 
-        noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
-        noteET.setText(item.getNote());
+        if (!bScheduleMode) {
+            noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
+            noteET.setText(item.getNote());
+        }
 
         clearInputString();
         String inputString = value2string(item.getValue());
@@ -174,8 +178,10 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         }
 
         if (bCreate) {
-            LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
-            picker.show();
+            if (!bScheduleMode) {
+                LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
+                picker.show();
+            }
         } else {
             viewDiscard = setViewListener(rootView, R.id.discard);
             viewDiscard.setVisibility(View.VISIBLE);
@@ -191,7 +197,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         viewTag = null;
         viewAccount2 = null;
 
-        noteET = null;
+        if (!bScheduleMode) noteET = null;
         accountTV = null;
         categoryTV = null;
         vendorTV = null;
@@ -220,8 +226,9 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             }
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
-                destroy();
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                destroy();
+                return;
             }
         }
 
@@ -320,8 +327,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                 }
                 break;
             case R.id.discard:
-                destroy();
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
+                destroy();
                 break;
 
             case R.id.goback:
@@ -431,19 +438,21 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     }
 
     private void saveLog() {
-        item.setNote(noteET.getText().toString());
+        if (!bScheduleMode) item.setNote(noteET.getText().toString());
         boolean changed = !item.isEqual(savedItem);
         if (changed) item.setTimeStampLast(System.currentTimeMillis());
-        destroy();
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
+        destroy();
     }
 
     private void hideIME() {
-        try {
-            InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(noteET.getWindowToken(), 0);
-            noteET.setCursorVisible(false);
-        } catch (Exception e) {
+        if (!bScheduleMode) {
+            try {
+                InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.hideSoftInputFromWindow(noteET.getWindowToken(), 0);
+                noteET.setCursorVisible(false);
+            } catch (Exception e) {
+            }
         }
     }
 }

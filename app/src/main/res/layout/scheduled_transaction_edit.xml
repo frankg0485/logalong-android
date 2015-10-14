@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="1dp"
     android:background="@color/base_bgd_color"
     android:orientation="vertical">
 
@@ -14,6 +15,41 @@
             android:layout_height="0dp"
             android:layout_weight="45"
             android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="42dp"
+                android:paddingRight="5dp"
+                android:paddingTop="10dp">
+
+                <TextView
+                    android:id="@+id/type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Expense"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="15dp"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:textSize="18dp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/discard"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/ic_action_discard"
+                    android:visibility="gone" />
+            </LinearLayout>
+
 
             <LinearLayout
                 android:id="@+id/repeatRow"
@@ -88,44 +124,10 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:paddingRight="15dp"
-                    android:text="Expense"
-                    android:textSize="18dp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/start_on"
-                    android:textSize="18dp" />
-
-                <TextView
-                    android:id="@+id/tvDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
-                    android:paddingLeft="15dp"
-                    android:paddingRight="15dp"
-                    android:textSize="18dp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
                 android:id="@+id/amountRow"
                 android:layout_width="fill_parent"
                 android:layout_height="@dimen/list_item_height"
+                android:layout_marginTop="1dp"
                 android:background="#e4e6e8"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -152,12 +154,51 @@
                 android:paddingRight="5dp">
 
                 <TextView
+                    android:id="@+id/from"
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transfer_from"
+                    android:textSize="12dp" />
+
+                <TextView
                     android:id="@+id/tvAccount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_choose_account"
+                    android:textSize="16dp" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginLeft="30dp"
+                    android:background="@drawable/ic_action_right" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/account2Row"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/list_item_height_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="42dp"
+                android:paddingRight="5dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/to"
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transfer_to"
+                    android:textSize="12dp" />
+
+                <TextView
+                    android:id="@+id/tvAccount2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/hint_choose_account"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -180,8 +221,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_category_not_specified"
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -204,9 +246,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#aaa"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
@@ -229,15 +270,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#aaa"
-                    android:textSize="16dp"
-                    android:textStyle="bold" />
+                    android:hint="@string/hint_tag_not_specified"
+                    android:textColorHint="#aaa"
+                    android:textSize="16dp" />
 
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:layout_marginLeft="30dp"
                     android:background="@drawable/ic_action_right" />
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -266,14 +308,6 @@
                 android:paddingBottom="6dp"
                 android:paddingTop="6dp"
                 android:src="@drawable/ic_action_left" />
-
-            <ImageView
-                android:id="@+id/discard"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_centerInParent="true"
-                android:background="@drawable/ic_action_discard_dark"
-                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/save"

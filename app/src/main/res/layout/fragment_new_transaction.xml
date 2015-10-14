@@ -50,7 +50,7 @@
                 <Button
                     android:id="@+id/transaction"
                     style="@style/setTimeButtons"
-                    android:text="+ Transaction" />
+                    android:text="+ Transfer" />
 
                 <Button
                     android:id="@+id/schedule"

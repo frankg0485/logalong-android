@@ -67,15 +67,52 @@
                     android:paddingTop="6dp"
                     android:src="@drawable/ic_action_left" />
 
-                <ImageView
-                    android:id="@+id/add"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
+                <TextView
+                    android:id="@+id/addExpense"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/addIncome"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="15dp"
+                    android:background="@drawable/button_bgd"
+                    android:gravity="center"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="15dp"
+                    android:paddingRight="15dp"
+                    android:paddingTop="5dp"
+                    android:text="@string/expense"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/addIncome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@+id/addTransfer"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="15dp"
+                    android:background="@drawable/button_bgd"
+                    android:gravity="center"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="15dp"
+                    android:paddingRight="15dp"
+                    android:paddingTop="5dp"
+                    android:text="@string/income"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/addTransfer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
-                    android:paddingBottom="4dp"
-                    android:paddingTop="4dp"
-                    android:src="@drawable/ic_action_add_to_queue" />
+                    android:layout_marginRight="15dp"
+                    android:background="@drawable/button_bgd"
+                    android:gravity="center"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="15dp"
+                    android:paddingRight="15dp"
+                    android:paddingTop="5dp"
+                    android:text="@string/transfer"
+                    android:textSize="16sp" />
 
                 <include
                     android:id="@+id/undobar"

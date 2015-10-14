@@ -140,7 +140,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         //item.setAccount(4);
         //item.setCategory(2);
 
-        edit = new TransactionEdit(getActivity(), rootView, item, true, this);
+        edit = new TransactionEdit(getActivity(), rootView, item, true, false, this);
 
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);

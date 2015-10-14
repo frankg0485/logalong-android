@@ -46,7 +46,9 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
 
         rootView = findViewById(R.id.scheduleEdit);
         findViewById(R.id.goback).setOnClickListener(this);
-        findViewById(R.id.add).setOnClickListener(this);
+        findViewById(R.id.addExpense).setOnClickListener(this);
+        findViewById(R.id.addIncome).setOnClickListener(this);
+        findViewById(R.id.addTransfer).setOnClickListener(this);
 
         listView = (ListView) findViewById(R.id.logsList);
         initListView();
@@ -63,8 +65,10 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
                 finish();
                 break;
 
-            case R.id.add:
-                addNewSchedule();
+            case R.id.addExpense:
+            case R.id.addIncome:
+            case R.id.addTransfer:
+                addNewSchedule(v.getId());
                 break;
         }
     }
@@ -121,8 +125,21 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
         viewFlipper.showNext();
     }
 
-    private void addNewSchedule() {
+    private void addNewSchedule(int id) {
         scheduledItem = new LScheduledTransaction();
+
+        switch (id) {
+            case R.id.addExpense:
+                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_EXPENSE);
+                break;
+            case R.id.addIncome:
+                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_INCOME);
+                break;
+            case R.id.addTransfer:
+                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                break;
+        }
+
         openSchedule(scheduledItem, true);
     }
 
