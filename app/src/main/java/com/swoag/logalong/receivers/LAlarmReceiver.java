@@ -11,6 +11,7 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 
 import java.util.Calendar;
@@ -32,22 +33,21 @@ public class LAlarmReceiver extends BroadcastReceiver {
         String ymd = "" + calendar.get(Calendar.YEAR) + calendar.get(Calendar.MONTH) + calendar.get(Calendar.DAY_OF_MONTH);
 
         LTransaction item = DBAccess.getItemByRid(sch.getItem().getRid() + ymd);
-
         if (item == null) {
             item = new LTransaction(sch.getItem());
             item.setTimeStampLast(System.currentTimeMillis());
             item.setRid(item.getRid() + ymd);
             item.setTimeStamp(sch.getTimestamp());
-            DBAccess.addItem(item);
+            DBTransaction.add(item);
         } else {
+            //this is the case where other party has already had alarm triggered and created the DB entry
             long saveId = item.getId();
             item.copy(sch.getItem());
             item.setId(saveId);
             item.setTimeStamp(sch.getTimestamp());
             item.setTimeStampLast(System.currentTimeMillis());
-            DBAccess.updateItem(item);
+            DBTransaction.update(item);
         }
-
         LJournal journal = new LJournal();
         journal.updateItem(item);
 

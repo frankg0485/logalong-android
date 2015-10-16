@@ -9,6 +9,7 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 
@@ -374,10 +375,10 @@ public class LJournal {
                 item.setTimeStamp(receivedItem.getTimeStamp());
                 item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
-                DBAccess.updateItem(item);
+                DBTransaction.update(item);
             }
         } else {
-            DBAccess.addItem(new LTransaction(receivedItem.getRid().toString(),
+            DBTransaction.add(new LTransaction(receivedItem.getRid().toString(),
                     receivedItem.getValue(),
                     receivedItem.getType(),
                     receivedItem.getCategory(),

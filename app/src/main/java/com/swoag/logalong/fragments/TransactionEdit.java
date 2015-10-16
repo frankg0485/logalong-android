@@ -80,11 +80,13 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
 
         accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-        accountTV.setText(DBAccess.getAccountNameById(item.getAccount()));
-
-        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+        accountTV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
+                item.getVendor() : item.getAccount()));
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER ||
+                item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
             account2TV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            account2TV.setText(DBAccess.getAccountNameById(item.getVendor()));
+            account2TV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
+                    item.getVendor() : item.getAccount()));
         } else {
             categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
@@ -105,7 +107,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private void updateOkDisplay() {
         if ((item.getAccount() > 0) && (item.getValue() > 0)
-                && ((item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER) ||
+                && ((item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER
+                && item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ||
                 (item.getVendor() > 0 && item.getVendor() != item.getAccount()))) {
             enableOk(true);
         } else {
@@ -144,10 +147,10 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             noteET.setText(item.getNote());
         }
 
-        clearInputString();
         String inputString = value2string(item.getValue());
 
-        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER ||
+                item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
             viewAccount2.setVisibility(View.VISIBLE);
             viewCategory.setVisibility(View.GONE);
             viewVendor.setVisibility(View.GONE);
@@ -374,14 +377,16 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     public void onSelectionDialogExit(int dlgId, long selectedId) {
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
-                if (selectedId == item.getVendor() && item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                if (selectedId == item.getVendor() && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
+                        || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                     selectedId = -1;
                 }
                 item.setAccount(selectedId);
                 updateOkDisplay();
                 break;
             case DLG_ID_ACCOUNT2:
-                if (selectedId == item.getAccount() && item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                if (selectedId == item.getAccount() && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
+                        || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                     selectedId = -1;
                 }
                 item.setVendor(selectedId);
@@ -422,11 +427,6 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         viewSave.setEnabled(yes);
         if (yes) LViewUtils.setAlpha((View) viewSave, 1.0f);
         else LViewUtils.setAlpha((View) viewSave, 0.5f);
-    }
-
-    private void clearInputString() {
-        amountTV.setText("0.0");
-        enableOk(false);
     }
 
     private String value2string(double value) {

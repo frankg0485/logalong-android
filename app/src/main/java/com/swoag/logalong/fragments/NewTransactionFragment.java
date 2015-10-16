@@ -20,6 +20,7 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.ScheduleActivity;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBPorter;
+import com.swoag.logalong.utils.DBTransaction;
 
 public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
@@ -104,11 +105,10 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
                 AppPersistency.transactionChanged = changed;
 
                 item.setTimeStampLast(System.currentTimeMillis());
-                DBAccess.addItem(item);
+                DBTransaction.add(item);
 
                 LJournal journal = new LJournal();
                 journal.updateItem(item);
-
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;

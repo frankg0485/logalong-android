@@ -143,7 +143,7 @@ public class DBPorter {
                         tagId = ll.longValue();
                     }
 
-                    DBAccess.addItem(new LTransaction(amount, type, categoryId, vendorId, tagId, accountId, timestamp, note));
+                    DBTransaction.add(new LTransaction(amount, type, categoryId, vendorId, tagId, accountId, timestamp, note));
                 }
             }
 

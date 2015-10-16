@@ -379,42 +379,6 @@ public class DBAccess {
         return null;
     }
 
-    public static void addItem(LTransaction item) {
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setItemValues(item);
-            db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
-            dirty = true;
-        }
-    }
-
-    public static void updateItem(LTransaction item) {
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setItemValues(item);
-            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + item.getId()});
-            dirty = true;
-        }
-    }
-
-    public static void updateItemOwnerById(int madeBy, long id) {
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = new ContentValues();
-            cv.put(DBHelper.TABLE_COLUMN_MADEBY, madeBy);
-            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-    }
-
-    public static void deleteItemById(long id) {
-        LTransaction item = getLogItemById(id);
-        if (item != null) {
-            item.setState(DBHelper.STATE_DELETED);
-            updateItem(item);
-        }
-    }
-
     public static void updateStateById(String table, long id, int state) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
@@ -1187,7 +1151,9 @@ public class DBAccess {
                 do {
                     int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-                    if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) v = -v;
+                    if (type == LTransaction.TRANSACTION_TYPE_EXPENSE || type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                        v = -v;
+                    }
                     timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
 
                     now.setTimeInMillis(timestamp);
@@ -1345,6 +1311,29 @@ public class DBAccess {
         try {
             csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?",
                     new String[]{"" + rid.toString()});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+                csr.close();
+                return 0;
+            }
+
+            csr.moveToFirst();
+            id = csr.getLong(0);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+        }
+        if (csr != null) csr.close();
+        return id;
+    }
+
+    public static long getIdByRid(String table, String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        long id = 0;
+
+        try {
+            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?",
+                    new String[]{"" + rid});
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
                 csr.close();

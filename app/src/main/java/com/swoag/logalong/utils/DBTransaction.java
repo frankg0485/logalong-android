@@ -3,6 +3,7 @@ package com.swoag.logalong.utils;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.entities.LTransaction;
 
@@ -47,4 +48,68 @@ public class DBTransaction {
         setValues(cv, trans);
         return cv;
     }
+
+    public static void add(LTransaction item) {
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = setValues(item);
+            db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
+
+            //duplicate record for transfer
+            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                cv.put(DBHelper.TABLE_COLUMN_TYPE, LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getVendor());
+                cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getAccount());
+                cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid() + "2");
+                db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
+            }
+            DBAccess.dirty = true;
+        }
+    }
+
+    public static void update(LTransaction item) {
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = setValues(item);
+            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + item.getId()});
+
+            //duplicate record for transfer
+            if ((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
+                    (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
+                long dbid = 0;
+                LTransaction item2 = new LTransaction(item);
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+                    item2.setRid(item.getRid() + "2");
+                } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                    item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                    item2.setRid(item.getRid().substring(0, item.getRid().length() - 1));
+                }
+
+                item2.setAccount(item.getVendor());
+                item2.setVendor(item.getAccount());
+                cv = setValues(item2);
+
+                dbid = DBAccess.getIdByRid(DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
+                if (dbid <= 0) {
+                    db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
+                } else {
+                    db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + dbid});
+                }
+            }
+
+            DBAccess.dirty = true;
+        }
+    }
+
+    public static void updateOwnerById(int madeBy, long id) {
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_MADEBY, madeBy);
+            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + id});
+            DBAccess.dirty = true;
+        }
+    }
+
 }

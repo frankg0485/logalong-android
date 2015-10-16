@@ -56,7 +56,9 @@
     <string name="tags">Tags</string>
     <string name="transfer">Transfer</string>
     <string name="transfer_from">FROM:</string>
+    <string name="transfer_from_report_view">from:</string>
     <string name="transfer_to">TO:</string>
+    <string name="transfer_to_report_view">to:</string>
     <string name="undo">Undo</string>
     <string name="unlimited">unlimited</string>
     <string name="unspecified_tag">Tag not specified</string>

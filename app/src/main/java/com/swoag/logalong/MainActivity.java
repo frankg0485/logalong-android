@@ -23,6 +23,7 @@ import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
@@ -413,7 +414,7 @@ public class MainActivity extends LFragmentActivity
 
         int madeBy = LPreferences.getUserId();
         for (long id : itemsMissingOwner) {
-            DBAccess.updateItemOwnerById(madeBy, id);
+            DBTransaction.updateOwnerById(madeBy, id);
         }
     }
 
