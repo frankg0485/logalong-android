@@ -180,7 +180,7 @@ public class GenericListEdit implements View.OnClickListener,
 
                 case R.id.vendors:
                     LVendor vendor = new LVendor(name);
-                    DBAccess.addVendor(vendor);
+                    DBVendor.add(vendor);
 
                     journal = new LJournal();
                     journal.updateVendor(vendor);
@@ -371,7 +371,7 @@ public class GenericListEdit implements View.OnClickListener,
                         LVendor vendor = DBVendor.getById(tag.id);
                         vendor.setName(newName);
                         vendor.setTimeStampLast(System.currentTimeMillis());
-                        DBAccess.updateVendor(vendor);
+                        DBVendor.update(vendor);
 
                         journal = new LJournal();
                         journal.updateVendor(vendor);
@@ -412,7 +412,7 @@ public class GenericListEdit implements View.OnClickListener,
                             DBAccess.deleteCategoryById(tag.id);
                             break;
                         case R.id.vendors:
-                            DBAccess.deleteVendorById(tag.id);
+                            DBVendor.deleteById(tag.id);
                             break;
                         case R.id.tags:
                             DBAccess.deleteTagById(tag.id);

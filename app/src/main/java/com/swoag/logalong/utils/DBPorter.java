@@ -42,10 +42,11 @@ public class DBPorter {
                 cursor.moveToFirst();
                 do {
                     String account, account2 = "", category, vendor = "", tag, note;
+                    int vendorType = LVendor.TYPE_PAYEE;
                     account = DBAccess.getAccountNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
                     account2 = DBAccess.getAccountNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
                     category = DBAccess.getCategoryNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-                    vendor = DBAccess.getVendorNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+                    vendor = DBVendor.getNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
                     tag = DBAccess.getTagNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
                     note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
@@ -56,6 +57,7 @@ public class DBPorter {
                             + account2 + ","
                             + category + ","
                             + vendor + ","
+                            + vendorType + ","
                             + tag + ","
                             + note;
                     myCSV.add(row);
@@ -95,6 +97,7 @@ public class DBPorter {
                     int type;
                     long timestamp, accountId, account2Id, categoryId, vendorId, tagId;
                     String account, account2, category, vendor, tag, note;
+                    int vendorType;
 
                     type = Integer.valueOf(ss[0]);
                     if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) continue;
@@ -105,8 +108,9 @@ public class DBPorter {
                     account2 = ss[4];
                     category = ss[5];
                     vendor = ss[6];
-                    tag = ss[7];
-                    note = ss[8];
+                    vendorType = Integer.valueOf(ss[7]);
+                    tag = ss[8];
+                    note = ss[9];
 
                     Long ll = accountMap.get(account);
                     if (null == ll) {
@@ -142,7 +146,7 @@ public class DBPorter {
                     if (null == ll) {
                         if (vendor.isEmpty()) vendorId = 0;
                         else {
-                            vendorId = DBAccess.addVendor(new LVendor(vendor));
+                            vendorId = DBVendor.add(new LVendor(vendor, vendorType));
                             vendorMap.put(vendor, vendorId);
                         }
                     } else {

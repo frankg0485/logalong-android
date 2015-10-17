@@ -16,21 +16,53 @@ import java.util.UUID;
 public class DBVendor {
     private static final String TAG = DBVendor.class.getSimpleName();
 
-    private static ContentValues setVendorValues(LVendor vendor) {
+    private static ContentValues setValues(LVendor vendor) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
+        cv.put(DBHelper.TABLE_COLUMN_TYPE, vendor.getType());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, vendor.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_RID, vendor.getRid());
         return cv;
     }
 
-    private static void getVendorValues(Cursor cur, LVendor vendor) {
+    private static void getValues(Cursor cur, LVendor vendor) {
         vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        vendor.setType(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)));
         vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        vendor.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
+        vendor.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
         vendor.setId(cur.getLong(0));
+    }
+
+    public static long add(LVendor vendor) {
+        long id = -1;
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = setValues(vendor);
+            id = db.insert(DBHelper.TABLE_VENDOR_NAME, "", cv);
+            DBAccess.dirty = true;
+        }
+        return id;
+    }
+
+    public static boolean update(LVendor vendor) {
+        try {
+            synchronized (DBAccess.dbLock) {
+                SQLiteDatabase db = DBAccess.getWriteDb();
+                ContentValues cv = setValues(vendor);
+                db.update(DBHelper.TABLE_VENDOR_NAME, cv, "_id=?", new String[]{"" + vendor.getId()});
+            }
+            DBAccess.dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void deleteById(long id) {
+        DBAccess.updateStateById(DBHelper.TABLE_VENDOR_NAME, id, DBHelper.STATE_DELETED);
     }
 
     public static LVendor getById(long id) {
@@ -47,7 +79,7 @@ public class DBVendor {
             }
 
             csr.moveToFirst();
-            getVendorValues(csr, vendor);
+            getValues(csr, vendor);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get vendor with id: " + id + ":" + e.getMessage());
             vendor = null;
@@ -56,8 +88,65 @@ public class DBVendor {
         return vendor;
     }
 
+    public static LVendor getByRid(String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LVendor vendor = new LVendor();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find vendor with RID: " + rid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, vendor);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get vendor with RID: " + rid + ":" + e.getMessage());
+            vendor = null;
+        }
+        if (csr != null) csr.close();
+        return vendor;
+    }
+
+    public static LVendor getByName(String name) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LVendor vendor = new LVendor();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, vendor);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
+            vendor = null;
+        }
+        if (csr != null) csr.close();
+        return vendor;
+    }
+
     public static long getIdByRid(UUID rid) {
         return DBAccess.getIdByRid(DBHelper.TABLE_VENDOR_NAME, rid);
+    }
+
+    public static String getNameById(long id) {
+        return DBAccess.getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+    }
+
+    public static int getIndexById(long id) {
+        return DBAccess.getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_STATE,
+                DBHelper.STATE_ACTIVE, id);
     }
 
     public static Cursor getCursorSortedBy(String sortColumn) {

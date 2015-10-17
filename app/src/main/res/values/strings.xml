@@ -65,7 +65,7 @@
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="user_name">User Name</string>
     <string name="user_name_hint">user name</string>
-    <string name="vendors">Vendors</string>
+    <string name="payee_payers">Payee/Payers</string>
     <string name="warning_get_share_user_time_out">Unable to connect to server</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>

@@ -352,7 +352,7 @@ public class MainActivity extends LFragmentActivity
         LVendor vendor = new LVendor();
         for (int ii = 0; ii < vendors.length; ii++) {
             vendor.setName(vendors[ii]);
-            DBAccess.addVendor(vendor);
+            DBVendor.add(vendor);
         }
     }
 
@@ -364,7 +364,7 @@ public class MainActivity extends LFragmentActivity
         if (DBAccess.getCategoryNameById(1).isEmpty()) {
             addCategories();
         }
-        if (DBAccess.getVendorNameById(1).isEmpty()) {
+        if (DBVendor.getNameById(1).isEmpty()) {
             addVendors();
         }
 

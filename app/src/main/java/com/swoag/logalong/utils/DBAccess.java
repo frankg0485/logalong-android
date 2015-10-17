@@ -123,22 +123,6 @@ public class DBAccess {
         tag.setId(cur.getLong(0));
     }
 
-    private static ContentValues setVendorValues(LVendor vendor) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, vendor.getRid().toString());
-        return cv;
-    }
-
-    private static void getVendorValues(Cursor cur, LVendor vendor) {
-        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
-        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        vendor.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
-        vendor.setId(cur.getLong(0));
-    }
 
     private static ContentValues setAccountValues(LAccount account) {
         ContentValues cv = new ContentValues();
@@ -248,20 +232,16 @@ public class DBAccess {
         updateStateById(DBHelper.TABLE_CATEGORY_NAME, id, LCategory.CATEGORY_STATE_DELETED);
     }
 
-    public static void deleteVendorById(long id) {
-        updateStateById(DBHelper.TABLE_VENDOR_NAME, id, LVendor.VENDOR_STATE_DELETED);
-    }
-
     public static void deleteTagById(long id) {
         updateStateById(DBHelper.TABLE_TAG_NAME, id, LTag.TAG_STATE_DELETED);
     }
 
-    private static String getStringFromDbById(String table, String column, long id) {
+    public static String getStringFromDbById(String table, String column, long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         String str = "";
         try {
-            csr = db.rawQuery("SELECT * FROM " + table + " WHERE _id=?", new String[]{"" + id});
+            csr = db.rawQuery("SELECT " + column + " FROM " + table + " WHERE _id=?", new String[]{"" + id});
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find id: " + id + " from table: " + table + " column: " + column);
                 csr.close();
@@ -279,10 +259,6 @@ public class DBAccess {
 
     public static String getCategoryNameById(long id) {
         return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_NAME, id);
-    }
-
-    public static String getVendorNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static String getTagNameById(long id) {
@@ -364,29 +340,6 @@ public class DBAccess {
         return category;
     }
 
-    public static LVendor getVendorByUuid(UUID uuid) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LVendor vendor = new LVendor();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find vendor with UUID: " + uuid);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getVendorValues(csr, vendor);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with UUID: " + uuid + ":" + e.getMessage());
-            vendor = null;
-        }
-        if (csr != null) csr.close();
-        return vendor;
-    }
 
     public static LTag getTagByUuid(UUID uuid) {
         SQLiteDatabase db = getReadDb();
@@ -485,30 +438,6 @@ public class DBAccess {
         return category;
     }
 
-    public static LVendor getVendorByName(String name) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LVendor vendor = new LVendor();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with name: " + name);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getVendorValues(csr, vendor);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
-            vendor = null;
-        }
-        if (csr != null) csr.close();
-        return vendor;
-    }
-
     public static LTag getTagByName(String name) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -550,17 +479,6 @@ public class DBAccess {
             SQLiteDatabase db = getWriteDb();
             ContentValues cv = setTagValues(tag);
             id = db.insert(DBHelper.TABLE_TAG_NAME, "", cv);
-            dirty = true;
-        }
-        return id;
-    }
-
-    public static long addVendor(LVendor vendor) {
-        long id = -1;
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setVendorValues(vendor);
-            id = db.insert(DBHelper.TABLE_VENDOR_NAME, "", cv);
             dirty = true;
         }
         return id;
@@ -631,7 +549,7 @@ public class DBAccess {
         return set;
     }
 
-    private static int getDbIndexById(String table, String state, int actvState, long id) {
+    public static int getDbIndexById(String table, String state, int actvState, long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         int index = 0;
@@ -666,11 +584,6 @@ public class DBAccess {
                 LCategory.CATEGORY_STATE_ACTIVE, id);
     }
 
-    public static int getVendorIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_STATE,
-                LVendor.VENDOR_STATE_ACTIVE, id);
-    }
-
     public static int getTagIndexById(long id) {
         return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LTag.TAG_STATE_ACTIVE, id);
@@ -694,41 +607,6 @@ public class DBAccess {
         }
         return 0;
     }
-
-
-    /*public static int updateCategoryNameById(long id, String name) {
-        LCategory category = getCategoryById(id);
-        if (category == null) {
-            LLog.e(TAG, "category no longer exists: " + id);
-            return -1;
-        }
-        category.setName(name);
-
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setCategoryValues(category);
-            db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-        return 0;
-    }*/
-
-    /*public static int updateVendorNameById(long id, String name) {
-        LVendor vendor = getVendorById(id);
-        if (vendor == null) {
-            LLog.e(TAG, "vendor no longer exists: " + id);
-            return -1;
-        }
-        vendor.setName(name);
-
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setVendorValues(vendor);
-            db.update(DBHelper.TABLE_VENDOR_NAME, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-        return 0;
-    }*/
 
     public static int updateTagNameById(long id, String name) {
         LTag tag = getTagById(id);
@@ -859,20 +737,6 @@ public class DBAccess {
         return true;
     }
 
-    public static boolean updateVendor(LVendor vendor) {
-        try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = setVendorValues(vendor);
-                db.update(DBHelper.TABLE_VENDOR_NAME, cv, "_id=?", new String[]{"" + vendor.getId()});
-            }
-            dirty = true;
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
-    }
 
     public static boolean updateTag(LTag tag) {
         try {
@@ -992,7 +856,6 @@ public class DBAccess {
                         amount = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
                         balances.put(year, amount);
                     }
-                    acc += v;
                     month = now.get(Calendar.MONTH);
 
                     // fill up months in between
@@ -1020,7 +883,7 @@ public class DBAccess {
                             }
                         }
                     }
-
+                    acc += v;
                     amount[month] = acc;
                     lastMonth = month;
                     lastYear = year;

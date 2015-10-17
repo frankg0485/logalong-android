@@ -96,13 +96,23 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_MADEBY + "=" + item.getBy() + ",";
 
         if (category != null && (!category.getName().isEmpty())) {
-            str += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName() + ";" + category.getRid() + ";" + category.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName()
+                    + ";" + category.getRid()
+                    + ";" + category.getTimeStampLast()
+                    + ",";
         }
         if (vendor != null && (!vendor.getName().isEmpty())) {
-            str += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName()
+                    + ";" + vendor.getRid()
+                    + ";" + vendor.getTimeStampLast()
+                    + ";" + vendor.getType()
+                    + ",";
         }
         if (tag != null && (!tag.getName().isEmpty())) {
-            str += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName() + ";" + tag.getRid() + ";" + tag.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName()
+                    + ";" + tag.getRid()
+                    + ";" + tag.getTimeStampLast()
+                    + ",";
         }
 
         if (!item.getNote().isEmpty()) {
@@ -111,16 +121,24 @@ public class LJournal {
 
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
             LAccount account2 = DBAccess.getAccountById(item.getAccount2());
-            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName() + ";" + account2.getRid() + ";" + account2.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName()
+                    + ";" + account2.getRid()
+                    + ";" + account2.getTimeStampLast()
+                    + ",";
         } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
             LAccount account2 = DBAccess.getAccountById(item.getAccount2());
-            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast() + ",";
+            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account.getName()
+                    + ";" + account.getRid()
+                    + ";" + account.getTimeStampLast()
+                    + ",";
             account = account2;
             rid = item.getRid().substring(0, item.getRid().length() - 1);
         }
 
         str += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
-        str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
+        str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName()
+                + ";" + account.getRid()
+                + ";" + account.getTimeStampLast();
 
         return str;
     }
@@ -202,6 +220,7 @@ public class LJournal {
 
         record = ACTION_UPDATE_VENDOR + ":"
                 + DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
+                + DBHelper.TABLE_COLUMN_TYPE + "=" + vendor.getType() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + vendor.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + vendor.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
@@ -224,13 +243,13 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateVendorCategory(boolean add, UUID vendor, UUID category) {
+    public boolean updateVendorCategory(boolean add, String vendorRid, UUID category) {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
         record = ACTION_UPDATE_VENDOR_CATEGORY + ":"
                 + DBHelper.TABLE_COLUMN_STATE + "=" + (add ? DBHelper.STATE_ACTIVE : DBHelper.STATE_DELETED) + ","
-                + DBHelper.TABLE_COLUMN_RID + ".vendor=" + vendor + ","
+                + DBHelper.TABLE_COLUMN_RID + ".vendor=" + vendorRid + ","
                 + DBHelper.TABLE_COLUMN_RID + ".category=" + category;
 
         for (int user : users) post(user);
@@ -340,13 +359,15 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
                 String[] sss = ss[1].split(";");
 
-                LVendor vendor1 = DBAccess.getVendorByName(sss[0]);
+                LVendor vendor1 = DBVendor.getByName(sss[0]);
                 if (null == vendor1) {
-                    vendorId = DBAccess.addVendor(new LVendor(sss[0], UUID.fromString(sss[1])));
+                    vendorId = DBVendor.add(new LVendor(sss[0], Integer.valueOf(sss[3]), sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) > vendor1.getTimeStampLast()) {
-                        vendor1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateVendor(vendor1);
+                    if (Long.valueOf(sss[2]) > vendor1.getTimeStampLast()) {
+                        vendor1.setRid(sss[1]);
+                        vendor1.setType(Integer.valueOf(sss[3]));
+                        vendor1.setTimeStampLast(Long.valueOf(sss[2]));
+                        DBVendor.update(vendor1);
                     }
 
                     vendorId = vendor1.getId();
@@ -552,9 +573,11 @@ public class LJournal {
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
+        int type = LVendor.TYPE_PAYEE;
         long timestampLast = 0;
         String name = "";
         boolean stateFound = false;
+        boolean typeFound = false;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
@@ -567,20 +590,24 @@ public class LJournal {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
                 name = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
+                type = Integer.valueOf(ss[1]);
+                typeFound = true;
             }
         }
 
         if (!rid.isEmpty()) {
-            LVendor vendor = DBAccess.getVendorByUuid(UUID.fromString(rid));
+            LVendor vendor = DBVendor.getByRid(rid);
             if (vendor == null) {
-                vendor = new LVendor(name, UUID.fromString(rid), timestampLast);
-                DBAccess.addVendor(vendor);
+                vendor = new LVendor(name, type, rid, timestampLast);
+                DBVendor.add(vendor);
             } else {
                 if (vendor.getTimeStampLast() < timestampLast) {
                     if (!name.isEmpty()) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
+                    if (typeFound) vendor.setType(type);
                     vendor.setTimeStampLast(timestampLast);
-                    DBAccess.updateVendor(vendor);
+                    DBVendor.update(vendor);
                 }
             }
         }

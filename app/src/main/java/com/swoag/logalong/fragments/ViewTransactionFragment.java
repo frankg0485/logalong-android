@@ -25,6 +25,7 @@ import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTransaction;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.DateFormatSymbols;
@@ -130,7 +131,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                         summary.setName(DBAccess.getTagNameById(lastId));
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                        summary.setName(DBAccess.getVendorNameById(lastId));
+                        summary.setName(DBVendor.getNameById(lastId));
                         break;
                 }
                 sectionSummary.addSummary(lastIndex, summary);
@@ -164,7 +165,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     summary.setName(DBAccess.getTagNameById(id));
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                    summary.setName(DBAccess.getVendorNameById(id));
+                    summary.setName(DBVendor.getNameById(id));
                     break;
             }
             summary.setExpense(expense);
@@ -375,7 +376,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
                 tv = (TextView) mainView.findViewById(R.id.note);
                 int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
-                String vendor = DBAccess.getVendorNameById(vendorId);
+                String vendor = DBVendor.getNameById(vendorId);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
                 if (vendor.isEmpty()) {

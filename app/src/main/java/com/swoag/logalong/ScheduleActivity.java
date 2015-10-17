@@ -23,6 +23,7 @@ import com.swoag.logalong.fragments.TransactionEdit;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBVendor;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -189,7 +190,7 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
 
             tv = (TextView) mainView.findViewById(R.id.note);
             int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
-            String vendor = DBAccess.getVendorNameById(vendorId);
+            String vendor = DBVendor.getNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
             if (vendor.isEmpty()) {

@@ -103,7 +103,7 @@
                     android:layout_alignParentLeft="true"
                     android:layout_centerVertical="true"
                     android:layout_marginLeft="@dimen/settings_row_margin_left"
-                    android:text="@string/vendors"
+                    android:text="@string/payee_payers"
                     android:textSize="@dimen/settings_option_text_size" />
 
                 <ImageView

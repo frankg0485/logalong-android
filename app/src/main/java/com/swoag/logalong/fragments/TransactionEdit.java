@@ -97,7 +97,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             } else if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME) {
                 vendorTV.setHint(activity.getString(R.string.hint_payer_not_specified));
             }
-            vendorTV.setText(DBAccess.getVendorNameById(item.getVendor()));
+            vendorTV.setText(DBVendor.getNameById(item.getVendor()));
 
             tagTV.setTypeface(null, item.getTag() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             tagTV.setText(DBAccess.getTagNameById(item.getTag()));
@@ -311,7 +311,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_VENDOR_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getVendorIndexById(item.getVendor()), DLG_ID_VENDOR);
+                                    DBHelper.TABLE_COLUMN_NAME, DBVendor.getIndexById(item.getVendor()), DLG_ID_VENDOR);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
