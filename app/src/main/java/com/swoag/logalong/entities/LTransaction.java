@@ -30,6 +30,7 @@ public class LTransaction {
     private long id;
     private long category;
     private long account;
+    private long account2;
     private long tag;
     private long vendor;
     private long timeStamp;
@@ -46,6 +47,7 @@ public class LTransaction {
         this.id = 0;
         this.category = 0;
         this.account = 0;
+        this.account2 = 0;
         this.tag = 0;
         this.vendor = 0;
         this.rid = UUID.randomUUID().toString();
@@ -67,6 +69,7 @@ public class LTransaction {
         this.id = item.id;
         this.category = item.category;
         this.account = item.account;
+        this.account2 = item.account2;
         this.tag = item.tag;
         this.vendor = item.vendor;
         this.note = item.note;
@@ -84,13 +87,14 @@ public class LTransaction {
                 this.by == item.by &&
                 this.category == item.category &&
                 this.account == item.account &&
+                this.account2 == item.account2 &&
                 this.tag == item.tag &&
                 this.vendor == item.vendor &&
                 this.note.contentEquals(item.note));
     }
 
     public LTransaction(double value, int type, long category, long vendor, long tag,
-                        long account, long timeStamp, String note) {
+                        long account, long account2, long timeStamp, String note) {
         init();
         this.value = value;
         this.type = type;
@@ -98,12 +102,13 @@ public class LTransaction {
         this.vendor = vendor;
         this.tag = tag;
         this.account = account;
+        this.account2 = account2;
         this.timeStamp = timeStamp;
         this.note = note;
     }
 
     public LTransaction(String rid, double value, int type, long category, long vendor, long tag,
-                        long account, int by, long timeStamp, long timeStampLast, String note) {
+                        long account, long account2, int by, long timeStamp, long timeStampLast, String note) {
         init();
         this.rid = rid;
         this.value = value;
@@ -112,6 +117,7 @@ public class LTransaction {
         this.vendor = vendor;
         this.tag = tag;
         this.account = account;
+        this.account2 = account2;
         this.by = by;
         this.timeStamp = timeStamp;
         this.timeStampLast = timeStampLast;
@@ -164,6 +170,14 @@ public class LTransaction {
 
     public void setAccount(long account) {
         this.account = account;
+    }
+
+    public long getAccount2() {
+        return account2;
+    }
+
+    public void setAccount2(long account2) {
+        this.account2 = account2;
     }
 
     public long getTag() {

@@ -76,15 +76,20 @@ public class LJournal {
         LProtocol.ui.postJournal(userId, this.id + ":" + this.record);
     }
 
-    private String transactionItemString(LTransaction item) {
+    public static String transactionItemString(LTransaction item) {
         LAccount account = DBAccess.getAccountById(item.getAccount());
-
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBAccess.getTagById(item.getTag());
+        String rid = item.getRid();
+
+        int type = item.getType();
+        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+            type = LTransaction.TRANSACTION_TYPE_TRANSFER;
+        }
 
         String str = DBHelper.TABLE_COLUMN_STATE + "=" + item.getState() + ","
-                + DBHelper.TABLE_COLUMN_TYPE + "=" + item.getType() + ","
+                + DBHelper.TABLE_COLUMN_TYPE + "=" + type + ","
                 + DBHelper.TABLE_COLUMN_AMOUNT + "=" + item.getValue() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP + "=" + item.getTimeStamp() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + item.getTimeStampLast() + ","
@@ -104,7 +109,17 @@ public class LJournal {
             str += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
         }
 
-        str += DBHelper.TABLE_COLUMN_RID + "=" + item.getRid() + ",";
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            LAccount account2 = DBAccess.getAccountById(item.getAccount2());
+            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName() + ";" + account2.getRid() + ";" + account2.getTimeStampLast() + ",";
+        } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+            LAccount account2 = DBAccess.getAccountById(item.getAccount2());
+            str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast() + ",";
+            account = account2;
+            rid = item.getRid().substring(0, item.getRid().length() - 1);
+        }
+
+        str += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
         str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
 
         return str;
@@ -265,7 +280,7 @@ public class LJournal {
         int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
         int madeBy = 0;
         int state = DBHelper.STATE_ACTIVE;
-        long timestamp = 0, timestampLast = 0, accountId = 0, categoryId = 0, vendorId = 0, tagId = 0;
+        long timestamp = 0, timestampLast = 0, accountId = 0, account2Id = 0, categoryId = 0, vendorId = 0, tagId = 0;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
@@ -294,6 +309,20 @@ public class LJournal {
                     }
 
                     accountId = account1.getId();
+                }
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2)) {
+                String[] sss = ss[1].split(";");
+
+                LAccount account1 = DBAccess.getAccountByName(sss[0]);
+                if (null == account1) {
+                    account2Id = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
+                } else {
+                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
+                        account1.setRid(UUID.fromString(sss[1]));
+                        DBAccess.updateAccount(account1);
+                    }
+
+                    account2Id = account1.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
                 String[] sss = ss[1].split(";");
@@ -347,6 +376,7 @@ public class LJournal {
         item.setValue(amount);
         item.setType(type);
         item.setAccount(accountId);
+        item.setAccount2(account2Id);
         item.setCategory(categoryId);
         item.setVendor(vendorId);
         item.setTag(tagId);
@@ -362,13 +392,14 @@ public class LJournal {
     public static void updateItemFromReceivedRecord(String receivedRecord) {
         LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
 
-        LTransaction item = DBAccess.getItemByRid(receivedItem.getRid());
+        LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
         if (item != null) {
             if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
                 item.setAccount(receivedItem.getAccount());
+                item.setAccount2(receivedItem.getAccount2());
                 item.setCategory(receivedItem.getCategory());
                 item.setVendor(receivedItem.getVendor());
                 item.setTag(receivedItem.getTag());
@@ -385,6 +416,7 @@ public class LJournal {
                     receivedItem.getVendor(),
                     receivedItem.getTag(),
                     receivedItem.getAccount(),
+                    receivedItem.getAccount2(),
                     receivedItem.getBy(),
                     receivedItem.getTimeStamp(),
                     receivedItem.getTimeStampLast(),
@@ -422,6 +454,7 @@ public class LJournal {
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
                 item.setAccount(receivedItem.getAccount());
+                item.setAccount2(receivedItem.getAccount2());
                 item.setCategory(receivedItem.getCategory());
                 item.setVendor(receivedItem.getVendor());
                 item.setTag(receivedItem.getTag());

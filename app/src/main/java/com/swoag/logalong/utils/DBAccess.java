@@ -159,78 +159,6 @@ public class DBAccess {
         account.setId(cur.getLong(0));
     }
 
-    private static ContentValues setItemValues(LTransaction item) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_TYPE, item.getType());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, item.getState());
-        cv.put(DBHelper.TABLE_COLUMN_CATEGORY, item.getCategory());
-        cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount());
-        cv.put(DBHelper.TABLE_COLUMN_MADEBY, item.getBy());
-        cv.put(DBHelper.TABLE_COLUMN_AMOUNT, item.getValue());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, item.getTimeStamp());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, item.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_NOTE, item.getNote());
-        cv.put(DBHelper.TABLE_COLUMN_TAG, item.getTag());
-        cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getVendor());
-        cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid().toString());
-        return cv;
-    }
-
-    private static void getItemValues(Cursor cur, LTransaction item) {
-        item.setType(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
-        item.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
-        item.setAccount(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT)));
-        item.setCategory(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_CATEGORY)));
-        item.setTag(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
-        item.setVendor(cur.getLong(cur.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
-        item.setValue(cur.getDouble(cur.getColumnIndex(DBHelper.TABLE_COLUMN_AMOUNT)));
-        item.setNote(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
-        item.setBy(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
-        item.setTimeStamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
-        item.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        item.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
-        item.setId(cur.getLong(0));
-    }
-
-    private static int getItemList(ArrayList<LTransaction> LTransactions, Cursor cur, boolean sort) {
-        while (cur.moveToNext()) {
-            LTransaction LTransaction = new LTransaction();
-            getItemValues(cur, LTransaction);
-            LTransactions.add(LTransaction);
-        }
-        if (sort) {
-            Collections.sort(LTransactions, new Comparator<LTransaction>() {
-                public int compare(LTransaction c1, LTransaction c2) {
-                    int ret;
-                    if (c1.getTimeStamp() > c2.getTimeStamp()) ret = 1;
-                    else if (c1.getTimeStamp() == c2.getTimeStamp()) ret = 0;
-                    else ret = -1;
-                    return ret;
-                }
-            });
-        }
-        //LTransactions.add(yaventLItem());
-        return 0;
-    }
-
-    public static int getAllItems(ArrayList<LTransaction> LTransactions, boolean sort) {
-        synchronized (dbLock) {
-            /*
-            SQLiteDatabase db = getReadDb();
-            Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LItemS_NAME, null);
-            getLItemList(LTransactions, cur, sort);
-            int ii = LTransactions.size();
-            while (ii-- > 0) {
-                if (LTransactions.get(ii).status == LTransaction.STATUS_GROUP_INVITE) {
-                    LTransactions.remove(ii);
-                }
-            }
-            cur.close();
-            */
-            return 0;
-        }
-    }
-
     //TODO: not thread safe?
     public static Cursor getAllActiveItemsCursor() {
         SQLiteDatabase db = getReadDb();
@@ -302,83 +230,6 @@ public class DBAccess {
         return cur;
     }
 
-    public static int getAllActiveItems(ArrayList<LTransaction> LTransactions, boolean sort) {
-        synchronized (dbLock) {
-            /*
-            SQLiteDatabase db = getReadDb();
-            Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LItemS_NAME + " WHERE Status=?",
-                    new String[]{"" + LTransaction.STATUS_ACTIVE});
-            getLItemList(LTransactions, cur, sort);
-            cur.close();
-            */
-            return 0;
-        }
-    }
-
-    public static LTransaction getItemByAccountId(int id) {
-        synchronized (dbLock) {
-
-            LTransaction LTransaction = null;
-            /*
-            if (id == 0) return yaventLItem();
-            YLog.d(TAG, "ID: " + id);
-            SQLiteDatabase db = getReadDb();
-            Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_LItemS_NAME + " WHERE Cid=?",
-                    new String[]{"" + id});
-            if (cur.getCount() > 0) {
-                YLog.d(TAG, "count: " + cur.getCount());
-                cur.moveToFirst();
-                LTransaction = new LTransaction();
-                getLItemValues(cur, LTransaction);
-            }
-
-            cur.close();
-                        */
-            return LTransaction;
-        }
-    }
-
-    public static LTransaction getItemByRid(String rid) {
-        SQLiteDatabase db = getReadDb();
-
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
-                        DBHelper.TABLE_COLUMN_RID + " =?",
-                new String[]{rid});
-        if (cur != null && cur.getCount() > 0) {
-            if (cur.getCount() != 1) {
-                LLog.e(TAG, "unexpected error: duplicated record");
-            }
-            cur.moveToFirst();
-            LTransaction item = new LTransaction();
-            getItemValues(cur, item);
-            cur.close();
-            return item;
-        }
-        if (cur != null) cur.close();
-        return null;
-    }
-
-    public static LTransaction getItemByUserTimestamp(int madeBy, long timestamp) {
-        SQLiteDatabase db = getReadDb();
-
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
-                        DBHelper.TABLE_COLUMN_MADEBY + " =? AND " +
-                        DBHelper.TABLE_COLUMN_TIMESTAMP + " =?",
-                new String[]{"" + madeBy, "" + timestamp});
-        if (cur != null && cur.getCount() > 0) {
-            if (cur.getCount() != 1) {
-                LLog.e(TAG, "unexpected error: duplicated record");
-            }
-            cur.moveToFirst();
-            LTransaction item = new LTransaction();
-            getItemValues(cur, item);
-            cur.close();
-            return item;
-        }
-        if (cur != null) cur.close();
-        return null;
-    }
-
     public static void updateStateById(String table, long id, int state) {
         synchronized (dbLock) {
             SQLiteDatabase db = getWriteDb();
@@ -403,29 +254,6 @@ public class DBAccess {
 
     public static void deleteTagById(long id) {
         updateStateById(DBHelper.TABLE_TAG_NAME, id, LTag.TAG_STATE_DELETED);
-    }
-
-    public static LTransaction getLogItemById(long id) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        String str = "";
-        LTransaction item = new LTransaction();
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE _id=?", new String[]{"" + id});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find id: " + id + " from log table");
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getItemValues(csr, item);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
-        }
-        if (csr != null) csr.close();
-        item.setId(id);
-        return item;
     }
 
     private static String getStringFromDbById(String table, String column, long id) {

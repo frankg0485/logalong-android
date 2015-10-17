@@ -344,20 +344,28 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
             if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                 int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
+                int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
                 String account = DBAccess.getAccountNameById(accountId);
-                String vendor = DBAccess.getAccountNameById(vendorId);
+                String account2 = DBAccess.getAccountNameById(account2Id);
 
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
-                    tv.setText(account + " --> " + vendor);
+                    tv.setText(account + " --> " + account2);
                 } else {
-                    tv.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + vendor);
+                    tv.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
                 }
+
+                tv = (TextView) mainView.findViewById(R.id.note);
+                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+                tv.setText(note);;
             } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
-                    int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
-                    String vendor = DBAccess.getAccountNameById(vendorId);
-                    tv.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + vendor);
+                    int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    String account2 = DBAccess.getAccountNameById(account2Id);
+                    tv.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
+
+                    tv = (TextView) mainView.findViewById(R.id.note);
+                    String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+                    tv.setText(note);
                 }
             } else {
                 String str = "";
@@ -450,7 +458,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         public void onClick(View v) {
             VTag tag = (VTag) v.getTag();
 
-            item = DBAccess.getLogItemById(tag.id);
+            item = DBTransaction.getById(tag.id);
 
             edit = new TransactionEdit(getActivity(), rootView, item, false, false, this);
 
@@ -470,7 +478,6 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     if (changed) {
                         item.setTimeStampLast(System.currentTimeMillis());
                         DBTransaction.update(item);
-
                         LJournal journal = new LJournal();
                         journal.updateItem(item);
 
@@ -545,7 +552,11 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
+        if (bMonthly) {
+            mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
+        } else {
+            mtv.setText("" + AppPersistency.viewTransactionYear);
+        }
     }
 
     private void getBalance(LAccountSummary summary) {

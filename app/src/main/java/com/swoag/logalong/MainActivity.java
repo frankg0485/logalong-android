@@ -21,6 +21,7 @@ import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTransaction;
@@ -380,42 +381,16 @@ public class MainActivity extends LFragmentActivity
 
     private void pushAllAccountRecords(int userId, LAccount account) {
         Cursor cursor = DBAccess.getActiveItemsCursorByAccount(account.getId());
-        HashSet<Long> itemsMissingOwner = new HashSet<Long>();
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {
-                LCategory category = DBCategory.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-                LVendor vendor = DBVendor.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
-
-                int madeBy = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY));
-                if (madeBy == 0) {
-                    madeBy = LPreferences.getUserId();
-                    itemsMissingOwner.add(cursor.getLong(0));
-                }
-
-                String record = DBHelper.TABLE_COLUMN_TYPE + "=" + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)) + ","
-                        + DBHelper.TABLE_COLUMN_AMOUNT + "=" + cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ","
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "=" + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) + ","
-                        + DBHelper.TABLE_COLUMN_MADEBY + "=" + madeBy + ",";
-                if (category != null && (!category.getName().isEmpty())) {
-                    record += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName() + ";" + category.getRid() + ";" + category.getTimeStampLast() + ",";
-                }
-                if (vendor != null && (!vendor.getName().isEmpty())) {
-                    record += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName() + ";" + vendor.getRid() + ";" + vendor.getTimeStampLast() + ",";
-                }
-                String rid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
-                record += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
-                record += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName() + ";" + account.getRid() + ";" + account.getTimeStampLast();
-
+                LTransaction item = new LTransaction();
+                DBTransaction.getValues(cursor, item);
+                String record = LJournal.transactionItemString(item);
                 LProtocol.ui.shareTransitionRecord(userId, record);
             } while (cursor.moveToNext());
         }
-
-        int madeBy = LPreferences.getUserId();
-        for (long id : itemsMissingOwner) {
-            DBTransaction.updateOwnerById(madeBy, id);
-        }
+        if (cursor != null) cursor.close();
     }
 
     @Override

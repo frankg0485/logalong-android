@@ -32,7 +32,7 @@ public class LAlarmReceiver extends BroadcastReceiver {
         calendar.setTimeInMillis(sch.getTimestamp());
         String ymd = "" + calendar.get(Calendar.YEAR) + calendar.get(Calendar.MONTH) + calendar.get(Calendar.DAY_OF_MONTH);
 
-        LTransaction item = DBAccess.getItemByRid(sch.getItem().getRid() + ymd);
+        LTransaction item = DBTransaction.getByRid(sch.getItem().getRid() + ymd);
         if (item == null) {
             item = new LTransaction(sch.getItem());
             item.setTimeStampLast(System.currentTimeMillis());

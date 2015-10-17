@@ -17,6 +17,7 @@ public class DBTransaction {
         cv.put(DBHelper.TABLE_COLUMN_STATE, trans.getState());
         cv.put(DBHelper.TABLE_COLUMN_CATEGORY, trans.getCategory());
         cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, trans.getAccount());
+        cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, trans.getAccount2());
         cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getBy());
         cv.put(DBHelper.TABLE_COLUMN_AMOUNT, trans.getValue());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, trans.getTimeStamp());
@@ -31,6 +32,7 @@ public class DBTransaction {
         trans.setType(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
         trans.setState(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
         trans.setAccount(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT)));
+        trans.setAccount2(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT2)));
         trans.setCategory(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_CATEGORY)));
         trans.setTag(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
         trans.setVendor(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
@@ -58,8 +60,8 @@ public class DBTransaction {
             //duplicate record for transfer
             if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                 cv.put(DBHelper.TABLE_COLUMN_TYPE, LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getVendor());
-                cv.put(DBHelper.TABLE_COLUMN_VENDOR, item.getAccount());
+                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount2());
+                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, item.getAccount());
                 cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid() + "2");
                 db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
             }
@@ -86,8 +88,8 @@ public class DBTransaction {
                     item2.setRid(item.getRid().substring(0, item.getRid().length() - 1));
                 }
 
-                item2.setAccount(item.getVendor());
-                item2.setVendor(item.getAccount());
+                item2.setAccount(item.getAccount2());
+                item2.setAccount2(item.getAccount());
                 cv = setValues(item2);
 
                 dbid = DBAccess.getIdByRid(DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
@@ -112,4 +114,46 @@ public class DBTransaction {
         }
     }
 
+    public static LTransaction getById(long id) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        String str = "";
+        LTransaction item = new LTransaction();
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find id: " + id + " from log table");
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, item);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        if (csr != null) csr.close();
+        item.setId(id);
+        return item;
+    }
+
+    public static LTransaction getByRid(String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
+                        DBHelper.TABLE_COLUMN_RID + " =?",
+                new String[]{rid});
+        if (cur != null && cur.getCount() > 0) {
+            if (cur.getCount() != 1) {
+                LLog.e(TAG, "unexpected error: duplicated record");
+            }
+            cur.moveToFirst();
+            LTransaction item = new LTransaction();
+            getValues(cur, item);
+            cur.close();
+            return item;
+        }
+        if (cur != null) cur.close();
+        return null;
+    }
 }

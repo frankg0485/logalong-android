@@ -81,12 +81,12 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
         accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
         accountTV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
-                item.getVendor() : item.getAccount()));
+                item.getAccount2() : item.getAccount()));
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER ||
                 item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
-            account2TV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
+            account2TV.setTypeface(null, item.getAccount2() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             account2TV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
-                    item.getVendor() : item.getAccount()));
+                    item.getAccount2() : item.getAccount()));
         } else {
             categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
@@ -109,7 +109,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         if ((item.getAccount() > 0) && (item.getValue() > 0)
                 && ((item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER
                 && item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ||
-                (item.getVendor() > 0 && item.getVendor() != item.getAccount()))) {
+                (item.getAccount2() > 0 && item.getAccount2() != item.getAccount()))) {
             enableOk(true);
         } else {
             enableOk(false);
@@ -273,7 +273,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getVendor()), DLG_ID_ACCOUNT2);
+                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -377,7 +377,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
     public void onSelectionDialogExit(int dlgId, long selectedId) {
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
-                if (selectedId == item.getVendor() && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
+                if (selectedId == item.getAccount2() && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
                         || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                     selectedId = -1;
                 }
@@ -389,7 +389,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                         || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                     selectedId = -1;
                 }
-                item.setVendor(selectedId);
+                item.setAccount2(selectedId);
                 updateOkDisplay();
                 break;
             case DLG_ID_CATEGORY:

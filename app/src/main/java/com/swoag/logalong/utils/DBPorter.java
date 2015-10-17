@@ -33,6 +33,7 @@ public class DBPorter {
                     + DBHelper.TABLE_COLUMN_AMOUNT + ","
                     + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
                     + DBHelper.TABLE_COLUMN_ACCOUNT + ","
+                    + DBHelper.TABLE_COLUMN_ACCOUNT2 + ","
                     + DBHelper.TABLE_COLUMN_CATEGORY + ","
                     + DBHelper.TABLE_COLUMN_VENDOR + ","
                     + DBHelper.TABLE_COLUMN_TAG + ","
@@ -40,8 +41,9 @@ public class DBPorter {
             if (cursor != null && cursor.getCount() > 0) {
                 cursor.moveToFirst();
                 do {
-                    String account, category, vendor, tag, note;
+                    String account, account2 = "", category, vendor = "", tag, note;
                     account = DBAccess.getAccountNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
+                    account2 = DBAccess.getAccountNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
                     category = DBAccess.getCategoryNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
                     vendor = DBAccess.getVendorNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
                     tag = DBAccess.getTagNameById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
@@ -51,6 +53,7 @@ public class DBPorter {
                             + cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ","
                             + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
                             + account + ","
+                            + account2 + ","
                             + category + ","
                             + vendor + ","
                             + tag + ","
@@ -90,17 +93,20 @@ public class DBPorter {
                     String[] ss = str.split(",", -1);
                     double amount;
                     int type;
-                    long timestamp, accountId, categoryId, vendorId, tagId;
-                    String account, category, vendor, tag, note;
+                    long timestamp, accountId, account2Id, categoryId, vendorId, tagId;
+                    String account, account2, category, vendor, tag, note;
 
                     type = Integer.valueOf(ss[0]);
+                    if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) continue;
+
                     amount = Double.valueOf(ss[1]);
                     timestamp = Long.valueOf(ss[2]);
                     account = ss[3];
-                    category = ss[4];
-                    vendor = ss[5];
-                    tag = ss[6];
-                    note = ss[7];
+                    account2 = ss[4];
+                    category = ss[5];
+                    vendor = ss[6];
+                    tag = ss[7];
+                    note = ss[8];
 
                     Long ll = accountMap.get(account);
                     if (null == ll) {
@@ -108,6 +114,17 @@ public class DBPorter {
                         accountMap.put(account, accountId);
                     } else {
                         accountId = ll.longValue();
+                    }
+
+                    ll = accountMap.get(account2);
+                    if (null == ll) {
+                        if (account2.isEmpty()) account2Id = 0;
+                        else {
+                            account2Id = DBAccess.addAccount(new LAccount(account2));
+                            accountMap.put(account2, account2Id);
+                        }
+                    } else {
+                        account2Id = ll.longValue();
                     }
 
                     ll = categoryMap.get(category);
@@ -143,7 +160,7 @@ public class DBPorter {
                         tagId = ll.longValue();
                     }
 
-                    DBTransaction.add(new LTransaction(amount, type, categoryId, vendorId, tagId, accountId, timestamp, note));
+                    DBTransaction.add(new LTransaction(amount, type, categoryId, vendorId, tagId, accountId, account2Id, timestamp, note));
                 }
             }
 
