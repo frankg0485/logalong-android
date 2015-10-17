@@ -26,9 +26,11 @@
     <string name="new_log">Logalong</string>
     <string name="new_tag">New Tag</string>
     <string name="new_user_name">New User Name</string>
-    <string name="new_vendor">New Vendor</string>
+    <string name="new_vendor">New Payee/Payer</string>
     <string name="password">Password</string>
     <string name="password_hint">password</string>
+    <string name="payee">Payee</string>
+    <string name="payer">Payer</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="reminder">Reminder</string>

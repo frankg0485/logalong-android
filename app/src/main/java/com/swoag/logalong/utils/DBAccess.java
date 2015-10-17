@@ -555,7 +555,7 @@ public class DBAccess {
         int index = 0;
         int ret = -1;
         try {
-            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + state + "=?",
+            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + state + "=? ORDER BY " + DBHelper.TABLE_COLUMN_NAME + " ASC",
                     new String[]{"" + actvState});
 
             csr.moveToFirst();

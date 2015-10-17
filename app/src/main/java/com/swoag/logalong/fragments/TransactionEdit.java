@@ -311,7 +311,8 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
                     mSelectionDialog = new LSelectionDialog
                             (activity, this, ids,
                                     DBHelper.TABLE_VENDOR_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBVendor.getIndexById(item.getVendor()), DLG_ID_VENDOR);
+                                    DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction.TRANSACTION_TYPE_INCOME?
+                                    DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor()), DLG_ID_VENDOR);
                     mSelectionDialog.show();
                     mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                 } catch (Exception e) {
@@ -360,9 +361,12 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
             return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
             return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
-        else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME))
-            return DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
-        else if (table.contentEquals(DBHelper.TABLE_TAG_NAME))
+        else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME)) {
+            if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME)
+                return DBVendor.getPayerCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            else
+                return DBVendor.getPayeeCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+        } else if (table.contentEquals(DBHelper.TABLE_TAG_NAME))
             return DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         return null;
     }

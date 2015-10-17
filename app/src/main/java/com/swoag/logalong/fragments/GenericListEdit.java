@@ -108,6 +108,7 @@ public class GenericListEdit implements View.OnClickListener,
 
     @Override
     public void onClick(View v) {
+        boolean attr1 = true, attr2 = false;
         switch (v.getId()) {
             case R.id.add:
                 String title = "";
@@ -127,7 +128,7 @@ public class GenericListEdit implements View.OnClickListener,
                     default:
                         break;
                 }
-                LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, this, this, title, null);
+                LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, listId, this, title, null, attr1, attr2);
                 newAccountDialog.show();
                 break;
         }
@@ -163,9 +164,9 @@ public class GenericListEdit implements View.OnClickListener,
     }
 
     @Override
-    public boolean onNewAccountDialogExit(Object id, boolean created, String name) {
+    public boolean onNewAccountDialogExit(int id, boolean created, String name, boolean attr1, boolean attr2) {
         if (created && name != null && !name.isEmpty()) {
-            switch (listId) {
+            switch (id) {
                 case R.id.accounts:
                     DBAccess.addAccount(new LAccount(name));
                     break;
@@ -179,7 +180,11 @@ public class GenericListEdit implements View.OnClickListener,
                     break;
 
                 case R.id.vendors:
-                    LVendor vendor = new LVendor(name);
+                    int type = LVendor.TYPE_PAYEE;
+                    if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
+                    else if (attr1) type = LVendor.TYPE_PAYEE;
+                    else type = LVendor.TYPE_PAYER;
+                    LVendor vendor = new LVendor(name, type);
                     DBVendor.add(vendor);
 
                     journal = new LJournal();
@@ -272,9 +277,17 @@ public class GenericListEdit implements View.OnClickListener,
 
             switch (v.getId()) {
                 case R.id.option:
-
+                    boolean attr1 = false, attr2 = false;
+                    if (listId == R.id.vendors) {
+                        LVendor vendor = DBVendor.getById(tag.id);
+                        if (vendor.getType() == LVendor.TYPE_PAYEE) attr1 = true;
+                        else if (vendor.getType() == LVendor.TYPE_PAYER) attr2 = true;
+                        else {
+                            attr1 = attr2 = true;
+                        }
+                    }
                     optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
-                            listId, this);
+                            listId, this, attr1, attr2);
                     optionDialog.show();
                     break;
 
@@ -397,6 +410,20 @@ public class GenericListEdit implements View.OnClickListener,
                 }
             }
             optionDialog.dismiss();
+        }
+
+        @Override
+        public void onGenericListOptionDialogDismiss(Object context, boolean attr1, boolean attr2) {
+            VTag tag = (VTag) context;
+            if (listId == R.id.vendors) {
+                LVendor vendor = DBVendor.getById(tag.id);
+                int type = LVendor.TYPE_PAYEE;
+                if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
+                else if (attr1) type = LVendor.TYPE_PAYEE;
+                else type = LVendor.TYPE_PAYER;
+                vendor.setType(type);
+                DBVendor.update(vendor);
+            }
         }
 
         @Override

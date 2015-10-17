@@ -10,6 +10,7 @@ public class LVendor {
 
     public static final int TYPE_PAYEE = 10;
     public static final int TYPE_PAYER = 20;
+    public static final int TYPE_PAYEE_PAYER = 30;
 
     private long id;
     private int state;

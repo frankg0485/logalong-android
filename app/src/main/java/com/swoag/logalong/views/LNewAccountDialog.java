@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -29,19 +30,22 @@ public class LNewAccountDialog extends Dialog implements
     private String hint;
     private EditText text;
     private Context context;
-    private Object id;
+    private int id;
     private View okView;
+    private View payeePayerView;
+    private CheckBox checkBoxAttr1, checkBoxAttr2;
     private boolean isNameAvailable;
+    private boolean attr1, attr2;
 
     public interface LNewAccountDialogItf {
         // return FALSE to keep this dialog alive.
-        public boolean onNewAccountDialogExit(Object id, boolean created, String name);
+        public boolean onNewAccountDialogExit(int id, boolean created, String name, boolean attr1, boolean attr2);
 
         public boolean isNewAccountNameAvailable(String name);
     }
 
-    public LNewAccountDialog(Context context, Object id, LNewAccountDialogItf callback,
-                             String title, String hint) {
+    public LNewAccountDialog(Context context, int id, LNewAccountDialogItf callback,
+                             String title, String hint, boolean attr1, boolean attr2) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
 
         this.context = context;
@@ -49,6 +53,8 @@ public class LNewAccountDialog extends Dialog implements
         this.title = title;
         this.hint = hint;
         this.id = id;
+        this.attr1 = attr1;
+        this.attr2 = attr2;
     }
 
     @Override
@@ -56,6 +62,20 @@ public class LNewAccountDialog extends Dialog implements
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.new_account_dialog);
+
+        payeePayerView = findViewById(R.id.payeePayerView);
+        checkBoxAttr1 = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayee);
+        checkBoxAttr2 = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayer);
+        if (id == R.id.vendors) {
+            payeePayerView.setVisibility(View.VISIBLE);
+            checkBoxAttr1.setOnClickListener(this);
+            checkBoxAttr2.setOnClickListener(this);
+
+            checkBoxAttr1.setChecked(attr1);
+            checkBoxAttr2.setChecked(attr2);
+        } else {
+            payeePayerView.setVisibility(View.GONE);
+        }
 
         findViewById(R.id.cancelDialog).setOnClickListener(this);
         okView = findViewById(R.id.confirmDialog);
@@ -107,18 +127,31 @@ public class LNewAccountDialog extends Dialog implements
         }
         boolean ret = true;
         try {
-            List<String> msg = new ArrayList<String>();
-            if (v.getId() == R.id.confirmDialog) {
-                String name = text.getText().toString();
-                name = name.trim();
+            switch (v.getId()) {
+                case R.id.confirmDialog:
+                    String name = text.getText().toString();
+                    name = name.trim();
 
-                if (name.length() <= 0) {
-                    ret = callback.onNewAccountDialogExit(id, false, null);
-                } else {
-                    ret = callback.onNewAccountDialogExit(id, true, name);
-                }
-            } else {
-                ret = callback.onNewAccountDialogExit(id, false, null);
+                    if (name.length() <= 0) {
+                        ret = callback.onNewAccountDialogExit(id, false, null, false, false);
+                    } else {
+                        attr1 = checkBoxAttr1.isChecked();
+                        attr2 = checkBoxAttr2.isChecked();
+                        ret = callback.onNewAccountDialogExit(id, true, name, attr1, attr2);
+                    }
+                    break;
+                case R.id.cancelDialog:
+                case R.id.closeDialog:
+                    ret = callback.onNewAccountDialogExit(id, false, null, false, false);
+                    break;
+
+                case R.id.checkBoxPayee:
+                case R.id.checkBoxPayer:
+                    ret = false;
+                    if ((!checkBoxAttr1.isChecked()) && (!checkBoxAttr2.isChecked())) {
+                        checkBoxAttr1.setChecked(true);
+                    }
+                    break;
             }
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());

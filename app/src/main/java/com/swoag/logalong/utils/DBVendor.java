@@ -144,22 +144,89 @@ public class DBVendor {
         return DBAccess.getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
-    public static int getIndexById(long id) {
-        return DBAccess.getDbIndexById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_STATE,
-                DBHelper.STATE_ACTIVE, id);
+    private static int getDbIndexById(int type, long id) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        int index = 0;
+        int ret = -1;
+        try {
+            csr = db.rawQuery("SELECT _id FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? ) ORDER BY " + DBHelper.TABLE_COLUMN_NAME + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + type, "" + LVendor.TYPE_PAYEE_PAYER});
+
+            csr.moveToFirst();
+            while (true) {
+                if (id == csr.getLong(0)) {
+                    ret = index;
+                    break;
+                }
+                csr.moveToNext();
+                index++;
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        if (csr != null) csr.close();
+        return ret;
+    }
+
+    public static int getPayerIndexById(long id) {
+        return getDbIndexById(LVendor.TYPE_PAYER, id);
+    }
+
+    public static int getPayeeIndexById(long id) {
+        return getDbIndexById(LVendor.TYPE_PAYEE, id);
     }
 
     public static Cursor getCursorSortedBy(String sortColumn) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor cur;
         if (sortColumn != null)
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + sortColumn + " ASC",
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + sortColumn + " ASC",
                     new String[]{"" + DBHelper.STATE_ACTIVE});
         else
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{"" + DBHelper.STATE_ACTIVE});
+        return cur;
+    }
+
+    public static Cursor getPayerCursorSortedBy(String sortColumn) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur;
+        if (sortColumn != null)
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? ) ORDER BY " + sortColumn + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYER, "" + LVendor.TYPE_PAYEE_PAYER});
+        else
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYER, "" + LVendor.TYPE_PAYEE_PAYER});
+        return cur;
+    }
+
+    public static Cursor getPayeeCursorSortedBy(String sortColumn) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur;
+        if (sortColumn != null)
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? ) ORDER BY " + sortColumn + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYEE, "" + LVendor.TYPE_PAYEE_PAYER});
+        else
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYEE, "" + LVendor.TYPE_PAYEE_PAYER});
         return cur;
     }
 

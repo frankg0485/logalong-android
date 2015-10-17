@@ -20,7 +20,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/undo_bar_bgd"
+            android:background="@drawable/dialog_bgd"
             android:orientation="vertical"
             android:padding="3dp">
 
