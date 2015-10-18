@@ -17,8 +17,44 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1">
+                android:layout_weight="1"
+                android:orientation="vertical">
 
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="25dp"
+                    android:background="#e4e6e8"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/month"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_marginLeft="15dp"
+                        android:layout_toLeftOf="@+id/balance"
+                        android:gravity="center_vertical"
+                        android:text="@string/balance"
+                        android:textSize="14dp" />
+
+                    <TextView
+                        android:id="@+id/balance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="15dp"
+                        android:layout_toLeftOf="@+id/p1"
+                        android:gravity="right|center_vertical"
+                        android:text="1234.45"
+                        android:textColor="@color/base_red"
+                        android:textSize="14dp" />
+                </RelativeLayout>
+
+                <ListView
+                    android:id="@+id/listView"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    android:divider="@android:color/transparent" />
             </LinearLayout>
 
             <LinearLayout

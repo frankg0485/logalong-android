@@ -23,12 +23,13 @@ public class GenericListOptionDialog extends Dialog implements
     private String title;
     private int listId;
     private GenericListOptionDialogItf callback;
-    private CheckBox checkBoxPayee, checkBoxPayer;
-    private View payeePayerView;
+    private CheckBox checkBoxPayee, checkBoxPayer, checkBoxAccountShowBalance;
+    private View payeePayerView, accountShowBalanceView;
     private boolean attr1, attr2;
 
     public interface GenericListOptionDialogItf {
         public void onGenericListOptionDialogDismiss(final Object context, boolean attr1, boolean attr2);
+
         public boolean onGenericListOptionDialogExit(final Object context, int viewId);
     }
 
@@ -45,7 +46,14 @@ public class GenericListOptionDialog extends Dialog implements
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        callback.onGenericListOptionDialogDismiss(context, checkBoxPayee.isChecked(), checkBoxPayer.isChecked());
+        switch (listId) {
+            case R.id.vendors:
+                callback.onGenericListOptionDialogDismiss(context, checkBoxPayee.isChecked(), checkBoxPayer.isChecked());
+                break;
+            case R.id.accounts:
+                callback.onGenericListOptionDialogDismiss(context, checkBoxAccountShowBalance.isChecked(), false);
+                break;
+        }
     }
 
     @Override
@@ -66,6 +74,9 @@ public class GenericListOptionDialog extends Dialog implements
         checkBoxPayee = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayee);
         checkBoxPayer = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayer);
 
+        accountShowBalanceView = findViewById(R.id.accountShowBalanceView);
+        checkBoxAccountShowBalance = (CheckBox) accountShowBalanceView.findViewById(R.id.checkboxAccountShowBalance);
+
         switch (listId) {
             case R.id.vendors:
                 View view = findViewById(R.id.associated_categories);
@@ -77,6 +88,11 @@ public class GenericListOptionDialog extends Dialog implements
                 checkBoxPayer.setOnClickListener(this);
                 checkBoxPayee.setChecked(attr1);
                 checkBoxPayer.setChecked(attr2);
+                break;
+            case R.id.accounts:
+                accountShowBalanceView.setVisibility(View.VISIBLE);
+                checkBoxAccountShowBalance.setOnClickListener(this);
+                checkBoxAccountShowBalance.setChecked(attr1);
                 break;
         }
         this.setOnDismissListener(this);
@@ -93,6 +109,8 @@ public class GenericListOptionDialog extends Dialog implements
                 if ((!checkBoxPayee.isChecked()) && (!checkBoxPayer.isChecked())) {
                     checkBoxPayee.setChecked(true);
                 }
+                return;
+            case R.id.checkboxAccountShowBalance:
                 return;
 
             default:

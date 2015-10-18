@@ -89,6 +89,31 @@
                         android:focusable="false"
                         android:text="@string/payer"
                         android:textColor="@color/base_text_color"
+
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/accountShowBalanceView"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/row_selector"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <CheckBox
+                        android:id="@+id/checkboxAccountShowBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="20dp"
+                        android:button="@drawable/btn_check_holo_dark"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:text="@string/show_balance"
+                        android:textColor="@color/base_text_color"
                         android:textSize="15sp" />
                 </LinearLayout>
 

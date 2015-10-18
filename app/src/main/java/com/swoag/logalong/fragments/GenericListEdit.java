@@ -168,7 +168,8 @@ public class GenericListEdit implements View.OnClickListener,
         if (created && name != null && !name.isEmpty()) {
             switch (id) {
                 case R.id.accounts:
-                    DBAccess.addAccount(new LAccount(name));
+                    long did = DBAccess.addAccount(new LAccount(name));
+                    LPreferences.setShowAccountBalance(did, attr1);
                     break;
 
                 case R.id.categories:
@@ -285,6 +286,8 @@ public class GenericListEdit implements View.OnClickListener,
                         else {
                             attr1 = attr2 = true;
                         }
+                    } else if (listId == R.id.accounts) {
+                        attr1 = LPreferences.getShowAccountBalance(tag.id);
                     }
                     optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
                             listId, this, attr1, attr2);
@@ -423,6 +426,8 @@ public class GenericListEdit implements View.OnClickListener,
                 else type = LVendor.TYPE_PAYER;
                 vendor.setType(type);
                 DBVendor.update(vendor);
+            } else if (listId == R.id.accounts) {
+                LPreferences.setShowAccountBalance(tag.id, attr1);
             }
         }
 

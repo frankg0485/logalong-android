@@ -8,6 +8,7 @@ import com.swoag.logalong.LApp;
 
 public class LPreferences {
     private static final String SHARED_PREF_NAME = "LogAlong";
+    private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
     private static final String USER_NAME = "UserName";
     private static final String USER_ID = "UserId";
 
@@ -33,6 +34,14 @@ public class LPreferences {
 
     public static void setShareUserName (int userId, String name) {
         savePreference(LApp.ctx, USER_NAME + "." + userId, name);
+    }
+
+    public static boolean getShowAccountBalance(long id) {
+        return getPreference(LApp.ctx, SHOW_ACCOUNT_BALANCE + "." + id, true);
+    }
+
+    public static void setShowAccountBalance(long id, boolean show) {
+        savePreference(LApp.ctx, SHOW_ACCOUNT_BALANCE + "." + id, show);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////

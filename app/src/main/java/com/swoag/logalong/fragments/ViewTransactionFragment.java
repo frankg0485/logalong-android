@@ -113,6 +113,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             v = logsCursor.getDouble(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             type = logsCursor.getInt(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
             id = logsCursor.getLong(logsCursor.getColumnIndexOrThrow(column));
+            if (id < 0) id = 0;
 
             if (hasLog && id != lastId) {
                 summary = new LAccountSummary();
@@ -194,8 +195,8 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
 
-        //allBalances = LAllBalances.getInstance();
-        allBalances = LAllBalances.getInstance(true);
+        allBalances = LAllBalances.getInstance();
+        //allBalances = LAllBalances.getInstance(true);
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
@@ -357,7 +358,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
                 tv = (TextView) mainView.findViewById(R.id.note);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
-                tv.setText(note);;
+                tv.setText(note);
             } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));

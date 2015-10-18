@@ -69,8 +69,10 @@ public class LAllBalances {
         return val;
     }
 
-    public void getBalance(long accountId, int year, int month) {
-
+    public double getBalance(long accountId, int year, int month) {
+        LAccountBalance balance = balances.get(accountId);
+        double[] b = balance.getYearBalance(year);
+        return b[month];
     }
 
     public long getStartDate() {

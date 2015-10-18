@@ -175,19 +175,39 @@ public class DBTransaction {
     }
 
     private static Cursor getCursorInRangeSortBy(String table, String column, long start, long end) {
+        String select = "SELECT a._id,"
+                + "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
+                + "a." + DBHelper.TABLE_COLUMN_CATEGORY + ","
+                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT + ","
+                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT2 + ","
+                + "a." + DBHelper.TABLE_COLUMN_TAG + ","
+                + "a." + DBHelper.TABLE_COLUMN_VENDOR + ","
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
+                /*
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ","
+                */
+                + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
+                /*
+                + "a." + DBHelper.TABLE_COLUMN_STATE + ","
+                + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
+                + "a." + DBHelper.TABLE_COLUMN_RID + ","
+                */
+                + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
+                + "b." + DBHelper.TABLE_COLUMN_NAME;
+
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor cur;
         if (start == -1 || end == -1) {
-            cur = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_TRANSACTION_NAME + " a LEFT JOIN " + table + " b "
+            cur = db.rawQuery(select
+                            + " FROM " + DBHelper.TABLE_TRANSACTION_NAME + " AS a LEFT JOIN " + table + " AS b "
                             + "ON a." + column + " = b._id "
                             + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY "
                             + "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, "
                             + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
                     new String[]{"" + DBHelper.STATE_ACTIVE});
         } else {
-            cur = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_TRANSACTION_NAME + " a LEFT JOIN " + table + " b "
+            cur = db.rawQuery(select
+                            + " FROM " + DBHelper.TABLE_TRANSACTION_NAME + " AS a LEFT JOIN " + table + " AS b "
                             + "ON a." + column + " = b._id "
                             + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? AND "
                             + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "

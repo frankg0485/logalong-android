@@ -32,8 +32,8 @@ public class LNewAccountDialog extends Dialog implements
     private Context context;
     private int id;
     private View okView;
-    private View payeePayerView;
-    private CheckBox checkBoxAttr1, checkBoxAttr2;
+    private View payeePayerView, accountShowBalanceView;
+    private CheckBox checkBoxAttr1, checkBoxAttr2, checkBoxAccountShowBalance;
     private boolean isNameAvailable;
     private boolean attr1, attr2;
 
@@ -63,6 +63,9 @@ public class LNewAccountDialog extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.new_account_dialog);
 
+        accountShowBalanceView = findViewById(R.id.accountShowBalanceView);
+        checkBoxAccountShowBalance = (CheckBox) accountShowBalanceView.findViewById(R.id.checkboxAccountShowBalance);
+
         payeePayerView = findViewById(R.id.payeePayerView);
         checkBoxAttr1 = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayee);
         checkBoxAttr2 = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayer);
@@ -75,6 +78,14 @@ public class LNewAccountDialog extends Dialog implements
             checkBoxAttr2.setChecked(attr2);
         } else {
             payeePayerView.setVisibility(View.GONE);
+        }
+
+        if (id == R.id.accounts) {
+            accountShowBalanceView.setVisibility(View.VISIBLE);
+            checkBoxAccountShowBalance.setOnClickListener(this);
+            checkBoxAccountShowBalance.setChecked(attr1);
+        } else {
+            accountShowBalanceView.setVisibility(View.GONE);
         }
 
         findViewById(R.id.cancelDialog).setOnClickListener(this);
@@ -135,7 +146,11 @@ public class LNewAccountDialog extends Dialog implements
                     if (name.length() <= 0) {
                         ret = callback.onNewAccountDialogExit(id, false, null, false, false);
                     } else {
-                        attr1 = checkBoxAttr1.isChecked();
+                        if (id == R.id.accounts) {
+                            attr1 = checkBoxAccountShowBalance.isChecked();
+                        } else {
+                            attr1 = checkBoxAttr1.isChecked();
+                        }
                         attr2 = checkBoxAttr2.isChecked();
                         ret = callback.onNewAccountDialogExit(id, true, name, attr1, attr2);
                     }
@@ -151,6 +166,9 @@ public class LNewAccountDialog extends Dialog implements
                     if ((!checkBoxAttr1.isChecked()) && (!checkBoxAttr2.isChecked())) {
                         checkBoxAttr1.setChecked(true);
                     }
+                    break;
+                case R.id.checkboxAccountShowBalance:
+                    ret = false;
                     break;
             }
         } catch (Exception e) {
