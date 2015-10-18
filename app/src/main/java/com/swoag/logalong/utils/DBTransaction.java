@@ -156,4 +156,78 @@ public class DBTransaction {
         if (cur != null) cur.close();
         return null;
     }
+
+    public static Cursor getCursorInRange(long start, long end) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur;
+        if (start == -1 || end == -1) {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE});
+        } else {
+            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        }
+        return cur;
+    }
+
+    private static Cursor getCursorInRangeSortBy(String table, String column, long start, long end) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur;
+        if (start == -1 || end == -1) {
+            cur = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_TRANSACTION_NAME + " a LEFT JOIN " + table + " b "
+                            + "ON a." + column + " = b._id "
+                            + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY "
+                            + "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, "
+                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE});
+        } else {
+            cur = db.rawQuery("SELECT * FROM "
+                            + DBHelper.TABLE_TRANSACTION_NAME + " a LEFT JOIN " + table + " b "
+                            + "ON a." + column + " = b._id "
+                            + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? AND "
+                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
+                            + "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, "
+                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
+        }
+        return cur;
+    }
+
+    public static Cursor getCursorInRangeSortByAccount(long start, long end) {
+        return getCursorInRangeSortBy(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_ACCOUNT, start, end);
+    }
+
+    public static Cursor getCursorInRangeSortByCategory(long start, long end) {
+        return getCursorInRangeSortBy(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_CATEGORY, start, end);
+    }
+
+    public static Cursor getCursorInRangeSortByVendor(long start, long end) {
+        return getCursorInRangeSortBy(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_VENDOR, start, end);
+    }
+
+    public static Cursor getCursorInRangeSortByTag(long start, long end) {
+        return getCursorInRangeSortBy(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_TAG, start, end);
+    }
+
+    public static Cursor getCursorByAccount(long accountId) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+        return cur;
+    }
+
+    public static Cursor getAllCursor() {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
+                new String[]{"" + DBHelper.STATE_ACTIVE});
+        return cur;
+    }
 }

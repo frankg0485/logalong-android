@@ -76,23 +76,23 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
         switch (AppPersistency.viewTransactionFilter) {
             case AppPersistency.TRANSACTION_FILTER_ALL:
-                logsCursor = DBAccess.getActiveItemsCursorInRange(startMs, endMs);
+                logsCursor = DBTransaction.getCursorInRange(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                 column = DBHelper.TABLE_COLUMN_ACCOUNT;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByAccount(startMs, endMs);
+                logsCursor = DBTransaction.getCursorInRangeSortByAccount(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                 column = DBHelper.TABLE_COLUMN_CATEGORY;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByCategory(startMs, endMs);
+                logsCursor = DBTransaction.getCursorInRangeSortByCategory(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_TAG:
                 column = DBHelper.TABLE_COLUMN_TAG;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByTag(startMs, endMs);
+                logsCursor = DBTransaction.getCursorInRangeSortByTag(startMs, endMs);
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
                 column = DBHelper.TABLE_COLUMN_VENDOR;
-                logsCursor = DBAccess.getActiveItemsCursorInRangeSortByVendor(startMs, endMs);
+                logsCursor = DBTransaction.getCursorInRangeSortByVendor(startMs, endMs);
                 break;
         }
 
@@ -356,7 +356,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 }
 
                 tv = (TextView) mainView.findViewById(R.id.note);
-                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
                 tv.setText(note);;
             } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
@@ -365,7 +365,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                     tv.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
 
                     tv = (TextView) mainView.findViewById(R.id.note);
-                    String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+                    String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
                     tv.setText(note);
                 }
             } else {
@@ -377,7 +377,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
                 tv = (TextView) mainView.findViewById(R.id.note);
                 int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
                 String vendor = DBVendor.getNameById(vendorId);
-                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
 
                 if (vendor.isEmpty()) {
                     if ((note != null) && (!note.isEmpty())) vendor = note;

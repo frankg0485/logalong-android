@@ -28,7 +28,7 @@ public class DBPorter {
         try {
             MyCSV myCSV = new MyCSV();
 
-            Cursor cursor = DBAccess.getAllActiveItemsCursor();
+            Cursor cursor = DBTransaction.getAllCursor();
             myCSV.add(DBHelper.TABLE_COLUMN_TYPE + ","
                     + DBHelper.TABLE_COLUMN_AMOUNT + ","
                     + DBHelper.TABLE_COLUMN_TIMESTAMP + ","

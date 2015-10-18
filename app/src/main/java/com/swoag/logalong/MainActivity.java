@@ -380,7 +380,7 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void pushAllAccountRecords(int userId, LAccount account) {
-        Cursor cursor = DBAccess.getActiveItemsCursorByAccount(account.getId());
+        Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {

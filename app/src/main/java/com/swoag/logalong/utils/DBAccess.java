@@ -87,8 +87,6 @@ public class DBAccess {
         dirty = false;
     }
 
-    private static LTransaction gLogItem;
-
     private static ContentValues setCategoryValues(LCategory category) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
@@ -141,77 +139,6 @@ public class DBAccess {
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         account.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
         account.setId(cur.getLong(0));
-    }
-
-    //TODO: not thread safe?
-    public static Cursor getAllActiveItemsCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE State=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + DBHelper.STATE_ACTIVE});
-        return cur;
-    }
-
-    public static Cursor getActiveItemsCursorInRange(long start, long end) {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur;
-        if (start == -1 || end == -1) {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE State=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
-        } else {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE State=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
-        }
-        return cur;
-    }
-
-    private static Cursor getActiveItemsCursorInRangeSortBy(String column, long start, long end) {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur;
-        if (start == -1 || end == -1) {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE State=? ORDER BY "
-                            + column + " ASC, "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
-        } else {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE State=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
-                            + column + " ASC, "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
-        }
-        return cur;
-    }
-
-    public static Cursor getActiveItemsCursorInRangeSortByAccount(long start, long end) {
-        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_ACCOUNT, start, end);
-    }
-
-    public static Cursor getActiveItemsCursorInRangeSortByCategory(long start, long end) {
-        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_CATEGORY, start, end);
-    }
-
-    public static Cursor getActiveItemsCursorInRangeSortByTag(long start, long end) {
-        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_TAG, start, end);
-    }
-
-    public static Cursor getActiveItemsCursorInRangeSortByVendor(long start, long end) {
-        return getActiveItemsCursorInRangeSortBy(DBHelper.TABLE_COLUMN_VENDOR, start, end);
-    }
-
-    public static Cursor getActiveItemsCursorByAccount(long accountId) {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE State=? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
-        return cur;
     }
 
     public static void updateStateById(String table, long id, int state) {
