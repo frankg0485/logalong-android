@@ -229,7 +229,7 @@ public class GenericListEdit implements View.OnClickListener,
 
     private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
             GenericListOptionDialog.GenericListOptionDialogItf,
-            LRenameDialog.LRenameDialogItf, LReminderDialog.LReminderDialogItf,
+            LRenameDialog.LRenameDialogItf,
             LShareAccountDialog.LShareAccountDialogItf,
             LMultiSelectionDialog.OnMultiSelectionDialogItf {
         GenericListOptionDialog optionDialog;
@@ -295,6 +295,11 @@ public class GenericListEdit implements View.OnClickListener,
                     break;
 
                 case R.id.share:
+                    if (LPreferences.getUserName().isEmpty()) {
+                        new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
+                        break;
+                    }
+
                     ArrayList<LUser> users = new ArrayList<LUser>();
                     HashSet<Integer> userSet = DBAccess.getAllAccountsShareUser();
                     for (int ii : userSet) {
@@ -322,6 +327,7 @@ public class GenericListEdit implements View.OnClickListener,
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
                             (activity, account, selectedUsers, this, users);
                     shareAccountDialog.show();
+                    break;
             }
         }
 
@@ -502,11 +508,6 @@ public class GenericListEdit implements View.OnClickListener,
                     return true;
             }
             return false;
-        }
-
-        @Override
-        public void onReminderDialogExit() {
-            optionDialog.dismiss();
         }
 
         @Override

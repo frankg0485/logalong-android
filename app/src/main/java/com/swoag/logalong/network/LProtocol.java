@@ -311,7 +311,9 @@ public class LProtocol {
                             break;
                     }
                 } else {
-                    LLog.d(TAG, "idle");
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_IDLE));
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, RSPS_OK);
+                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 }
                 break;
 
@@ -402,16 +404,22 @@ public class LProtocol {
             if (!connected) {
                 server = LAppServer.getInstance();
                 server.connect();
-
-                scrambler = genScrambler();
-                LTransport.send_rqst(server, RQST_SCRAMBLER_SEED, scrambler, 0);
             }
         }
 
         public static void disconnect() {
-            if (connected) {
-                server.disconnect();
-            }
+            server.disconnect();
+            //disconnect eventually clears the 'connected' flag thru callback, when
+            //network thread exits
+        }
+
+        public static boolean isConnected() {
+            return connected;
+        }
+
+        public static void initScrambler() {
+            scrambler = genScrambler();
+            LTransport.send_rqst(server, RQST_SCRAMBLER_SEED, scrambler, 0);
         }
 
         public static boolean ping() {
@@ -436,7 +444,7 @@ public class LProtocol {
 
         public static boolean shareAccountWithUser(int userId, String accountName, String uuid, boolean requireConfirmation) {
             return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName + "," + uuid + ","
-                    + (requireConfirmation? 1 : 0), scrambler);
+                    + (requireConfirmation ? 1 : 0), scrambler);
         }
 
         public static boolean shareTransitionRecord(int userId, String record) {

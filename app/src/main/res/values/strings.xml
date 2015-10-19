@@ -32,6 +32,7 @@
     <string name="password_hint">password</string>
     <string name="payee">Payee</string>
     <string name="payer">Payer</string>
+    <string name="please_complete_your_profile">Please complete your profile settings then come back.</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="reminder">Reminder</string>

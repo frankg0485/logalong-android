@@ -19,24 +19,25 @@
                 layout="@layout/settings" />
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
             android:id="@+id/viewSettings"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
+            android:layout_height="fill_parent"
+            android:orientation="vertical">
 
             <include
                 android:id="@+id/profileSettings"
                 layout="@layout/settings_profile"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/bottomBar"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:visibility="gone" />
 
             <ListView
                 android:id="@+id/listView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_above="@+id/bottomBar"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:divider="@android:color/transparent"
                 android:dividerHeight="1dp"
                 android:visibility="gone" />
@@ -45,7 +46,6 @@
                 android:id="@+id/bottomBar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/footer_height"
-                android:layout_alignParentBottom="true"
                 android:background="#C0080c10"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
@@ -93,8 +93,8 @@
                     android:layout_height="25dp"
                     android:layout_centerInParent="true"
                     android:layout_centerVertical="true"
-                    android:visibility="gone"
-                    android:layout_marginRight="15dp" />
+                    android:layout_marginRight="15dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/save"
@@ -118,6 +118,6 @@
                     android:visibility="gone" />
             </RelativeLayout>
 
-        </RelativeLayout>
+        </LinearLayout>
     </ViewFlipper>
 </RelativeLayout>

@@ -2,10 +2,14 @@ package com.swoag.logalong.network;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
+import com.swoag.logalong.utils.LAlarm;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LBufferPool;
 import com.swoag.logalong.utils.LLog;
@@ -14,12 +18,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Calendar;
 
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    //private static final String serverIp = "192.168.1.107";
-    private static final String serverIp = "162.209.48.52";
+    private static final String serverIp = "192.168.1.107";
+    //private static final String serverIp = "162.209.48.52";
     private static final int serverPort = 1723;
 
     private Socket socket = null;
@@ -27,8 +32,6 @@ public class LAppServer {
     private OutputStream sockOut = null;
 
     private final int STATE_INIT = 10;
-    private final int STATE_WAIT = 20;
-    private final int STATE_FAIL = 25;
     private final int STATE_READY = 30;
     private final int STATE_OFF = 40;
     private final int STATE_EXIT = 50;
@@ -40,6 +43,9 @@ public class LAppServer {
 
     private static LAppServer instance;
     private boolean connected;
+    private int tried;
+    private static final int AUTO_RECONNECT_DEFAULT_TIME_SECONDS = 3600;
+    private static final int AUTO_RECONNECT_RETRY_TIME_SECONDS = 30;
     private Context context;
     private LProtocol lProtocol;
 
@@ -59,87 +65,119 @@ public class LAppServer {
         netTxBufPool.enable(true);
 
         netRxBuf = new LBuffer(LProtocol.PACKET_MAX_LEN);
+
+        tried = 0;
     }
 
-    private void closeSockets() {
+    private void autoReconnect(int timeS) {
+        if (tried++ >= 3) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(calendar.getTimeInMillis() + timeS * 1000);
+        LAlarm.cancelAutoReconnectAlarm();
+        LAlarm.setAutoReconnectAlarm(calendar.getTimeInMillis());
+    }
+
+    //caller must hold netLock
+    private void closeSockets(int timeMs) {
         try {
-            sockOut.close();
+            if (null != sockOut) {
+                sockOut.close();
+            }
         } catch (Exception e) {
         }
         try {
-            sockIn.close();
+            if (null != sockIn) {
+                sockIn.close();
+            }
         } catch (Exception e) {
         }
 
         sockOut = null;
         sockIn = null;
         connected = false;
+        autoReconnect(timeMs);
     }
 
     public boolean connect() {
-        if (!connected) {
-            connected = true;
+        synchronized (netLock) {
+            if (!connected) {
+                connected = true;
 
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            if ((activeNetwork != null) && activeNetwork.isConnectedOrConnecting()) {
-                Thread connectThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            if (sockIn != null) sockIn.close();
-                            if (sockOut != null) sockOut.close();
-                            if (socket != null) socket.close();
-                        } catch (Exception e) {
-                        }
-
-                        try {
-                            LLog.d(TAG, "open at: " + serverIp + "@" + serverPort);
-                            InetAddress serverAddr = InetAddress.getByName(serverIp);
-                            LLog.d(TAG, "server addr:" + serverAddr);
-                            socket = new Socket(serverAddr, serverPort);
-                            LLog.d(TAG, "stream opened: " + socket);
-                            socket.setSoTimeout(0);
-
-                            sockIn = socket.getInputStream();
-                            sockOut = socket.getOutputStream();
-
-                            synchronized (netLock) {
-                                netThreadState = STATE_READY;
-                                netLock.notifyAll();
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                if ((activeNetwork != null) && activeNetwork.isConnectedOrConnecting()) {
+                    Thread connectThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (sockIn != null) sockIn.close();
+                                if (sockOut != null) sockOut.close();
+                                if (socket != null) socket.close();
+                            } catch (Exception e) {
                             }
 
-                            netTxBufPool.enable(true);
-                            Thread netThread = new Thread(new NetThread());
-                            netThread.start();
-                        } catch (Exception e) {
-                            LLog.e(TAG, "connection error: " + e.getMessage());
-                            connected = false;
-                        }
-                    }
-                });
-                connectThread.start();
-            } else {
-                connected = false;
-                LLog.e(TAG, "network not available?");
-            }
-        }
+                            try {
+                                LLog.d(TAG, "open at: " + serverIp + "@" + serverPort);
+                                InetAddress serverAddr = InetAddress.getByName(serverIp);
+                                LLog.d(TAG, "server addr:" + serverAddr);
+                                socket = new Socket(serverAddr, serverPort);
+                                LLog.d(TAG, "stream opened: " + socket);
+                                socket.setSoTimeout(0);
 
-        return connected;
+                                sockIn = socket.getInputStream();
+                                sockOut = socket.getOutputStream();
+
+                                synchronized (netLock) {
+                                    netTxBufPool.enable(true);
+                                    netTxBufPool.flush();
+
+                                    netThreadState = STATE_READY;
+                                    netLock.notifyAll();
+                                }
+
+                                Thread netThread = new Thread(new NetThread());
+                                netThread.start();
+                                tried = 0;
+
+                                Intent intent;
+                                intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
+                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, LProtocol.RSPS_OK);
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
+                            } catch (Exception e) {
+                                LLog.e(TAG, "connection error: " + e.getMessage());
+                                synchronized (netLock) {
+                                    connected = false;
+                                    autoReconnect(AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                                }
+                            }
+                        }
+                    });
+                    connectThread.start();
+                } else {
+                    connected = false;
+                    autoReconnect(AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                    LLog.e(TAG, "network not available?");
+                }
+            }
+            return connected;
+        }
     }
 
     public void disconnect() {
         synchronized (netLock) {
-            while (netThreadState != STATE_EXIT) {
-                netThreadState = STATE_OFF;
-                netTxBufPool.enable(false);
-                netLock.notifyAll();
+            if (netThreadState == STATE_READY) {
+                while (netThreadState != STATE_EXIT) {
+                    netThreadState = STATE_OFF;
+                    netTxBufPool.enable(false);
+                    netLock.notifyAll();
 
-                try {
-                    netLock.wait();
-                } catch (Exception e) {
+                    try {
+                        netLock.wait();
+                    } catch (Exception e) {
+                    }
                 }
             }
+            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
         }
     }
 
@@ -152,14 +190,12 @@ public class LAppServer {
 
             while (loop) {
                 synchronized (netLock) {
-                    fail = (netThreadState == STATE_FAIL);
+                    fail = false;
                     while (netThreadState != STATE_READY) {
                         if (netThreadState == STATE_OFF) {
                             netThreadState = STATE_EXIT;
                             loop = false;
-
-                            netTxBufPool.flush();
-                            closeSockets();
+                            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
                             break;
                         }
                         try {
@@ -204,10 +240,10 @@ public class LAppServer {
                 }
 
                 if (fail) {
-                    closeSockets();
                     synchronized (netLock) {
-                        netThreadState = STATE_WAIT;
-                        netLock.notifyAll();
+                        closeSockets(AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                        //network layer broken in the middle of transfer, teardown server and restart
+                        break;
                     }
                 } else {
                     lProtocol.parse(netRxBuf);
@@ -220,20 +256,25 @@ public class LAppServer {
             // signal the end of connection.
             lProtocol.parse(null);
             synchronized (netLock) {
+                netThreadState = STATE_EXIT;
                 netLock.notifyAll();
             }
         }
     }
 
     public LBuffer getNetBuffer() {
-        return netTxBufPool.getWriteBufferNeverFail();
+        synchronized (netLock) {
+            if (!connected) return null;
+            //netLock is held before calling to get buffer: getBuffer should NEVER block.
+            return netTxBufPool.getWriteBufferNeverFail();
+        }
     }
 
-    public void putNetBuffer(LBuffer buf) {
-        netTxBufPool.putWriteBuffer(buf);
-    }
-
-    public void putNetBuffer(LBuffer buf, boolean priority) {
-        netTxBufPool.putWriteBuffer(buf, priority);
+    public boolean putNetBuffer(LBuffer buf) {
+        synchronized (netLock) {
+            if (!connected) return false;
+            netTxBufPool.putWriteBuffer(buf);
+            return true;
+        }
     }
 }

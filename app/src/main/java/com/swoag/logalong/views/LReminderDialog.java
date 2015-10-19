@@ -18,18 +18,12 @@ public class LReminderDialog extends Dialog implements
     private TextView text;
     private Context context;
     private String msg;
-    private LReminderDialogItf callback;
 
-    public interface LReminderDialogItf {
-        public void onReminderDialogExit();
-    }
-
-    public LReminderDialog(Context context, String msg, LReminderDialogItf callback) {
+    public LReminderDialog(Context context, String msg) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
 
         this.context = context;
         this.msg = msg;
-        this.callback = callback;
     }
 
     @Override
@@ -46,7 +40,6 @@ public class LReminderDialog extends Dialog implements
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.confirmDialog) {
-            callback.onReminderDialogExit();
             dismiss();
         }
     }

@@ -50,9 +50,6 @@ public class MainActivity extends LFragmentActivity
     TextView errorMsgV;
     //LoginReceiverHelper loginReceiver;
 
-    Handler pollHandler;
-    Runnable pollRunnable;
-    static final int NETWORK_POLLING_MS = 10000;
     private BroadcastReceiver broadcastReceiver;
 
     @Override
@@ -77,33 +74,10 @@ public class MainActivity extends LFragmentActivity
         //AppPersistency.reauthenticate = true;
 
         //LNotification.dismiss();
-        LProtocol.ui.connect();
-        if (LPreferences.getUserName().isEmpty()) {
-            LProtocol.ui.requestUserName();
-        } else {
-            LProtocol.ui.login();
-        }
-
-        pollHandler = new Handler() {
-        };
-        pollRunnable = new Runnable() {
-            @Override
-            public void run() {
-                LProtocol.ui.poll();
-                pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
-            }
-        };
-        pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
-        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_LOGIN,
-                LBroadcastReceiver.ACTION_POLL_ACKED,
-                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
-                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
-                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE,
-                LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD,
-                LBroadcastReceiver.ACTION_JOURNAL_POSTED,
-                LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
-                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE}, this);
+        /*broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_LOGIN
+        }, this);
+        */
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -245,6 +219,13 @@ public class MainActivity extends LFragmentActivity
 				LViewUtils.disableEnableControls(true, (ViewGroup)footerV);
 			}
 		}*/
+        MainService.start(this);
+    }
+
+    @Override
+    protected void onPause() {
+        MainService.stop(this);
+        super.onPause();
     }
 
     @Override
@@ -257,9 +238,6 @@ public class MainActivity extends LFragmentActivity
 
     @Override
     protected void onDestroy() {
-        pollHandler.removeCallbacks(pollRunnable);
-        pollRunnable = null;
-        pollHandler = null;
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
@@ -271,7 +249,6 @@ public class MainActivity extends LFragmentActivity
 			loginReceiver = null;
 		}
 		LNotification.dismiss();*/
-        LProtocol.ui.disconnect();
         super.onDestroy();
     }
 
@@ -379,20 +356,6 @@ public class MainActivity extends LFragmentActivity
         LPreferences.setOneTimeInit(true);*/
     }
 
-    private void pushAllAccountRecords(int userId, LAccount account) {
-        Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-            do {
-                LTransaction item = new LTransaction();
-                DBTransaction.getValues(cursor, item);
-                String record = LJournal.transactionItemString(item);
-                LProtocol.ui.shareTransitionRecord(userId, record);
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) cursor.close();
-    }
-
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
@@ -402,159 +365,6 @@ public class MainActivity extends LFragmentActivity
                     LJournal.flush();
                 } else {
                     LLog.w(TAG, "unable to login");
-                }
-                break;
-
-            case LBroadcastReceiver.ACTION_POLL_ACKED:
-                pollHandler.removeCallbacks(pollRunnable);
-                pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
-                LProtocol.ui.poll();
-                break;
-
-            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
-                if (ret == LProtocol.RSPS_OK) {
-                    int id = intent.getIntExtra("id", 0);
-                    String name = LPreferences.getShareUserName(id);
-                    String accountName = intent.getStringExtra("accountName");
-
-                    LAccount account = DBAccess.getAccountByName(accountName);
-                    account.addShareUser(id, LAccount.ACCOUNT_SHARE_INVITED);
-                    DBAccess.updateAccount(account);
-                    LPreferences.setShareUserName(id, name);
-                } else {
-                    LLog.w(TAG, "unable to complete share request");
-                    //displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
-                }
-                break;
-
-            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
-                int cacheId = intent.getIntExtra("cacheId", 0);
-                int userId = intent.getIntExtra("id", 0);
-                String userName = intent.getStringExtra("userName");
-                String accountName = intent.getStringExtra("accountName");
-                String uuid = intent.getStringExtra("UUID");
-                byte requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
-                //TODO: ask for user confirmation
-
-                LPreferences.setShareUserName(userId, userName);
-                LAccount account = DBAccess.getAccountByName(accountName);
-                if (account == null) {
-                    account = new LAccount();
-                    account.setName(accountName);
-                    account.setRid(UUID.fromString(uuid));
-                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                    DBAccess.addAccount(account);
-                } else {
-                    account.setRid(UUID.fromString(uuid));
-                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                    DBAccess.updateAccount(account);
-                }
-                LProtocol.ui.pollAck(cacheId);
-
-                // inform all existing peers about this new user if confirmation were required
-                if (requireConfirmation == 1) {
-                    LProtocol.ui.confirmAccountShare(userId, accountName);
-
-                    ArrayList<Integer> ids = account.getShareIds();
-                    ArrayList<Integer> states = account.getShareStates();
-                    for (int jj = 0; jj < ids.size(); jj++) {
-                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED && jj != userId) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
-                        }
-                    }
-                }
-
-                // now push all existing records
-                pushAllAccountRecords(userId, account);
-                break;
-
-            case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                accountName = intent.getStringExtra("accountName");
-                //TODO: notify user
-
-                LPreferences.setShareUserName(userId, userName);
-                account = DBAccess.getAccountByName(accountName);
-                if (account == null) {
-                    //TODO: the account name has been changed??
-                    LLog.w(TAG, "warning: account renamed, account sharing ignored");
-                } else {
-                    ArrayList<Integer> ids = account.getShareIds();
-                    ArrayList<Integer> states = account.getShareStates();
-                    for (int jj = 0; jj < ids.size(); jj++) {
-                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
-                        }
-                    }
-
-                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                    DBAccess.updateAccount(account);
-                }
-
-                LProtocol.ui.pollAck(cacheId);
-
-                // now push all existing records
-                pushAllAccountRecords(userId, account);
-                break;
-
-            case LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                String record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
-
-                LJournal.updateItemFromReceivedRecord(record);
-                break;
-
-            case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
-                if (ret == LProtocol.RSPS_OK) {
-                    long journalId = intent.getLongExtra("journalId", 0);
-                    DBAccess.deleteJournalById(journalId);
-                }
-                break;
-
-            case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
-
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                LLog.d(TAG, "received journal from: " + userId + "@" + userName);
-                LJournal.receive(intent.getStringExtra("record"));
-                break;
-
-            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE:
-                // this is from our shared peer, informing status change for one of the existng shared user
-                // or newly added user
-                cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
-
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                LLog.d(TAG, "received account share user change from: " + userId + "@" + userName);
-
-                int changeUserId = intent.getIntExtra("changeUserId", 0);
-                byte change = intent.getByteExtra("change", (byte) 0);
-                accountName = intent.getStringExtra("accountName");
-                uuid = intent.getStringExtra("UUID");
-
-                account = DBAccess.getAccountByUuid(UUID.fromString(uuid));
-                if (account == null) {
-                    LLog.w(TAG, "warning: account removed?");
-                } else {
-                    if (change == 1) {
-                        account.addShareUser(changeUserId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                        DBAccess.updateAccount(account);
-                        LProtocol.ui.shareAccountWithUser(changeUserId, accountName, uuid, false);
-                    } else {
-                        if (changeUserId == LPreferences.getUserId()) {
-                            account.removeAllShareUsers();
-                        } else {
-                            account.removeShareUser(changeUserId);
-                        }
-                        DBAccess.updateAccount(account);
-                    }
                 }
                 break;
         }

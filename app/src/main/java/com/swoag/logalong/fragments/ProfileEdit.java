@@ -3,6 +3,8 @@ package com.swoag.logalong.fragments;
 
 import android.app.Activity;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
@@ -10,13 +12,13 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 
-public class ProfileEdit implements View.OnClickListener,
-        LRenameDialog.LRenameDialogItf {
+public class ProfileEdit implements View.OnClickListener {
     private static final String TAG = ProfileEdit.class.getSimpleName();
 
     private Activity activity;
     private View rootView;
-    private TextView userNameTV;
+    private EditText userNameTV;
+    private EditText userPassTV;
     private String userName;
 
     public ProfileEdit(Activity activity, View rootView) {
@@ -28,12 +30,15 @@ public class ProfileEdit implements View.OnClickListener,
 
     private void create() {
         userName = LPreferences.getUserName();
-        //TODO: validate userName and request one if empty
-        userNameTV = (TextView) setViewListener(rootView, R.id.userName);
+        userNameTV = (EditText) setViewListener(rootView, R.id.userName);
+        userPassTV = (EditText) setViewListener(rootView, R.id.userPass);
         userNameTV.setText(userName);
+        userPassTV.setText("12345678");
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
     }
 
     private void destroy() {
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         userNameTV = null;
     }
 
@@ -41,26 +46,12 @@ public class ProfileEdit implements View.OnClickListener,
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.userName:
-                /*
-                LRenameDialog dialog = new LRenameDialog(activity, null, this, activity.getString(R.string.change_user_name),
-                        userName, activity.getString(R.string.new_user_name));
-                dialog.show();
-                */
                 break;
         }
     }
 
     public void dismiss() {
         destroy();
-    }
-
-    @Override
-    public void onRenameDialogExit(Object id, boolean renamed, String name) {
-        if (renamed) {
-            userNameTV.setText(name);
-            userName = name;
-            LPreferences.setUserName(userName);
-        }
     }
 
     private View setViewListener(View v, int id) {

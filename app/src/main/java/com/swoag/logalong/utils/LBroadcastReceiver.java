@@ -15,6 +15,7 @@ public class LBroadcastReceiver {
     public static final String EXTRA_RET_CODE = "ert";
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
     public static final int ACTION_POLL_ACKED = 1;
+    public static final int ACTION_POLL_IDLE = 2;
     public static final int ACTION_LOGIN = 5;
     public static final int ACTION_GET_SHARE_USER_BY_ID = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
@@ -25,6 +26,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_JOURNAL_POSTED = 70;
     public static final int ACTION_JOURNAL_RECEIVED = 71;
     public static final int ACTION_SHARE_ACCOUNT_USER_CHANGE = 80;
+    public static final int ACTION_NETWORK_CONNECTED = 90;
 
     private static LBroadcastReceiver instance;
 

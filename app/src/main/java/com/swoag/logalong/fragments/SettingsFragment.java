@@ -18,6 +18,8 @@ public class SettingsFragment extends LFragment implements
     ViewFlipper viewFlipper;
     View profileV, accountsV, categoriesV, vendorsV, tagsV;
     View backV, editV, addV;
+    private ProfileEdit profileEdit;
+    private GenericListEdit listEdit;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -82,7 +84,7 @@ public class SettingsFragment extends LFragment implements
                 tmpView = viewSettings.findViewById(R.id.profileSettings);
                 tmpView.setVisibility(View.VISIBLE);
 
-                ProfileEdit profileEdit = new ProfileEdit(getActivity(), viewSettings);
+                profileEdit = new ProfileEdit(getActivity(), viewSettings);
 
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -101,7 +103,7 @@ public class SettingsFragment extends LFragment implements
                 viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
                 viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
 
-                GenericListEdit listEdit = new GenericListEdit(getActivity(),
+                listEdit = new GenericListEdit(getActivity(),
                         viewSettings, v.getId(), this);
 
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
@@ -118,6 +120,14 @@ public class SettingsFragment extends LFragment implements
 
                 actv = (MainActivity) getActivity();
                 actv.enablePager();
+
+                if (profileEdit != null) {
+                    profileEdit.dismiss();
+                    profileEdit = null;
+                } else if (listEdit != null) {
+                    listEdit.dismiss();
+                    listEdit = null;
+                }
                 break;
             default:
                 break;
@@ -138,6 +148,15 @@ public class SettingsFragment extends LFragment implements
 
             MainActivity actv = (MainActivity) getActivity();
             actv.enablePager();
+
+            if (profileEdit != null) {
+                profileEdit.dismiss();
+                profileEdit = null;
+            } else if (listEdit != null) {
+                listEdit.dismiss();
+                listEdit = null;
+            }
+
             return true;
         }
         return false;
