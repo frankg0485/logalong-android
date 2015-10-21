@@ -295,7 +295,7 @@ public class GenericListEdit implements View.OnClickListener,
                     break;
 
                 case R.id.share:
-                    if (LPreferences.getUserName().isEmpty()) {
+                    if (LPreferences.getUserFullName().isEmpty()) {
                         new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
                         break;
                     }

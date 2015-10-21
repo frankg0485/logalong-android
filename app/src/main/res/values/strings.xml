@@ -16,7 +16,8 @@
     <string name="hint_payee_not_specified">Payee not specified</string>
     <string name="hint_payer_not_specified">Payer not specified</string>
     <string name="hint_tag_not_specified">Tag not specified</string>
-    <string name="hint_user_name">User Name</string>
+    <string name="hint_user_id">unknown</string>
+    <string name="hint_user_name">Your Name</string>
     <string name="income">Income</string>
     <string name="login">Log In</string>
     <string name="month">month</string>
@@ -32,7 +33,7 @@
     <string name="password_hint">password</string>
     <string name="payee">Payee</string>
     <string name="payer">Payer</string>
-    <string name="please_complete_your_profile">Please complete your profile settings then come back.</string>
+    <string name="please_complete_your_profile">Please set your name in profile settings then come back.</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="reminder">Reminder</string>
@@ -68,8 +69,8 @@
     <string name="unlimited">unlimited</string>
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
-    <string name="user_name">User Name</string>
-    <string name="user_name_hint">user name</string>
+    <string name="user_id">User ID</string>
+    <string name="user_name">Name</string>
     <string name="payee_payers">Payee/Payers</string>
     <string name="warning_get_share_user_time_out">Unable to connect to server</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>

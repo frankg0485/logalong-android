@@ -12,7 +12,7 @@ import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 
 public class SettingsFragment extends LFragment implements
-        View.OnClickListener, GenericListEdit.GenericListEditItf {
+        View.OnClickListener, GenericListEdit.GenericListEditItf, ProfileEdit.ProfileEditItf {
     private static final String TAG = SettingsFragment.class.getSimpleName();
 
     ViewFlipper viewFlipper;
@@ -84,7 +84,7 @@ public class SettingsFragment extends LFragment implements
                 tmpView = viewSettings.findViewById(R.id.profileSettings);
                 tmpView.setVisibility(View.VISIBLE);
 
-                profileEdit = new ProfileEdit(getActivity(), viewSettings);
+                profileEdit = new ProfileEdit(getActivity(), viewSettings, this);
 
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -132,6 +132,17 @@ public class SettingsFragment extends LFragment implements
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onProfileEditExit() {
+        viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+        viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+        viewFlipper.showPrevious();
+
+        MainActivity actv = (MainActivity) getActivity();
+        actv = (MainActivity) getActivity();
+        actv.enablePager();
     }
 
     @Override

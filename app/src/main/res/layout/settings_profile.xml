@@ -7,14 +7,45 @@
     android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/userIdView"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#c0d4d6d8"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="25dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:text="@string/user_id"
+            android:textColor="@color/gray_text_color"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/userId"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical|right"
+            android:hint="@string/hint_user_id"
+            android:singleLine="true"
+            android:textColor="#909090"
+            android:textColorHint="#ccc"
+            android:textSize="20sp"
+            android:typeface="monospace" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/userView"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp"
-        android:paddingTop="10dp">
+        android:paddingRight="25dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -47,7 +78,8 @@
         android:layout_height="55dp"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
-        android:paddingRight="15dp">
+        android:paddingRight="15dp"
+        android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
@@ -81,7 +113,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingBottom="15dp"
-        android:paddingLeft="10dp">
+        android:paddingLeft="10dp"
+        android:visibility="gone">
 
         <CheckBox
             android:id="@+id/showPass"

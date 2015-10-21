@@ -139,7 +139,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 LProtocol.ui.initScrambler();
                 if (LPreferences.getUserName().isEmpty()) {
-                    //LProtocol.ui.requestUserName();
+                    LProtocol.ui.requestUserName();
                 } else {
                     LProtocol.ui.login();
                 }

@@ -10,7 +10,9 @@ public class LPreferences {
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
     private static final String USER_NAME = "UserName";
+    private static final String USER_PASS = "UserPass";
     private static final String USER_ID = "UserId";
+    private static final String USER_FULL_NAME = "UserFullName";
 
     public static int getUserId() {
         return getPreference(LApp.ctx, USER_ID, (int) 0);
@@ -20,6 +22,16 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_ID, userId);
     }
 
+    /*
+    public static String getUserPass() {
+        return getPreference(LApp.ctx, USER_PASS, "");
+    }
+
+    public static void setUserPass(String userPass) {
+        savePreference(LApp.ctx, USER_PASS, userPass);
+    }
+    */
+
     public static String getUserName() {
         return getPreference(LApp.ctx, USER_NAME, "");
     }
@@ -28,11 +40,19 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME, userName);
     }
 
-    public static String getShareUserName (int userId) {
+    public static String getUserFullName() {
+        return getPreference(LApp.ctx, USER_FULL_NAME, "");
+    }
+
+    public static void setUserFullName(String userName) {
+        savePreference(LApp.ctx, USER_FULL_NAME, userName);
+    }
+
+    public static String getShareUserName(int userId) {
         return getPreference(LApp.ctx, USER_NAME + "." + userId, "");
     }
 
-    public static void setShareUserName (int userId, String name) {
+    public static void setShareUserName(int userId, String name) {
         savePreference(LApp.ctx, USER_NAME + "." + userId, name);
     }
 
