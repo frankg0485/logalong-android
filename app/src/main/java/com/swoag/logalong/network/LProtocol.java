@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
+import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
@@ -48,6 +49,7 @@ public class LProtocol {
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
     private static final short RQST_LOGIN = RQST_SYS | 0x105;
+    private static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
     private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
     private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
@@ -80,6 +82,9 @@ public class LProtocol {
         short bytes = pkt.getShortAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
         bytes = pkt.getShortAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
+        bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
@@ -87,6 +92,7 @@ public class LProtocol {
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("record", record);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
@@ -97,6 +103,9 @@ public class LProtocol {
         short bytes = pkt.getShortAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
         bytes = pkt.getShortAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
+        bytes = pkt.getShortAutoInc();
         String str = pkt.getStringAutoInc(bytes);
         String[] ss = str.split(",");
         String accountName = ss[0];
@@ -104,11 +113,16 @@ public class LProtocol {
         byte requireConfirmation = Byte.parseByte(ss[2]);
         LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " " + uuid);
 
+        if (requireConfirmation == 1) {
+            LPreferences.addAccountShareRequest(new LAccountShareRequest(userId, userName, userFullName, accountName, uuid));
+        }
+
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("accountName", accountName);
         rspsIntent.putExtra("UUID", uuid);
         rspsIntent.putExtra("requireConfirmation", requireConfirmation);
@@ -121,6 +135,9 @@ public class LProtocol {
         short bytes = pkt.getShortAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
         bytes = pkt.getShortAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
+        bytes = pkt.getShortAutoInc();
         String accountName = pkt.getStringAutoInc(bytes);
         LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName);
 
@@ -129,6 +146,7 @@ public class LProtocol {
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("accountName", accountName);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
@@ -139,6 +157,9 @@ public class LProtocol {
         short bytes = pkt.getShortAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
         bytes = pkt.getShortAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
+        bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
         LLog.d(TAG, "record share request from: " + userId + ":" + userName + " record: " + record);
 
@@ -147,6 +168,7 @@ public class LProtocol {
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("record", record);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
@@ -156,6 +178,9 @@ public class LProtocol {
         int userId = pkt.getIntAutoInc();
         short bytes = pkt.getShortAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
+        bytes = pkt.getShortAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
         bytes = pkt.getShortAutoInc();
         String str = pkt.getStringAutoInc(bytes);
         String[] ss = str.split(",");
@@ -170,6 +195,7 @@ public class LProtocol {
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("id", userId);
         rspsIntent.putExtra("userName", userName);
+        rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("changeUserId", changeUserId);
         rspsIntent.putExtra("change", change);
         rspsIntent.putExtra("accountName", accountName);
@@ -190,11 +216,11 @@ public class LProtocol {
 
         switch (rsps) {
             case RSPS | RQST_PING:
-                LLog.d(TAG, "pong");
+                //LLog.d(TAG, "pong");
                 break;
 
             case RSPS | RQST_SCRAMBLER_SEED:
-                LLog.d(TAG, "channel scrambler seed sent");
+                //LLog.d(TAG, "channel scrambler seed sent");
                 connected = true;
                 break;
 
@@ -203,10 +229,12 @@ public class LProtocol {
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
-                    LLog.d(TAG, "user created as: " + userName);
 
-                    LPreferences.setUserId(userId);
-                    LPreferences.setUserName(userName);
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_CREATED));
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                    rspsIntent.putExtra("id", userId);
+                    rspsIntent.putExtra("name", userName);
+                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 } else {
                     LLog.w(TAG, "unable to create user");
                 }
@@ -216,6 +244,9 @@ public class LProtocol {
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOGIN));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                break;
+
+            case RSPS | RQST_UPDATE_USER_PROFILE:
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_ID:
@@ -239,9 +270,12 @@ public class LProtocol {
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
+                    bytes = pkt.getShortAutoInc();
+                    String userFullName = pkt.getStringAutoInc(bytes);
                     rspsIntent.putExtra("id", userId);
                     rspsIntent.putExtra("name", userName);
-                    LLog.d(TAG, "user returned as: " + userName);
+                    rspsIntent.putExtra("fullName", userFullName);
+                    LLog.d(TAG, "user returned as: " + userName + " full name: " + userFullName);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
@@ -432,6 +466,10 @@ public class LProtocol {
 
         public static boolean login() {
             return LTransport.send_rqst(server, RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
+        }
+
+        public static boolean updateUserProfile() {
+            return LTransport.send_rqst(server, RQST_UPDATE_USER_PROFILE, LPreferences.getUserId(), LPreferences.getUserFullName(), scrambler);
         }
 
         public static boolean getShareUserById(int id) {

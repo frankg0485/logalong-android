@@ -6,6 +6,7 @@ import android.database.Cursor;
 
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
@@ -77,7 +78,7 @@ public class LJournal {
     }
 
     public static String transactionItemString(LTransaction item) {
-        LAccount account = DBAccess.getAccountById(item.getAccount());
+        LAccount account = DBAccount.getById(item.getAccount());
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBAccess.getTagById(item.getTag());
@@ -120,13 +121,13 @@ public class LJournal {
         }
 
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-            LAccount account2 = DBAccess.getAccountById(item.getAccount2());
+            LAccount account2 = DBAccount.getById(item.getAccount2());
             str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName()
                     + ";" + account2.getRid()
                     + ";" + account2.getTimeStampLast()
                     + ",";
         } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
-            LAccount account2 = DBAccess.getAccountById(item.getAccount2());
+            LAccount account2 = DBAccount.getById(item.getAccount2());
             str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account.getName()
                     + ";" + account.getRid()
                     + ";" + account.getTimeStampLast()
@@ -144,7 +145,7 @@ public class LJournal {
     }
 
     public boolean updateItem(LTransaction item) {
-        LAccount account = DBAccess.getAccountById(item.getAccount());
+        LAccount account = DBAccount.getById(item.getAccount());
         if (!account.isShared()) return false;
 
         record = ACTION_UPDATE_ITEM + ":" + transactionItemString(item);
@@ -161,7 +162,7 @@ public class LJournal {
 
     public boolean updateScheduledItem(LScheduledTransaction sch) {
         LTransaction item = sch.getItem();
-        LAccount account = DBAccess.getAccountById(item.getAccount());
+        LAccount account = DBAccount.getById(item.getAccount());
         if ((null == account) || (!account.isShared())) return false;
 
         record = ACTION_UPDATE_SCHEDULED_ITEM + ":" + transactionItemString(item);
@@ -318,13 +319,13 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
                 String[] sss = ss[1].split(";");
 
-                LAccount account1 = DBAccess.getAccountByName(sss[0]);
+                LAccount account1 = DBAccount.getByName(sss[0]);
                 if (null == account1) {
-                    accountId = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
+                    accountId = DBAccount.add(new LAccount(sss[0], UUID.fromString(sss[1])));
                 } else {
                     if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
                         account1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateAccount(account1);
+                        DBAccount.update(account1);
                     }
 
                     accountId = account1.getId();
@@ -332,13 +333,13 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2)) {
                 String[] sss = ss[1].split(";");
 
-                LAccount account1 = DBAccess.getAccountByName(sss[0]);
+                LAccount account1 = DBAccount.getByName(sss[0]);
                 if (null == account1) {
-                    account2Id = DBAccess.addAccount(new LAccount(sss[0], UUID.fromString(sss[1])));
+                    account2Id = DBAccount.add(new LAccount(sss[0], UUID.fromString(sss[1])));
                 } else {
                     if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
                         account1.setRid(UUID.fromString(sss[1]));
-                        DBAccess.updateAccount(account1);
+                        DBAccount.update(account1);
                     }
 
                     account2Id = account1.getId();
@@ -525,7 +526,7 @@ public class LJournal {
                     if (!name.isEmpty()) account.setName(name);
                     if (stateFound) account.setState(state);
                     account.setTimeStampLast(timestampLast);
-                    DBAccess.updateAccount(account);
+                    DBAccount.update(account);
                 }
             }
         }
@@ -706,5 +707,20 @@ public class LJournal {
                 updateVendorCategoryFromReceivedRecord(ss[2]);
                 break;
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    public static void pushAllAccountRecords(int userId, LAccount account) {
+        Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            do {
+                LTransaction item = new LTransaction();
+                DBTransaction.getValues(cursor, item);
+                String record = LJournal.transactionItemString(item);
+                LProtocol.ui.shareTransitionRecord(userId, record);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) cursor.close();
     }
 }

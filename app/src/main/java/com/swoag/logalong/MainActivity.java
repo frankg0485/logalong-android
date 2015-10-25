@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
@@ -30,16 +31,17 @@ import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LReminderDialog;
+import com.swoag.logalong.views.LShareAccountConfirmDialog;
 import com.swoag.logalong.views.LViewPager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.UUID;
 
 
 public class MainActivity extends LFragmentActivity
-        implements LBroadcastReceiver.BroadcastReceiverListener {
+        implements LBroadcastReceiver.BroadcastReceiverListener,
+        LShareAccountConfirmDialog.LShareAccountConfirmDialogItf {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     FragmentManager fragmentManager;
@@ -51,6 +53,8 @@ public class MainActivity extends LFragmentActivity
     //LoginReceiverHelper loginReceiver;
 
     private BroadcastReceiver broadcastReceiver;
+    private Handler handler;
+    private Runnable confirmAccountShare;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,10 +78,17 @@ public class MainActivity extends LFragmentActivity
         //AppPersistency.reauthenticate = true;
 
         //LNotification.dismiss();
-        /*broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_LOGIN
+        handler = new Handler();
+        confirmAccountShare = new Runnable() {
+            @Override
+            public void run() {
+                LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this, accountShareRequest, MainActivity.this);
+                dialog.show();
+            }
+        };
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH
         }, this);
-        */
 
         doOneTimeInit();
         setContentView(R.layout.top);
@@ -242,6 +253,13 @@ public class MainActivity extends LFragmentActivity
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
         }
+        if (handler != null) {
+            handler.removeCallbacks(confirmAccountShare);
+            handler = null;
+        }
+        if (confirmAccountShare != null) {
+            confirmAccountShare = null;
+        }
 
         LLog.d(TAG, "destroyed");
         /*if (loginReceiver != null) {
@@ -305,7 +323,7 @@ public class MainActivity extends LFragmentActivity
         LAccount account = new LAccount();
         for (int ii = 0; ii < accounts.length; ii++) {
             account.setName(accounts[ii]);
-            DBAccess.addAccount(account);
+            DBAccount.add(account);
         }
     }
 
@@ -356,17 +374,70 @@ public class MainActivity extends LFragmentActivity
         LPreferences.setOneTimeInit(true);*/
     }
 
+    private LAccountShareRequest accountShareRequest;
+
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
-            case LBroadcastReceiver.ACTION_LOGIN:
-                if (ret == LProtocol.RSPS_OK) {
-                    LLog.d(TAG, "user logged in");
-                    LJournal.flush();
-                } else {
-                    LLog.w(TAG, "unable to login");
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+                accountShareRequest = LPreferences.getAccountShareRequest();
+                if (accountShareRequest != null) {
+                    handler.post(confirmAccountShare);
                 }
                 break;
+        }
+    }
+
+    @Override
+    public void onShareAccountConfirmDialogExit(boolean ok, LAccountShareRequest request) {
+        if (ok) {
+            int userId = request.getUserId();
+            String userName = request.getUserName();
+            String userFullName = request.getUserFullName();
+            String accountName = request.getAccountName();
+            String uuid = request.getAccountUuid();
+
+            LPreferences.setShareUserName(userId, userName);
+            LPreferences.setShareUserFullName(userId, userFullName);
+            LAccount account = DBAccount.getByName(accountName);
+            if (account == null) {
+                account = new LAccount();
+                account.setName(accountName);
+                account.setRid(UUID.fromString(uuid));
+                account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                DBAccount.add(account);
+            } else {
+                //NOTE: potential racing issue that would cause account RID inconsistent?
+                //if the racing ever happens where account share has been initiated from both
+                //ends 'simultaneously', account will be left in an inconsistent state, but it
+                //will cure itself when any transaction record is shared among users.
+                account.setState(DBHelper.STATE_ACTIVE);
+                account.setRid(UUID.fromString(uuid));
+                account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
+                DBAccount.update(account);
+            }
+
+            // inform all existing peers about this new user
+            LProtocol.ui.confirmAccountShare(userId, accountName);
+
+            ArrayList<Integer> ids = account.getShareIds();
+            ArrayList<Integer> states = account.getShareStates();
+            for (int jj = 0; jj < ids.size(); jj++) {
+                if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED && ids.get(jj) != userId) {
+                    LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
+                }
+            }
+
+            // now push all existing records
+            LJournal.pushAllAccountRecords(userId, account);
+        } else {
+
+        }
+
+        LPreferences.deleteAccountShareRequest(request);
+        accountShareRequest = LPreferences.getAccountShareRequest();
+        if (accountShareRequest != null) {
+            handler.post(confirmAccountShare);
         }
     }
 }

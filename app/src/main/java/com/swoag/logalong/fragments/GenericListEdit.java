@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTag;
@@ -168,8 +169,10 @@ public class GenericListEdit implements View.OnClickListener,
         if (created && name != null && !name.isEmpty()) {
             switch (id) {
                 case R.id.accounts:
-                    long did = DBAccess.addAccount(new LAccount(name));
+                    long did = DBAccount.add(new LAccount(name));
                     LPreferences.setShowAccountBalance(did, attr1);
+
+                    LAllBalances.getInstance(true);
                     break;
 
                 case R.id.categories:
@@ -301,15 +304,15 @@ public class GenericListEdit implements View.OnClickListener,
                     }
 
                     ArrayList<LUser> users = new ArrayList<LUser>();
-                    HashSet<Integer> userSet = DBAccess.getAllAccountsShareUser();
+                    HashSet<Integer> userSet = DBAccount.getAllShareUser();
                     for (int ii : userSet) {
                         if (!LPreferences.getShareUserName(ii).isEmpty()) {
-                            users.add(new LUser(LPreferences.getShareUserName(ii), ii));
+                            users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences.getShareUserFullName(ii), ii));
                         }
                     }
 
                     boolean updateAccount = false;
-                    LAccount account = DBAccess.getAccountById(tag.id);
+                    LAccount account = DBAccount.getById(tag.id);
                     HashSet<Integer> selectedUsers = new HashSet<Integer>();
                     if (account.getShareIds() != null) {
                         for (int ii : account.getShareIds()) {
@@ -321,7 +324,7 @@ public class GenericListEdit implements View.OnClickListener,
 
                     if (updateAccount) {
                         account.setShareIds(new ArrayList<Integer>(selectedUsers));
-                        DBAccess.updateAccount(account);
+                        DBAccount.update(account);
                     }
 
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
@@ -346,7 +349,7 @@ public class GenericListEdit implements View.OnClickListener,
             for (Integer ii : origSelections) {
                 if (!selections.contains(ii)) {
                     account.removeShareUser(ii);
-                    DBAccess.updateAccount(account);
+                    DBAccount.update(account);
 
                     // notify the other party
                     LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid().toString());
@@ -370,10 +373,10 @@ public class GenericListEdit implements View.OnClickListener,
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
-                        LAccount account = DBAccess.getAccountById(tag.id);
+                        LAccount account = DBAccount.getById(tag.id);
                         account.setName(newName);
                         account.setTimeStampLast(System.currentTimeMillis());
-                        DBAccess.updateAccount(account);
+                        DBAccount.update(account);
 
                         LJournal journal = new LJournal();
                         journal.updateAccount(account);

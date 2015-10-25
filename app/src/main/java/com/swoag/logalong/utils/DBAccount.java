@@ -26,7 +26,7 @@ import java.util.UUID;
 public class DBAccount {
     private static final String TAG = DBAccount.class.getSimpleName();
 
-    private static ContentValues setAccountValues(LAccount account) {
+    private static ContentValues setValues(LAccount account) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
@@ -36,13 +36,126 @@ public class DBAccount {
         return cv;
     }
 
-    private static void getAccountValues(Cursor cur, LAccount account) {
+    private static void getValues(Cursor cur, LAccount account) {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         account.setRid(UUID.fromString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID))));
         account.setId(cur.getLong(0));
+    }
+
+    public static LAccount getById(long id) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LAccount account = new LAccount();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, account);
+            account.setId(id);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
+            account = null;
+        }
+        if (csr != null) csr.close();
+        return account;
+    }
+
+    public static LAccount getByName(String name) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LAccount account = new LAccount();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find account with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, account);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with name: " + name + ":" + e.getMessage());
+            account = null;
+        }
+        if (csr != null) csr.close();
+        return account;
+    }
+
+    public static long add(LAccount acccount) {
+        long id = -1;
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = setValues(acccount);
+            id = db.insert(DBHelper.TABLE_ACCOUNT_NAME, "", cv);
+            DBAccess.dirty = true;
+        }
+        return id;
+    }
+
+    public static boolean update(LAccount account) {
+        try {
+            synchronized (DBAccess.dbLock) {
+                SQLiteDatabase db = DBAccess.getWriteDb();
+                ContentValues cv = setValues(account);
+                db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + account.getId()});
+            }
+            DBAccess.dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /*
+    public static int updateNameById(long id, String name) {
+        synchronized (DBAccess.dbLock) {
+            SQLiteDatabase db = DBAccess.getWriteDb();
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_NAME, name);
+            db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + id});
+            DBAccess.dirty = true;
+        }
+        return 0;
+    }
+    */
+
+    public static HashSet<Integer> getAllShareUser() {
+        LAccount account = new LAccount();
+        HashSet<Integer> set = new HashSet<Integer>();
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
+                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE});
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                String str = cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE));
+                if (str != null) {
+                    account.setSharedIdsString(str);
+                    if (account.getShareIds() != null) {
+                        for (int ii : account.getShareIds()) {
+                            set.add(ii);
+                        }
+                    }
+                }
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
     }
 
     public static Cursor getCursorSortedBy(String sortColumn) {

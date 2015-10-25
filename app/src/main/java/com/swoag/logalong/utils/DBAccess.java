@@ -121,17 +121,6 @@ public class DBAccess {
         tag.setId(cur.getLong(0));
     }
 
-
-    private static ContentValues setAccountValues(LAccount account) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
-        cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid().toString());
-        return cv;
-    }
-
     private static void getAccountValues(Cursor cur, LAccount account) {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
@@ -219,30 +208,6 @@ public class DBAccess {
         return tag;
     }
 
-    public static LAccount getAccountById(long id) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LAccount account = new LAccount();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE _id=?", new String[]{"" + id});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with id: " + id);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getAccountValues(csr, account);
-            account.setId(id);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
-            account = null;
-        }
-        if (csr != null) csr.close();
-        return account;
-    }
-
     public static LCategory getCategoryByUuid(UUID uuid) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -310,30 +275,6 @@ public class DBAccess {
             getAccountValues(csr, account);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with UUID: " + uuid + ":" + e.getMessage());
-            account = null;
-        }
-        if (csr != null) csr.close();
-        return account;
-    }
-
-    public static LAccount getAccountByName(String name) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LAccount account = new LAccount();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find account with name: " + name);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getAccountValues(csr, account);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get account with name: " + name + ":" + e.getMessage());
             account = null;
         }
         if (csr != null) csr.close();
@@ -411,43 +352,6 @@ public class DBAccess {
         return id;
     }
 
-    public static long addAccount(LAccount acccount) {
-        long id = -1;
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setAccountValues(acccount);
-            id = db.insert(DBHelper.TABLE_ACCOUNT_NAME, "", cv);
-            dirty = true;
-        }
-        return id;
-    }
-
-    public static HashSet<Integer> getAllAccountsShareUser() {
-        LAccount account = new LAccount();
-        HashSet<Integer> set = new HashSet<Integer>();
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
-        if (cur != null && cur.getCount() > 0) {
-
-            cur.moveToFirst();
-            do {
-                String str = cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE));
-                if (str != null) {
-                    account.setSharedIdsString(str);
-                    if (account.getShareIds() != null) {
-                        for (int ii : account.getShareIds()) {
-                            set.add(ii);
-                        }
-                    }
-                }
-            } while (cur.moveToNext());
-        }
-        if (cur != null) cur.close();
-        return set;
-    }
-
     public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
         LAccount account = new LAccount();
         HashSet<Integer> set = new HashSet<Integer>();
@@ -514,25 +418,6 @@ public class DBAccess {
     public static int getTagIndexById(long id) {
         return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_STATE,
                 LTag.TAG_STATE_ACTIVE, id);
-    }
-
-
-    public static int updateAccountNameById(long id, String name) {
-        LAccount account = getAccountById(id);
-        if (account == null) {
-            LLog.e(TAG, "account no longer exists: " + id);
-            return -1;
-        }
-        account.setName(name);
-        //account.setState(DBHelper.STATE_ACTIVE);
-
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setAccountValues(account);
-            db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-        return 0;
     }
 
     public static int updateTagNameById(long id, String name) {
@@ -680,6 +565,7 @@ public class DBAccess {
         return true;
     }
 
+    /*
     public static boolean updateAccount(LAccount account) {
         try {
             synchronized (dbLock) {
@@ -694,7 +580,7 @@ public class DBAccess {
 
         return true;
     }
-
+*/
     public static boolean updateAccountBalance(long id, int year, String balance) {
         boolean exists = false;
         SQLiteDatabase db = getReadDb();

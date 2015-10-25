@@ -39,7 +39,7 @@ import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
-import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -131,6 +131,8 @@ public class LShareAccountDialog extends Dialog
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
+
+        this.setOnDismissListener(this);
     }
 
     @Override
@@ -149,15 +151,17 @@ public class LShareAccountDialog extends Dialog
                 if (ret == LProtocol.RSPS_OK) {
                     int id = intent.getIntExtra("id", 0);
                     String name = intent.getStringExtra("name");
+                    String fullName = intent.getStringExtra("fullName");
 
-                    LUser user = new LUser(name, id);
+                    LUser user = new LUser(name, fullName, id);
                     users.add(user);
                     selectedIds.add(id);
                     myArrayAdapter.notifyDataSetChanged();
 
                     account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
-                    DBAccess.updateAccount(account);
+                    DBAccount.update(account);
                     LPreferences.setShareUserName(id, name);
+                    LPreferences.setShareUserFullName(id, fullName);
 
                     editText.setText("");
                     hideIME();
@@ -196,7 +200,7 @@ public class LShareAccountDialog extends Dialog
     }
 
     private void hideErrorMsg() {
-        errorMsgV.setVisibility(View.INVISIBLE);
+        errorMsgV.setVisibility(View.GONE);
     }
 
     private void displayErrorMsg(String msg) {
@@ -349,7 +353,7 @@ public class LShareAccountDialog extends Dialog
             }
 
             TextView txtView = (TextView) convertView.findViewById(textId1);
-            txtView.setText(user.getName());
+            txtView.setText(user.getFullName() + " (" + user.getName() + ")");
 
             CheckBox cb = (CheckBox) convertView.findViewById(checkboxId);
             cb.setChecked(selectedIds.contains(user.getId()));

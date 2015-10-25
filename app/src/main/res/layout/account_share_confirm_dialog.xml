@@ -26,7 +26,13 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_action_share" />
 
                 <TextView
                     android:id="@+id/title"
@@ -39,76 +45,10 @@
                     android:gravity="center_vertical|left"
                     android:padding="6dp"
                     android:singleLine="true"
+                    android:text="@string/account_share_request"
                     android:textColor="@color/base_text_color"
                     android:textSize="@dimen/settings_option_text_size"
                     android:textStyle="bold" />
-
-                <LinearLayout
-                    android:id="@+id/selectall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <CheckBox
-                        android:id="@+id/checkBox1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:button="@drawable/btn_check_holo_dark"
-                        android:clickable="false"
-                        android:focusable="false"
-                        android:text="@string/select_all"
-                        android:textColor="@color/base_text_color"
-                        android:textSize="15sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <ListView
-                android:id="@+id/list"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginLeft="1dp"
-                android:layout_marginRight="1dp"
-                android:layout_weight="1"
-                android:choiceMode="multipleChoice"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="1dp"
-                android:fadingEdgeLength="0dp"
-                android:listSelector="@android:color/transparent"
-                android:orientation="vertical"></ListView>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/newname"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/editbox_bgd"
-                    android:gravity="top"
-                    android:hint="@string/hint_type_user_id"
-                    android:imeOptions="flagNoExtractUi"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:paddingTop="5dp"
-                    android:singleLine="true"
-                    android:textColor="@color/base_text_color" />
-
-                <ImageView
-                    android:id="@+id/add"
-                    android:layout_width="60dp"
-                    android:layout_height="match_parent"
-                    android:paddingBottom="4dp"
-                    android:paddingLeft="5dp"
-                    android:paddingTop="4dp"
-                    android:src="@drawable/ic_action_add_to_queue" />
 
                 <ProgressBar
                     android:id="@+id/progressBar"
@@ -118,7 +58,41 @@
                     android:paddingLeft="18dp"
                     android:paddingRight="18dp"
                     android:visibility="gone" />
+            </LinearLayout>
 
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/request"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="top"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingTop="5dp"
+                    android:singleLine="false"
+                    android:textColor="@color/base_text_color"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="top"
+                    android:paddingBottom="10dp"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingTop="10dp"
+                    android:singleLine="false"
+                    android:text="@string/hint_account_share_accept"
+                    android:textColor="@color/base_text_color" />
             </LinearLayout>
 
             <TextView
@@ -147,7 +121,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="2dp"
                     android:layout_weight="1"
-                    android:text="@android:string/cancel" />
+                    android:text="@string/ignore" />
 
                 <Button
                     android:id="@+id/save"
@@ -155,7 +129,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@android:string/ok" />
+                    android:text="@string/accept" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -3,6 +3,7 @@ package com.swoag.logalong.fragments;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
@@ -15,6 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LReminderDialog;
@@ -137,12 +139,26 @@ public class ProfileEdit implements View.OnClickListener {
                 }
             }
         });*/
+
+        //displayHintBug(userNameTV, userName, activity.getResources().getString(R.string.hint_user_name));
         userNameTV.setText(userName);
         //userPassTV.setText(userPass);
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         hideIME();
     }
+
+    /*
+    private void displayHintBug (EditText et, String txt, String hint) {
+        if (txt.isEmpty()) {
+            et.setTextColor(Color.rgb(0xc0, 0xc0, 0xc0));
+            et.setText(hint);
+        } else {
+            et.setTextColor(activity.getResources().getColor(R.color.base_text_color));
+            et.setText(txt);
+        }
+    }
+    */
 
     private void destroy() {
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -191,6 +207,7 @@ public class ProfileEdit implements View.OnClickListener {
             case R.id.save:
                 LPreferences.setUserFullName(userNameTV.getText().toString().trim());
                 //LPreferences.setUserPass(userPassTV.getText().toString().trim());
+                LProtocol.ui.updateUserProfile();
                 if (this.callback != null) {
                     this.callback.onProfileEditExit();
                 }

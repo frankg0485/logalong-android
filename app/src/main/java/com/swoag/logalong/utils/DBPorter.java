@@ -114,7 +114,7 @@ public class DBPorter {
 
                     Long ll = accountMap.get(account);
                     if (null == ll) {
-                        accountId = DBAccess.addAccount(new LAccount(account));
+                        accountId = DBAccount.add(new LAccount(account));
                         accountMap.put(account, accountId);
                     } else {
                         accountId = ll.longValue();
@@ -124,7 +124,7 @@ public class DBPorter {
                     if (null == ll) {
                         if (account2.isEmpty()) account2Id = 0;
                         else {
-                            account2Id = DBAccess.addAccount(new LAccount(account2));
+                            account2Id = DBAccount.add(new LAccount(account2));
                             accountMap.put(account2, account2Id);
                         }
                     } else {

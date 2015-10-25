@@ -16,6 +16,7 @@ public class LBroadcastReceiver {
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
     public static final int ACTION_POLL_ACKED = 1;
     public static final int ACTION_POLL_IDLE = 2;
+    public static final int ACTION_USER_CREATED = 4;
     public static final int ACTION_LOGIN = 5;
     public static final int ACTION_GET_SHARE_USER_BY_ID = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;

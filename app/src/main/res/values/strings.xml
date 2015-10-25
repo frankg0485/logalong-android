@@ -1,6 +1,7 @@
 <resources>
-
+    <string name="accept">Accept</string>
     <string name="accounts">Accounts</string>
+    <string name="account_share_request">Account Share Request</string>
     <string name="action_settings">settings</string>
     <string name="additional_note_here">Additional note here</string>
     <string name="annually">annually</string>
@@ -10,14 +11,17 @@
     <string name="change_user_name">Change User Name</string>
     <string name="edit">Edit</string>
     <string name="expense">Expense</string>
+    <string name="hint_account_share_accept">Once accepted, all local data under given account are shared with the requester, and users the requester already shared this account with.</string>
     <string name="hint_additional_note">Additional note here</string>
     <string name="hint_category_not_specified">Category not specified</string>
     <string name="hint_choose_account">Choose account</string>
     <string name="hint_payee_not_specified">Payee not specified</string>
     <string name="hint_payer_not_specified">Payer not specified</string>
     <string name="hint_tag_not_specified">Tag not specified</string>
+    <string name="hint_type_user_id">User ID</string>
     <string name="hint_user_id">unknown</string>
     <string name="hint_user_name">Your Name</string>
+    <string name="ignore">Ignore</string>
     <string name="income">Income</string>
     <string name="login">Log In</string>
     <string name="month">month</string>
