@@ -336,8 +336,34 @@ public class GenericListEdit implements View.OnClickListener,
 
 
         @Override
-        public void onShareAccountDialogExit(boolean ok, LAccount account, HashSet<Integer> selections, HashSet<Integer> origSelections) {
+        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, LAccount account,
+                                             HashSet<Integer> selections, HashSet<Integer> origSelections) {
             if (!ok) return;
+            boolean unshare = false;
+
+            if (!shareEnabled) {
+                if (origSelections.isEmpty()) return;
+                //unshare myself
+                unshare = true;
+            } else {
+                if (selections.isEmpty()) {
+                    //unshare myself, instead of removing everyone from shared group
+                    unshare = true;
+                }
+            }
+
+            if (unshare) {
+                ArrayList<Integer> ids = account.getShareIds();
+                ArrayList<Integer> states = account.getShareStates();
+                for (int jj = 0; jj < ids.size(); jj++) {
+                    if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                        LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(), false, account.getName(), account.getRid().toString());
+                    }
+                }
+                account.removeAllShareUsers();
+                DBAccount.update(account);
+                return;
+            }
 
             for (Integer ii : selections) {
                 if (!origSelections.contains(ii)) {

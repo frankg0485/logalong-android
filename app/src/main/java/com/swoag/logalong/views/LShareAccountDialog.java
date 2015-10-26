@@ -69,7 +69,9 @@ public class LShareAccountDialog extends Dialog
     private CountDownTimer countDownTimer;
     private MyArrayAdapter myArrayAdapter;
     private BroadcastReceiver broadcastReceiver;
-
+    private CheckBox checkBoxShare;
+    private View userCtrlView;
+    private View selectAllView;
     private LAccount account;
 
     private void init(Context context, LAccount account, HashSet<Integer> selectedIds,
@@ -84,7 +86,8 @@ public class LShareAccountDialog extends Dialog
     }
 
     public interface LShareAccountDialogItf {
-        public void onShareAccountDialogExit(boolean ok, LAccount account, HashSet<Integer> selections, HashSet<Integer> origiSelections);
+        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, LAccount account,
+                                             HashSet<Integer> selections, HashSet<Integer> origiSelections);
     }
 
     public LShareAccountDialog(Context context, LAccount account, HashSet<Integer> selectedIds,
@@ -104,15 +107,21 @@ public class LShareAccountDialog extends Dialog
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME}, this);
 
-        findViewById(R.id.selectall).setOnClickListener(this);
+
         findViewById(R.id.save).setOnClickListener(this);
         findViewById(R.id.cancel).setOnClickListener(this);
+        findViewById(R.id.share).setOnClickListener(this);
+        checkBoxShare = (CheckBox) findViewById(R.id.checkBoxShare);
+        userCtrlView = findViewById(R.id.userCtrlView);
+
+        selectAllView = findViewById(R.id.selectall);
+        selectAllView.setOnClickListener(this);
+
         addIV = (ImageView) findViewById(R.id.add);
         LViewUtils.setAlpha(addIV, 0.3f);
         addIV.setOnClickListener(this);
         addIV.setEnabled(false);
 
-        ((TextView) findViewById(R.id.title)).setText(context.getString(R.string.share_account_with));
         errorMsgV = (TextView) findViewById(R.id.errorMsg);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -131,6 +140,9 @@ public class LShareAccountDialog extends Dialog
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
+
+        checkBoxShare.setChecked(!selectedIds.isEmpty());
+        enableShare(checkBoxShare.isChecked());
 
         this.setOnDismissListener(this);
     }
@@ -272,6 +284,10 @@ public class LShareAccountDialog extends Dialog
         int id = v.getId();
 
         switch (id) {
+            case R.id.share:
+                checkBoxShare.setChecked(!checkBoxShare.isChecked());
+                enableShare(checkBoxShare.isChecked());
+                break;
             case R.id.selectall:
                 try {
                     CheckBox cb = (CheckBox) v.findViewById(R.id.checkBox1);
@@ -327,8 +343,23 @@ public class LShareAccountDialog extends Dialog
 
     private void leave(boolean ok) {
         hideIME();
-        callback.onShareAccountDialogExit(ok, account, selectedIds, origSelectedIds);
+        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), account, selectedIds, origSelectedIds);
         dismiss();
+    }
+
+    private void enableShare(boolean enabled) {
+        LViewUtils.disableEnableControls(enabled, mList);
+        LViewUtils.disableEnableControls(enabled, (ViewGroup) userCtrlView);
+        LViewUtils.disableEnableControls(enabled, (ViewGroup) selectAllView);
+        if (enabled) {
+            LViewUtils.setAlpha(mList, 1.0f);
+            LViewUtils.setAlpha(userCtrlView, 1.0f);
+            LViewUtils.setAlpha(selectAllView, 1.0f);
+        } else {
+            LViewUtils.setAlpha(mList, 0.5f);
+            LViewUtils.setAlpha(userCtrlView, 0.5f);
+            LViewUtils.setAlpha(selectAllView, 0.5f);
+        }
     }
 
     private class MyArrayAdapter extends ArrayAdapter<LUser> {
