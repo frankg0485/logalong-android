@@ -19,7 +19,7 @@
     <string name="hint_payer_not_specified">Payer not specified</string>
     <string name="hint_tag_not_specified">Tag not specified</string>
     <string name="hint_type_user_id">User ID</string>
-    <string name="hint_user_id">unknown</string>
+    <string name="hint_user_id">pending</string>
     <string name="hint_user_name">Your Name</string>
     <string name="ignore">Ignore</string>
     <string name="income">Income</string>
@@ -76,9 +76,10 @@
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
     <string name="payee_payers">Payee/Payers</string>
-    <string name="warning_get_share_user_time_out">Unable to connect to server</string>
+    <string name="warning_get_share_user_time_out">Unable to connect to server, please try later.</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
+    <string name="warning_unable_to_update_profile">Unable to update user profile, please try later.</string>
     <string name="week">week</string>
     <string name="weeks">weeks</string>
 </resources>

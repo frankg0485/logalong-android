@@ -126,7 +126,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 LProtocol.ui.initScrambler();
                 if (LPreferences.getUserName().isEmpty()) {
-                    LProtocol.ui.requestUserName();
+                    if (!LPreferences.getUserFullName().isEmpty())
+                        LProtocol.ui.requestUserName();
                 } else {
                     LProtocol.ui.login();
                 }
@@ -137,6 +138,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 String userName = intent.getStringExtra("name");
                 LPreferences.setUserId(userId);
                 LPreferences.setUserName(userName);
+
+                LProtocol.ui.updateUserProfile();
                 LProtocol.ui.login();
                 break;
 
@@ -204,9 +207,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     int id = intent.getIntExtra("id", 0);
                     String name = LPreferences.getShareUserName(id);
                     accountName = intent.getStringExtra("accountName");
+                    requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
 
                     account = DBAccount.getByName(accountName);
-                    account.addShareUser(id, LAccount.ACCOUNT_SHARE_INVITED);
+                    account.addShareUser(id, requireConfirmation == 1? LAccount.ACCOUNT_SHARE_INVITED : LAccount.ACCOUNT_SHARE_CONFIRMED);
                     DBAccount.update(account);
                 } else {
                     LLog.w(TAG, "unable to complete share request");

@@ -247,6 +247,9 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_UPDATE_USER_PROFILE:
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
+                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_ID:
@@ -291,7 +294,7 @@ public class LProtocol {
                     rspsIntent.putExtra("id", userId);
                     rspsIntent.putExtra("accountName", ss[0]);
                     rspsIntent.putExtra("UUID", ss[1]);
-                    rspsIntent.putExtra("requireConfirmation", ss[2]);
+                    rspsIntent.putExtra("requireConfirmation", Byte.parseByte(ss[2]));
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;

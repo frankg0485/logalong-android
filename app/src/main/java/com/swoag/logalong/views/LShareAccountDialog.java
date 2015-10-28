@@ -61,6 +61,7 @@ public class LShareAccountDialog extends Dialog
 
     private ArrayList<LUser> users;
     private HashSet<Integer> selectedIds;
+    private HashSet<Integer> origSelectedIds;
     private EditText editText;
     private TextView errorMsgV;
     private ProgressBar progressBar;
@@ -79,6 +80,7 @@ public class LShareAccountDialog extends Dialog
                       ArrayList<LUser> users) {
         this.context = context;
         this.callback = callback;
+        this.origSelectedIds = selectedIds;
         this.selectedIds = new HashSet<Integer>(selectedIds);
         this.users = users;
         this.accountId = accountId;
@@ -87,7 +89,7 @@ public class LShareAccountDialog extends Dialog
 
     public interface LShareAccountDialogItf {
         public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
-                                             HashSet<Integer> selections);
+                                             HashSet<Integer> selections, HashSet<Integer> origSelections);
     }
 
     public LShareAccountDialog(Context context, long accountId, HashSet<Integer> selectedIds,
@@ -344,7 +346,7 @@ public class LShareAccountDialog extends Dialog
 
     private void leave(boolean ok) {
         hideIME();
-        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), accountId, selectedIds);
+        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), accountId, selectedIds, origSelectedIds);
         dismiss();
     }
 

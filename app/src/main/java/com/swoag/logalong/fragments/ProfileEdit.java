@@ -2,7 +2,9 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.Editable;
@@ -13,10 +15,13 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.network.LProtocol;
+import com.swoag.logalong.utils.CountDownTimer;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LReminderDialog;
@@ -24,7 +29,7 @@ import com.swoag.logalong.views.LRenameDialog;
 
 import org.w3c.dom.Text;
 
-public class ProfileEdit implements View.OnClickListener {
+public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = ProfileEdit.class.getSimpleName();
 
     private static final int MAX_USER_NAME_LEN = 16;
@@ -33,11 +38,18 @@ public class ProfileEdit implements View.OnClickListener {
     private View rootView, saveV;
     //private CheckBox checkboxShowPass;
     private EditText userNameTV;
+    private TextView userIdTV;
     private TextWatcher userTextWatcher;
     //private EditText userPassTV;
-    private String userName;
+    private String oldUserId;
+    private String oldUserName;
     //private String userPass;
     private ProfileEditItf callback;
+    private ProgressBar progressBar;
+    private CountDownTimer countDownTimer;
+    private TextView errorMsgV;
+
+    private BroadcastReceiver broadcastReceiver;
 
     public interface ProfileEditItf {
         public void onProfileEditExit();
@@ -87,20 +99,20 @@ public class ProfileEdit implements View.OnClickListener {
             }
         };
 
-        String userId = LPreferences.getUserName();
+        oldUserId = LPreferences.getUserName();
 
-        TextView textView = (TextView) rootView.findViewById(R.id.userId);
-        textView.setTextScaleX(1.0f);
-        textView.setTextSize(18);
-        textView.setTypeface(Typeface.MONOSPACE);
-        textView.setText(userId);
+        userIdTV= (TextView) rootView.findViewById(R.id.userId);
+        userIdTV.setTextScaleX(1.0f);
+        userIdTV.setTextSize(18);
+        userIdTV.setTypeface(Typeface.MONOSPACE);
+        userIdTV.setText(oldUserId);
 
-        userName = LPreferences.getUserFullName();
+        oldUserName = LPreferences.getUserFullName();
         //userPass = LPreferences.getUserPass();
         //checkboxShowPass = (CheckBox) rootView.findViewById(R.id.showPass);
         saveV = setViewListener(rootView, R.id.save);
 
-        if (userName.isEmpty()) {
+        if (oldUserName.isEmpty()) {
             LViewUtils.setAlpha(saveV, 0.5f);
             saveV.setEnabled(false);
         } else {
@@ -140,25 +152,18 @@ public class ProfileEdit implements View.OnClickListener {
             }
         });*/
 
-        //displayHintBug(userNameTV, userName, activity.getResources().getString(R.string.hint_user_name));
-        userNameTV.setText(userName);
+        userNameTV.setText(oldUserName);
         //userPassTV.setText(userPass);
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
+        progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
+        hideErrorMsg();
         hideIME();
-    }
 
-    /*
-    private void displayHintBug (EditText et, String txt, String hint) {
-        if (txt.isEmpty()) {
-            et.setTextColor(Color.rgb(0xc0, 0xc0, 0xc0));
-            et.setText(hint);
-        } else {
-            et.setTextColor(activity.getResources().getColor(R.color.base_text_color));
-            et.setText(txt);
-        }
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
     }
-    */
 
     private void destroy() {
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
@@ -168,7 +173,35 @@ public class ProfileEdit implements View.OnClickListener {
             userTextWatcher = null;
             userNameTV = null;
         }
+
+        if (broadcastReceiver != null) {
+            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
+            broadcastReceiver = null;
+        }
         saveV = null;
+    }
+
+    @Override
+    public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
+        switch (action) {
+            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
+                if (countDownTimer != null) countDownTimer.cancel();
+                progressBar.setVisibility(View.GONE);
+                if (ret == LProtocol.RSPS_OK) {
+                    if (oldUserId.isEmpty()) {
+                        oldUserId = LPreferences.getUserName();
+                        userIdTV.setText(LPreferences.getUserName());
+                    } else if (this.callback != null) {
+                        this.callback.onProfileEditExit();
+                        dismiss();
+                        break;
+                    }
+                } else {
+                    displayErrorMsg(activity.getString(R.string.warning_unable_to_update_profile));
+                    restoreOldProfile();
+                }
+                break;
+        }
     }
 
     @Override
@@ -205,15 +238,46 @@ public class ProfileEdit implements View.OnClickListener {
                 break;*/
 
             case R.id.save:
+                countDownTimer = new CountDownTimer(15000, 15000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        displayErrorMsg(activity.getString(R.string.warning_get_share_user_time_out));
+                        restoreOldProfile();
+                        progressBar.setVisibility(View.GONE);
+                    }
+                }.start();
+
+                progressBar.setVisibility(View.VISIBLE);
+
                 LPreferences.setUserFullName(userNameTV.getText().toString().trim());
                 //LPreferences.setUserPass(userPassTV.getText().toString().trim());
-                LProtocol.ui.updateUserProfile();
-                if (this.callback != null) {
-                    this.callback.onProfileEditExit();
+
+                if (LPreferences.getUserName().isEmpty()) {
+                    LProtocol.ui.requestUserName();
+                    //profile is automatically updated when username is first-time generated.
+                } else {
+                    LProtocol.ui.updateUserProfile();
                 }
-                dismiss();
                 break;
         }
+    }
+
+    private void hideErrorMsg() {
+        errorMsgV.setVisibility(View.GONE);
+    }
+
+    private void displayErrorMsg(String msg) {
+        errorMsgV.setText(msg);
+        errorMsgV.setVisibility(View.VISIBLE);
+    }
+
+    private void restoreOldProfile() {
+        LPreferences.setUserFullName(oldUserName);
     }
 
     public void dismiss() {

@@ -27,6 +27,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_JOURNAL_POSTED = 70;
     public static final int ACTION_JOURNAL_RECEIVED = 71;
     public static final int ACTION_SHARE_ACCOUNT_USER_CHANGE = 80;
+    public static final int ACTION_USER_PROFILE_UPDATED = 84;
     public static final int ACTION_NETWORK_CONNECTED = 90;
 
     private static LBroadcastReceiver instance;

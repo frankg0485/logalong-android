@@ -337,22 +337,13 @@ public class GenericListEdit implements View.OnClickListener,
 
         @Override
         public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
-                                             HashSet<Integer> selections) {
+                                             HashSet<Integer> selections, HashSet<Integer> origSelections) {
             if (!ok) return;
 
             LAccount account = DBAccount.getById(accountId);
-            HashSet<Integer> origSelections = new HashSet<Integer>();
-            if (account.getShareIds() != null) {
-                for (int ii : account.getShareIds()) {
-                    if (!LPreferences.getShareUserName(ii).isEmpty()) {
-                        origSelections.add(ii);
-                    }
-                }
-            }
             boolean unshare = false;
 
             if (!shareEnabled) {
-                if (origSelections.isEmpty()) return;
                 //unshare myself
                 unshare = true;
             } else {
@@ -367,7 +358,8 @@ public class GenericListEdit implements View.OnClickListener,
                 ArrayList<Integer> states = account.getShareStates();
                 for (int jj = 0; jj < ids.size(); jj++) {
                     if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                        LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(), false, account.getName(), account.getRid().toString());
+                        LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(),
+                                false, account.getName(), account.getRid().toString());
                     }
                 }
                 account.removeAllShareUsers();

@@ -81,6 +81,7 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_AMOUNT + " REAL," +
             TABLE_COLUMN_CATEGORY + " INTEGER," +
             TABLE_COLUMN_ACCOUNT + " INTEGER," +
+            TABLE_COLUMN_ACCOUNT2 + " INTEGER," +
             TABLE_COLUMN_TAG + " INTEGER," +
             TABLE_COLUMN_VENDOR + " INTEGER," +
             TABLE_COLUMN_TIMESTAMP + " INTEGER," +
