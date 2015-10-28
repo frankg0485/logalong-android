@@ -328,7 +328,7 @@ public class GenericListEdit implements View.OnClickListener,
                     }
 
                     LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                            (activity, account, selectedUsers, this, users);
+                            (activity, account.getId(), selectedUsers, this, users);
                     shareAccountDialog.show();
                     break;
             }
@@ -336,9 +336,19 @@ public class GenericListEdit implements View.OnClickListener,
 
 
         @Override
-        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, LAccount account,
-                                             HashSet<Integer> selections, HashSet<Integer> origSelections) {
+        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
+                                             HashSet<Integer> selections) {
             if (!ok) return;
+
+            LAccount account = DBAccount.getById(accountId);
+            HashSet<Integer> origSelections = new HashSet<Integer>();
+            if (account.getShareIds() != null) {
+                for (int ii : account.getShareIds()) {
+                    if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                        origSelections.add(ii);
+                    }
+                }
+            }
             boolean unshare = false;
 
             if (!shareEnabled) {

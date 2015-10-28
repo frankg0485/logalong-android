@@ -61,7 +61,6 @@ public class LShareAccountDialog extends Dialog
 
     private ArrayList<LUser> users;
     private HashSet<Integer> selectedIds;
-    private HashSet<Integer> origSelectedIds;
     private EditText editText;
     private TextView errorMsgV;
     private ProgressBar progressBar;
@@ -73,28 +72,29 @@ public class LShareAccountDialog extends Dialog
     private View userCtrlView;
     private View selectAllView;
     private LAccount account;
+    private long accountId;
 
-    private void init(Context context, LAccount account, HashSet<Integer> selectedIds,
+    private void init(Context context, long accountId, HashSet<Integer> selectedIds,
                       LShareAccountDialog.LShareAccountDialogItf callback,
                       ArrayList<LUser> users) {
         this.context = context;
         this.callback = callback;
-        this.origSelectedIds = selectedIds;
         this.selectedIds = new HashSet<Integer>(selectedIds);
         this.users = users;
-        this.account = account;
+        this.accountId = accountId;
+        this.account = DBAccount.getById(accountId);
     }
 
     public interface LShareAccountDialogItf {
-        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, LAccount account,
-                                             HashSet<Integer> selections, HashSet<Integer> origiSelections);
+        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
+                                             HashSet<Integer> selections);
     }
 
-    public LShareAccountDialog(Context context, LAccount account, HashSet<Integer> selectedIds,
+    public LShareAccountDialog(Context context, long accountId, HashSet<Integer> selectedIds,
                                LShareAccountDialog.LShareAccountDialogItf callback,
                                ArrayList<LUser> users) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        init(context, account, selectedIds, callback, users);
+        init(context, accountId, selectedIds, callback, users);
     }
 
     @Override
@@ -170,6 +170,7 @@ public class LShareAccountDialog extends Dialog
                     selectedIds.add(id);
                     myArrayAdapter.notifyDataSetChanged();
 
+                    account = DBAccount.getById(accountId);
                     account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
                     DBAccount.update(account);
                     LPreferences.setShareUserName(id, name);
@@ -343,7 +344,7 @@ public class LShareAccountDialog extends Dialog
 
     private void leave(boolean ok) {
         hideIME();
-        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), account, selectedIds, origSelectedIds);
+        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), accountId, selectedIds);
         dismiss();
     }
 
@@ -388,6 +389,20 @@ public class LShareAccountDialog extends Dialog
 
             CheckBox cb = (CheckBox) convertView.findViewById(checkboxId);
             cb.setChecked(selectedIds.contains(user.getId()));
+
+            ImageView imageView = (ImageView) convertView.findViewById(R.id.share);
+            int share = account.getShareUserState(user.getId());
+            switch (share) {
+                case LAccount.ACCOUNT_SHARE_CONFIRMED:
+                    imageView.setImageResource(R.drawable.ic_action_share_green);
+                    break;
+                case LAccount.ACCOUNT_SHARE_INVITED:
+                    imageView.setImageResource(R.drawable.ic_action_share_yellow);
+                    break;
+                default:
+                    imageView.setImageResource(R.drawable.ic_action_share);
+                    break;
+            }
 
             return convertView;
         }
