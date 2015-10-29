@@ -147,6 +147,7 @@ public class MainActivity extends LFragmentActivity
         });
     }
 
+    /*
     public void enablePager() {
         mViewPager.setPagingEnabled(true);
     }
@@ -154,6 +155,7 @@ public class MainActivity extends LFragmentActivity
     public void disablePager() {
         mViewPager.setPagingEnabled(false);
     }
+    */
 
     /*@Override
     public void onLoginStatus (Context arg0, boolean success, Intent arg1) {
@@ -164,7 +166,7 @@ public class MainActivity extends LFragmentActivity
             LViewUtils.disableEnableControls(true, (ViewGroup)footerV);
         }
     };
-*/
+    */
     private View selectedTabView;
     private int deselectedPosition;
 

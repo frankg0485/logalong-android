@@ -194,7 +194,6 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                         oldUserId = LPreferences.getUserName();
                         userIdTV.setText(LPreferences.getUserName());
                     } else if (this.callback != null) {
-                        this.callback.onProfileEditExit();
                         dismiss();
                         break;
                     }
@@ -285,6 +284,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     }
 
     public void dismiss() {
+        this.callback.onProfileEditExit();
         destroy();
     }
 

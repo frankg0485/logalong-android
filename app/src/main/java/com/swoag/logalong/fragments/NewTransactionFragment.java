@@ -102,6 +102,9 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
 
     @Override
     public void onSelected(boolean selected) {
+        if (edit != null) {
+            edit.dismiss();
+        }
     }
 
     @Override
@@ -164,9 +167,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();
-
-        MainActivity actv = (MainActivity) getActivity();
-        actv.enablePager();
+        edit = null;
     }
 
     @Override
@@ -190,9 +191,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
         viewFlipper.showNext();
-
-        MainActivity actv = (MainActivity) getActivity();
-        actv.disablePager();
     }
 
     private Button setBtnListener(View v, int id) {

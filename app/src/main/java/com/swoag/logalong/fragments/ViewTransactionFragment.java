@@ -268,6 +268,10 @@ public class ViewTransactionFragment extends LFragment {
         if (selected && AppPersistency.transactionChanged) {
             refreshLogs();
         }
+
+        if (edit != null) {
+            edit.dismiss();
+        }
     }
 
     @Override
@@ -475,9 +479,6 @@ public class ViewTransactionFragment extends LFragment {
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
                 viewFlipper.showNext();
-
-                MainActivity actv = (MainActivity) getActivity();
-                actv.disablePager();
             }
         }
 
@@ -513,8 +514,7 @@ public class ViewTransactionFragment extends LFragment {
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
 
-            MainActivity actv = (MainActivity) getActivity();
-            actv.enablePager();
+            edit = null;
         }
 
         private class VTag {

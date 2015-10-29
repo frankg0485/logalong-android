@@ -223,8 +223,8 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
     }
 
     public void dismiss() {
-        destroy();
         callback.onGenericListEditExit();
+        destroy();
     }
 
 

@@ -63,6 +63,12 @@ public class SettingsFragment extends LFragment implements
 
     @Override
     public void onSelected(boolean selected) {
+        if (listEdit != null) {
+            listEdit.dismiss();
+        }
+        if (profileEdit != null) {
+            profileEdit.dismiss();
+        }
     }
 
     @Override
@@ -94,9 +100,6 @@ public class SettingsFragment extends LFragment implements
                     viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                     viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
                     viewFlipper.showNext();
-
-                    actv = (MainActivity) getActivity();
-                    actv.disablePager();
                     break;
 
                 case R.id.accounts:
@@ -114,24 +117,13 @@ public class SettingsFragment extends LFragment implements
                     viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                     viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
                     viewFlipper.showNext();
-
-                    actv = (MainActivity) getActivity();
-                    actv.disablePager();
                     break;
+
                 case R.id.goback:
-                    viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
-                    viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
-                    viewFlipper.showPrevious();
-
-                    actv = (MainActivity) getActivity();
-                    actv.enablePager();
-
                     if (profileEdit != null) {
                         profileEdit.dismiss();
-                        profileEdit = null;
                     } else if (listEdit != null) {
                         listEdit.dismiss();
-                        listEdit = null;
                     }
                     break;
                 default:
@@ -145,35 +137,24 @@ public class SettingsFragment extends LFragment implements
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();
-
-        MainActivity actv = (MainActivity) getActivity();
-        actv = (MainActivity) getActivity();
-        actv.enablePager();
+        profileEdit = null;
     }
 
     @Override
     public void onGenericListEditExit() {
-
+        viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+        viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+        viewFlipper.showPrevious();
+        listEdit = null;
     }
 
     @Override
     public boolean onBackPressed() {
-        if (viewFlipper.getDisplayedChild() == 1) {
-            viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
-            viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
-            viewFlipper.showPrevious();
-
-            MainActivity actv = (MainActivity) getActivity();
-            actv.enablePager();
-
-            if (profileEdit != null) {
-                profileEdit.dismiss();
-                profileEdit = null;
-            } else if (listEdit != null) {
-                listEdit.dismiss();
-                listEdit = null;
-            }
-
+        if (profileEdit != null) {
+            profileEdit.dismiss();
+            return true;
+        } else if (listEdit != null) {
+            listEdit.dismiss();
             return true;
         }
         return false;
