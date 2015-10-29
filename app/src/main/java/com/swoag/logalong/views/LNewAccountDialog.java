@@ -16,13 +16,13 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LNewAccountDialog extends Dialog implements
-        View.OnClickListener, TextWatcher {
+public class LNewAccountDialog extends Dialog implements TextWatcher {
     private static final String TAG = LNewAccountDialog.class.getSimpleName();
 
     LNewAccountDialogItf callback;
@@ -36,6 +36,7 @@ public class LNewAccountDialog extends Dialog implements
     private CheckBox checkBoxAttr1, checkBoxAttr2, checkBoxAccountShowBalance;
     private boolean isNameAvailable;
     private boolean attr1, attr2;
+    private MyClickListener myClickListener;
 
     public interface LNewAccountDialogItf {
         // return FALSE to keep this dialog alive.
@@ -55,6 +56,7 @@ public class LNewAccountDialog extends Dialog implements
         this.id = id;
         this.attr1 = attr1;
         this.attr2 = attr2;
+        myClickListener = new MyClickListener();
     }
 
     @Override
@@ -71,8 +73,8 @@ public class LNewAccountDialog extends Dialog implements
         checkBoxAttr2 = (CheckBox) payeePayerView.findViewById(R.id.checkBoxPayer);
         if (id == R.id.vendors) {
             payeePayerView.setVisibility(View.VISIBLE);
-            checkBoxAttr1.setOnClickListener(this);
-            checkBoxAttr2.setOnClickListener(this);
+            checkBoxAttr1.setOnClickListener(myClickListener);
+            checkBoxAttr2.setOnClickListener(myClickListener);
 
             checkBoxAttr1.setChecked(attr1);
             checkBoxAttr2.setChecked(attr2);
@@ -82,21 +84,21 @@ public class LNewAccountDialog extends Dialog implements
 
         if (id == R.id.accounts) {
             accountShowBalanceView.setVisibility(View.VISIBLE);
-            checkBoxAccountShowBalance.setOnClickListener(this);
+            checkBoxAccountShowBalance.setOnClickListener(myClickListener);
             checkBoxAccountShowBalance.setChecked(attr1);
         } else {
             accountShowBalanceView.setVisibility(View.GONE);
         }
 
-        findViewById(R.id.cancelDialog).setOnClickListener(this);
+        findViewById(R.id.cancelDialog).setOnClickListener(myClickListener);
         okView = findViewById(R.id.confirmDialog);
-        okView.setOnClickListener(this);
+        okView.setOnClickListener(myClickListener);
 
         isNameAvailable = false;
         okView.setClickable(false);
         LViewUtils.setAlpha(okView, 0.5f);
 
-        findViewById(R.id.closeDialog).setOnClickListener(this);
+        findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
 
         ((TextView) findViewById(R.id.title)).setText(title);
         text = (EditText) findViewById(R.id.newname);
@@ -129,51 +131,53 @@ public class LNewAccountDialog extends Dialog implements
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        try {
-            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
-        } catch (Exception e) {
-        }
-        boolean ret = true;
-        try {
-            switch (v.getId()) {
-                case R.id.confirmDialog:
-                    String name = text.getText().toString();
-                    name = name.trim();
-
-                    if (name.length() <= 0) {
-                        ret = callback.onNewAccountDialogExit(id, false, null, false, false);
-                    } else {
-                        if (id == R.id.accounts) {
-                            attr1 = checkBoxAccountShowBalance.isChecked();
-                        } else {
-                            attr1 = checkBoxAttr1.isChecked();
-                        }
-                        attr2 = checkBoxAttr2.isChecked();
-                        ret = callback.onNewAccountDialogExit(id, true, name, attr1, attr2);
-                    }
-                    break;
-                case R.id.cancelDialog:
-                case R.id.closeDialog:
-                    ret = callback.onNewAccountDialogExit(id, false, null, false, false);
-                    break;
-
-                case R.id.checkBoxPayee:
-                case R.id.checkBoxPayer:
-                    ret = false;
-                    if ((!checkBoxAttr1.isChecked()) && (!checkBoxAttr2.isChecked())) {
-                        checkBoxAttr1.setChecked(true);
-                    }
-                    break;
-                case R.id.checkboxAccountShowBalance:
-                    ret = false;
-                    break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            try {
+                InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
+            } catch (Exception e) {
             }
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
+            boolean ret = true;
+            try {
+                switch (v.getId()) {
+                    case R.id.confirmDialog:
+                        String name = text.getText().toString();
+                        name = name.trim();
+
+                        if (name.length() <= 0) {
+                            ret = callback.onNewAccountDialogExit(id, false, null, false, false);
+                        } else {
+                            if (id == R.id.accounts) {
+                                attr1 = checkBoxAccountShowBalance.isChecked();
+                            } else {
+                                attr1 = checkBoxAttr1.isChecked();
+                            }
+                            attr2 = checkBoxAttr2.isChecked();
+                            ret = callback.onNewAccountDialogExit(id, true, name, attr1, attr2);
+                        }
+                        break;
+                    case R.id.cancelDialog:
+                    case R.id.closeDialog:
+                        ret = callback.onNewAccountDialogExit(id, false, null, false, false);
+                        break;
+
+                    case R.id.checkBoxPayee:
+                    case R.id.checkBoxPayer:
+                        ret = false;
+                        if ((!checkBoxAttr1.isChecked()) && (!checkBoxAttr2.isChecked())) {
+                            checkBoxAttr1.setChecked(true);
+                        }
+                        break;
+                    case R.id.checkboxAccountShowBalance:
+                        ret = false;
+                        break;
+                }
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected error: " + e.getMessage());
+            }
+            if (ret) dismiss();
         }
-        if (ret) dismiss();
     }
 }

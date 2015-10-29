@@ -23,6 +23,7 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LSelectionDialog;
@@ -30,7 +31,7 @@ import com.swoag.logalong.views.LSelectionDialog;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ScheduledTransactionEdit implements View.OnClickListener, TransactionEdit.TransitionEditItf {
+public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditItf {
     private static final String TAG = ScheduledTransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -43,6 +44,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, Transacti
     private ScheduledTransitionEditItf callback;
 
     private TextView weekMonthTV, intervalTV, countTV;
+    private MyClickListener myClickListener;
 
     public interface ScheduledTransitionEditItf {
         public static final int EXIT_DELETE = 10;
@@ -105,12 +107,14 @@ public class ScheduledTransactionEdit implements View.OnClickListener, Transacti
         savedScheduledItem = null;
     }
 
-    @Override
-    public void onClick(View v) {
-        LTransaction item = scheduledItem.getItem();
-        switch (v.getId()) {
-            default:
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            LTransaction item = scheduledItem.getItem();
+            switch (v.getId()) {
+                default:
+                    break;
+            }
         }
     }
 
@@ -122,7 +126,7 @@ public class ScheduledTransactionEdit implements View.OnClickListener, Transacti
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

@@ -14,21 +14,22 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LRenameDialog extends Dialog implements
-        android.view.View.OnClickListener {
+public class LRenameDialog extends Dialog {
     private static final String TAG = LRenameDialog.class.getSimpleName();
 
-    LRenameDialogItf callback;
+    private LRenameDialogItf callback;
     private String oldname;
     private String title;
     private String hint;
     private EditText text;
     private Context context;
     private Object id;
+    private MyClickListener myClickListener;
 
     public interface LRenameDialogItf {
         public void onRenameDialogExit(Object id, boolean renamed, String name);
@@ -44,6 +45,7 @@ public class LRenameDialog extends Dialog implements
         this.oldname = oldname;
         this.hint = hint;
         this.id = id;
+        myClickListener = new MyClickListener();
     }
 
     @Override
@@ -52,9 +54,9 @@ public class LRenameDialog extends Dialog implements
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.rename_dialog);
 
-        findViewById(R.id.cancelDialog).setOnClickListener(this);
-        findViewById(R.id.confirmDialog).setOnClickListener(this);
-        findViewById(R.id.closeDialog).setOnClickListener(this);
+        findViewById(R.id.cancelDialog).setOnClickListener(myClickListener);
+        findViewById(R.id.confirmDialog).setOnClickListener(myClickListener);
+        findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
 
         ((TextView) findViewById(R.id.title)).setText(title);
         TextView from = (TextView) findViewById(R.id.oldname);
@@ -63,31 +65,33 @@ public class LRenameDialog extends Dialog implements
         text.setHint((hint != null) ? hint : "");
     }
 
-    @Override
-    public void onClick(View v) {
-        try {
-            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
-        } catch (Exception e) {
-        }
-
-        try {
-            List<String> msg = new ArrayList<String>();
-            if (v.getId() == R.id.confirmDialog) {
-                String name = text.getText().toString();
-                name = name.trim();
-
-                if (name.length() <= 0) {
-                    callback.onRenameDialogExit(id, false, null);
-                } else {
-                    callback.onRenameDialogExit(id, true, name);
-                }
-            } else {
-                callback.onRenameDialogExit(id, false, null);
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            try {
+                InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
+            } catch (Exception e) {
             }
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
+
+            try {
+                List<String> msg = new ArrayList<String>();
+                if (v.getId() == R.id.confirmDialog) {
+                    String name = text.getText().toString();
+                    name = name.trim();
+
+                    if (name.length() <= 0) {
+                        callback.onRenameDialogExit(id, false, null);
+                    } else {
+                        callback.onRenameDialogExit(id, true, name);
+                    }
+                } else {
+                    callback.onRenameDialogExit(id, false, null);
+                }
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected error: " + e.getMessage());
+            }
+            dismiss();
         }
-        dismiss();
     }
 }

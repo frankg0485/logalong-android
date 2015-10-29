@@ -32,19 +32,21 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 public class LMultiSelectionDialog extends Dialog
-        implements AdapterView.OnItemClickListener, View.OnClickListener {
+        implements AdapterView.OnItemClickListener {
     private static final String TAG = LMultiSelectionDialog.class.getSimpleName();
     private Cursor mCursor;
     private int idColumnIndex;
 
     public Context context;
     private ListView mList;
+    private MyClickListener myClickListener;
 
 	/* 0: layoutId;
      * 1: itemLayoutId;
@@ -93,6 +95,7 @@ public class LMultiSelectionDialog extends Dialog
                                  LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
                                  int[] ids, String[] columns) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
+        myClickListener = new MyClickListener();
         init(context, obj, selectedIds, callback, ids, columns);
     }
 
@@ -102,9 +105,9 @@ public class LMultiSelectionDialog extends Dialog
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(ids[0]);
 
-        ((LinearLayout) findViewById(ids[5])).setOnClickListener(this);
-        ((TextView) findViewById(ids[3])).setOnClickListener(this);
-        ((TextView) findViewById(ids[4])).setOnClickListener(this);
+        ((LinearLayout) findViewById(ids[5])).setOnClickListener(myClickListener);
+        ((TextView) findViewById(ids[3])).setOnClickListener(myClickListener);
+        ((TextView) findViewById(ids[4])).setOnClickListener(myClickListener);
         ((TextView) findViewById(ids[2])).setText(context.getString(ids[9]));
 
         try {
@@ -154,34 +157,36 @@ public class LMultiSelectionDialog extends Dialog
         return super.dispatchTouchEvent(ev);
     }
 
-    @Override
-    public void onClick(View v) {
-        int id = v.getId();
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            int id = v.getId();
 
-        if (id == ids[5]) {
-            try {
-                CheckBox cb = (CheckBox) v.findViewById(ids[6]);
-                cb.setChecked(!cb.isChecked());
+            if (id == ids[5]) {
+                try {
+                    CheckBox cb = (CheckBox) v.findViewById(ids[6]);
+                    cb.setChecked(!cb.isChecked());
 
-                this.mCursor.moveToFirst();
-                for (int ii = 0; ii < this.mCursor.getCount(); ii++) {
+                    mCursor.moveToFirst();
+                    for (int ii = 0; ii < mCursor.getCount(); ii++) {
 
-                    if (cb.isChecked()) {
-                        selectedIds.add(this.mCursor.getLong(idColumnIndex));
-                    } else {
-                        selectedIds.remove(this.mCursor.getLong(idColumnIndex));
+                        if (cb.isChecked()) {
+                            selectedIds.add(mCursor.getLong(idColumnIndex));
+                        } else {
+                            selectedIds.remove(mCursor.getLong(idColumnIndex));
+                        }
+                        mCursor.moveToNext();
                     }
-                    this.mCursor.moveToNext();
+                    mList.invalidateViews();
+                } catch (Exception e) {
+                    LLog.e(TAG, "unexpected error: " + e.getMessage());
                 }
-                mList.invalidateViews();
-            } catch (Exception e) {
-                LLog.e(TAG, "unexpected error: " + e.getMessage());
+            } else if (id == ids[3]) {
+                leave();
+            } else if (id == ids[4]) {
+                selectedIds.clear();
+                leave();
             }
-        } else if (id == ids[3]) {
-            leave();
-        } else if (id == ids[4]) {
-            selectedIds.clear();
-            leave();
         }
     }
 

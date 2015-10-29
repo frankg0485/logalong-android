@@ -36,6 +36,7 @@ import com.swoag.logalong.utils.DBPorter;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
@@ -47,7 +48,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 
-public class NewTransactionFragment extends LFragment implements View.OnClickListener, TransactionEdit.TransitionEditItf {
+public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
 
     private Button btnExpense, btnIncome, btnTransaction, btnSchedule;
@@ -60,10 +61,13 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
     private TextView balanceTV;
     private MyCursorAdapter adapter;
     private LAllBalances allBalances;
+    private MyClickListener myClickListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
+
+        myClickListener = new MyClickListener();
 
         balanceTV = (TextView) rootView.findViewById(R.id.balance);
         allBalances = LAllBalances.getInstance(true);
@@ -81,6 +85,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         btnIncome = setBtnListener(rootView, R.id.income);
         btnTransaction = setBtnListener(rootView, R.id.transaction);
         btnSchedule = setBtnListener(rootView, R.id.schedule);
+
         return rootView;
     }
 
@@ -109,28 +114,30 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
         super.onResume();
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.expense:
-                newLog(LTransaction.TRANSACTION_TYPE_EXPENSE);
-                break;
-            case R.id.income:
-                newLog(LTransaction.TRANSACTION_TYPE_INCOME);
-                break;
-            case R.id.transaction:
-                newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
-                //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
-                //DBPorter.importDb("logalong" + DBHelper.DB_VERSION + ".db");
-                //LProtocol.ui.ping();
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            switch (v.getId()) {
+                case R.id.expense:
+                    newLog(LTransaction.TRANSACTION_TYPE_EXPENSE);
+                    break;
+                case R.id.income:
+                    newLog(LTransaction.TRANSACTION_TYPE_INCOME);
+                    break;
+                case R.id.transaction:
+                    newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                    //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
+                    //DBPorter.importDb("logalong" + DBHelper.DB_VERSION + ".db");
+                    //LProtocol.ui.ping();
+                    break;
 
-            case R.id.schedule:
-                startActivity(new Intent(getActivity(), ScheduleActivity.class));
-                break;
+                case R.id.schedule:
+                    startActivity(new Intent(getActivity(), ScheduleActivity.class));
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -190,7 +197,7 @@ public class NewTransactionFragment extends LFragment implements View.OnClickLis
 
     private Button setBtnListener(View v, int id) {
         Button btn = (Button) v.findViewById(id);
-        btn.setOnClickListener(this);
+        btn.setOnClickListener(myClickListener);
         return btn;
     }
 

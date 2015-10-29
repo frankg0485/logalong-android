@@ -26,6 +26,7 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LSelectionDialog;
@@ -33,7 +34,7 @@ import com.swoag.logalong.views.LSelectionDialog;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class TransactionEdit implements View.OnClickListener, LSelectionDialog.OnSelectionDialogItf,
+public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
@@ -53,6 +54,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private LSelectionDialog mSelectionDialog;
     private boolean firstTimeAmountPicker = true;
+    private MyClickListener myClickListener;
 
     public interface TransitionEditItf {
         public static final int EXIT_DELETE = 10;
@@ -73,6 +75,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
         this.bCreate = bCreate;
         this.bScheduleMode = bScheduleMode;
+        myClickListener = new MyClickListener();
         create();
     }
 
@@ -239,114 +242,116 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
         updateOkDisplay();
     }
 
-    @Override
-    public void onClick(View v) {
-        hideIME();
-        switch (v.getId()) {
-            case R.id.tvDate:
-                final Calendar c = Calendar.getInstance();
-                DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
-                        this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-                datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-                datePickerDialog.show();
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            hideIME();
+            switch (v.getId()) {
+                case R.id.tvDate:
+                    final Calendar c = Calendar.getInstance();
+                    DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
+                            TransactionEdit.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+                    datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                    datePickerDialog.show();
+                    break;
 
-            case R.id.noteEditText:
-                noteET.setCursorVisible(true);
-                try {
-                    if (noteET.requestFocus()) {
-                        InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        keyboard.showSoftInput(noteET, 0);
+                case R.id.noteEditText:
+                    noteET.setCursorVisible(true);
+                    try {
+                        if (noteET.requestFocus()) {
+                            InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            keyboard.showSoftInput(noteET, 0);
+                        }
+                    } catch (Exception e) {
                     }
-                } catch (Exception e) {
-                }
-                break;
+                    break;
 
-            case R.id.amountRow:
-                LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
-                picker.show();
-                break;
+                case R.id.amountRow:
+                    LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), TransactionEdit.this);
+                    picker.show();
+                    break;
 
-            case R.id.account2Row:
-                try {
-                    ids[9] = R.string.select_account;
-                    mSelectionDialog = new LSelectionDialog
-                            (activity, this, ids,
-                                    DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
-                    mSelectionDialog.show();
-                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                } catch (Exception e) {
-                }
-                break;
+                case R.id.account2Row:
+                    try {
+                        ids[9] = R.string.select_account;
+                        mSelectionDialog = new LSelectionDialog
+                                (activity, TransactionEdit.this, ids,
+                                        DBHelper.TABLE_ACCOUNT_NAME,
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
+                        mSelectionDialog.show();
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                    } catch (Exception e) {
+                    }
+                    break;
 
-            case R.id.accountRow:
-                try {
-                    ids[9] = R.string.select_account;
-                    mSelectionDialog = new LSelectionDialog
-                            (activity, this, ids,
-                                    DBHelper.TABLE_ACCOUNT_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount()), DLG_ID_ACCOUNT);
-                    mSelectionDialog.show();
-                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                } catch (Exception e) {
-                }
-                break;
+                case R.id.accountRow:
+                    try {
+                        ids[9] = R.string.select_account;
+                        mSelectionDialog = new LSelectionDialog
+                                (activity, TransactionEdit.this, ids,
+                                        DBHelper.TABLE_ACCOUNT_NAME,
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount()), DLG_ID_ACCOUNT);
+                        mSelectionDialog.show();
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                    } catch (Exception e) {
+                    }
+                    break;
 
-            case R.id.categoryRow:
-                try {
-                    ids[9] = R.string.select_category;
-                    mSelectionDialog = new LSelectionDialog
-                            (activity, this, ids,
-                                    DBHelper.TABLE_CATEGORY_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
-                    mSelectionDialog.show();
-                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                } catch (Exception e) {
-                }
-                break;
-            case R.id.vendorRow:
-                try {
-                    ids[9] = R.string.select_vendor;
-                    mSelectionDialog = new LSelectionDialog
-                            (activity, this, ids,
-                                    DBHelper.TABLE_VENDOR_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction.TRANSACTION_TYPE_INCOME?
-                                    DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor()), DLG_ID_VENDOR);
-                    mSelectionDialog.show();
-                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                } catch (Exception e) {
-                }
-                break;
-            case R.id.tagRow:
-                try {
-                    ids[9] = R.string.select_tag;
-                    mSelectionDialog = new LSelectionDialog
-                            (activity, this, ids,
-                                    DBHelper.TABLE_TAG_NAME,
-                                    DBHelper.TABLE_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
-                    mSelectionDialog.show();
-                    mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                } catch (Exception e) {
-                }
-                break;
-            case R.id.discard:
-                callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
-                destroy();
-                break;
+                case R.id.categoryRow:
+                    try {
+                        ids[9] = R.string.select_category;
+                        mSelectionDialog = new LSelectionDialog
+                                (activity, TransactionEdit.this, ids,
+                                        DBHelper.TABLE_CATEGORY_NAME,
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
+                        mSelectionDialog.show();
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                    } catch (Exception e) {
+                    }
+                    break;
+                case R.id.vendorRow:
+                    try {
+                        ids[9] = R.string.select_vendor;
+                        mSelectionDialog = new LSelectionDialog
+                                (activity, TransactionEdit.this, ids,
+                                        DBHelper.TABLE_VENDOR_NAME,
+                                        DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
+                                        DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor()), DLG_ID_VENDOR);
+                        mSelectionDialog.show();
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                    } catch (Exception e) {
+                    }
+                    break;
+                case R.id.tagRow:
+                    try {
+                        ids[9] = R.string.select_tag;
+                        mSelectionDialog = new LSelectionDialog
+                                (activity, TransactionEdit.this, ids,
+                                        DBHelper.TABLE_TAG_NAME,
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
+                        mSelectionDialog.show();
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                    } catch (Exception e) {
+                    }
+                    break;
+                case R.id.discard:
+                    callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
+                    destroy();
+                    break;
 
-            case R.id.goback:
-            case R.id.back:
-                callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
-                destroy();
-                break;
+                case R.id.goback:
+                case R.id.back:
+                    callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
+                    destroy();
+                    break;
 
-            case R.id.save:
-                saveLog();
-                break;
+                case R.id.save:
+                    saveLog();
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -423,7 +428,7 @@ public class TransactionEdit implements View.OnClickListener, LSelectionDialog.O
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

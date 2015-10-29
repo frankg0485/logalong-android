@@ -26,13 +26,14 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ViewTransactionFragment extends LFragment implements View.OnClickListener {
+public class ViewTransactionFragment extends LFragment {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
@@ -48,6 +49,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private LAllBalances allBalances;
     private boolean bMonthly;
+    private MyClickListener myClickListener;
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
@@ -194,6 +196,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
+        myClickListener = new MyClickListener();
 
         allBalances = LAllBalances.getInstance();
         //allBalances = LAllBalances.getInstance(true);
@@ -277,40 +280,42 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
         super.onResume();
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.filter:
-                changeFilter();
-                break;
-            case R.id.prev:
-                showPrevNext(true);
-                break;
-            case R.id.next:
-                showPrevNext(false);
-                break;
-            case R.id.monthly:
-                bMonthly = !bMonthly;
-                if (bMonthly) {
-                    monthlyView.setText(getActivity().getString(R.string.monthly));
-                    prevView.setEnabled(true);
-                    nextView.setEnabled(true);
-                } else {
-                    monthlyView.setText(getActivity().getString(R.string.annually));
-                    prevView.setEnabled(false);
-                    nextView.setEnabled(false);
-                }
-                refreshLogs();
-                break;
-            default:
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            switch (v.getId()) {
+                case R.id.filter:
+                    changeFilter();
+                    break;
+                case R.id.prev:
+                    showPrevNext(true);
+                    break;
+                case R.id.next:
+                    showPrevNext(false);
+                    break;
+                case R.id.monthly:
+                    bMonthly = !bMonthly;
+                    if (bMonthly) {
+                        monthlyView.setText(getActivity().getString(R.string.monthly));
+                        prevView.setEnabled(true);
+                        nextView.setEnabled(true);
+                    } else {
+                        monthlyView.setText(getActivity().getString(R.string.annually));
+                        prevView.setEnabled(false);
+                        nextView.setEnabled(false);
+                    }
+                    refreshLogs();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
-    private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
-            TransactionEdit.TransitionEditItf {
+    private class MyCursorAdapter extends CursorAdapter implements TransactionEdit.TransitionEditItf {
         private LTransaction item;
         private LSectionSummary sectionSummary;
+        private ClickListener clickListener;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
@@ -318,6 +323,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             //super(context, cursor, 0);
             super(context, cursor, false);
             sectionSummary = null;
+            clickListener = new ClickListener();
         }
 
         public MyCursorAdapter(Context context, Cursor cursor, LSectionSummary sectionSummary) {
@@ -326,6 +332,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             //super(context, cursor, 0);
             super(context, cursor, false);
             this.sectionSummary = sectionSummary;
+            clickListener = new ClickListener();
         }
 
         /**
@@ -418,7 +425,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             tv.setText(String.format("%.2f", dollar));
 
-            mainView.setOnClickListener(this);
+            mainView.setOnClickListener(clickListener);
             long id = cursor.getLong(0);
             mainView.setTag(new VTag(id));
 
@@ -456,20 +463,22 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
             return newView;
         }
 
-        @Override
-        public void onClick(View v) {
-            VTag tag = (VTag) v.getTag();
+        private class ClickListener extends LOnClickListener {
+            @Override
+            public void onClicked(View v) {
+                VTag tag = (VTag) v.getTag();
 
-            item = DBTransaction.getById(tag.id);
+                item = DBTransaction.getById(tag.id);
 
-            edit = new TransactionEdit(getActivity(), rootView, item, false, false, this);
+                edit = new TransactionEdit(getActivity(), rootView, item, false, false, MyCursorAdapter.this);
 
-            viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
-            viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
-            viewFlipper.showNext();
+                viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+                viewFlipper.showNext();
 
-            MainActivity actv = (MainActivity) getActivity();
-            actv.disablePager();
+                MainActivity actv = (MainActivity) getActivity();
+                actv.disablePager();
+            }
         }
 
         @Override
@@ -644,7 +653,7 @@ public class ViewTransactionFragment extends LFragment implements View.OnClickLi
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

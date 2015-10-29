@@ -37,13 +37,14 @@ import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class LShareAccountConfirmDialog extends Dialog implements View.OnClickListener,
+public class LShareAccountConfirmDialog extends Dialog implements
         LBroadcastReceiver.BroadcastReceiverListener, DialogInterface.OnDismissListener {
     private static final String TAG = LShareAccountConfirmDialog.class.getSimpleName();
     public Context context;
@@ -55,7 +56,7 @@ public class LShareAccountConfirmDialog extends Dialog implements View.OnClickLi
     private ProgressBar progressBar;
     private CountDownTimer countDownTimer;
     private BroadcastReceiver broadcastReceiver;
-
+    private MyClickListener myClickListener;
     private LAccount account;
 
     private void init(Context context, LAccountShareRequest request,
@@ -63,6 +64,7 @@ public class LShareAccountConfirmDialog extends Dialog implements View.OnClickLi
         this.context = context;
         this.callback = callback;
         this.request = request;
+        myClickListener = new MyClickListener();
     }
 
     public interface LShareAccountConfirmDialogItf {
@@ -84,8 +86,8 @@ public class LShareAccountConfirmDialog extends Dialog implements View.OnClickLi
         //broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
         //        LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME}, this);
 
-        findViewById(R.id.save).setOnClickListener(this);
-        findViewById(R.id.cancel).setOnClickListener(this);
+        findViewById(R.id.save).setOnClickListener(myClickListener);
+        findViewById(R.id.cancel).setOnClickListener(myClickListener);
 
         ((TextView) findViewById(R.id.request)).setText(request.getAccountName() + " : " + request.getUserFullName()
                 + " (" + request.getUserName() + ")");
@@ -179,17 +181,19 @@ public class LShareAccountConfirmDialog extends Dialog implements View.OnClickLi
         return super.dispatchTouchEvent(ev);
     }
 
-    @Override
-    public void onClick(View v) {
-        int id = v.getId();
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            int id = v.getId();
 
-        switch (id) {
-            case R.id.save:
-                leave(true);
-                break;
-            case R.id.cancel:
-                leave(false);
-                break;
+            switch (id) {
+                case R.id.save:
+                    leave(true);
+                    break;
+                case R.id.cancel:
+                    leave(false);
+                    break;
+            }
         }
     }
 

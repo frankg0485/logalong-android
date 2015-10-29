@@ -33,6 +33,7 @@ import android.widget.SectionIndexer;
 import android.widget.TextView;
 
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -40,7 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class LSelectionDialog extends Dialog
-        implements AdapterView.OnItemClickListener, View.OnClickListener, android.text.TextWatcher {
+        implements AdapterView.OnItemClickListener, android.text.TextWatcher {
     private static final String TAG = LSelectionDialog.class.getSimpleName();
     private Cursor mCursor;
 
@@ -71,6 +72,7 @@ public class LSelectionDialog extends Dialog
     private BitSet bitSet;
     private int startPosition;
     private int dlgId;
+    private MyClickListener myClickListener;
 
     private void init(Context context, LSelectionDialog.OnSelectionDialogItf callback,
                       int[] ids, String table, String column, int startPosition, int dlgId) {
@@ -87,6 +89,7 @@ public class LSelectionDialog extends Dialog
         this.startPosition = startPosition;
 
         this.dlgId = dlgId;
+        myClickListener = new MyClickListener();
     }
 
     public interface OnSelectionDialogItf {
@@ -108,8 +111,8 @@ public class LSelectionDialog extends Dialog
         setContentView(ids[0]);
 
         //((LinearLayout) findViewById(ids[5])).setOnClickListener(this);
-        ((TextView) findViewById(ids[3])).setOnClickListener(this);
-        ((TextView) findViewById(ids[4])).setOnClickListener(this);
+        ((TextView) findViewById(ids[3])).setOnClickListener(myClickListener);
+        ((TextView) findViewById(ids[4])).setOnClickListener(myClickListener);
         ((TextView) findViewById(ids[2])).setText(context.getString(ids[9]));
 
         bitSet.clear();
@@ -176,16 +179,18 @@ public class LSelectionDialog extends Dialog
         return super.dispatchTouchEvent(ev);
     }
 
-    @Override
-    public void onClick(View v) {
-        int id = v.getId();
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            int id = v.getId();
 
-        if (id == ids[3]) {
-            leave(true);
-        } else if (id == ids[4]) {
-            leave(false);
-        } else if (id == ids[8]) {
-            hideSoftKeyboard();
+            if (id == ids[3]) {
+                leave(true);
+            } else if (id == ids[4]) {
+                leave(false);
+            } else if (id == ids[8]) {
+                hideSoftKeyboard();
+            }
         }
     }
 

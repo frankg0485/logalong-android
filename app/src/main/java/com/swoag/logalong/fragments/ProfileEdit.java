@@ -22,6 +22,7 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.LBroadcastReceiver;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LReminderDialog;
@@ -29,7 +30,7 @@ import com.swoag.logalong.views.LRenameDialog;
 
 import org.w3c.dom.Text;
 
-public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.BroadcastReceiverListener {
+public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = ProfileEdit.class.getSimpleName();
 
     private static final int MAX_USER_NAME_LEN = 16;
@@ -50,6 +51,7 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
     private TextView errorMsgV;
 
     private BroadcastReceiver broadcastReceiver;
+    private MyClickListener myClickListener;
 
     public interface ProfileEditItf {
         public void onProfileEditExit();
@@ -59,7 +61,7 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
         this.activity = activity;
         this.rootView = rootView;
         this.callback = callback;
-
+        myClickListener = new MyClickListener();
         create();
     }
 
@@ -101,7 +103,7 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
 
         oldUserId = LPreferences.getUserName();
 
-        userIdTV= (TextView) rootView.findViewById(R.id.userId);
+        userIdTV = (TextView) rootView.findViewById(R.id.userId);
         userIdTV.setTextScaleX(1.0f);
         userIdTV.setTextSize(18);
         userIdTV.setTypeface(Typeface.MONOSPACE);
@@ -204,19 +206,20 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.userName:
-                userNameTV.setCursorVisible(true);
-                try {
-                    if (userNameTV.requestFocus()) {
-                        InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        keyboard.showSoftInput(userNameTV, 0);
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            switch (v.getId()) {
+                case R.id.userName:
+                    userNameTV.setCursorVisible(true);
+                    try {
+                        if (userNameTV.requestFocus()) {
+                            InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            keyboard.showSoftInput(userNameTV, 0);
+                        }
+                    } catch (Exception e) {
                     }
-                } catch (Exception e) {
-                }
-                break;
+                    break;
             /*case R.id.userPass:
                 userPassTV.setCursorVisible(true);
                 try {
@@ -237,33 +240,34 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
                 }
                 break;*/
 
-            case R.id.save:
-                countDownTimer = new CountDownTimer(15000, 15000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
+                case R.id.save:
+                    countDownTimer = new CountDownTimer(15000, 15000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
 
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            displayErrorMsg(activity.getString(R.string.warning_get_share_user_time_out));
+                            restoreOldProfile();
+                            progressBar.setVisibility(View.GONE);
+                        }
+                    }.start();
+
+                    progressBar.setVisibility(View.VISIBLE);
+
+                    LPreferences.setUserFullName(userNameTV.getText().toString().trim());
+                    //LPreferences.setUserPass(userPassTV.getText().toString().trim());
+
+                    if (LPreferences.getUserName().isEmpty()) {
+                        LProtocol.ui.requestUserName();
+                        //profile is automatically updated when username is first-time generated.
+                    } else {
+                        LProtocol.ui.updateUserProfile();
                     }
-
-                    @Override
-                    public void onFinish() {
-                        displayErrorMsg(activity.getString(R.string.warning_get_share_user_time_out));
-                        restoreOldProfile();
-                        progressBar.setVisibility(View.GONE);
-                    }
-                }.start();
-
-                progressBar.setVisibility(View.VISIBLE);
-
-                LPreferences.setUserFullName(userNameTV.getText().toString().trim());
-                //LPreferences.setUserPass(userPassTV.getText().toString().trim());
-
-                if (LPreferences.getUserName().isEmpty()) {
-                    LProtocol.ui.requestUserName();
-                    //profile is automatically updated when username is first-time generated.
-                } else {
-                    LProtocol.ui.updateUserProfile();
-                }
-                break;
+                    break;
+            }
         }
     }
 
@@ -286,7 +290,7 @@ public class ProfileEdit implements View.OnClickListener, LBroadcastReceiver.Bro
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

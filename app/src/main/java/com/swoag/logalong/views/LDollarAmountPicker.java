@@ -12,10 +12,10 @@ import android.widget.TextView;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
-public class LDollarAmountPicker extends Dialog implements
-        View.OnClickListener {
+public class LDollarAmountPicker extends Dialog {
     private static final String TAG = LDollarAmountPicker.class.getSimpleName();
 
     private Context context;
@@ -31,6 +31,7 @@ public class LDollarAmountPicker extends Dialog implements
     private double lastValue;
     private int lastValueEnd;
     private int mathOperator;
+    private MyClickListener myClickListener;
 
     public interface LDollarAmountPickerItf {
         public void onDollarAmountPickerExit(double value, boolean save);
@@ -42,6 +43,7 @@ public class LDollarAmountPicker extends Dialog implements
         this.context = context;
         this.value = value;
         this.callback = callback;
+        myClickListener = new MyClickListener();
     }
 
     @Override
@@ -104,79 +106,81 @@ public class LDollarAmountPicker extends Dialog implements
         valueTV = null;
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.b0:
-                appendToString(0);
-                break;
-            case R.id.b1:
-                appendToString(1);
-                break;
-            case R.id.b2:
-                appendToString(2);
-                break;
-            case R.id.b3:
-                appendToString(3);
-                break;
-            case R.id.b4:
-                appendToString(4);
-                break;
-            case R.id.b5:
-                appendToString(5);
-                break;
-            case R.id.b6:
-                appendToString(6);
-                break;
-            case R.id.b7:
-                appendToString(7);
-                break;
-            case R.id.b8:
-                appendToString(8);
-                break;
-            case R.id.b9:
-                appendToString(9);
-                break;
-            case R.id.dot:
-                appendToString(-1);
-                break;
-            case R.id.backspace:
-                removeLastDigitFromString();
-                break;
-            case R.id.clear:
-                clearInputString();
-                break;
-            case R.id.plus:
-                doMathToString(0);
-                break;
-            case R.id.minus:
-                doMathToString(1);
-                break;
-            case R.id.multiply:
-                doMathToString(2);
-                break;
-            case R.id.divide:
-                doMathToString(3);
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            switch (v.getId()) {
+                case R.id.b0:
+                    appendToString(0);
+                    break;
+                case R.id.b1:
+                    appendToString(1);
+                    break;
+                case R.id.b2:
+                    appendToString(2);
+                    break;
+                case R.id.b3:
+                    appendToString(3);
+                    break;
+                case R.id.b4:
+                    appendToString(4);
+                    break;
+                case R.id.b5:
+                    appendToString(5);
+                    break;
+                case R.id.b6:
+                    appendToString(6);
+                    break;
+                case R.id.b7:
+                    appendToString(7);
+                    break;
+                case R.id.b8:
+                    appendToString(8);
+                    break;
+                case R.id.b9:
+                    appendToString(9);
+                    break;
+                case R.id.dot:
+                    appendToString(-1);
+                    break;
+                case R.id.backspace:
+                    removeLastDigitFromString();
+                    break;
+                case R.id.clear:
+                    clearInputString();
+                    break;
+                case R.id.plus:
+                    doMathToString(0);
+                    break;
+                case R.id.minus:
+                    doMathToString(1);
+                    break;
+                case R.id.multiply:
+                    doMathToString(2);
+                    break;
+                case R.id.divide:
+                    doMathToString(3);
+                    break;
 
-            case R.id.cancel:
-                callback.onDollarAmountPickerExit(0, false);
-                destroy();
-                dismiss();
-                break;
+                case R.id.cancel:
+                    callback.onDollarAmountPickerExit(0, false);
+                    destroy();
+                    dismiss();
+                    break;
 
-            case R.id.ok:
-                saveLog();
-                break;
+                case R.id.ok:
+                    saveLog();
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 
     private View setViewListener(int id) {
         View view = findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

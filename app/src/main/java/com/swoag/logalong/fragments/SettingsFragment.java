@@ -10,9 +10,10 @@ import android.widget.ViewFlipper;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
+import com.swoag.logalong.utils.LOnClickListener;
 
 public class SettingsFragment extends LFragment implements
-        View.OnClickListener, GenericListEdit.GenericListEditItf, ProfileEdit.ProfileEditItf {
+        GenericListEdit.GenericListEditItf, ProfileEdit.ProfileEditItf {
     private static final String TAG = SettingsFragment.class.getSimpleName();
 
     ViewFlipper viewFlipper;
@@ -20,10 +21,13 @@ public class SettingsFragment extends LFragment implements
     View backV, editV, addV;
     private ProfileEdit profileEdit;
     private GenericListEdit listEdit;
+    private MyClickListener myClickListener;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_settings, container, false);
+
+        myClickListener = new MyClickListener();
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -71,66 +75,68 @@ public class SettingsFragment extends LFragment implements
         super.onResume();
     }
 
-    @Override
-    public void onClick(View v) {
-        View tmpView;
-        View viewSettings = viewFlipper.findViewById(R.id.viewSettings);
-        MainActivity actv;
-        switch (v.getId()) {
-            case R.id.profile:
-                viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
-                viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
-                viewSettings.findViewById(R.id.save).setVisibility(View.VISIBLE);
-                tmpView = viewSettings.findViewById(R.id.profileSettings);
-                tmpView.setVisibility(View.VISIBLE);
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            View tmpView;
+            View viewSettings = viewFlipper.findViewById(R.id.viewSettings);
+            MainActivity actv;
+            switch (v.getId()) {
+                case R.id.profile:
+                    viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.save).setVisibility(View.VISIBLE);
+                    tmpView = viewSettings.findViewById(R.id.profileSettings);
+                    tmpView.setVisibility(View.VISIBLE);
 
-                profileEdit = new ProfileEdit(getActivity(), viewSettings, this);
+                    profileEdit = new ProfileEdit(getActivity(), viewSettings, SettingsFragment.this);
 
-                viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
-                viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
-                viewFlipper.showNext();
+                    viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                    viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+                    viewFlipper.showNext();
 
-                actv = (MainActivity) getActivity();
-                actv.disablePager();
-                break;
+                    actv = (MainActivity) getActivity();
+                    actv.disablePager();
+                    break;
 
-            case R.id.accounts:
-            case R.id.categories:
-            case R.id.vendors:
-            case R.id.tags:
-                viewSettings.findViewById(R.id.listView).setVisibility(View.VISIBLE);
-                viewSettings.findViewById(R.id.add).setVisibility(View.VISIBLE);
-                viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
-                viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
+                case R.id.accounts:
+                case R.id.categories:
+                case R.id.vendors:
+                case R.id.tags:
+                    viewSettings.findViewById(R.id.listView).setVisibility(View.VISIBLE);
+                    viewSettings.findViewById(R.id.add).setVisibility(View.VISIBLE);
+                    viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
 
-                listEdit = new GenericListEdit(getActivity(),
-                        viewSettings, v.getId(), this);
+                    listEdit = new GenericListEdit(getActivity(),
+                            viewSettings, v.getId(), SettingsFragment.this);
 
-                viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
-                viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
-                viewFlipper.showNext();
+                    viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                    viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+                    viewFlipper.showNext();
 
-                actv = (MainActivity) getActivity();
-                actv.disablePager();
-                break;
-            case R.id.goback:
-                viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
-                viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
-                viewFlipper.showPrevious();
+                    actv = (MainActivity) getActivity();
+                    actv.disablePager();
+                    break;
+                case R.id.goback:
+                    viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+                    viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+                    viewFlipper.showPrevious();
 
-                actv = (MainActivity) getActivity();
-                actv.enablePager();
+                    actv = (MainActivity) getActivity();
+                    actv.enablePager();
 
-                if (profileEdit != null) {
-                    profileEdit.dismiss();
-                    profileEdit = null;
-                } else if (listEdit != null) {
-                    listEdit.dismiss();
-                    listEdit = null;
-                }
-                break;
-            default:
-                break;
+                    if (profileEdit != null) {
+                        profileEdit.dismiss();
+                        profileEdit = null;
+                    } else if (listEdit != null) {
+                        listEdit.dismiss();
+                        listEdit = null;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -175,7 +181,7 @@ public class SettingsFragment extends LFragment implements
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 

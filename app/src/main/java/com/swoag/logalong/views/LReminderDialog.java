@@ -10,20 +10,22 @@ import android.view.Window;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.utils.LOnClickListener;
 
-public class LReminderDialog extends Dialog implements
-        View.OnClickListener {
+public class LReminderDialog extends Dialog {
     private static final String TAG = LReminderDialog.class.getSimpleName();
 
     private TextView text;
     private Context context;
     private String msg;
+    private MyClickListener myClickListener;
 
     public LReminderDialog(Context context, String msg) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
 
         this.context = context;
         this.msg = msg;
+        myClickListener = new MyClickListener();
     }
 
     @Override
@@ -34,13 +36,15 @@ public class LReminderDialog extends Dialog implements
 
         TextView textView = (TextView) findViewById(R.id.msg);
         textView.setText(msg);
-        findViewById(R.id.confirmDialog).setOnClickListener(this);
+        findViewById(R.id.confirmDialog).setOnClickListener(myClickListener);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.confirmDialog) {
-            dismiss();
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            if (v.getId() == R.id.confirmDialog) {
+                dismiss();
+            }
         }
     }
 }

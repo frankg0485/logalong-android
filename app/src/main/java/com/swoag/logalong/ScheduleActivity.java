@@ -24,11 +24,12 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LOnClickListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ScheduleActivity extends Activity implements View.OnClickListener,
+public class ScheduleActivity extends Activity implements
         ScheduledTransactionEdit.ScheduledTransitionEditItf {
 
     private View rootView;
@@ -39,17 +40,19 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
     private ListView listView;
     private MyCursorAdapter adapter;
     private boolean createNew;
+    private MyClickListener myClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.scheduled_transactions);
+        myClickListener = new MyClickListener();
 
         rootView = findViewById(R.id.scheduleEdit);
-        findViewById(R.id.goback).setOnClickListener(this);
-        findViewById(R.id.addExpense).setOnClickListener(this);
-        findViewById(R.id.addIncome).setOnClickListener(this);
-        findViewById(R.id.addTransfer).setOnClickListener(this);
+        findViewById(R.id.goback).setOnClickListener(myClickListener);
+        findViewById(R.id.addExpense).setOnClickListener(myClickListener);
+        findViewById(R.id.addIncome).setOnClickListener(myClickListener);
+        findViewById(R.id.addTransfer).setOnClickListener(myClickListener);
 
         listView = (ListView) findViewById(R.id.logsList);
         initListView();
@@ -59,18 +62,20 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
         viewFlipper.setDisplayedChild(0);
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.goback:
-                finish();
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            switch (v.getId()) {
+                case R.id.goback:
+                    finish();
+                    break;
 
-            case R.id.addExpense:
-            case R.id.addIncome:
-            case R.id.addTransfer:
-                addNewSchedule(v.getId());
-                break;
+                case R.id.addExpense:
+                case R.id.addIncome:
+                case R.id.addTransfer:
+                    addNewSchedule(v.getId());
+                    break;
+            }
         }
     }
 
@@ -158,14 +163,16 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
         });
     }
 
-    private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener {
+    private class MyCursorAdapter extends CursorAdapter {
         private LTransaction item;
+        private ClickListener clickListener;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
             //      using LoaderManager with a CursorLoader.
             //super(context, cursor, 0);
             super(context, cursor, false);
+            clickListener = new ClickListener();
         }
 
         /**
@@ -221,7 +228,7 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             tv.setText(String.format("%.2f", dollar));
 
-            mainView.setOnClickListener(this);
+            mainView.setOnClickListener(clickListener);
             long id = cursor.getLong(0);
             mainView.setTag(new VTag(id));
 
@@ -237,11 +244,13 @@ public class ScheduleActivity extends Activity implements View.OnClickListener,
             return newView;
         }
 
-        @Override
-        public void onClick(View v) {
-            VTag tag = (VTag) v.getTag();
-            scheduledItem = DBScheduledTransaction.getById(tag.id);
-            openSchedule(scheduledItem, false);
+        private class ClickListener extends LOnClickListener {
+            @Override
+            public void onClicked(View v) {
+                VTag tag = (VTag) v.getTag();
+                scheduledItem = DBScheduledTransaction.getById(tag.id);
+                openSchedule(scheduledItem, false);
+            }
         }
 
         private class VTag {

@@ -29,6 +29,7 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
@@ -42,8 +43,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class GenericListEdit implements View.OnClickListener,
-        LNewAccountDialog.LNewAccountDialogItf {
+public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
     private static final String TAG = GenericListEdit.class.getSimpleName();
 
     private Activity activity;
@@ -53,6 +53,7 @@ public class GenericListEdit implements View.OnClickListener,
     private ListView listView;
     private MyCursorAdapter adapter;
     private View addV;
+    private MyClickListener myClickListener;
 
     public interface GenericListEditItf {
         public void onGenericListEditExit();
@@ -64,6 +65,7 @@ public class GenericListEdit implements View.OnClickListener,
         this.rootView = rootView;
         this.callback = callback;
         this.listId = listId;
+        myClickListener = new MyClickListener();
         create();
     }
 
@@ -89,7 +91,7 @@ public class GenericListEdit implements View.OnClickListener,
     private void create() {
         this.listView = (ListView) rootView.findViewById(R.id.listView);
         addV = rootView.findViewById(R.id.add);
-        addV.setOnClickListener(this);
+        addV.setOnClickListener(myClickListener);
 
         Cursor cursor = getMyCursor();
         if (null == cursor) {
@@ -107,31 +109,33 @@ public class GenericListEdit implements View.OnClickListener,
         addV = null;
     }
 
-    @Override
-    public void onClick(View v) {
-        boolean attr1 = true, attr2 = false;
-        switch (v.getId()) {
-            case R.id.add:
-                String title = "";
-                switch (listId) {
-                    case R.id.accounts:
-                        title = activity.getString(R.string.new_account);
-                        break;
-                    case R.id.categories:
-                        title = activity.getString(R.string.new_category);
-                        break;
-                    case R.id.vendors:
-                        title = activity.getString(R.string.new_vendor);
-                        break;
-                    case R.id.tags:
-                        title = activity.getString(R.string.new_tag);
-                        break;
-                    default:
-                        break;
-                }
-                LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, listId, this, title, null, attr1, attr2);
-                newAccountDialog.show();
-                break;
+    private class MyClickListener extends LOnClickListener {
+        @Override
+        public void onClicked(View v) {
+            boolean attr1 = true, attr2 = false;
+            switch (v.getId()) {
+                case R.id.add:
+                    String title = "";
+                    switch (listId) {
+                        case R.id.accounts:
+                            title = activity.getString(R.string.new_account);
+                            break;
+                        case R.id.categories:
+                            title = activity.getString(R.string.new_category);
+                            break;
+                        case R.id.vendors:
+                            title = activity.getString(R.string.new_vendor);
+                            break;
+                        case R.id.tags:
+                            title = activity.getString(R.string.new_tag);
+                            break;
+                        default:
+                            break;
+                    }
+                    LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, listId, GenericListEdit.this, title, null, attr1, attr2);
+                    newAccountDialog.show();
+                    break;
+            }
         }
     }
 
@@ -226,22 +230,24 @@ public class GenericListEdit implements View.OnClickListener,
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
-        view.setOnClickListener(this);
+        view.setOnClickListener(myClickListener);
         return view;
     }
 
-    private class MyCursorAdapter extends CursorAdapter implements View.OnClickListener,
+    private class MyCursorAdapter extends CursorAdapter implements
             GenericListOptionDialog.GenericListOptionDialogItf,
             LRenameDialog.LRenameDialogItf,
             LShareAccountDialog.LShareAccountDialogItf,
             LMultiSelectionDialog.OnMultiSelectionDialogItf {
-        GenericListOptionDialog optionDialog;
+        private GenericListOptionDialog optionDialog;
+        private ClickListener clickListener;
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
             //      using LoaderManager with a CursorLoader.
             //super(context, cursor, 0);
             super(context, cursor, false);
+            clickListener = new ClickListener();
         }
 
         /**
@@ -254,14 +260,14 @@ public class GenericListEdit implements View.OnClickListener,
             tv.setText(name);
 
             View v = view.findViewById(R.id.option);
-            v.setOnClickListener(this);
+            v.setOnClickListener(clickListener);
             VTag tag = new VTag(cursor.getLong(0), name);
             v.setTag(tag);
 
             if (listId == R.id.accounts) {
                 v = view.findViewById(R.id.share);
                 v.setVisibility(View.VISIBLE);
-                v.setOnClickListener(this);
+                v.setOnClickListener(clickListener);
                 v.setTag(tag);
             }
         }
@@ -275,62 +281,64 @@ public class GenericListEdit implements View.OnClickListener,
             return newView;
         }
 
-        @Override
-        public void onClick(View v) {
-            VTag tag = (VTag) v.getTag();
+        private class ClickListener extends LOnClickListener {
+            @Override
+            public void onClicked(View v) {
+                VTag tag = (VTag) v.getTag();
 
-            switch (v.getId()) {
-                case R.id.option:
-                    boolean attr1 = false, attr2 = false;
-                    if (listId == R.id.vendors) {
-                        LVendor vendor = DBVendor.getById(tag.id);
-                        if (vendor.getType() == LVendor.TYPE_PAYEE) attr1 = true;
-                        else if (vendor.getType() == LVendor.TYPE_PAYER) attr2 = true;
-                        else {
-                            attr1 = attr2 = true;
+                switch (v.getId()) {
+                    case R.id.option:
+                        boolean attr1 = false, attr2 = false;
+                        if (listId == R.id.vendors) {
+                            LVendor vendor = DBVendor.getById(tag.id);
+                            if (vendor.getType() == LVendor.TYPE_PAYEE) attr1 = true;
+                            else if (vendor.getType() == LVendor.TYPE_PAYER) attr2 = true;
+                            else {
+                                attr1 = attr2 = true;
+                            }
+                        } else if (listId == R.id.accounts) {
+                            attr1 = LPreferences.getShowAccountBalance(tag.id);
                         }
-                    } else if (listId == R.id.accounts) {
-                        attr1 = LPreferences.getShowAccountBalance(tag.id);
-                    }
-                    optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
-                            listId, this, attr1, attr2);
-                    optionDialog.show();
-                    break;
-
-                case R.id.share:
-                    if (LPreferences.getUserFullName().isEmpty()) {
-                        new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
+                        optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
+                                listId, MyCursorAdapter.this, attr1, attr2);
+                        optionDialog.show();
                         break;
-                    }
 
-                    ArrayList<LUser> users = new ArrayList<LUser>();
-                    HashSet<Integer> userSet = DBAccount.getAllShareUser();
-                    for (int ii : userSet) {
-                        if (!LPreferences.getShareUserName(ii).isEmpty()) {
-                            users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences.getShareUserFullName(ii), ii));
+                    case R.id.share:
+                        if (LPreferences.getUserFullName().isEmpty()) {
+                            new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
+                            break;
                         }
-                    }
 
-                    boolean updateAccount = false;
-                    LAccount account = DBAccount.getById(tag.id);
-                    HashSet<Integer> selectedUsers = new HashSet<Integer>();
-                    if (account.getShareIds() != null) {
-                        for (int ii : account.getShareIds()) {
+                        ArrayList<LUser> users = new ArrayList<LUser>();
+                        HashSet<Integer> userSet = DBAccount.getAllShareUser();
+                        for (int ii : userSet) {
                             if (!LPreferences.getShareUserName(ii).isEmpty()) {
-                                selectedUsers.add(ii);
-                            } else updateAccount = true;
+                                users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences.getShareUserFullName(ii), ii));
+                            }
                         }
-                    }
 
-                    if (updateAccount) {
-                        account.setShareIds(new ArrayList<Integer>(selectedUsers));
-                        DBAccount.update(account);
-                    }
+                        boolean updateAccount = false;
+                        LAccount account = DBAccount.getById(tag.id);
+                        HashSet<Integer> selectedUsers = new HashSet<Integer>();
+                        if (account.getShareIds() != null) {
+                            for (int ii : account.getShareIds()) {
+                                if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                                    selectedUsers.add(ii);
+                                } else updateAccount = true;
+                            }
+                        }
 
-                    LShareAccountDialog shareAccountDialog = new LShareAccountDialog
-                            (activity, account.getId(), selectedUsers, this, users);
-                    shareAccountDialog.show();
-                    break;
+                        if (updateAccount) {
+                            account.setShareIds(new ArrayList<Integer>(selectedUsers));
+                            DBAccount.update(account);
+                        }
+
+                        LShareAccountDialog shareAccountDialog = new LShareAccountDialog
+                                (activity, account.getId(), selectedUsers, MyCursorAdapter.this, users);
+                        shareAccountDialog.show();
+                        break;
+                }
             }
         }
 
