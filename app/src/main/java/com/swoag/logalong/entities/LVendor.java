@@ -42,7 +42,7 @@ public class LVendor {
         this.type = type;
     }
 
-    public LVendor(String name, int type, String rid) {
+    public LVendor(String name, String rid, int type) {
         init();
         this.name = name;
         this.type = type;

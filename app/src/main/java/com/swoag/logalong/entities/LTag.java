@@ -12,13 +12,13 @@ public class LTag {
     long id;
     int state;
     String name;
-    UUID rid;
+    String rid;
     long timeStampLast;
 
     private void init() {
         this.state = TAG_STATE_ACTIVE;
         this.timeStampLast = System.currentTimeMillis();
-        this.rid = UUID.randomUUID();
+        this.rid = UUID.randomUUID().toString();
         this.name = "";
     }
 
@@ -37,13 +37,13 @@ public class LTag {
         this.name = name;
     }
 
-    public LTag(String name, UUID rid) {
+    public LTag(String name, String rid) {
         init();
         this.name = name;
         this.rid = rid;
     }
 
-    public LTag(String name, UUID rid, long timeStampLast) {
+    public LTag(String name, String rid, long timeStampLast) {
         init();
         this.name = name;
         this.rid = rid;
@@ -74,11 +74,11 @@ public class LTag {
         this.id = id;
     }
 
-    public UUID getRid() {
+    public String getRid() {
         return rid;
     }
 
-    public void setRid(UUID rid) {
+    public void setRid(String rid) {
         this.rid = rid;
     }
 

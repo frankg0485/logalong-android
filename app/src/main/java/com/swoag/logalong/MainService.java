@@ -182,7 +182,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (account == null) {
                         account = new LAccount();
                         account.setName(accountName);
-                        account.setRid(UUID.fromString(uuid));
+                        account.setRid(uuid);
                         account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                         DBAccount.add(account);
                     } else {
@@ -190,7 +190,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         //if the racing ever happens where account share has been initiated from both
                         //ends 'simultaneously', account will be left in an inconsistent state, but it
                         //will cure itself when any transaction record is shared among users.
-                        account.setRid(UUID.fromString(uuid));
+                        account.setRid(uuid);
                         account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                         DBAccount.update(account);
                     }

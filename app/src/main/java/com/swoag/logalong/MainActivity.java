@@ -405,7 +405,7 @@ public class MainActivity extends LFragmentActivity
             if (account == null) {
                 account = new LAccount();
                 account.setName(accountName);
-                account.setRid(UUID.fromString(uuid));
+                account.setRid(uuid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.add(account);
             } else {
@@ -414,7 +414,7 @@ public class MainActivity extends LFragmentActivity
                 //ends 'simultaneously', account will be left in an inconsistent state, but it
                 //will cure itself when any transaction record is shared among users.
                 account.setState(DBHelper.STATE_ACTIVE);
-                account.setRid(UUID.fromString(uuid));
+                account.setRid(uuid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.update(account);
             }

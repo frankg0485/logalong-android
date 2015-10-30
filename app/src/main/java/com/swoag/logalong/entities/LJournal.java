@@ -244,7 +244,7 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateVendorCategory(boolean add, String vendorRid, UUID category) {
+    public boolean updateVendorCategory(boolean add, String vendorRid, String category) {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
@@ -321,10 +321,10 @@ public class LJournal {
 
                 LAccount account1 = DBAccount.getByName(sss[0]);
                 if (null == account1) {
-                    accountId = DBAccount.add(new LAccount(sss[0], UUID.fromString(sss[1])));
+                    accountId = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
-                        account1.setRid(UUID.fromString(sss[1]));
+                        account1.setRid(sss[1]);
                         DBAccount.update(account1);
                     }
 
@@ -335,10 +335,10 @@ public class LJournal {
 
                 LAccount account1 = DBAccount.getByName(sss[0]);
                 if (null == account1) {
-                    account2Id = DBAccount.add(new LAccount(sss[0], UUID.fromString(sss[1])));
+                    account2Id = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
-                        account1.setRid(UUID.fromString(sss[1]));
+                        account1.setRid(sss[1]);
                         DBAccount.update(account1);
                     }
 
@@ -349,10 +349,10 @@ public class LJournal {
 
                 LCategory category1 = DBAccess.getCategoryByName(sss[0]);
                 if (null == category1) {
-                    categoryId = DBAccess.addCategory(new LCategory(sss[0], UUID.fromString(sss[1])));
+                    categoryId = DBAccess.addCategory(new LCategory(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
-                        category1.setRid(UUID.fromString(sss[1]));
+                        category1.setRid(sss[1]);
                         DBAccess.updateCategory(category1);
                     }
                     categoryId = category1.getId();
@@ -362,7 +362,7 @@ public class LJournal {
 
                 LVendor vendor1 = DBVendor.getByName(sss[0]);
                 if (null == vendor1) {
-                    vendorId = DBVendor.add(new LVendor(sss[0], Integer.valueOf(sss[3]), sss[1]));
+                    vendorId = DBVendor.add(new LVendor(sss[0], sss[1], Integer.valueOf(sss[3])));
                 } else {
                     if (Long.valueOf(sss[2]) > vendor1.getTimeStampLast()) {
                         vendor1.setRid(sss[1]);
@@ -378,10 +378,10 @@ public class LJournal {
 
                 LTag tag1 = DBAccess.getTagByName(sss[0]);
                 if (null == tag1) {
-                    tagId = DBAccess.addTag(new LTag(sss[0], UUID.fromString(sss[1])));
+                    tagId = DBAccess.addTag(new LTag(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > tag1.getTimeStampLast()) {
-                        tag1.setRid(UUID.fromString(sss[1]));
+                        tag1.setRid(sss[1]);
                         DBAccess.updateTag(tag1);
                     }
 
@@ -557,7 +557,7 @@ public class LJournal {
         if (!rid.isEmpty()) {
             LCategory category = DBAccess.getCategoryByUuid(UUID.fromString(rid));
             if (category == null) {
-                category = new LCategory(name, UUID.fromString(rid), timestampLast);
+                category = new LCategory(name, rid, timestampLast);
                 DBAccess.addCategory(category);
             } else {
                 if (category.getTimeStampLast() < timestampLast) {
@@ -639,7 +639,7 @@ public class LJournal {
         if (!rid.isEmpty()) {
             LTag tag = DBAccess.getTagByUuid(UUID.fromString(rid));
             if (tag == null) {
-                tag = new LTag(name, UUID.fromString(rid), timestampLast);
+                tag = new LTag(name, rid, timestampLast);
                 DBAccess.addTag(tag);
             } else {
                 if (tag.getTimeStampLast() < timestampLast) {

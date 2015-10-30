@@ -12,13 +12,13 @@ public class LCategory {
     long id;
     int state;
     String name;
-    UUID rid;
+    String rid;
     long timeStampLast;
 
     private void init() {
         this.state = CATEGORY_STATE_ACTIVE;
         this.timeStampLast = System.currentTimeMillis();
-        this.rid = UUID.randomUUID();
+        this.rid = UUID.randomUUID().toString();
         this.name = "";
     }
 
@@ -31,7 +31,7 @@ public class LCategory {
         this.name = name;
     }
 
-    public LCategory(String name, UUID rid) {
+    public LCategory(String name, String rid) {
         init();
         this.name = name;
         this.rid = rid;
@@ -43,7 +43,7 @@ public class LCategory {
         this.name = name;
     }
 
-    public LCategory(String name, UUID rid, long timeStampLast) {
+    public LCategory(String name, String rid, long timeStampLast) {
         init();
         this.name = name;
         this.rid = rid;
@@ -74,11 +74,11 @@ public class LCategory {
         this.name = name;
     }
 
-    public UUID getRid() {
+    public String getRid() {
         return rid;
     }
 
-    public void setRid(UUID rid) {
+    public void setRid(String rid) {
         this.rid = rid;
     }
 

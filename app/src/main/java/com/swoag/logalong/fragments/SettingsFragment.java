@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LFragment;
@@ -13,7 +14,7 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LOnClickListener;
 
 public class SettingsFragment extends LFragment implements
-        GenericListEdit.GenericListEditItf, ProfileEdit.ProfileEditItf {
+        GenericListEdit.GenericListEditItf, ProfileEdit.ProfileEditItf, DataBackupEdit.DataBackupEditItf {
     private static final String TAG = SettingsFragment.class.getSimpleName();
 
     ViewFlipper viewFlipper;
@@ -21,6 +22,7 @@ public class SettingsFragment extends LFragment implements
     View backV, editV, addV;
     private ProfileEdit profileEdit;
     private GenericListEdit listEdit;
+    private DataBackupEdit dataBackupEdit;
     private MyClickListener myClickListener;
 
     @Override
@@ -34,6 +36,7 @@ public class SettingsFragment extends LFragment implements
         viewFlipper.setDisplayedChild(0);
 
         View view = rootView.findViewById(R.id.settings);
+        setViewListener(view, R.id.backup);
         profileV = setViewListener(view, R.id.profile);
         accountsV = setViewListener(view, R.id.accounts);
         categoriesV = setViewListener(view, R.id.categories);
@@ -69,6 +72,10 @@ public class SettingsFragment extends LFragment implements
         if (profileEdit != null) {
             profileEdit.dismiss();
         }
+
+        if (dataBackupEdit != null) {
+            dataBackupEdit.dismiss();
+        }
     }
 
     @Override
@@ -84,16 +91,32 @@ public class SettingsFragment extends LFragment implements
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
-            View tmpView;
             View viewSettings = viewFlipper.findViewById(R.id.viewSettings);
-            MainActivity actv;
             switch (v.getId()) {
+                case R.id.backup:
+                    viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.VISIBLE);
+
+                    viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
+                    TextView tv = (TextView) viewSettings.findViewById(R.id.save);
+                    tv.setVisibility(View.VISIBLE);
+                    tv.setText(getActivity().getString(R.string.done));
+
+                    dataBackupEdit = new DataBackupEdit(getActivity(), viewSettings, SettingsFragment.this);
+
+                    viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                    viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+                    viewFlipper.showNext();
+                    break;
+
                 case R.id.profile:
                     viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.profileSettings).setVisibility(View.VISIBLE);
+                    viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
+
                     viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.save).setVisibility(View.VISIBLE);
-                    tmpView = viewSettings.findViewById(R.id.profileSettings);
-                    tmpView.setVisibility(View.VISIBLE);
 
                     profileEdit = new ProfileEdit(getActivity(), viewSettings, SettingsFragment.this);
 
@@ -107,9 +130,11 @@ public class SettingsFragment extends LFragment implements
                 case R.id.vendors:
                 case R.id.tags:
                     viewSettings.findViewById(R.id.listView).setVisibility(View.VISIBLE);
+                    viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
+                    viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
+
                     viewSettings.findViewById(R.id.add).setVisibility(View.VISIBLE);
                     viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
-                    viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
 
                     listEdit = new GenericListEdit(getActivity(),
                             viewSettings, v.getId(), SettingsFragment.this);
@@ -120,11 +145,7 @@ public class SettingsFragment extends LFragment implements
                     break;
 
                 case R.id.goback:
-                    if (profileEdit != null) {
-                        profileEdit.dismiss();
-                    } else if (listEdit != null) {
-                        listEdit.dismiss();
-                    }
+                    onBackPressed();
                     break;
                 default:
                     break;
@@ -132,19 +153,27 @@ public class SettingsFragment extends LFragment implements
         }
     }
 
-    @Override
-    public void onProfileEditExit() {
+    private void restoreView() {
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();
+    }
+
+    @Override
+    public void onDataBackupEditExit() {
+        restoreView();
+        dataBackupEdit = null;
+    }
+
+    @Override
+    public void onProfileEditExit() {
+        restoreView();
         profileEdit = null;
     }
 
     @Override
     public void onGenericListEditExit() {
-        viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
-        viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
-        viewFlipper.showPrevious();
+        restoreView();
         listEdit = null;
     }
 
@@ -155,6 +184,9 @@ public class SettingsFragment extends LFragment implements
             return true;
         } else if (listEdit != null) {
             listEdit.dismiss();
+            return true;
+        } else if (dataBackupEdit != null) {
+            dataBackupEdit.dismiss();
             return true;
         }
         return false;

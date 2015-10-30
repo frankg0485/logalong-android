@@ -8,6 +8,7 @@ import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 
 public class LPreferences {
+    //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
@@ -15,6 +16,16 @@ public class LPreferences {
     private static final String USER_PASS = "UserPass";
     private static final String USER_ID = "UserId";
     private static final String USER_FULL_NAME = "UserFullName";
+
+    /*
+    public static String getLastDbRestoreDate() {
+        return getPreference(LApp.ctx, LAST_DB_RESTORE_DATE, "N/A");
+    }
+
+    public static void setLastDbRestoreDate(String date) {
+        savePreference(LApp.ctx, LAST_DB_RESTORE_DATE, date);
+    }
+    */
 
     public static int getUserId() {
         return getPreference(LApp.ctx, USER_ID, (int) 0);

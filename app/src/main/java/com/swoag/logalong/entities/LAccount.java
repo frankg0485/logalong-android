@@ -21,7 +21,7 @@ public class LAccount {
 
     int state;
     String name;
-    UUID rid;
+    String rid;
     long timeStampLast;
 
     ArrayList<Integer> shareIds;
@@ -31,7 +31,7 @@ public class LAccount {
     private void init() {
         this.state = ACCOUNT_STATE_ACTIVE;
         this.timeStampLast = System.currentTimeMillis();
-        this.rid = UUID.randomUUID();
+        this.rid = UUID.randomUUID().toString();
         this.name = "";
         this.shareIds = new ArrayList<Integer>();
         this.shareStates = new ArrayList<Integer>();
@@ -46,7 +46,7 @@ public class LAccount {
         this.name = name;
     }
 
-    public LAccount(String name, UUID rid) {
+    public LAccount(String name, String rid) {
         init();
         this.name = name;
         this.rid = rid;
@@ -189,11 +189,11 @@ public class LAccount {
         return ACCOUNT_SHARE_NA;
     }
 
-    public UUID getRid() {
+    public String getRid() {
         return rid;
     }
 
-    public void setRid(UUID rid) {
+    public void setRid(String rid) {
         this.rid = rid;
     }
 

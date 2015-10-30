@@ -129,9 +129,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     break;
                 case R.id.transaction:
                     newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
-                    //DBPorter.exportDb("logalong" + DBHelper.DB_VERSION + ".db");
-                    //DBPorter.importDb("logalong" + DBHelper.DB_VERSION + ".db");
-                    //LProtocol.ui.ping();
                     break;
 
                 case R.id.schedule:

@@ -191,7 +191,6 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                 progressBar.setVisibility(View.GONE);
                 if (ret == LProtocol.RSPS_OK) {
                     if (oldUserId.isEmpty()) {
-                        oldUserId = LPreferences.getUserName();
                         userIdTV.setText(LPreferences.getUserName());
                     } else if (this.callback != null) {
                         dismiss();
