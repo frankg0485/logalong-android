@@ -181,7 +181,7 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
 
                 case R.id.categories:
                     LCategory category = new LCategory(name);
-                    DBAccess.addCategory(category);
+                    DBCategory.add(category);
 
                     LJournal journal = new LJournal();
                     journal.updateCategory(category);
@@ -201,7 +201,7 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
 
                 case R.id.tags:
                     LTag tag = new LTag(name);
-                    DBAccess.addTag(tag);
+                    DBTag.add(tag);
 
                     journal = new LJournal();
                     journal.updateTag(tag);

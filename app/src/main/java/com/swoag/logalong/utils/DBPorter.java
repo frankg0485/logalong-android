@@ -44,6 +44,7 @@ public class DBPorter {
                 return false;
             }
 
+            myCSV.add(LPreferences.getUserId() + "," + LPreferences.getUserName() + "," + LPreferences.getUserFullName());
             myCSV.add(DBHelper.TABLE_COLUMN_AMOUNT + "," +
                     DBHelper.TABLE_COLUMN_CATEGORY + "," + DBHelper.TABLE_COLUMN_RID + "," +
                     DBHelper.TABLE_COLUMN_ACCOUNT + "," + DBHelper.TABLE_COLUMN_RID + "," +
@@ -143,82 +144,120 @@ public class DBPorter {
             HashMap<String, Long> tagMap = new HashMap<String, Long>();
 
             boolean header = true;
+            boolean userInfo = true;
             for (String str : myCSV.getCsv()) {
                 LLog.d(TAG, "" + str);
-                if (header) {
+                String[] ss = str.split(",", -1);
+                if (userInfo) {
+                    userInfo = false;
+                    LPreferences.setUserId(Integer.valueOf(ss[0]));
+                    LPreferences.setUserName(ss[1]);
+                    LPreferences.setUserFullName(ss[2]);
+                } else if (header) {
                     header = false;
                 } else {
-                    String[] ss = str.split(",", -1);
                     int ii = 0;
+                    Long ll;
+
                     double amount = Double.valueOf(ss[ii++]);
 
                     String category = ss[ii++];
                     long categoryId;
-                    Long ll = categoryMap.get(category);
-                    if (null == ll) {
-                        if (category.isEmpty()) categoryId = 0;
-                        else {
-                            categoryId = DBAccess.addCategory(new LCategory(category, ss[ii]));
+                    if (category.isEmpty()) categoryId = 0;
+                    else {
+                        ll = categoryMap.get(category);
+                        if (null == ll) {
+                            ll = DBCategory.getIdByName(category);
+                            if (ll != null) {
+                                categoryId = ll.longValue();
+                                DBCategory.updateColumnById(categoryId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                            } else {
+                                categoryId = DBCategory.add(new LCategory(category, ss[ii]));
+                            }
                             categoryMap.put(category, categoryId);
+                        } else {
+                            categoryId = ll.longValue();
                         }
-                    } else {
-                        categoryId = ll.longValue();
                     }
                     ii++;
 
                     String account = ss[ii++];
                     long accountId;
-                    ll = accountMap.get(account);
-                    if (null == ll) {
-                        if (account.isEmpty()) accountId = 0;
-                        else {
-                            accountId = DBAccount.add(new LAccount(account, ss[ii]));
+                    if (account.isEmpty()) accountId = 0;
+                    else {
+                        ll = accountMap.get(account);
+                        if (null == ll) {
+                            ll = DBAccount.getIdByName(account);
+                            if (ll != null) {
+                                accountId = ll.longValue();
+                                DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                            } else {
+                                accountId = DBAccount.add(new LAccount(account, ss[ii]));
+                            }
                             accountMap.put(account, accountId);
+                        } else {
+                            accountId = ll.longValue();
                         }
-                    } else {
-                        accountId = ll.longValue();
                     }
                     ii++;
 
                     String account2 = ss[ii++];
                     long account2Id;
-                    ll = accountMap.get(account2);
-                    if (null == ll) {
-                        if (account2.isEmpty()) account2Id = 0;
-                        else {
-                            account2Id = DBAccount.add(new LAccount(account2, ss[ii]));
-                            accountMap.put(account, account2Id);
+                    if (account2.isEmpty()) account2Id = 0;
+                    else {
+                        ll = accountMap.get(account2);
+                        if (null == ll) {
+                            ll = DBAccount.getIdByName(account2);
+                            if (ll != null) {
+                                account2Id = ll.longValue();
+                                DBAccount.updateColumnById(account2Id, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                            } else {
+                                account2Id = DBAccount.add(new LAccount(account2, ss[ii]));
+                            }
+                            accountMap.put(account2, account2Id);
+                        } else {
+                            account2Id = ll.longValue();
                         }
-                    } else {
-                        account2Id = ll.longValue();
                     }
                     ii++;
 
                     String tag = ss[ii++];
                     long tagId;
-                    ll = tagMap.get(tag);
-                    if (null == ll) {
-                        if (tag.isEmpty()) tagId = 0;
-                        else {
-                            tagId = DBAccess.addTag(new LTag(tag, ss[ii]));
+                    if (tag.isEmpty()) tagId = 0;
+                    else {
+                        ll = tagMap.get(tag);
+                        if (null == ll) {
+                            ll = DBTag.getIdByName(tag);
+                            if (ll != null) {
+                                tagId = ll.longValue();
+                                DBTag.updateColumnById(tagId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                            } else {
+                                tagId = DBTag.add(new LTag(tag, ss[ii]));
+                            }
                             tagMap.put(tag, tagId);
+                        } else {
+                            tagId = ll.longValue();
                         }
-                    } else {
-                        tagId = ll.longValue();
                     }
                     ii++;
 
                     String vendor = ss[ii++];
                     long vendorId;
-                    ll = vendorMap.get(vendor);
-                    if (null == ll) {
-                        if (vendor.isEmpty()) vendorId = 0;
-                        else {
-                            vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
+                    if (vendor.isEmpty()) vendorId = 0;
+                    else {
+                        ll = vendorMap.get(vendor);
+                        if (null == ll) {
+                            ll = DBVendor.getIdByName(vendor);
+                            if (ll != null) {
+                                vendorId = ll.longValue();
+                                DBVendor.updateColumnById(vendorId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                            } else {
+                                vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
+                            }
                             vendorMap.put(vendor, vendorId);
+                        } else {
+                            vendorId = ll.longValue();
                         }
-                    } else {
-                        vendorId = ll.longValue();
                     }
                     ii += 2;
 
@@ -230,18 +269,31 @@ public class DBPorter {
                     String rid = ss[ii++];
                     String note = ss[ii];
 
-                    DBTransaction.add(new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
-                            accountId, account2Id, madeby, timestamp, timestampLast, note));
+                    long tid = DBTransaction.getIdByRid(rid);
+                    if (tid != 0) {
+                        LTransaction trans = new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
+                            accountId, account2Id, madeby, timestamp, timestampLast, note);
+                        trans.setId(tid);
+                        DBTransaction.update(trans);
+                    } else {
+                        DBTransaction.add(new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
+                                accountId, account2Id, madeby, timestamp, timestampLast, note));
+                    }
                 }
             }
 
             ois.close();
 
             //LPreferences.setLastDbRestoreDate("" + (new SimpleDateFormat("EEEE, MMM d yyyy")).format(new Date()));
-        } catch (Exception e) {
+        } catch (
+                Exception e
+                )
+
+        {
             LLog.e(TAG, "unable to importport database version: " + dbVersion);
             return false;
         }
+
         return true;
     }
 

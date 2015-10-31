@@ -136,12 +136,20 @@ public class DBVendor {
         return vendor;
     }
 
-    public static long getIdByRid(UUID rid) {
+    public static long getIdByRid(String rid) {
         return DBAccess.getIdByRid(DBHelper.TABLE_VENDOR_NAME, rid);
     }
 
     public static String getNameById(long id) {
         return DBAccess.getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+    }
+
+    public static boolean updateColumnById(long id, String column, String value) {
+        return DBAccess.updateColumnById(DBHelper.TABLE_VENDOR_NAME, id, column, value);
+    }
+
+    public static long getIdByName(String name) {
+        return DBAccess.getIdByName(DBHelper.TABLE_VENDOR_NAME, name);
     }
 
     private static int getDbIndexById(int type, long id) {

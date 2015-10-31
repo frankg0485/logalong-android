@@ -10,6 +10,7 @@ import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
@@ -347,9 +348,9 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
                 String[] sss = ss[1].split(";");
 
-                LCategory category1 = DBAccess.getCategoryByName(sss[0]);
+                LCategory category1 = DBCategory.getByName(sss[0]);
                 if (null == category1) {
-                    categoryId = DBAccess.addCategory(new LCategory(sss[0], sss[1]));
+                    categoryId = DBCategory.add(new LCategory(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
                         category1.setRid(sss[1]);
@@ -378,7 +379,7 @@ public class LJournal {
 
                 LTag tag1 = DBAccess.getTagByName(sss[0]);
                 if (null == tag1) {
-                    tagId = DBAccess.addTag(new LTag(sss[0], sss[1]));
+                    tagId = DBTag.add(new LTag(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > tag1.getTimeStampLast()) {
                         tag1.setRid(sss[1]);
@@ -558,7 +559,7 @@ public class LJournal {
             LCategory category = DBAccess.getCategoryByUuid(UUID.fromString(rid));
             if (category == null) {
                 category = new LCategory(name, rid, timestampLast);
-                DBAccess.addCategory(category);
+                DBCategory.add(category);
             } else {
                 if (category.getTimeStampLast() < timestampLast) {
                     if (!name.isEmpty()) category.setName(name);
@@ -640,7 +641,7 @@ public class LJournal {
             LTag tag = DBAccess.getTagByUuid(UUID.fromString(rid));
             if (tag == null) {
                 tag = new LTag(name, rid, timestampLast);
-                DBAccess.addTag(tag);
+                DBTag.add(tag);
             } else {
                 if (tag.getTimeStampLast() < timestampLast) {
                     if (!name.isEmpty()) tag.setName(name);
@@ -669,8 +670,8 @@ public class LJournal {
         }
 
         if ((!vendorRid.isEmpty()) && (!categoryRid.isEmpty())) {
-            long vendor = DBVendor.getIdByRid(UUID.fromString(vendorRid));
-            long category = DBCategory.getIdByRid(UUID.fromString(categoryRid));
+            long vendor = DBVendor.getIdByRid(vendorRid);
+            long category = DBCategory.getIdByRid(categoryRid);
             DBVendor.updateCategory(vendor, category, state == DBHelper.STATE_ACTIVE);
         }
     }

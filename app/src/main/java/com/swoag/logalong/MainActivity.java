@@ -333,7 +333,7 @@ public class MainActivity extends LFragmentActivity
         LCategory category = new LCategory();
         for (int ii = 0; ii < categories.length; ii++) {
             category.setName(categories[ii]);
-            DBAccess.addCategory(category);
+            DBCategory.add(category);
         }
     }
 

@@ -119,6 +119,14 @@ public class DBAccount {
         return true;
     }
 
+    public static boolean updateColumnById(long id, String column, String value) {
+        return DBAccess.updateColumnById(DBHelper.TABLE_ACCOUNT_NAME, id, column, value);
+    }
+
+    public static long getIdByName(String name) {
+        return DBAccess.getIdByName(DBHelper.TABLE_ACCOUNT_NAME, name);
+    }
+
     /*
     public static int updateNameById(long id, String name) {
         synchronized (DBAccess.dbLock) {

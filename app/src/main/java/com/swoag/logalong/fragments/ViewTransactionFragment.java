@@ -484,6 +484,7 @@ public class ViewTransactionFragment extends LFragment {
 
         @Override
         public void onTransactionEditExit(int action, boolean changed) {
+            edit = null;
             switch (action) {
                 case TransactionEdit.TransitionEditItf.EXIT_OK:
                     AppPersistency.transactionChanged = changed;
@@ -514,7 +515,6 @@ public class ViewTransactionFragment extends LFragment {
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
 
-            edit = null;
         }
 
         private class VTag {
@@ -524,7 +524,6 @@ public class ViewTransactionFragment extends LFragment {
                 this.id = id;
             }
         }
-
     }
 
     @Override

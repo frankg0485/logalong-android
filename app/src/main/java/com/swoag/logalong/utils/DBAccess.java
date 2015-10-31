@@ -281,31 +281,6 @@ public class DBAccess {
         return account;
     }
 
-    public static LCategory getCategoryByName(String name) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LCategory category = new LCategory();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with name: " + name);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getCategoryValues(csr, category);
-            category.setId(csr.getLong(0));
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get category with name: " + name + ":" + e.getMessage());
-            category = null;
-        }
-        if (csr != null) csr.close();
-        return category;
-    }
-
     public static LTag getTagByName(String name) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -328,28 +303,6 @@ public class DBAccess {
         }
         if (csr != null) csr.close();
         return tag;
-    }
-
-    public static long addCategory(LCategory category) {
-        long id = -1;
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setCategoryValues(category);
-            id = db.insert(DBHelper.TABLE_CATEGORY_NAME, "", cv);
-            dirty = true;
-        }
-        return id;
-    }
-
-    public static long addTag(LTag tag) {
-        long id = -1;
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setTagValues(tag);
-            id = db.insert(DBHelper.TABLE_TAG_NAME, "", cv);
-            dirty = true;
-        }
-        return id;
     }
 
     public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
@@ -807,6 +760,7 @@ public class DBAccess {
         return true;
     }
 
+    /*
     public static long getIdByRid(String table, UUID rid) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
@@ -829,17 +783,35 @@ public class DBAccess {
         if (csr != null) csr.close();
         return id;
     }
+    */
 
-    public static long getIdByRid(String table, String rid) {
+    public static boolean updateColumnById(String table, long id, String column, String value) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = new ContentValues();
+                cv.put(column, value);
+                db.update(table, cv, "_id=?", new String[]{"" + id});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static long getIdByColumn(String table, String column, String value) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
         long id = 0;
 
         try {
-            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?",
-                    new String[]{"" + rid});
+            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
             if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+                LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
                 csr.close();
                 return 0;
             }
@@ -847,9 +819,17 @@ public class DBAccess {
             csr.moveToFirst();
             id = csr.getLong(0);
         } catch (Exception e) {
-            LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
+            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
         }
         if (csr != null) csr.close();
         return id;
+    }
+
+    public static long getIdByName(String table, String name) {
+        return getIdByColumn(table, DBHelper.TABLE_COLUMN_NAME, name);
+    }
+
+    public static long getIdByRid(String table, String rid) {
+        return getIdByColumn(table, DBHelper.TABLE_COLUMN_RID, rid);
     }
 }

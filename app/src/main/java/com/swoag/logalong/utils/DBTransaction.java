@@ -137,6 +137,10 @@ public class DBTransaction {
         return item;
     }
 
+    public static long getIdByRid(String rid) {
+        return DBAccess.getIdByRid(DBHelper.TABLE_TRANSACTION_NAME, rid);
+    }
+
     public static LTransaction getByRid(String rid) {
         SQLiteDatabase db = DBAccess.getReadDb();
 
