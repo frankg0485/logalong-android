@@ -1,15 +1,14 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import com.swoag.logalong.utils.DBHelper;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.UUID;
 
 public class LAccount {
     private static final String TAG = LAccount.class.getSimpleName();
-
-    public static final int ACCOUNT_STATE_ACTIVE = 10;
-    public static final int ACCOUNT_STATE_DELETED = 20;
 
     public static final int ACCOUNT_SHARE_NA = 0;
     public static final int ACCOUNT_SHARE_INVITED = 1;
@@ -29,7 +28,7 @@ public class LAccount {
     long id;
 
     private void init() {
-        this.state = ACCOUNT_STATE_ACTIVE;
+        this.state = DBHelper.STATE_ACTIVE;
         this.timeStampLast = System.currentTimeMillis();
         this.rid = UUID.randomUUID().toString();
         this.name = "";

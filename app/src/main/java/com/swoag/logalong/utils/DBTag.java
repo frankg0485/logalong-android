@@ -41,6 +41,97 @@ public class DBTag {
         return id;
     }
 
+    public static boolean update(LTag tag) {
+        try {
+            synchronized (DBAccess.dbLock) {
+                SQLiteDatabase db = DBAccess.getWriteDb();
+                ContentValues cv = setValues(tag);
+                db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + tag.getId()});
+            }
+            DBAccess.dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void deleteById(long id) {
+        DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+    }
+
+    public static LTag getById(long id) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE _id=?", new String[]{"" + id});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with id: " + id);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with id: " + id + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
+    public static LTag getByName(String name) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
+                            + DBHelper.TABLE_COLUMN_NAME + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with name: " + name);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with name: " + name + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
+    public static LTag getByRid(String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LTag tag = new LTag();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find tag with rid: " + rid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, tag);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get tag with rid: " + rid + ":" + e.getMessage());
+            tag = null;
+        }
+        if (csr != null) csr.close();
+        return tag;
+    }
+
     public static Cursor getCursorSortedBy(String sortColumn) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor cur;
@@ -61,5 +152,9 @@ public class DBTag {
 
     public static long getIdByName(String name) {
         return DBAccess.getIdByName(DBHelper.TABLE_TAG_NAME, name);
+    }
+
+    public static String getNameById(long id) {
+        return DBAccess.getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 }

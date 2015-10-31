@@ -21,8 +21,10 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.fragments.ScheduledTransactionEdit;
 import com.swoag.logalong.fragments.TransactionEdit;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 
@@ -187,8 +189,8 @@ public class ScheduleActivity extends Activity implements
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
 
-            String category = DBAccess.getCategoryNameById(categoryId);
-            String tag = DBAccess.getTagNameById(tagId);
+            String category = DBCategory.getNameById(categoryId);
+            String tag = DBTag.getNameById(tagId);
 
             String str = "";
             if (!tag.isEmpty()) str = tag + ":";

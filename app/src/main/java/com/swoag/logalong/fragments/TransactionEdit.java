@@ -83,16 +83,16 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
 
         accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-        accountTV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
+        accountTV.setText(DBAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
                 item.getAccount2() : item.getAccount()));
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER ||
                 item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
             account2TV.setTypeface(null, item.getAccount2() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            account2TV.setText(DBAccess.getAccountNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
+            account2TV.setText(DBAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
                     item.getAccount2() : item.getAccount()));
         } else {
             categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            categoryTV.setText(DBAccess.getCategoryNameById(item.getCategory()));
+            categoryTV.setText(DBCategory.getNameById(item.getCategory()));
 
             vendorTV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             if (item.getType() == LTransaction.TRANSACTION_TYPE_EXPENSE) {
@@ -103,7 +103,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             vendorTV.setText(DBVendor.getNameById(item.getVendor()));
 
             tagTV.setTypeface(null, item.getTag() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            tagTV.setText(DBAccess.getTagNameById(item.getTag()));
+            tagTV.setText(DBTag.getNameById(item.getTag()));
         }
         updateOkDisplay();
     }

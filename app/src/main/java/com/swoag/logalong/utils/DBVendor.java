@@ -62,7 +62,7 @@ public class DBVendor {
     }
 
     public static void deleteById(long id) {
-        DBAccess.updateStateById(DBHelper.TABLE_VENDOR_NAME, id, DBHelper.STATE_DELETED);
+        DBAccess.updateColumnById(DBHelper.TABLE_VENDOR_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static LVendor getById(long id) {
@@ -119,7 +119,8 @@ public class DBVendor {
 
         try {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_VENDOR_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+                            + DBHelper.TABLE_COLUMN_NAME + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with name: " + name);
                 csr.close();

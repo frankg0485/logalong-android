@@ -87,71 +87,6 @@ public class DBAccess {
         dirty = false;
     }
 
-    private static ContentValues setCategoryValues(LCategory category) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
-        cv.put(DBHelper.TABLE_COLUMN_RID, category.getRid().toString());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, category.getTimeStampLast());
-        return cv;
-    }
-
-    private static void getCategoryValues(Cursor cur, LCategory category) {
-        category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
-        category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        category.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
-        category.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        category.setId(cur.getLong(0));
-    }
-
-    private static ContentValues setTagValues(LTag tag) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_NAME, tag.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, tag.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, tag.getRid().toString());
-        return cv;
-    }
-
-    private static void getTagValues(Cursor cur, LTag tag) {
-        tag.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
-        tag.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        tag.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        tag.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
-        tag.setId(cur.getLong(0));
-    }
-
-    private static void getAccountValues(Cursor cur, LAccount account) {
-        account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
-        account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
-        account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        account.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
-        account.setId(cur.getLong(0));
-    }
-
-    public static void updateStateById(String table, long id, int state) {
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = new ContentValues();
-            cv.put(DBHelper.TABLE_COLUMN_STATE, state);
-            db.update(table, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-    }
-
-    public static void deleteAccountById(long id) {
-        updateStateById(DBHelper.TABLE_ACCOUNT_NAME, id, LAccount.ACCOUNT_STATE_DELETED);
-    }
-
-    public static void deleteCategoryById(long id) {
-        updateStateById(DBHelper.TABLE_CATEGORY_NAME, id, LCategory.CATEGORY_STATE_DELETED);
-    }
-
-    public static void deleteTagById(long id) {
-        updateStateById(DBHelper.TABLE_TAG_NAME, id, LTag.TAG_STATE_DELETED);
-    }
-
     public static String getStringFromDbById(String table, String column, long id) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
@@ -173,145 +108,13 @@ public class DBAccess {
         return str;
     }
 
-    public static String getCategoryNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_NAME, id);
-    }
-
-    public static String getTagNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_NAME, id);
-    }
-
-    public static String getAccountNameById(long id) {
-        return getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
-    }
-
-    public static LTag getTagById(long id) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LTag tag = new LTag();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE _id=?", new String[]{"" + id});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with id: " + id);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getTagValues(csr, tag);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get tag with id: " + id + ":" + e.getMessage());
-            tag = null;
-        }
-        if (csr != null) csr.close();
-        return tag;
-    }
-
-    public static LCategory getCategoryByUuid(UUID uuid) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LCategory category = new LCategory();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with UUID: " + uuid);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getCategoryValues(csr, category);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get category with UUID: " + uuid + ":" + e.getMessage());
-            category = null;
-        }
-        if (csr != null) csr.close();
-        return category;
-    }
-
-
-    public static LTag getTagByUuid(UUID uuid) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LTag tag = new LTag();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with UUID: " + uuid);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getTagValues(csr, tag);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get tag with UUID: " + uuid + ":" + e.getMessage());
-            tag = null;
-        }
-        if (csr != null) csr.close();
-        return tag;
-    }
-
-    public static LAccount getAccountByUuid(UUID uuid) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LAccount account = new LAccount();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{uuid.toString()});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find account with UUID: " + uuid);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getAccountValues(csr, account);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get account with UUID: " + uuid + ":" + e.getMessage());
-            account = null;
-        }
-        if (csr != null) csr.close();
-        return account;
-    }
-
-    public static LTag getTagByName(String name) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        LTag tag = new LTag();
-
-        try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with name: " + name);
-                csr.close();
-                return null;
-            }
-
-            csr.moveToFirst();
-            getTagValues(csr, tag);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get tag with name: " + name + ":" + e.getMessage());
-            tag = null;
-        }
-        if (csr != null) csr.close();
-        return tag;
-    }
-
     public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
         LAccount account = new LAccount();
         HashSet<Integer> set = new HashSet<Integer>();
         SQLiteDatabase db = getReadDb();
         Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
                         + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + LAccount.ACCOUNT_STATE_ACTIVE});
+                new String[]{"" + DBHelper.STATE_ACTIVE});
         if (cur != null && cur.getCount() > 0) {
 
             cur.moveToFirst();
@@ -360,7 +163,7 @@ public class DBAccess {
 
     public static int getAccountIndexById(long id) {
         return getDbIndexById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_STATE,
-                LAccount.ACCOUNT_STATE_ACTIVE, id);
+                DBHelper.STATE_ACTIVE, id);
     }
 
     public static int getCategoryIndexById(long id) {
@@ -373,22 +176,6 @@ public class DBAccess {
                 LTag.TAG_STATE_ACTIVE, id);
     }
 
-    public static int updateTagNameById(long id, String name) {
-        LTag tag = getTagById(id);
-        if (tag == null) {
-            LLog.e(TAG, "tag no longer exists: " + id);
-            return -1;
-        }
-        tag.setName(name);
-
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
-            ContentValues cv = setTagValues(tag);
-            db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + id});
-            dirty = true;
-        }
-        return 0;
-    }
 
     public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, long id, Cursor cursor) {
         double income = 0;
@@ -487,53 +274,6 @@ public class DBAccess {
         return balance;
     }
 
-    public static boolean updateCategory(LCategory category) {
-        try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = setCategoryValues(category);
-                db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + category.getId()});
-            }
-            dirty = true;
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
-    }
-
-
-    public static boolean updateTag(LTag tag) {
-        try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = setTagValues(tag);
-                db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + tag.getId()});
-            }
-            dirty = true;
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /*
-    public static boolean updateAccount(LAccount account) {
-        try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = setAccountValues(account);
-                db.update(DBHelper.TABLE_ACCOUNT_NAME, cv, "_id=?", new String[]{"" + account.getId()});
-            }
-            dirty = true;
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
-    }
-*/
     public static boolean updateAccountBalance(long id, int year, String balance) {
         boolean exists = false;
         SQLiteDatabase db = getReadDb();
@@ -760,32 +500,23 @@ public class DBAccess {
         return true;
     }
 
-    /*
-    public static long getIdByRid(String table, UUID rid) {
-        SQLiteDatabase db = DBAccess.getReadDb();
-        Cursor csr = null;
-        long id = 0;
-
-        try {
-            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?",
-                    new String[]{"" + rid.toString()});
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
-                csr.close();
-                return 0;
-            }
-
-            csr.moveToFirst();
-            id = csr.getLong(0);
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to find entry with uuid: " + rid + " in table: " + table);
-        }
-        if (csr != null) csr.close();
-        return id;
-    }
-    */
-
     public static boolean updateColumnById(String table, long id, String column, String value) {
+        try {
+            synchronized (dbLock) {
+                SQLiteDatabase db = getWriteDb();
+                ContentValues cv = new ContentValues();
+                cv.put(column, value);
+                db.update(table, cv, "_id=?", new String[]{"" + id});
+            }
+            dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean updateColumnById(String table, long id, String column, int value) {
         try {
             synchronized (dbLock) {
                 SQLiteDatabase db = getWriteDb();

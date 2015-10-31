@@ -76,7 +76,8 @@ public class DBAccount {
 
         try {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+                            + DBHelper.TABLE_COLUMN_NAME + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find account with name: " + name);
                 csr.close();
@@ -87,6 +88,30 @@ public class DBAccount {
             getValues(csr, account);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with name: " + name + ":" + e.getMessage());
+            account = null;
+        }
+        if (csr != null) csr.close();
+        return account;
+    }
+
+    public static LAccount getByRid(String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LAccount account = new LAccount();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find account with rid: " + rid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, account);
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with rid: " + rid + ":" + e.getMessage());
             account = null;
         }
         if (csr != null) csr.close();
@@ -117,6 +142,10 @@ public class DBAccount {
         }
 
         return true;
+    }
+
+    public static void deleteById(long id) {
+        DBAccess.updateColumnById(DBHelper.TABLE_ACCOUNT_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
@@ -178,5 +207,9 @@ public class DBAccount {
                             + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{"" + DBHelper.STATE_ACTIVE});
         return cur;
+    }
+
+    public static String getNameById(long id) {
+        return DBAccess.getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 }

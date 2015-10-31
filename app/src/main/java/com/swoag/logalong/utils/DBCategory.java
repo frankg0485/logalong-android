@@ -55,8 +55,27 @@ public class DBCategory {
         return id;
     }
 
+    public static boolean update(LCategory category) {
+        try {
+            synchronized (DBAccess.dbLock) {
+                SQLiteDatabase db = DBAccess.getWriteDb();
+                ContentValues cv = setValues(category);
+                db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + category.getId()});
+            }
+            DBAccess.dirty = true;
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static boolean updateColumnById(long id, String column, String value) {
         return DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, column, value);
+    }
+
+    public static void deleteById(long id) {
+        DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static LCategory getById(long id) {
@@ -89,7 +108,8 @@ public class DBCategory {
 
         try {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=?", new String[]{name});
+                    + DBHelper.TABLE_COLUMN_NAME + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with name: " + name);
                 csr.close();
@@ -107,9 +127,37 @@ public class DBCategory {
         return category;
     }
 
+    public static LCategory getByRid(String rid) {
+        SQLiteDatabase db = DBAccess.getReadDb();
+        Cursor csr = null;
+        LCategory category = new LCategory();
+
+        try {
+            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
+                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            if (csr != null && csr.getCount() != 1) {
+                LLog.w(TAG, "unable to find category with rid: " + rid);
+                csr.close();
+                return null;
+            }
+
+            csr.moveToFirst();
+            getValues(csr, category);
+            category.setId(csr.getLong(0));
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get category with rid: " + rid + ":" + e.getMessage());
+            category = null;
+        }
+        if (csr != null) csr.close();
+        return category;
+    }
 
     public static long getIdByName(String name) {
         return DBAccess.getIdByName(DBHelper.TABLE_CATEGORY_NAME, name);
+    }
+
+    public static String getNameById(long id) {
+        return DBAccess.getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static long getIdByRid(String rid) {

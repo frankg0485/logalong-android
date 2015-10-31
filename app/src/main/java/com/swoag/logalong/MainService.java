@@ -289,7 +289,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountName = intent.getStringExtra("accountName");
                 uuid = intent.getStringExtra("UUID");
 
-                account = DBAccess.getAccountByUuid(UUID.fromString(uuid));
+                account = DBAccount.getByRid(uuid);
                 if (account == null) {
                     LLog.w(TAG, "warning: account removed?");
                 } else {

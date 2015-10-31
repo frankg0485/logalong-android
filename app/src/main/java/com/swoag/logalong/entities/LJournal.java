@@ -82,7 +82,7 @@ public class LJournal {
         LAccount account = DBAccount.getById(item.getAccount());
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
-        LTag tag = DBAccess.getTagById(item.getTag());
+        LTag tag = DBTag.getById(item.getTag());
         String rid = item.getRid();
 
         int type = item.getType();
@@ -354,7 +354,7 @@ public class LJournal {
                 } else {
                     if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
                         category1.setRid(sss[1]);
-                        DBAccess.updateCategory(category1);
+                        DBCategory.update(category1);
                     }
                     categoryId = category1.getId();
                 }
@@ -377,13 +377,13 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TAG)) {
                 String[] sss = ss[1].split(";");
 
-                LTag tag1 = DBAccess.getTagByName(sss[0]);
+                LTag tag1 = DBTag.getByName(sss[0]);
                 if (null == tag1) {
                     tagId = DBTag.add(new LTag(sss[0], sss[1]));
                 } else {
                     if (Long.parseLong(sss[2]) > tag1.getTimeStampLast()) {
                         tag1.setRid(sss[1]);
-                        DBAccess.updateTag(tag1);
+                        DBTag.update(tag1);
                     }
 
                     tagId = tag1.getId();
@@ -519,7 +519,7 @@ public class LJournal {
         }
 
         if (!rid.isEmpty()) {
-            LAccount account = DBAccess.getAccountByUuid(UUID.fromString(rid));
+            LAccount account = DBAccount.getByRid(rid);
             if (account == null) {
                 LLog.w(TAG, "account removed?");
             } else {
@@ -556,7 +556,7 @@ public class LJournal {
         }
 
         if (!rid.isEmpty()) {
-            LCategory category = DBAccess.getCategoryByUuid(UUID.fromString(rid));
+            LCategory category = DBCategory.getByRid(rid);
             if (category == null) {
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
@@ -565,7 +565,7 @@ public class LJournal {
                     if (!name.isEmpty()) category.setName(name);
                     if (stateFound) category.setState(state);
                     category.setTimeStampLast(timestampLast);
-                    DBAccess.updateCategory(category);
+                    DBCategory.update(category);
                 }
             }
         }
@@ -638,7 +638,7 @@ public class LJournal {
         }
 
         if (!rid.isEmpty()) {
-            LTag tag = DBAccess.getTagByUuid(UUID.fromString(rid));
+            LTag tag = DBTag.getByRid(rid);
             if (tag == null) {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
@@ -647,7 +647,7 @@ public class LJournal {
                     if (!name.isEmpty()) tag.setName(name);
                     if (stateFound) tag.setState(state);
                     tag.setTimeStampLast(timestampLast);
-                    DBAccess.updateTag(tag);
+                    DBTag.update(tag);
                 }
             }
         }

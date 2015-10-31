@@ -23,7 +23,10 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
@@ -125,13 +128,13 @@ public class ViewTransactionFragment extends LFragment {
 
                 switch (AppPersistency.viewTransactionFilter) {
                     case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                        summary.setName(DBAccess.getAccountNameById(lastId));
+                        summary.setName(DBAccount.getNameById(lastId));
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                        summary.setName(DBAccess.getCategoryNameById(lastId));
+                        summary.setName(DBCategory.getNameById(lastId));
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                        summary.setName(DBAccess.getTagNameById(lastId));
+                        summary.setName(DBTag.getNameById(lastId));
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
                         summary.setName(DBVendor.getNameById(lastId));
@@ -159,13 +162,13 @@ public class ViewTransactionFragment extends LFragment {
             summary = new LAccountSummary();
             switch (AppPersistency.viewTransactionFilter) {
                 case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                    summary.setName(DBAccess.getAccountNameById(id));
+                    summary.setName(DBAccount.getNameById(id));
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                    summary.setName(DBAccess.getCategoryNameById(id));
+                    summary.setName(DBCategory.getNameById(id));
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                    summary.setName(DBAccess.getTagNameById(id));
+                    summary.setName(DBTag.getNameById(id));
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
                     summary.setName(DBVendor.getNameById(id));
@@ -352,14 +355,14 @@ public class ViewTransactionFragment extends LFragment {
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
-            String category = DBAccess.getCategoryNameById(categoryId);
-            String tag = DBAccess.getTagNameById(tagId);
+            String category = DBCategory.getNameById(categoryId);
+            String tag = DBTag.getNameById(tagId);
 
             if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                 int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                 int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                String account = DBAccess.getAccountNameById(accountId);
-                String account2 = DBAccess.getAccountNameById(account2Id);
+                String account = DBAccount.getNameById(accountId);
+                String account2 = DBAccount.getNameById(account2Id);
 
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
                     tv.setText(account + " --> " + account2);
@@ -373,7 +376,7 @@ public class ViewTransactionFragment extends LFragment {
             } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    String account2 = DBAccess.getAccountNameById(account2Id);
+                    String account2 = DBAccount.getNameById(account2Id);
                     tv.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
 
                     tv = (TextView) mainView.findViewById(R.id.note);

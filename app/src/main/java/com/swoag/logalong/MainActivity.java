@@ -354,11 +354,11 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void initDb() {
-        if (DBAccess.getAccountNameById(1).isEmpty()) {
+        if (DBAccount.getNameById(1).isEmpty()) {
             addAccounts();
         }
 
-        if (DBAccess.getCategoryNameById(1).isEmpty()) {
+        if (DBCategory.getNameById(1).isEmpty()) {
             addCategories();
         }
         if (DBVendor.getNameById(1).isEmpty()) {

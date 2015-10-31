@@ -422,7 +422,7 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
                         LCategory category = DBCategory.getById(tag.id);
                         category.setName(newName);
                         category.setTimeStampLast(System.currentTimeMillis());
-                        DBAccess.updateCategory(category);
+                        DBCategory.update(category);
 
                         journal = new LJournal();
                         journal.updateCategory(category);
@@ -438,10 +438,10 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
                         journal.updateVendor(vendor);
                         break;
                     case R.id.tags:
-                        LTag tag1 = DBAccess.getTagById(tag.id);
+                        LTag tag1 = DBTag.getById(tag.id);
                         tag1.setName(newName);
                         tag1.setTimeStampLast(System.currentTimeMillis());
-                        DBAccess.updateTag(tag1);
+                        DBTag.update(tag1);
 
                         journal = new LJournal();
                         journal.updateTag(tag1);
@@ -483,16 +483,16 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
                 case R.id.remove:
                     switch (listId) {
                         case R.id.accounts:
-                            DBAccess.deleteAccountById(tag.id);
+                            DBAccount.deleteById(tag.id);
                             break;
                         case R.id.categories:
-                            DBAccess.deleteCategoryById(tag.id);
+                            DBCategory.deleteById(tag.id);
                             break;
                         case R.id.vendors:
                             DBVendor.deleteById(tag.id);
                             break;
                         case R.id.tags:
-                            DBAccess.deleteTagById(tag.id);
+                            DBTag.deleteById(tag.id);
                             break;
                     }
 
