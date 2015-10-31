@@ -15,7 +15,7 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
-public class LDollarAmountPicker extends Dialog {
+public class LDollarAmountPicker extends Dialog implements View.OnClickListener {
     private static final String TAG = LDollarAmountPicker.class.getSimpleName();
 
     private Context context;
@@ -52,25 +52,25 @@ public class LDollarAmountPicker extends Dialog {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.dollar_amount_picker);
 
-        view0 = setViewListener(R.id.b0);
-        view1 = setViewListener(R.id.b1);
-        view2 = setViewListener(R.id.b2);
-        view3 = setViewListener(R.id.b3);
-        view4 = setViewListener(R.id.b4);
-        view5 = setViewListener(R.id.b5);
-        view6 = setViewListener(R.id.b6);
-        view7 = setViewListener(R.id.b7);
-        view8 = setViewListener(R.id.b8);
-        view9 = setViewListener(R.id.b9);
-        viewBackSpace = setViewListener(R.id.backspace);
-        viewDot = setViewListener(R.id.dot);
-        viewPlus = setViewListener(R.id.plus);
-        viewMinus = setViewListener(R.id.minus);
-        viewMultiply = setViewListener(R.id.multiply);
-        viewDivide = setViewListener(R.id.divide);
-        viewClear = setViewListener(R.id.clear);
-        viewCancel = setViewListener(R.id.cancel);
-        viewSave = setViewListener(R.id.ok);
+        view0 = setViewListener(R.id.b0, false);
+        view1 = setViewListener(R.id.b1, false);
+        view2 = setViewListener(R.id.b2, false);
+        view3 = setViewListener(R.id.b3, false);
+        view4 = setViewListener(R.id.b4, false);
+        view5 = setViewListener(R.id.b5, false);
+        view6 = setViewListener(R.id.b6, false);
+        view7 = setViewListener(R.id.b7, false);
+        view8 = setViewListener(R.id.b8, false);
+        view9 = setViewListener(R.id.b9, false);
+        viewBackSpace = setViewListener(R.id.backspace, false);
+        viewDot = setViewListener(R.id.dot, true);
+        viewPlus = setViewListener(R.id.plus, true);
+        viewMinus = setViewListener(R.id.minus, true);
+        viewMultiply = setViewListener(R.id.multiply, true);
+        viewDivide = setViewListener(R.id.divide, true);
+        viewClear = setViewListener(R.id.clear, true);
+        viewCancel = setViewListener(R.id.cancel, true);
+        viewSave = setViewListener(R.id.ok, true);
 
         valueTV = (TextView) findViewById(R.id.value);
         clearInputString();
@@ -110,41 +110,8 @@ public class LDollarAmountPicker extends Dialog {
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
-                case R.id.b0:
-                    appendToString(0);
-                    break;
-                case R.id.b1:
-                    appendToString(1);
-                    break;
-                case R.id.b2:
-                    appendToString(2);
-                    break;
-                case R.id.b3:
-                    appendToString(3);
-                    break;
-                case R.id.b4:
-                    appendToString(4);
-                    break;
-                case R.id.b5:
-                    appendToString(5);
-                    break;
-                case R.id.b6:
-                    appendToString(6);
-                    break;
-                case R.id.b7:
-                    appendToString(7);
-                    break;
-                case R.id.b8:
-                    appendToString(8);
-                    break;
-                case R.id.b9:
-                    appendToString(9);
-                    break;
                 case R.id.dot:
                     appendToString(-1);
-                    break;
-                case R.id.backspace:
-                    removeLastDigitFromString();
                     break;
                 case R.id.clear:
                     clearInputString();
@@ -178,9 +145,50 @@ public class LDollarAmountPicker extends Dialog {
         }
     }
 
-    private View setViewListener(int id) {
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.b0:
+                appendToString(0);
+                break;
+            case R.id.b1:
+                appendToString(1);
+                break;
+            case R.id.b2:
+                appendToString(2);
+                break;
+            case R.id.b3:
+                appendToString(3);
+                break;
+            case R.id.b4:
+                appendToString(4);
+                break;
+            case R.id.b5:
+                appendToString(5);
+                break;
+            case R.id.b6:
+                appendToString(6);
+                break;
+            case R.id.b7:
+                appendToString(7);
+                break;
+            case R.id.b8:
+                appendToString(8);
+                break;
+            case R.id.b9:
+                appendToString(9);
+                break;
+            case R.id.backspace:
+                removeLastDigitFromString();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private View setViewListener(int id, boolean myListener) {
         View view = findViewById(id);
-        view.setOnClickListener(myClickListener);
+        view.setOnClickListener(myListener ? myClickListener : this);
         return view;
     }
 
