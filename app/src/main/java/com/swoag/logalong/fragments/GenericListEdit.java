@@ -37,6 +37,7 @@ import com.swoag.logalong.views.LNewAccountDialog;
 import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LShareAccountDialog;
+import com.swoag.logalong.views.LWarnDialog;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -238,7 +239,8 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
             GenericListOptionDialog.GenericListOptionDialogItf,
             LRenameDialog.LRenameDialogItf,
             LShareAccountDialog.LShareAccountDialogItf,
-            LMultiSelectionDialog.OnMultiSelectionDialogItf {
+            LMultiSelectionDialog.OnMultiSelectionDialogItf,
+            LWarnDialog.LWarnDialogItf {
         private GenericListOptionDialog optionDialog;
         private ClickListener clickListener;
 
@@ -477,33 +479,62 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
         }
 
         @Override
+        public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
+            VTag tag = (VTag)obj;
+
+            if (confirm && ok) {
+                switch (listId) {
+                    case R.id.accounts:
+                        DBAccount.deleteById(tag.id);
+                        break;
+                    case R.id.categories:
+                        DBCategory.deleteById(tag.id);
+                        break;
+                    case R.id.vendors:
+                        DBVendor.deleteById(tag.id);
+                        break;
+                    case R.id.tags:
+                        DBTag.deleteById(tag.id);
+                        break;
+                }
+
+                Cursor cursor = getMyCursor();
+                if (null == cursor) {
+                    LLog.e(TAG, "fatal: unable to open database");
+                } else {
+                    adapter.swapCursor(cursor);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+            optionDialog.dismiss();
+        }
+
+        @Override
         public boolean onGenericListOptionDialogExit(Object context, int viewId) {
             VTag tag = (VTag) context;
             switch (viewId) {
                 case R.id.remove:
+                    String msg = "";
                     switch (listId) {
                         case R.id.accounts:
-                            DBAccount.deleteById(tag.id);
+                            msg = activity.getString(R.string.warning_delete_account);
                             break;
                         case R.id.categories:
-                            DBCategory.deleteById(tag.id);
+                            msg = activity.getString(R.string.warning_delete_category);
                             break;
                         case R.id.vendors:
-                            DBVendor.deleteById(tag.id);
+                            msg = activity.getString(R.string.warning_delete_vendor);
                             break;
                         case R.id.tags:
-                            DBTag.deleteById(tag.id);
+                            msg = activity.getString(R.string.warning_delete_tag);
                             break;
                     }
-
-                    Cursor cursor = getMyCursor();
-                    if (null == cursor) {
-                        LLog.e(TAG, "fatal: unable to open database");
-                    } else {
-                        adapter.swapCursor(cursor);
-                        adapter.notifyDataSetChanged();
-                    }
-                    break;
+                    LWarnDialog warnDialog = new LWarnDialog(activity, tag, this,
+                            activity.getString(R.string.delete), msg,
+                            activity.getString(R.string.delete_now),
+                            true);
+                    warnDialog.show();
+                    return true;
                 case R.id.rename:
                     String title = "";
                     switch (listId) {
@@ -549,6 +580,7 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
             return false;
         }
 
+
         @Override
         public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections) {
             VTag tag = (VTag) obj;
@@ -572,5 +604,7 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
             }
         }
     }
+
+
 }
 

@@ -1,0 +1,150 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dialog_bg_color"
+    android:gravity="center"
+    android:weightSum="100">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="240dp"
+        android:layout_weight="90"
+        android:background="@drawable/dialog_bgd"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="3dp">
+
+        <LinearLayout
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dialog_title_height"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:padding="6dp"
+                android:singleLine="true"
+                android:textColor="@color/base_text_color"
+                android:textSize="@dimen/settings_option_text_size"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/closeDialog"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="2dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                android:src="@drawable/ic_action_cancel" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="#000"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:background="#ffb4b6b8"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp">
+
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_horizontal"
+                            android:padding="1dp">
+
+                            <TextView
+                                android:id="@+id/msg"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="top"
+                                android:padding="10dp"
+                                android:textColor="@color/base_text_color" />
+                        </RelativeLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/confirmView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="5dp"
+                        android:visibility="gone">
+
+                        <CheckBox
+                            android:id="@+id/checkboxConfirm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="20dp"
+                            android:button="@drawable/btn_check_holo_light"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <LinearLayout
+                        android:id="@+id/buttons"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dialog_btn_height"
+                        android:layout_marginLeft="1dp"
+                        android:layout_marginRight="1dp"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/cancelDialog"
+                            style="@style/dialogButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="1dp"
+                            android:layout_weight="1"
+                            android:text="@android:string/cancel" />
+
+                        <Button
+                            android:id="@+id/confirmDialog"
+                            style="@style/dialogButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@android:string/ok" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

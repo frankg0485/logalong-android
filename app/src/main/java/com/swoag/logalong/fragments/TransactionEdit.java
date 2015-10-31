@@ -30,12 +30,13 @@ import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LSelectionDialog;
+import com.swoag.logalong.views.LWarnDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
-        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf {
+        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf, LWarnDialog.LWarnDialogItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -335,8 +336,12 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     }
                     break;
                 case R.id.discard:
-                    callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
-                    destroy();
+                    LWarnDialog warnDialog = new LWarnDialog(activity, null, TransactionEdit.this,
+                            activity.getString(R.string.delete),
+                            activity.getString(R.string.warning_delete_record),
+                            activity.getString(R.string.delete_now),
+                            true);
+                    warnDialog.show();
                     break;
 
                 case R.id.goback:
@@ -358,6 +363,14 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     public void dismiss() {
         callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
         destroy();
+    }
+
+    @Override
+    public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
+        if (confirm && ok) {
+            callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
+            destroy();
+        }
     }
 
     @Override

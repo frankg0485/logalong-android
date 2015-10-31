@@ -24,8 +24,9 @@ import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LWarnDialog;
 
-public class DataBackupEdit {
+public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     private static final String TAG = DataBackupEdit.class.getSimpleName();
 
     private Activity activity;
@@ -92,12 +93,12 @@ public class DataBackupEdit {
                     break;
 
                 case R.id.restoreView:
-                    if (DBPorter.importDb(DBHelper.DB_VERSION)) {
-                        //restoreDateTV.setText(DBPorter.getImportDate());
-                        displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_done));
-                    } else {
-                        displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_error));
-                    }
+                    LWarnDialog warnDialog = new LWarnDialog(activity, null, DataBackupEdit.this,
+                            activity.getString(R.string.restore_db),
+                            activity.getString(R.string.warning_restore_db),
+                            activity.getString(R.string.restore_now),
+                            true);
+                    warnDialog.show();
                     break;
 
                 case R.id.save:
@@ -140,6 +141,18 @@ public class DataBackupEdit {
         View view = v.findViewById(id);
         view.setOnClickListener(myClickListener);
         return view;
+    }
+
+    @Override
+    public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
+        if (confirm && ok) {
+            if (DBPorter.importDb(DBHelper.DB_VERSION)) {
+                //restoreDateTV.setText(DBPorter.getImportDate());
+                displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_done));
+            } else {
+                displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_error));
+            }
+        }
     }
 }
 

@@ -12,6 +12,8 @@
     <string name="categories">Categories</string>
     <string name="change_user_name">Change User Name</string>
     <string name="data_backup">Data Backup</string>
+    <string name="delete">Delete</string>
+    <string name="delete_now">Delete now</string>
     <string name="done">Done</string>
     <string name="edit">Edit</string>
     <string name="expense">Expense</string>
@@ -58,8 +60,10 @@
     <string name="repeat_every">Repeat every</string>
     <string name="repeat_for">Repeat for</string>
     <string name="reports">Reports</string>
+    <string name="restore_db">Restore data</string>
     <string name="restore_data_from_sd_card">Restore data from SD card</string>
     <string name="restored_on">Restored on</string>
+    <string name="restore_now">Restore now</string>
     <string name="save">Save</string>
     <string name="scheduled_transactions">Scheduled Transactions</string>
     <string name="select_account">Select Account</string>
@@ -86,7 +90,13 @@
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
     <string name="payee_payers">Payee/Payers</string>
+    <string name="warning_delete_account">Account and all its associated records will be permanently deleted.</string>
+    <string name="warning_delete_category">Category will be permanently deleted.</string>
+    <string name="warning_delete_record">Record will be permanently deleted.</string>
+    <string name="warning_delete_tag">Tag will be permanently deleted.</string>
+    <string name="warning_delete_vendor">Payer/Payee will be permanently deleted.</string>
     <string name="warning_get_share_user_time_out">Unable to connect to server, please try later.</string>
+    <string name="warning_restore_db">To keep data consistent, please restore on fresh App installation, and setup account share again if any were shared.</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
     <string name="warning_unable_to_update_profile">Unable to update user profile, please try later.</string>

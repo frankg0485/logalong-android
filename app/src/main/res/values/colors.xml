@@ -22,6 +22,7 @@
     <color name="base_blue">#4238bb</color>
     <color name="base_blue_color">#2487ab</color>
     <color name="dialog_bg_color">#a0000000</color>
+    <color name="dialog_border_color">#848688</color>
     <color name="released_base_btn_background">#42bb38</color>
     <color name="pressed_base_btn_background">#52cb48</color>
     <color name="released_quickie_btn_background">#b4cdcd</color>
@@ -36,4 +37,6 @@
     <color name="pressed_login_btn_background">#52cb48</color>
     <color name="released_alt_login_btn_background">#708088</color>
     <color name="pressed_alt_login_btn_background">#879f9f</color>
+    <color name="pressed_dialog_btn_background">#979f9f</color>
+    <color name="released_dialog_btn_background">#a4a6a8</color>
 </resources>
