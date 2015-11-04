@@ -36,6 +36,7 @@
 
             <ImageView
                 android:id="@+id/closeDialog"
+                android:visibility="gone"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:layout_gravity="center_vertical"
@@ -67,9 +68,7 @@
                     android:layout_marginTop="1dp"
                     android:background="#ffb4b6b8"
                     android:orientation="vertical"
-                    android:paddingBottom="3dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
+
                     android:paddingTop="5dp">
 
                     <LinearLayout
@@ -97,7 +96,6 @@
                                 android:textColor="@color/base_text_color" />
                         </RelativeLayout>
                     </LinearLayout>
-
 
                     <LinearLayout
                         android:id="@+id/payeePayerView"
@@ -163,22 +161,22 @@
                         android:id="@+id/buttons"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dialog_btn_height"
-                        android:layout_margin="10dp"
-                        android:orientation="horizontal"
-                        android:padding="2dp">
+                        android:layout_marginLeft="1dp"
+                        android:layout_marginRight="1dp"
+                        android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/cancelDialog"
-                            style="@style/dialogButtons"
+                            style="@style/dialogButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginRight="5dp"
+                            android:layout_marginRight="1dp"
                             android:layout_weight="1"
                             android:text="@android:string/cancel" />
 
                         <Button
                             android:id="@+id/confirmDialog"
-                            style="@style/dialogButtons"
+                            style="@style/dialogButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

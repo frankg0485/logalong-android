@@ -13,16 +13,12 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTag;
-import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
-import com.swoag.logalong.utils.AppPersistency;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
@@ -33,18 +29,16 @@ import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
-import com.swoag.logalong.views.LNewAccountDialog;
+import com.swoag.logalong.views.LNewEntryDialog;
 import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LShareAccountDialog;
 import com.swoag.logalong.views.LWarnDialog;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 
-public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
+public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
     private static final String TAG = GenericListEdit.class.getSimpleName();
 
     private Activity activity;
@@ -117,101 +111,37 @@ public class GenericListEdit implements LNewAccountDialog.LNewAccountDialogItf {
             switch (v.getId()) {
                 case R.id.add:
                     String title = "";
+                    int type = 0;
                     switch (listId) {
                         case R.id.accounts:
                             title = activity.getString(R.string.new_account);
+                            type = LNewEntryDialog.TYPE_ACCOUNT;
                             break;
                         case R.id.categories:
                             title = activity.getString(R.string.new_category);
+                            type = LNewEntryDialog.TYPE_CATEGORY;
                             break;
                         case R.id.vendors:
                             title = activity.getString(R.string.new_vendor);
+                            type = LNewEntryDialog.TYPE_VENDOR;
                             break;
                         case R.id.tags:
                             title = activity.getString(R.string.new_tag);
+                            type = LNewEntryDialog.TYPE_TAG;
                             break;
                         default:
                             break;
                     }
-                    LNewAccountDialog newAccountDialog = new LNewAccountDialog(activity, listId, GenericListEdit.this, title, null, attr1, attr2);
-                    newAccountDialog.show();
+                    LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, 0, type, GenericListEdit.this, title, null, attr1, attr2);
+                    newEntryDialog.show();
                     break;
             }
         }
     }
 
     @Override
-    public boolean isNewAccountNameAvailable(String name) {
-        if (name != null && !name.isEmpty()) {
-            String table;
-            switch (listId) {
-                case R.id.accounts:
-                    table = DBHelper.TABLE_ACCOUNT_NAME;
-                    break;
-
-                case R.id.categories:
-                    table = DBHelper.TABLE_CATEGORY_NAME;
-                    break;
-
-                case R.id.vendors:
-                    table = DBHelper.TABLE_VENDOR_NAME;
-                    break;
-
-                case R.id.tags:
-                    table = DBHelper.TABLE_TAG_NAME;
-                    break;
-
-                default:
-                    return false;
-            }
-            return DBAccess.isNameAvailable(table, name);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onNewAccountDialogExit(int id, boolean created, String name, boolean attr1, boolean attr2) {
+    public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2) {
         if (created && name != null && !name.isEmpty()) {
-            switch (id) {
-                case R.id.accounts:
-                    long did = DBAccount.add(new LAccount(name));
-                    LPreferences.setShowAccountBalance(did, attr1);
-
-                    LAllBalances.getInstance(true);
-                    break;
-
-                case R.id.categories:
-                    LCategory category = new LCategory(name);
-                    DBCategory.add(category);
-
-                    LJournal journal = new LJournal();
-                    journal.updateCategory(category);
-                    break;
-
-                case R.id.vendors:
-                    int type = LVendor.TYPE_PAYEE;
-                    if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
-                    else if (attr1) type = LVendor.TYPE_PAYEE;
-                    else type = LVendor.TYPE_PAYER;
-                    LVendor vendor = new LVendor(name, type);
-                    DBVendor.add(vendor);
-
-                    journal = new LJournal();
-                    journal.updateVendor(vendor);
-                    break;
-
-                case R.id.tags:
-                    LTag tag = new LTag(name);
-                    DBTag.add(tag);
-
-                    journal = new LJournal();
-                    journal.updateTag(tag);
-                    break;
-
-                default:
-                    break;
-            }
-
             Cursor cursor = getMyCursor();
             if (null == cursor) {
                 LLog.e(TAG, "fatal: unable to open database");

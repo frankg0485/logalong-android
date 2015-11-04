@@ -602,7 +602,7 @@ public class ViewTransactionFragment extends LFragment {
         }
 
         long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        if (ym < allBalances.getStartDate() || ym > allBalances.getEndDate()) {
+        if (ym < allBalances.getStartDate() || ym >= allBalances.getEndDate()) {
             AppPersistency.viewTransactionYear = year;
             AppPersistency.viewTransactionMonth = month;
             return false;

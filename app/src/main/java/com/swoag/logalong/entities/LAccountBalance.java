@@ -36,32 +36,34 @@ public class LAccountBalance {
         }
 
         if (this.balances.size() <= 0) return;
-        latestBalance = balances.get(boxer.y)[11];
+
+        Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(boxer.ly);
+        int endYear = now.get(Calendar.YEAR);
+        latestBalance = balances.get(endYear)[11];
 
         // set start end date if there's balance
-        Calendar now = Calendar.getInstance();
-        now.clear();
-        double[] bal = balances.get(boxer.x);
-        int ii;
-        for (ii = 0; ii < 12; ii++) {
-            if (bal[ii] != 0) break;
-        }
-        if (ii == 12) ii = 11;
-        now.set(boxer.x, ii, 1);
-        startDate = now.getTimeInMillis();
+        startDate = getMsOnStartOfMonth(boxer.lx, false);
+        endDate = getMsOnStartOfMonth(boxer.ly, true);
+    }
 
-        now.clear();
-        bal = balances.get(boxer.y);
-        double lastV = bal[11];
-        for (ii = 10; ii >= 0; ii--) {
-            if (bal[ii] != lastV) {
-                ii++;
-                break;
+    private long getMsOnStartOfMonth (long ms, boolean nextMonth) {
+        Calendar now = Calendar.getInstance();
+
+        now.setTimeInMillis(ms);
+        int year, month;
+        year = now.get(Calendar.YEAR);
+        month = now.get(Calendar.MONTH);
+        if (nextMonth) {
+            if (month < 11) month++;
+            else {
+                month = 0;
+                year++;
             }
         }
-        if (ii == -1) ii = 0;
-        now.set(boxer.y, ii, 1);
-        endDate = now.getTimeInMillis();
+        now.clear();
+        now.set(year, month, 1);
+        return now.getTimeInMillis();
     }
 
     public long getAccountId() {

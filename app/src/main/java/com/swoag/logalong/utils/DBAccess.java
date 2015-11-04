@@ -319,12 +319,17 @@ public class DBAccess {
     }
 
     // scans through transaction to compile account monthly balances, from the very first transaction to the latest, in that order.
+    // return boxer.lx: start timestamp
+    //              ly: end timestamp
+
     public static HashMap<Integer, double[]> scanAccountBalanceById(long id, LBoxer boxer) {
         SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         HashMap<Integer, double[]> balances = new HashMap<Integer, double[]>();
 
         long timestamp;
+        boxer.lx = -1;
+        boxer.ly = -1;
         try {
             csr = db.rawQuery("SELECT "
                             + DBHelper.TABLE_COLUMN_AMOUNT + ","
@@ -344,8 +349,6 @@ public class DBAccess {
                 int lastYear = -1;
                 int month;
                 double[] lastAmount;
-                boxer.x = -1; //startYear
-                boxer.y = -1; //endYear
                 do {
                     int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     double v = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
@@ -353,6 +356,8 @@ public class DBAccess {
                         v = -v;
                     }
                     timestamp = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    if (boxer.lx == -1) boxer.lx = timestamp;
+                    boxer.ly = timestamp;
 
                     now.setTimeInMillis(timestamp);
 
@@ -394,9 +399,6 @@ public class DBAccess {
                     lastMonth = month;
                     lastYear = year;
                     lastAmount = amount;
-
-                    if (boxer.x == -1) boxer.x = year;
-                    boxer.y = year;
                 } while (csr.moveToNext());
                 csr.close();
 
@@ -532,15 +534,21 @@ public class DBAccess {
         return true;
     }
 
-    private static long getIdByColumn(String table, String column, String value) {
+    private static long getIdByColumn(String table, String column, String value, boolean caseSensitive) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
         long id = 0;
 
         try {
-            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
-                            + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+            if (caseSensitive) {
+                csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
+                                + DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+            } else {
+                csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? COLLATE NOCASE AND "
+                                + DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+            }
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
                 csr.close();
@@ -557,10 +565,10 @@ public class DBAccess {
     }
 
     public static long getIdByName(String table, String name) {
-        return getIdByColumn(table, DBHelper.TABLE_COLUMN_NAME, name);
+        return getIdByColumn(table, DBHelper.TABLE_COLUMN_NAME, name, false);
     }
 
     public static long getIdByRid(String table, String rid) {
-        return getIdByColumn(table, DBHelper.TABLE_COLUMN_RID, rid);
+        return getIdByColumn(table, DBHelper.TABLE_COLUMN_RID, rid, false);
     }
 }

@@ -76,7 +76,7 @@ public class DBAccount {
 
         try {
             csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_ACCOUNT_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_NAME + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                            + DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE});
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find account with name: " + name);

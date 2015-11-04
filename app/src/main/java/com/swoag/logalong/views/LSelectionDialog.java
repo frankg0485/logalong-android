@@ -48,17 +48,19 @@ public class LSelectionDialog extends Dialog
     public Context context;
     private EditText searchText;
     private ListView mList;
+    private MyCursorAdapter myCursorAdapter;
 
-	/* 0: layoutId;
-     * 1: itemLayoutId;
-	 * 2: titleId;
-	 * 3: saveBtnId;
-	 * 4: cancelBtnId;
-	 * 5: selectradioButtonId;
-	 * 6: mainEntryTextId;
-	 * 7: listViewId;
+	/* 0: layoutId
+     * 1: itemLayoutId
+	 * 2: titleId
+	 * 3: saveBtnId
+	 * 4: cancelBtnId
+	 * 5: selectradioButtonId
+	 * 6: mainEntryTextId
+	 * 7: listViewId
 	 * 8: searchText
 	 * 9: titleStringId
+	 * 10: addNewId
 	 */
 
     private int[] ids;
@@ -79,7 +81,7 @@ public class LSelectionDialog extends Dialog
         this.context = context;
         this.callback = callback;
 
-        this.mCursor = callback.onGetCursor(table, column);
+        this.mCursor = callback.onSelectionGetCursor(table, column);
 
         this.ids = ids;
         this.table = table;
@@ -93,7 +95,9 @@ public class LSelectionDialog extends Dialog
     }
 
     public interface OnSelectionDialogItf {
-        public Cursor onGetCursor(String table, String column);
+        public Cursor onSelectionGetCursor(String table, String column);
+
+        public void onSelectionAddNew(int dlgId);
 
         public void onSelectionDialogExit(int dlgId, long selectedId);
     }
@@ -110,9 +114,9 @@ public class LSelectionDialog extends Dialog
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(ids[0]);
 
-        //((LinearLayout) findViewById(ids[5])).setOnClickListener(this);
-        ((TextView) findViewById(ids[3])).setOnClickListener(myClickListener);
-        ((TextView) findViewById(ids[4])).setOnClickListener(myClickListener);
+        findViewById(ids[10]).setOnClickListener(myClickListener);
+        findViewById(ids[3]).setOnClickListener(myClickListener);
+        findViewById(ids[4]).setOnClickListener(myClickListener);
         ((TextView) findViewById(ids[2])).setText(context.getString(ids[9]));
 
         bitSet.clear();
@@ -125,8 +129,9 @@ public class LSelectionDialog extends Dialog
             searchText.setCursorVisible(false);
 
             mList.setFastScrollEnabled(true);
-            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                    mCursor, ids[1], column, ids[6], ids[5]));
+            myCursorAdapter = new MyCursorAdapter(context.getApplicationContext(),
+                    mCursor, ids[1], column, ids[6], ids[5]);
+            mList.setAdapter(myCursorAdapter);
 
             if (startPosition != -1) {
                 bitSet.set(startPosition, true);
@@ -137,11 +142,30 @@ public class LSelectionDialog extends Dialog
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    public void refresh(int selectPosition) {
+        mCursor = callback.onSelectionGetCursor(table, column);
+        myCursorAdapter.swapCursor(mCursor);
+        myCursorAdapter.notifyDataSetChanged();
+
+        if (selectPosition != -1) {
+            mList.setSelection(selectPosition);
+            bitSet.set(selectPosition, true);
+        }
+        mList.invalidateViews();
+    }
+
     public void setSelection(int position) {
         try {
-            mList.setSelection(position);
-            bitSet.set(position, true);
-            mList.invalidateViews();
+            if (position != -1) {
+                mList.setSelection(position);
+                bitSet.set(position, true);
+                mList.invalidateViews();
+            }
         } catch (Exception e) {
         }
     }
@@ -190,6 +214,9 @@ public class LSelectionDialog extends Dialog
                 leave(false);
             } else if (id == ids[8]) {
                 hideSoftKeyboard();
+            } else if (id == ids[10]) {
+                if (callback != null)
+                    callback.onSelectionAddNew(dlgId);
             }
         }
     }
@@ -227,7 +254,7 @@ public class LSelectionDialog extends Dialog
     @Override
     public void afterTextChanged(Editable s) {
         String newStr = searchText.getText().toString().trim();
-        mCursor = callback.onGetCursor(table, newStr);
+        mCursor = callback.onSelectionGetCursor(table, newStr);
 
         mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
                 mCursor, ids[1], column, ids[6], ids[5]));

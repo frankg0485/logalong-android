@@ -5,18 +5,15 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccess;
@@ -25,10 +22,10 @@ import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
+import com.swoag.logalong.views.LNewEntryDialog;
 import com.swoag.logalong.views.LSelectionDialog;
 import com.swoag.logalong.views.LWarnDialog;
 
@@ -36,7 +33,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
-        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf, LWarnDialog.LWarnDialogItf {
+        LNewEntryDialog.LNewEntryDialogItf,
+        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf,
+        LWarnDialog.LWarnDialogItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -374,7 +373,62 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     @Override
-    public Cursor onGetCursor(String table, String column) {
+    public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2) {
+        if (created && (!name.isEmpty())) {
+            int selection = -1;
+            switch (id) {
+                case DLG_ID_ACCOUNT:
+                    selection = DBAccess.getAccountIndexById(item.getAccount());
+                    break;
+                case DLG_ID_ACCOUNT2:
+                    selection = DBAccess.getAccountIndexById(item.getAccount2());
+                    break;
+                case DLG_ID_CATEGORY:
+                    selection = DBAccess.getCategoryIndexById(item.getCategory());
+                    break;
+                case DLG_ID_VENDOR:
+                    selection = item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
+                            DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor());
+                    break;
+                case DLG_ID_TAG:
+                    selection = DBAccess.getTagIndexById(item.getTag());
+                    break;
+            }
+            mSelectionDialog.refresh(selection);
+        }
+        return true;
+    }
+
+    @Override
+    public void onSelectionAddNew(int dlgId) {
+        boolean attr1 = true, attr2 = false;
+        String title = "";
+        int type = 0;
+        switch (dlgId) {
+            case DLG_ID_ACCOUNT:
+            case DLG_ID_ACCOUNT2:
+                title = activity.getString(R.string.new_account);
+                type = LNewEntryDialog.TYPE_ACCOUNT;
+                break;
+            case DLG_ID_CATEGORY:
+                title = activity.getString(R.string.new_category);
+                type = LNewEntryDialog.TYPE_CATEGORY;
+                break;
+            case DLG_ID_VENDOR:
+                title = activity.getString(R.string.new_vendor);
+                type = LNewEntryDialog.TYPE_VENDOR;
+                break;
+            case DLG_ID_TAG:
+                title = activity.getString(R.string.new_tag);
+                type = LNewEntryDialog.TYPE_TAG;
+                break;
+        }
+        LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, dlgId, type, TransactionEdit.this, title, null, attr1, attr2);
+        newEntryDialog.show();
+    }
+
+    @Override
+    public Cursor onSelectionGetCursor(String table, String column) {
         if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))
             return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
@@ -437,7 +491,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             R.id.name,
             R.id.list,
             R.id.searchText,
-            R.string.select_account};
+            R.string.select_account,
+            R.id.add};
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);
