@@ -72,57 +72,51 @@ public class DBTransaction {
     }
 
     public static void update(LTransaction item) {
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
-            ContentValues cv = setValues(item);
-            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + item.getId()});
-
-            //duplicate record for transfer
-            if ((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
-                    (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
-                long dbid = 0;
-                LTransaction item2 = new LTransaction(item);
-                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                    item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                    item2.setRid(item.getRid() + "2");
-                } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
-                    item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
-                    item2.setRid(item.getRid().substring(0, item.getRid().length() - 1));
-                }
-
-                item2.setAccount(item.getAccount2());
-                item2.setAccount2(item.getAccount());
-                cv = setValues(item2);
-
-                dbid = DBAccess.getIdByRid(DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
-                if (dbid <= 0) {
-                    db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
-                } else {
-                    db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + dbid});
-                }
-            }
-
-            DBAccess.dirty = true;
-        }
+        update(LApp.ctx, item);
     }
 
-    public static void updateOwnerById(int madeBy, long id) {
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
-            ContentValues cv = new ContentValues();
-            cv.put(DBHelper.TABLE_COLUMN_MADEBY, madeBy);
-            db.update(DBHelper.TABLE_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + id});
-            DBAccess.dirty = true;
+    public static void update(Context context, LTransaction item) {
+        ContentValues cv = setValues(item);
+        context.getContentResolver().update(DBProvider.URI_TRANSACTION, cv, "_id=?", new String[]{"" + item.getId()});
+
+        //duplicate record for transfer
+        if ((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
+                (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
+            long dbid = 0;
+            LTransaction item2 = new LTransaction(item);
+            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+                item2.setRid(item.getRid() + "2");
+            } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                item2.setRid(item.getRid().substring(0, item.getRid().length() - 1));
+            }
+
+            item2.setAccount(item.getAccount2());
+            item2.setAccount2(item.getAccount());
+            cv = setValues(item2);
+
+            dbid = DBAccess.getIdByRid(context, DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
+            if (dbid <= 0) {
+                context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
+            } else {
+                context.getContentResolver().update(DBProvider.URI_TRANSACTION, cv,
+                        "_id=?", new String[]{"" + dbid});
+            }
         }
     }
 
     public static LTransaction getById(long id) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getById(LApp.ctx, id);
+    }
+
+    public static LTransaction getById(Context context, long id) {
         Cursor csr = null;
         String str = "";
         LTransaction item = new LTransaction();
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE _id=?", new String[]{"" + id});
+            csr = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+                    "_id=?", new String[]{"" + id}, null);
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find id: " + id + " from log table");
                 csr.close();
@@ -144,11 +138,12 @@ public class DBTransaction {
     }
 
     public static LTransaction getByRid(String rid) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByRid(LApp.ctx, rid);
+    }
 
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME + " WHERE " +
-                        DBHelper.TABLE_COLUMN_RID + " =?",
-                new String[]{rid});
+    public static LTransaction getByRid(Context context, String rid) {
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+                DBHelper.TABLE_COLUMN_RID + " =?", new String[]{rid}, null);
         if (cur != null && cur.getCount() > 0) {
             if (cur.getCount() != 1) {
                 LLog.e(TAG, "unexpected error: duplicated record");
@@ -163,97 +158,25 @@ public class DBTransaction {
         return null;
     }
 
-    public static Cursor getCursorInRange(long start, long end) {
-        SQLiteDatabase db = DBAccess.getReadDb();
-        Cursor cur;
-        if (start == -1 || end == -1) {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
-        } else {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
-        }
-        return cur;
-    }
-
-    private static Cursor getCursorInRangeSortBy(String table, String column, long start, long end) {
-        String select = "SELECT a._id,"
-                + "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
-                + "a." + DBHelper.TABLE_COLUMN_CATEGORY + ","
-                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT + ","
-                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT2 + ","
-                + "a." + DBHelper.TABLE_COLUMN_TAG + ","
-                + "a." + DBHelper.TABLE_COLUMN_VENDOR + ","
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
-                /*
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ","
-                */
-                + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
-                /*
-                + "a." + DBHelper.TABLE_COLUMN_STATE + ","
-                + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
-                + "a." + DBHelper.TABLE_COLUMN_RID + ","
-                */
-                + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
-                + "b." + DBHelper.TABLE_COLUMN_NAME;
-
-        SQLiteDatabase db = DBAccess.getReadDb();
-        Cursor cur;
-        if (start == -1 || end == -1) {
-            cur = db.rawQuery(select
-                            + " FROM " + DBHelper.TABLE_TRANSACTION_NAME + " AS a LEFT JOIN " + table + " AS b "
-                            + "ON a." + column + " = b._id "
-                            + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY "
-                            + "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, "
-                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
-        } else {
-            cur = db.rawQuery(select
-                            + " FROM " + DBHelper.TABLE_TRANSACTION_NAME + " AS a LEFT JOIN " + table + " AS b "
-                            + "ON a." + column + " = b._id "
-                            + "WHERE a." + DBHelper.TABLE_COLUMN_STATE + " =? AND "
-                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<? ORDER BY "
-                            + "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, "
-                            + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end});
-        }
-        return cur;
-    }
-
-    public static Cursor getCursorInRangeSortByAccount(long start, long end) {
-        return getCursorInRangeSortBy(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_ACCOUNT, start, end);
-    }
-
-    public static Cursor getCursorInRangeSortByCategory(long start, long end) {
-        return getCursorInRangeSortBy(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_CATEGORY, start, end);
-    }
-
-    public static Cursor getCursorInRangeSortByVendor(long start, long end) {
-        return getCursorInRangeSortBy(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_VENDOR, start, end);
-    }
-
-    public static Cursor getCursorInRangeSortByTag(long start, long end) {
-        return getCursorInRangeSortBy(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_TAG, start, end);
-    }
-
     public static Cursor getCursorByAccount(long accountId) {
-        SQLiteDatabase db = DBAccess.getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+        return getCursorByAccount(LApp.ctx, accountId);
+    }
+
+    public static Cursor getCursorByAccount(Context context, long accountId) {
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+                DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId}, null);
         return cur;
     }
 
     public static Cursor getAllCursor() {
-        SQLiteDatabase db = DBAccess.getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TRANSACTION_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + " =? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                new String[]{"" + DBHelper.STATE_ACTIVE});
+        return getAllCursor(LApp.ctx);
+    }
+
+    public static Cursor getAllCursor(Context context) {
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+                DBHelper.TABLE_COLUMN_STATE + " =?", new String[]{"" + DBHelper.STATE_ACTIVE},
+                DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
         return cur;
     }
 }

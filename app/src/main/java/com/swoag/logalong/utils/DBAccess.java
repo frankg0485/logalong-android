@@ -2,8 +2,10 @@ package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
@@ -534,20 +536,38 @@ public class DBAccess {
         return true;
     }
 
-    private static long getIdByColumn(String table, String column, String value, boolean caseSensitive) {
+    private static Uri table2uri(String table) {
+        if (table.contentEquals(DBHelper.TABLE_TRANSACTION_NAME)) {
+            return DBProvider.URI_TRANSACTION;
+        }
+        return null;
+    }
+
+    private static long getIdByColumn(Context context, String table, String column, String value, boolean caseSensitive) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
         long id = 0;
 
         try {
+            Uri uri = table2uri(table);
             if (caseSensitive) {
-                csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
-                                + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+                if (uri == null) {
+                    csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
+                                    + DBHelper.TABLE_COLUMN_STATE + "=?",
+                            new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+                } else {
+                    csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
+                }
             } else {
-                csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? COLLATE NOCASE AND "
-                                + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+                if (uri == null) {
+                    csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? COLLATE NOCASE AND "
+                                    + DBHelper.TABLE_COLUMN_STATE + "=?",
+                            new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
+                } else {
+                    csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
+                                    + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
+                }
             }
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
@@ -565,10 +585,18 @@ public class DBAccess {
     }
 
     public static long getIdByName(String table, String name) {
-        return getIdByColumn(table, DBHelper.TABLE_COLUMN_NAME, name, false);
+        return getIdByName(LApp.ctx, table, name);
+    }
+
+    public static long getIdByName(Context context, String table, String name) {
+        return getIdByColumn(context, table, DBHelper.TABLE_COLUMN_NAME, name, false);
     }
 
     public static long getIdByRid(String table, String rid) {
-        return getIdByColumn(table, DBHelper.TABLE_COLUMN_RID, rid, false);
+        return getIdByRid(LApp.ctx, table, rid);
+    }
+
+    public static long getIdByRid(Context context, String table, String rid) {
+        return getIdByColumn(context, table, DBHelper.TABLE_COLUMN_RID, rid, false);
     }
 }
