@@ -2,9 +2,11 @@ package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LTransaction;
 
 import java.util.UUID;
@@ -52,20 +54,20 @@ public class DBTransaction {
     }
 
     public static void add(LTransaction item) {
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
-            ContentValues cv = setValues(item);
-            db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
+        add(LApp.ctx, item);
+    }
 
-            //duplicate record for transfer
-            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                cv.put(DBHelper.TABLE_COLUMN_TYPE, LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount2());
-                cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, item.getAccount());
-                cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid() + "2");
-                db.insert(DBHelper.TABLE_TRANSACTION_NAME, "", cv);
-            }
-            DBAccess.dirty = true;
+    public static void add(Context context, LTransaction item) {
+        ContentValues cv = setValues(item);
+        context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
+
+        //duplicate record for transfer
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            cv.put(DBHelper.TABLE_COLUMN_TYPE, LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount2());
+            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, item.getAccount());
+            cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid() + "2");
+            context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
         }
     }
 

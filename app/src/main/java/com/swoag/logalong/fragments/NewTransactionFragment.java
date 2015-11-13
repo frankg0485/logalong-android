@@ -148,7 +148,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 AppPersistency.transactionChanged = changed;
 
                 item.setTimeStampLast(System.currentTimeMillis());
-                DBTransaction.add(item);
+                DBTransaction.add(getActivity(), item);
 
                 LJournal journal = new LJournal();
                 journal.updateItem(item);

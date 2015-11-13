@@ -2,9 +2,13 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
+import android.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +30,7 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -36,11 +41,11 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ViewTransactionFragment extends LFragment {
+public class ViewTransactionFragment extends LFragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
-    private Cursor logsCursor;
+    private long startMs, endMs;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
@@ -54,6 +59,117 @@ public class ViewTransactionFragment extends LFragment {
     private boolean bMonthly;
     private MyClickListener myClickListener;
 
+
+    @Override
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri uri;
+        String projection = "a._id,"
+                + "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
+                + "a." + DBHelper.TABLE_COLUMN_CATEGORY + ","
+                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT + ","
+                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT2 + ","
+                + "a." + DBHelper.TABLE_COLUMN_TAG + ","
+                + "a." + DBHelper.TABLE_COLUMN_VENDOR + ","
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
+                /*
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ","
+                */
+                + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
+                /*
+                + "a." + DBHelper.TABLE_COLUMN_STATE + ","
+                + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
+                + "a." + DBHelper.TABLE_COLUMN_RID + ","
+                */
+                + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
+                + "b." + DBHelper.TABLE_COLUMN_NAME;
+
+        switch (id) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                uri = DBProvider.URI_TRANSACTION;
+                return new CursorLoader(
+                        getActivity(),
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                                + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                                + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                        DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+                );
+
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                uri = DBProvider.URI_TRANSACTION_ACCOUNT;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                uri = DBProvider.URI_TRANSACTION_CATEGORY;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                uri = DBProvider.URI_TRANSACTION_TAG;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                uri = DBProvider.URI_TRANSACTION_VENDOR;
+                break;
+
+            default:
+                // An invalid id was passed in
+                return null;
+        }
+
+        return new CursorLoader(
+                getActivity(),
+                uri,
+                new String[]{projection},
+                "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                        + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                        + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+        );
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+        String column = "";
+        switch (loader.getId()) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                column = DBHelper.TABLE_COLUMN_ACCOUNT;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                column = DBHelper.TABLE_COLUMN_CATEGORY;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                column = DBHelper.TABLE_COLUMN_TAG;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                column = DBHelper.TABLE_COLUMN_VENDOR;
+                break;
+        }
+
+        setSectionSummary(column, data);
+
+        adapter.swapCursor(data);
+        adapter.notifyDataSetChanged();
+
+        //TODO: incremental balance update support
+        //allBalances = LAllBalances.getInstance();
+        allBalances = LAllBalances.getInstance(true);
+        showBalance(isAltView, data);
+
+        listView.post(new Runnable() {
+            @Override
+            public void run() {
+                listView.setSelection(adapter.getCount() - 1);
+            }
+        });
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+        adapter.swapCursor(null);
+    }
+
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
         now.clear();
@@ -61,50 +177,11 @@ public class ViewTransactionFragment extends LFragment {
         return now.getTimeInMillis();
     }
 
-    private void getLogsCursor() {
-        String column = "";
-        long startMs, endMs;
-
-        if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
-            Calendar now = Calendar.getInstance();
-            AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
-            AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
-        }
-
-        if (bMonthly) {
-            startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-            endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
-        } else {
-            startMs = -1;
-            endMs = -1;
-        }
-
-        switch (AppPersistency.viewTransactionFilter) {
-            case AppPersistency.TRANSACTION_FILTER_ALL:
-                logsCursor = DBTransaction.getCursorInRange(startMs, endMs);
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                column = DBHelper.TABLE_COLUMN_ACCOUNT;
-                logsCursor = DBTransaction.getCursorInRangeSortByAccount(startMs, endMs);
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                column = DBHelper.TABLE_COLUMN_CATEGORY;
-                logsCursor = DBTransaction.getCursorInRangeSortByCategory(startMs, endMs);
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                column = DBHelper.TABLE_COLUMN_TAG;
-                logsCursor = DBTransaction.getCursorInRangeSortByTag(startMs, endMs);
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                column = DBHelper.TABLE_COLUMN_VENDOR;
-                logsCursor = DBTransaction.getCursorInRangeSortByVendor(startMs, endMs);
-                break;
-        }
-
+    private void setSectionSummary(String column, Cursor data) {
         sectionSummary.clear();
         // generate section summary
         if (AppPersistency.TRANSACTION_FILTER_ALL == AppPersistency.viewTransactionFilter) return;
-        if (logsCursor == null || logsCursor.getCount() <= 0) return;
+        if (data == null || data.getCount() <= 0) return;
 
         LAccountSummary summary;
         boolean hasLog = false;
@@ -113,11 +190,11 @@ public class ViewTransactionFragment extends LFragment {
         long id;
         double v, income = 0, expense = 0;
         int type;
-        logsCursor.moveToFirst();
+        data.moveToFirst();
         do {
-            v = logsCursor.getDouble(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-            type = logsCursor.getInt(logsCursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-            id = logsCursor.getLong(logsCursor.getColumnIndexOrThrow(column));
+            v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+            type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+            id = data.getLong(data.getColumnIndexOrThrow(column));
             if (id < 0) id = 0;
 
             if (hasLog && id != lastId) {
@@ -147,7 +224,7 @@ public class ViewTransactionFragment extends LFragment {
                 lastId = id;
             }
 
-            lastIndex = logsCursor.getLong(0);
+            lastIndex = data.getLong(0);
             if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
             else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
             else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
@@ -156,7 +233,7 @@ public class ViewTransactionFragment extends LFragment {
             }
             if (!hasLog) lastId = id;
             hasLog = true;
-        } while (logsCursor.moveToNext());
+        } while (data.moveToNext());
 
         if (hasLog) {
             summary = new LAccountSummary();
@@ -181,28 +258,28 @@ public class ViewTransactionFragment extends LFragment {
         }
     }
 
-    private void initListView() {
-        getLogsCursor();
+    private void initDbLoader() {
+        if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
+            Calendar now = Calendar.getInstance();
+            AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
+            AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
+        }
 
-        adapter = new MyCursorAdapter(getActivity(), logsCursor, sectionSummary);
-        listView.setAdapter(adapter);
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(adapter.getCount() - 1);
-            }
-        });
+        if (bMonthly) {
+            startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+            endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
+        } else {
+            startMs = getMs(AppPersistency.viewTransactionYear, 0);
+            endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
+        }
 
-        showBalance(false);
+        getLoaderManager().restartLoader(AppPersistency.viewTransactionFilter, null, this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
         myClickListener = new MyClickListener();
-
-        allBalances = LAllBalances.getInstance();
-        //allBalances = LAllBalances.getInstance(true);
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
@@ -218,7 +295,10 @@ public class ViewTransactionFragment extends LFragment {
         listViewFlipper.setAnimateFirstView(false);
         listViewFlipper.setDisplayedChild(0);
 
+        sectionSummary = new LSectionSummary();
         listView = (ListView) rootView.findViewById(R.id.logsList);
+        adapter = new MyCursorAdapter(getActivity(), null, sectionSummary);
+        listView.setAdapter(adapter);
 
         View tmp = listViewFlipper.findViewById(R.id.logs);
         monthTV = (TextView) tmp.findViewById(R.id.month);
@@ -232,10 +312,7 @@ public class ViewTransactionFragment extends LFragment {
         altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
         altIncomeTV = (TextView) tmp.findViewById(R.id.income);
 
-        sectionSummary = new LSectionSummary();
-
-        initListView();
-
+        initDbLoader();
         return rootView;
     }
 
@@ -267,11 +344,6 @@ public class ViewTransactionFragment extends LFragment {
 
     @Override
     public void onSelected(boolean selected) {
-        //LLog.d(TAG, "onSelected" + selected);
-        if (selected && AppPersistency.transactionChanged) {
-            refreshLogs();
-        }
-
         if (edit != null) {
             edit.dismiss();
         }
@@ -517,7 +589,6 @@ public class ViewTransactionFragment extends LFragment {
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
-
         }
 
         private class VTag {
@@ -538,9 +609,9 @@ public class ViewTransactionFragment extends LFragment {
         return false;
     }
 
-    private void showBalance(boolean altView) {
+    private void showBalance(boolean altView, Cursor data) {
         LAccountSummary summary = new LAccountSummary();
-        getBalance(summary);
+        getBalance(summary, data);
         TextView mtv, btv, itv, etv;
 
         if (altView) {
@@ -572,11 +643,14 @@ public class ViewTransactionFragment extends LFragment {
         }
     }
 
-    private void getBalance(LAccountSummary summary) {
-        DBAccess.getAccountSummaryForCurrentCursor(summary, 0, logsCursor);
+    private void getBalance(LAccountSummary summary, Cursor data) {
+        DBAccess.getAccountSummaryForCurrentCursor(summary, 0, data);
         //get balance for All accounts at current year/month
-        summary.setBalance(allBalances.getBalance(
-                AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+        if (bMonthly)
+            summary.setBalance(allBalances.getBalance(
+                    AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+        else
+            summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
     }
 
     private boolean isAltView = false;
@@ -611,28 +685,15 @@ public class ViewTransactionFragment extends LFragment {
     }
 
     private void refreshLogs() {
+        //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
+        initDbLoader();
         AppPersistency.transactionChanged = false;
-
-        getLogsCursor();
-        adapter.swapCursor(logsCursor);
-        adapter.notifyDataSetChanged();
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(adapter.getCount() - 1);
-            }
-        });
-        showBalance(isAltView);
     }
 
     private void showPrevNext(boolean prev) {
         if (!prevNextMonth(prev)) return;
 
-        getLogsCursor();
-
         isAltView = !isAltView;
-        showBalance(isAltView);
-
         if (prev) {
             listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
@@ -642,15 +703,7 @@ public class ViewTransactionFragment extends LFragment {
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
             listViewFlipper.showNext();
         }
-
-        adapter.swapCursor(logsCursor);
-        adapter.notifyDataSetChanged();
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(adapter.getCount() - 1);
-            }
-        });
+        refreshLogs();
     }
 
     private View setViewListener(View v, int id) {
@@ -680,8 +733,9 @@ public class ViewTransactionFragment extends LFragment {
     }
 
     private void changeFilter() {
+        //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
         nextFilter();
-        refreshLogs();
+        initDbLoader();
     }
 }
 
