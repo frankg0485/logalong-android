@@ -1,10 +1,14 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LTag;
 
@@ -31,42 +35,49 @@ public class DBTag {
     }
 
     public static long add(LTag tag) {
+        return add(LApp.ctx, tag);
+    }
+
+    public static long add(Context context, LTag tag) {
         long id = -1;
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
+        try {
             ContentValues cv = setValues(tag);
-            id = db.insert(DBHelper.TABLE_TAG_NAME, "", cv);
-            DBAccess.dirty = true;
+            Uri uri = context.getContentResolver().insert(DBProvider.URI_TAGS, cv);
+            id = ContentUris.parseId(uri);
+        } catch (Exception e) {
         }
         return id;
     }
 
     public static boolean update(LTag tag) {
+        return update(LApp.ctx, tag);
+    }
+
+    public static boolean update(Context context, LTag tag) {
         try {
-            synchronized (DBAccess.dbLock) {
-                SQLiteDatabase db = DBAccess.getWriteDb();
-                ContentValues cv = setValues(tag);
-                db.update(DBHelper.TABLE_TAG_NAME, cv, "_id=?", new String[]{"" + tag.getId()});
-            }
-            DBAccess.dirty = true;
+            ContentValues cv = setValues(tag);
+            context.getContentResolver().update(DBProvider.URI_TAGS, cv, "_id=?", new String[]{"" + tag.getId()});
         } catch (Exception e) {
             return false;
         }
-
         return true;
     }
 
     public static void deleteById(long id) {
-        DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static LTag getById(long id) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getById(LApp.ctx, id);
+    }
+
+    public static LTag getById(Context context, long id) {
         Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE _id=?", new String[]{"" + id});
+            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+                    "_id=?", new String[]{"" + id}, null);
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find tag with id: " + id);
                 csr.close();
@@ -84,14 +95,17 @@ public class DBTag {
     }
 
     public static LTag getByName(String name) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByName(LApp.ctx, name);
+    }
+
+    public static LTag getByName(Context context, String name) {
         Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
+            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+                    DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find tag with name: " + name);
                 csr.close();
@@ -109,13 +123,16 @@ public class DBTag {
     }
 
     public static LTag getByRid(String rid) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByRid(LApp.ctx, rid);
+    }
+
+    public static LTag getByRid(Context context, String rid) {
         Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+                    DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find tag with rid: " + rid);
                 csr.close();
@@ -133,20 +150,26 @@ public class DBTag {
     }
 
     public static Cursor getCursorSortedBy(String sortColumn) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getCursorSortedBy(LApp.ctx, sortColumn);
+    }
+
+    public static Cursor getCursorSortedBy(Context context, String sortColumn) {
         Cursor cur;
         if (sortColumn != null)
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + sortColumn + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
+            cur = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
+                    sortColumn + " ASC");
         else
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_TAG_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
+            cur = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         return cur;
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
+        return DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, column, value);
+    }
+
+    public static boolean updateColumnById(long id, String column, int value) {
         return DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, column, value);
     }
 

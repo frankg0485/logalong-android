@@ -90,11 +90,17 @@ public class DBAccess {
     }
 
     public static String getStringFromDbById(String table, String column, long id) {
-        SQLiteDatabase db = getReadDb();
+        return getStringFromDbById(LApp.ctx, table, column, id);
+    }
+
+    public static String getStringFromDbById(Context context, String table, String column, long id) {
+        Uri uri = table2uri(table);
+        if (uri == null) return null;
+
         Cursor csr = null;
         String str = "";
         try {
-            csr = db.rawQuery("SELECT " + column + " FROM " + table + " WHERE _id=?", new String[]{"" + id});
+            csr = context.getContentResolver().query(uri, new String[]{column}, "_id=?", new String[]{"" + id}, null);
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find id: " + id + " from table: " + table + " column: " + column);
                 csr.close();
@@ -506,39 +512,39 @@ public class DBAccess {
 
     public static boolean updateColumnById(String table, long id, String column, String value) {
         try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = new ContentValues();
-                cv.put(column, value);
-                db.update(table, cv, "_id=?", new String[]{"" + id});
-            }
-            dirty = true;
+            Uri uri = table2uri(table);
+            ContentValues cv = new ContentValues();
+            cv.put(column, value);
+            LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
         } catch (Exception e) {
             return false;
         }
-
         return true;
     }
 
     public static boolean updateColumnById(String table, long id, String column, int value) {
         try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = new ContentValues();
-                cv.put(column, value);
-                db.update(table, cv, "_id=?", new String[]{"" + id});
-            }
-            dirty = true;
+            Uri uri = table2uri(table);
+            ContentValues cv = new ContentValues();
+            cv.put(column, value);
+            LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
         } catch (Exception e) {
             return false;
         }
-
         return true;
     }
 
     private static Uri table2uri(String table) {
         if (table.contentEquals(DBHelper.TABLE_TRANSACTION_NAME)) {
-            return DBProvider.URI_TRANSACTION;
+            return DBProvider.URI_TRANSACTIONS;
+        } else if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME)) {
+            return DBProvider.URI_ACCOUNTS;
+        } else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME)) {
+            return DBProvider.URI_CATEGORIES;
+        } else if (table.contentEquals(DBHelper.TABLE_TAG_NAME)) {
+            return DBProvider.URI_TAGS;
+        } else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME)) {
+            return DBProvider.URI_VENDORS;
         }
         return null;
     }
@@ -566,7 +572,7 @@ public class DBAccess {
                             new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
                 } else {
                     csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
-                                    + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
+                            + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
                 }
             }
             if (csr.getCount() != 1) {

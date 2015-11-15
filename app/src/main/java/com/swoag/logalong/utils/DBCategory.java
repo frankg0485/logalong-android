@@ -1,10 +1,14 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 
@@ -31,42 +35,48 @@ public class DBCategory {
     }
 
     public static Cursor getCursorSortedBy(String sortColumn) {
+        return getCursorSortedBy(LApp.ctx, sortColumn);
+    }
+
+    public static Cursor getCursorSortedBy(Context context, String sortColumn) {
         SQLiteDatabase db = DBAccess.getReadDb();
         Cursor cur;
         if (sortColumn != null)
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + sortColumn + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
+            cur = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
+                    sortColumn + " ASC");
         else
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME
-                            + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE});
+            cur = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         return cur;
     }
 
     public static long add(LCategory category) {
+        return add(LApp.ctx, category);
+    }
+
+    public static long add(Context context, LCategory category) {
         long id = -1;
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
+        try {
             ContentValues cv = setValues(category);
-            id = db.insert(DBHelper.TABLE_CATEGORY_NAME, "", cv);
-            DBAccess.dirty = true;
+            Uri uri = context.getContentResolver().insert(DBProvider.URI_CATEGORIES, cv);
+            id = ContentUris.parseId(uri);
+        } catch (Exception e) {
         }
         return id;
     }
 
     public static boolean update(LCategory category) {
+        return update(LApp.ctx, category);
+    }
+
+    public static boolean update(Context context, LCategory category) {
         try {
-            synchronized (DBAccess.dbLock) {
-                SQLiteDatabase db = DBAccess.getWriteDb();
-                ContentValues cv = setValues(category);
-                db.update(DBHelper.TABLE_CATEGORY_NAME, cv, "_id=?", new String[]{"" + category.getId()});
-            }
-            DBAccess.dirty = true;
+            ContentValues cv = setValues(category);
+            context.getContentResolver().update(DBProvider.URI_CATEGORIES, cv, "_id=?", new String[]{"" + category.getId()});
         } catch (Exception e) {
             return false;
         }
-
         return true;
     }
 
@@ -74,17 +84,25 @@ public class DBCategory {
         return DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, column, value);
     }
 
+    public static boolean updateColumnById(long id, String column, int value) {
+        return DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, column, value);
+    }
+
     public static void deleteById(long id) {
-        DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static LCategory getById(long id) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getById(LApp.ctx, id);
+    }
+
+    public static LCategory getById(Context context, long id) {
         Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE _id=?", new String[]{"" + id});
+            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    "_id=?", new String[]{"" + id}, null);
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with id: " + id);
                 csr.close();
@@ -102,14 +120,17 @@ public class DBCategory {
     }
 
     public static LCategory getByName(String name) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByName(LApp.ctx, name);
+    }
+
+    public static LCategory getByName(Context context, String name) {
         Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{name, "" + DBHelper.STATE_ACTIVE});
+            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with name: " + name);
                 csr.close();
@@ -128,13 +149,16 @@ public class DBCategory {
     }
 
     public static LCategory getByRid(String rid) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByRid(LApp.ctx, rid);
+    }
+
+    public static LCategory getByRid(Context context, String rid) {
         Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_CATEGORY_NAME + " WHERE "
-                    + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid});
+            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
             if (csr != null && csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find category with rid: " + rid);
                 csr.close();

@@ -85,7 +85,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
         switch (id) {
             case AppPersistency.TRANSACTION_FILTER_ALL:
-                uri = DBProvider.URI_TRANSACTION;
+                uri = DBProvider.URI_TRANSACTIONS;
                 return new CursorLoader(
                         getActivity(),
                         uri,
@@ -98,16 +98,16 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 );
 
             case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                uri = DBProvider.URI_TRANSACTION_ACCOUNT;
+                uri = DBProvider.URI_TRANSACTIONS_ACCOUNT;
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                uri = DBProvider.URI_TRANSACTION_CATEGORY;
+                uri = DBProvider.URI_TRANSACTIONS_CATEGORY;
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                uri = DBProvider.URI_TRANSACTION_TAG;
+                uri = DBProvider.URI_TRANSACTIONS_TAG;
                 break;
             case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                uri = DBProvider.URI_TRANSACTION_VENDOR;
+                uri = DBProvider.URI_TRANSACTIONS_VENDOR;
                 break;
 
             default:
@@ -129,25 +129,11 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        String column = "";
-        switch (loader.getId()) {
-            case AppPersistency.TRANSACTION_FILTER_ALL:
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                column = DBHelper.TABLE_COLUMN_ACCOUNT;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                column = DBHelper.TABLE_COLUMN_CATEGORY;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                column = DBHelper.TABLE_COLUMN_TAG;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                column = DBHelper.TABLE_COLUMN_VENDOR;
-                break;
+        if (loader.getId() != AppPersistency.viewTransactionFilter) {
+            return;
         }
 
-        setSectionSummary(column, data);
+        setSectionSummary(loader.getId(), data);
 
         adapter.swapCursor(data);
         adapter.notifyDataSetChanged();
@@ -177,10 +163,29 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         return now.getTimeInMillis();
     }
 
-    private void setSectionSummary(String column, Cursor data) {
+    private void setSectionSummary(int filterId, Cursor data) {
+        String column = "";
+        switch (filterId) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                column = DBHelper.TABLE_COLUMN_ACCOUNT;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                column = DBHelper.TABLE_COLUMN_CATEGORY;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                column = DBHelper.TABLE_COLUMN_TAG;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                column = DBHelper.TABLE_COLUMN_VENDOR;
+                break;
+        }
+
         sectionSummary.clear();
         // generate section summary
-        if (AppPersistency.TRANSACTION_FILTER_ALL == AppPersistency.viewTransactionFilter) return;
+        if (column.isEmpty()) return;
+        if (AppPersistency.TRANSACTION_FILTER_ALL == filterId) return;
         if (data == null || data.getCount() <= 0) return;
 
         LAccountSummary summary;
@@ -203,7 +208,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 summary.setIncome(income);
                 summary.setBalance(income - expense);
 
-                switch (AppPersistency.viewTransactionFilter) {
+                switch (filterId) {
                     case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                         summary.setName(DBAccount.getNameById(lastId));
                         break;
@@ -227,7 +232,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             lastIndex = data.getLong(0);
             if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
             else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
-            else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
+            else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == filterId) {
                 if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) expense += v;
                 else income += v;
             }
@@ -237,7 +242,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
         if (hasLog) {
             summary = new LAccountSummary();
-            switch (AppPersistency.viewTransactionFilter) {
+            switch (filterId) {
                 case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                     summary.setName(DBAccount.getNameById(id));
                     break;

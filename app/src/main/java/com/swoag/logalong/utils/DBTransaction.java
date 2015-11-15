@@ -59,7 +59,7 @@ public class DBTransaction {
 
     public static void add(Context context, LTransaction item) {
         ContentValues cv = setValues(item);
-        context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
+        context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
 
         //duplicate record for transfer
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
@@ -67,7 +67,7 @@ public class DBTransaction {
             cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, item.getAccount2());
             cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, item.getAccount());
             cv.put(DBHelper.TABLE_COLUMN_RID, item.getRid() + "2");
-            context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
+            context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
         }
     }
 
@@ -77,7 +77,7 @@ public class DBTransaction {
 
     public static void update(Context context, LTransaction item) {
         ContentValues cv = setValues(item);
-        context.getContentResolver().update(DBProvider.URI_TRANSACTION, cv, "_id=?", new String[]{"" + item.getId()});
+        context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv, "_id=?", new String[]{"" + item.getId()});
 
         //duplicate record for transfer
         if ((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
@@ -98,9 +98,9 @@ public class DBTransaction {
 
             dbid = DBAccess.getIdByRid(context, DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
             if (dbid <= 0) {
-                context.getContentResolver().insert(DBProvider.URI_TRANSACTION, cv);
+                context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
             } else {
-                context.getContentResolver().update(DBProvider.URI_TRANSACTION, cv,
+                context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv,
                         "_id=?", new String[]{"" + dbid});
             }
         }
@@ -115,7 +115,7 @@ public class DBTransaction {
         String str = "";
         LTransaction item = new LTransaction();
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+            csr = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                     "_id=?", new String[]{"" + id}, null);
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to find id: " + id + " from log table");
@@ -125,11 +125,12 @@ public class DBTransaction {
 
             csr.moveToFirst();
             getValues(csr, item);
+            item.setId(id);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+            item = null;
         }
         if (csr != null) csr.close();
-        item.setId(id);
         return item;
     }
 
@@ -142,7 +143,7 @@ public class DBTransaction {
     }
 
     public static LTransaction getByRid(Context context, String rid) {
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_RID + " =?", new String[]{rid}, null);
         if (cur != null && cur.getCount() > 0) {
             if (cur.getCount() != 1) {
@@ -163,7 +164,7 @@ public class DBTransaction {
     }
 
     public static Cursor getCursorByAccount(Context context, long accountId) {
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
                 new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId}, null);
         return cur;
@@ -174,7 +175,7 @@ public class DBTransaction {
     }
 
     public static Cursor getAllCursor(Context context) {
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTION, null,
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =?", new String[]{"" + DBHelper.STATE_ACTIVE},
                 DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
         return cur;
