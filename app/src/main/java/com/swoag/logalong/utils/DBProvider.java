@@ -30,6 +30,10 @@ public class DBProvider extends ContentProvider {
     private static final String CATEGORIES = "categories";
     private static final String TAGS = "tags";
     private static final String VENDORS = "vendors";
+    private static final String VENDORS_CATEGORY = "vendorscat";
+    private static final String SCHEDULED_TRANSACTIONS = "scheduledtrans";
+    private static final String JOURNALS = "journals";
+    private static final String ACCOUNT_BALANCES = "accntbalances";
 
     private static final int TRANSACTIONS_ID = 1;
     private static final int TRANSACTIONS_ACCOUNT_ID = 2;
@@ -40,6 +44,10 @@ public class DBProvider extends ContentProvider {
     private static final int CATEGORIES_ID = 20;
     private static final int TAGS_ID = 30;
     private static final int VENDORS_ID = 40;
+    private static final int VENDORS_CATEGORY_ID = 50;
+    private static final int SCHEDULED_TRANSACTIONS_ID = 60;
+    private static final int JOURNALS_ID = 70;
+    private static final int ACCOUNT_BALANCES_ID = 80;
 
     public static final Uri URI_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS);
     public static final Uri URI_TRANSACTIONS_ACCOUNT = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_ACCOUNT);
@@ -50,6 +58,10 @@ public class DBProvider extends ContentProvider {
     public static final Uri URI_CATEGORIES = Uri.parse("content://" + PROVIDER_NAME + "/" + CATEGORIES);
     public static final Uri URI_TAGS = Uri.parse("content://" + PROVIDER_NAME + "/" + TAGS);
     public static final Uri URI_VENDORS = Uri.parse("content://" + PROVIDER_NAME + "/" + VENDORS);
+    public static final Uri URI_VENDORS_CATEGORY = Uri.parse("content://" + PROVIDER_NAME + "/" + VENDORS_CATEGORY);
+    public static final Uri URI_SCHEDULED_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + SCHEDULED_TRANSACTIONS);
+    public static final Uri URI_JOURNALS = Uri.parse("content://" + PROVIDER_NAME + "/" + JOURNALS);
+    public static final Uri URI_ACCOUNT_BALANCES = Uri.parse("content://" + PROVIDER_NAME + "/" + ACCOUNT_BALANCES);
 
     static final UriMatcher uriMatcher;
 
@@ -64,6 +76,10 @@ public class DBProvider extends ContentProvider {
         uriMatcher.addURI(PROVIDER_NAME, CATEGORIES, CATEGORIES_ID);
         uriMatcher.addURI(PROVIDER_NAME, TAGS, TAGS_ID);
         uriMatcher.addURI(PROVIDER_NAME, VENDORS, VENDORS_ID);
+        uriMatcher.addURI(PROVIDER_NAME, VENDORS_CATEGORY, VENDORS_CATEGORY_ID);
+        uriMatcher.addURI(PROVIDER_NAME, SCHEDULED_TRANSACTIONS, SCHEDULED_TRANSACTIONS_ID);
+        uriMatcher.addURI(PROVIDER_NAME, JOURNALS, JOURNALS_ID);
+        uriMatcher.addURI(PROVIDER_NAME, ACCOUNT_BALANCES, ACCOUNT_BALANCES_ID);
     }
 
     @Override
@@ -77,6 +93,8 @@ public class DBProvider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         int count = 0;
         String table0 = null;
+        boolean notify = true;
+
         switch (uriMatcher.match(uri)) {
             case TRANSACTIONS_ID:
                 table0 = DBHelper.TABLE_TRANSACTION_NAME;
@@ -96,6 +114,26 @@ public class DBProvider extends ContentProvider {
 
             case VENDORS_ID:
                 table0 = DBHelper.TABLE_VENDOR_NAME;
+                break;
+
+            case VENDORS_CATEGORY_ID:
+                table0 = DBHelper.TABLE_VENDOR_CATEGORY_NAME;
+                notify = false;
+                break;
+
+            case SCHEDULED_TRANSACTIONS_ID:
+                table0 = DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME;
+                notify = false;
+                break;
+
+            case JOURNALS_ID:
+                table0 = DBHelper.TABLE_JOURNAL_NAME;
+                notify = false;
+                break;
+
+            case ACCOUNT_BALANCES_ID:
+                table0 = DBHelper.TABLE_ACCOUNT_BALANCE_NAME;
+                notify = false;
                 break;
         }
 
@@ -104,7 +142,8 @@ public class DBProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
 
             /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
-            notifyTransactionChange();
+            if (notify)
+                notifyTransactionChange();
         }
 
         return count;
@@ -113,6 +152,7 @@ public class DBProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         String table0 = null;
+        boolean notify = true;
         switch (uriMatcher.match(uri)) {
             case TRANSACTIONS_ID:
                 table0 = DBHelper.TABLE_TRANSACTION_NAME;
@@ -132,6 +172,26 @@ public class DBProvider extends ContentProvider {
 
             case VENDORS_ID:
                 table0 = DBHelper.TABLE_VENDOR_NAME;
+                break;
+
+            case VENDORS_CATEGORY_ID:
+                table0 = DBHelper.TABLE_VENDOR_CATEGORY_NAME;
+                notify = false;
+                break;
+
+            case SCHEDULED_TRANSACTIONS_ID:
+                table0 = DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME;
+                notify = false;
+                break;
+
+            case JOURNALS_ID:
+                table0 = DBHelper.TABLE_JOURNAL_NAME;
+                notify = false;
+                break;
+
+            case ACCOUNT_BALANCES_ID:
+                table0 = DBHelper.TABLE_ACCOUNT_BALANCE_NAME;
+                notify = false;
                 break;
         }
 
@@ -142,7 +202,8 @@ public class DBProvider extends ContentProvider {
                 getContext().getContentResolver().notifyChange(uri1, null);
 
                 /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
-                notifyTransactionChange();
+                if (notify)
+                    notifyTransactionChange();
                 return uri1;
             }
         }
@@ -154,6 +215,7 @@ public class DBProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         int count = 0;
         String table0 = null;
+        boolean notify = true;
         switch (uriMatcher.match(uri)) {
             case TRANSACTIONS_ID:
                 table0 = DBHelper.TABLE_TRANSACTION_NAME;
@@ -174,6 +236,26 @@ public class DBProvider extends ContentProvider {
             case VENDORS_ID:
                 table0 = DBHelper.TABLE_VENDOR_NAME;
                 break;
+
+            case VENDORS_CATEGORY_ID:
+                table0 = DBHelper.TABLE_VENDOR_CATEGORY_NAME;
+                notify = false;
+                break;
+
+            case SCHEDULED_TRANSACTIONS_ID:
+                table0 = DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME;
+                notify = false;
+                break;
+
+            case JOURNALS_ID:
+                table0 = DBHelper.TABLE_JOURNAL_NAME;
+                notify = false;
+                break;
+
+            case ACCOUNT_BALANCES_ID:
+                table0 = DBHelper.TABLE_ACCOUNT_BALANCE_NAME;
+                notify = false;
+                break;
         }
 
         if (table0 != null) {
@@ -181,7 +263,8 @@ public class DBProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
 
             /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
-            notifyTransactionChange();
+            if (notify)
+                notifyTransactionChange();
         }
 
         return count;
@@ -225,6 +308,22 @@ public class DBProvider extends ContentProvider {
 
             case VENDORS_ID:
                 qb.setTables(DBHelper.TABLE_VENDOR_NAME);
+                break;
+
+            case VENDORS_CATEGORY_ID:
+                qb.setTables(DBHelper.TABLE_VENDOR_CATEGORY_NAME);
+                break;
+
+            case SCHEDULED_TRANSACTIONS_ID:
+                qb.setTables(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME);
+                break;
+
+            case JOURNALS_ID:
+                qb.setTables(DBHelper.TABLE_JOURNAL_NAME);
+                break;
+
+            case ACCOUNT_BALANCES_ID:
+                qb.setTables(DBHelper.TABLE_ACCOUNT_BALANCE_NAME);
                 break;
         }
 

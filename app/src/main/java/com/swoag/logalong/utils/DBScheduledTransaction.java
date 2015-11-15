@@ -1,10 +1,14 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
@@ -39,52 +43,65 @@ public class DBScheduledTransaction {
     }
 
     public static Cursor getCursor(String sortColumn) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getCursor(LApp.ctx, sortColumn);
+    }
+
+    public static Cursor getCursor(Context context, String sortColumn) {
         Cursor cur = null;
         try {
             if (sortColumn != null)
-                cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                                + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + sortColumn + " ASC",
-                        new String[]{"" + DBHelper.STATE_ACTIVE});
+                cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, sortColumn + " ASC");
             else
-                cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                                + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE});
+                cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         } catch (Exception e) {
         }
         return cur;
     }
 
     public static long add(LScheduledTransaction sch) {
+        return add(LApp.ctx, sch);
+    }
+
+    public static long add(Context context, LScheduledTransaction sch) {
         long id = 0;
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
+        try {
             ContentValues cv = setValues(sch);
-            id = db.insert(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, "", cv);
-            DBAccess.dirty = true;
+            Uri uri = context.getContentResolver().insert(DBProvider.URI_SCHEDULED_TRANSACTIONS, cv);
+            id = ContentUris.parseId(uri);
+        } catch (Exception e) {
         }
         sch.getItem().setId(id);
         return id;
     }
 
     public static boolean update(LScheduledTransaction sch) {
-        synchronized (DBAccess.dbLock) {
-            SQLiteDatabase db = DBAccess.getWriteDb();
+        return update(LApp.ctx, sch);
+    }
+
+    public static boolean update(Context context, LScheduledTransaction sch) {
+        try {
             ContentValues cv = setValues(sch);
-            db.update(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, cv, "_id=?", new String[]{"" + sch.getItem().getId()});
-            DBAccess.dirty = true;
+            context.getContentResolver().update(DBProvider.URI_SCHEDULED_TRANSACTIONS,
+                    cv, "_id=?", new String[]{"" + sch.getItem().getId()});
+        } catch (Exception e) {
+            return false;
         }
         return true;
     }
 
     public static LScheduledTransaction getById(long id) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getById(LApp.ctx, id);
+    }
+
+    public static LScheduledTransaction getById(Context context, long id) {
         LScheduledTransaction sch = null;
         Cursor cur = null;
 
         try {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                    + " WHERE _id=?", new String[]{"" + id});
+            cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                    "_id=?", new String[]{"" + id}, null);
             if (cur != null && cur.getCount() > 0) {
                 cur.moveToFirst();
                 sch = new LScheduledTransaction();
@@ -99,13 +116,16 @@ public class DBScheduledTransaction {
     }
 
     public static LScheduledTransaction getByRid(String rid) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getByRid(LApp.ctx, rid);
+    }
+
+    public static LScheduledTransaction getByRid(Context context, String rid) {
         LScheduledTransaction sch = null;
         Cursor cur = null;
 
         try {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                    + " WHERE " + DBHelper.TABLE_COLUMN_RID + "=?", new String[]{"" + rid});
+            cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                    DBHelper.TABLE_COLUMN_RID + "=?", new String[]{"" + rid}, null);
             if (cur != null && cur.getCount() > 0) {
                 cur.moveToFirst();
                 sch = new LScheduledTransaction();
@@ -118,30 +138,6 @@ public class DBScheduledTransaction {
 
         return sch;
     }
-
-    /*
-    public static LScheduledTransaction getFirst() {
-        SQLiteDatabase db = DBAccess.getReadDb();
-        LScheduledTransaction sch = null;
-        Cursor cur = null;
-
-        try {
-            cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME
-                    + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY "
-                    + DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + " ASC", new String[]{"" + DBHelper.STATE_ACTIVE});
-            if (cur != null && cur.getCount() > 0) {
-                cur.moveToFirst();
-                sch = new LScheduledTransaction();
-                getValues(cur, sch);
-            }
-
-            if (cur != null) cur.close();
-        } catch (Exception e) {
-        }
-
-        return sch;
-    }
-    */
 
     public static void deleteById(long id) {
         DBAccess.updateColumnById(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);

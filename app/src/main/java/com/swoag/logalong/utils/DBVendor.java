@@ -274,15 +274,17 @@ public class DBVendor {
     }
 
     public static HashSet<Long> getCategories(long vendor) {
-        SQLiteDatabase db = DBAccess.getReadDb();
+        return getCategories(LApp.ctx, vendor);
+    }
+
+    public static HashSet<Long> getCategories(Context context, long vendor) {
         Cursor csr = null;
         HashSet<Long> cats = new HashSet<Long>();
         try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+            csr = context.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_VENDOR + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor});
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor}, null);
             if (csr != null) {
                 if (csr.getCount() > 0) {
                     csr.moveToFirst();
@@ -300,38 +302,40 @@ public class DBVendor {
     }
 
     public static void setCategories(long vendor, HashSet<Long> categories) {
+        setCategories(LApp.ctx, vendor, categories);
+    }
+
+    public static void setCategories(Context context, long vendor, HashSet<Long> categories) {
         boolean exists = false;
-        HashSet<Long> oldCategories = getCategories(vendor);
+        HashSet<Long> oldCategories = getCategories(context, vendor);
         HashSet<Long> and = new HashSet<Long>(oldCategories);
         and.retainAll(categories);
 
         for (Long ll : oldCategories) {
             if (!and.contains(ll)) {
-                do_updateCategory(vendor, ll, false, true);
+                do_updateCategory(context, vendor, ll, false, true);
             }
         }
 
         for (Long ll : categories) {
             if (!and.contains(ll)) {
-                do_updateCategory(vendor, ll, true, true);
+                do_updateCategory(context, vendor, ll, true, true);
             }
         }
     }
 
-    private static void do_updateCategory(long vendor, long category, boolean add, boolean writeJournal) {
+    private static void do_updateCategory(Context context, long vendor, long category, boolean add, boolean writeJournal) {
         boolean exists = false;
-        SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
         long id = 0;
         boolean changed = false;
 
         try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_VENDOR_CATEGORY_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+            csr = context.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_VENDOR + "=? AND "
                             + DBHelper.TABLE_COLUMN_CATEGORY + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor, "" + category});
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor, "" + category}, null);
             if (csr != null) {
                 if (csr.getCount() > 0) {
                     exists = true;
@@ -343,25 +347,17 @@ public class DBVendor {
             }
 
             if (!exists && add) {
-                synchronized (DBAccess.dbLock) {
-                    db = DBAccess.getWriteDb();
-                    ContentValues cv = new ContentValues();
-                    cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
-                    cv.put(DBHelper.TABLE_COLUMN_VENDOR, vendor);
-                    cv.put(DBHelper.TABLE_COLUMN_CATEGORY, category);
-                    db.insert(DBHelper.TABLE_VENDOR_CATEGORY_NAME, "", cv);
-                    DBAccess.dirty = true;
-                    changed = true;
-                }
+                ContentValues cv = new ContentValues();
+                cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
+                cv.put(DBHelper.TABLE_COLUMN_VENDOR, vendor);
+                cv.put(DBHelper.TABLE_COLUMN_CATEGORY, category);
+                context.getContentResolver().insert(DBProvider.URI_VENDORS_CATEGORY, cv);
+                changed = true;
             } else if (exists && !add) {
-                synchronized (DBAccess.dbLock) {
-                    db = DBAccess.getWriteDb();
-                    ContentValues cv = new ContentValues();
-                    cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-                    db.update(DBHelper.TABLE_VENDOR_CATEGORY_NAME, cv, "_id=?", new String[]{"" + id});
-                    DBAccess.dirty = true;
-                    changed = true;
-                }
+                ContentValues cv = new ContentValues();
+                cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+                context.getContentResolver().update(DBProvider.URI_VENDORS_CATEGORY, cv, "_id=?", new String[]{"" + id});
+                changed = true;
             }
         } catch (Exception e) {
             LLog.w(TAG, "unable to update vendor category: " + e.getMessage());
@@ -377,6 +373,6 @@ public class DBVendor {
     }
 
     public static void updateCategory(long vendor, long category, boolean add) {
-        do_updateCategory(vendor, category, add, false);
+        do_updateCategory(LApp.ctx, vendor, category, add, false);
     }
 }

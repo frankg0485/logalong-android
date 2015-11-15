@@ -21,6 +21,7 @@ import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
@@ -277,7 +278,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
@@ -290,7 +291,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getAccountIndexById(item.getAccount()), DLG_ID_ACCOUNT);
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount()), DLG_ID_ACCOUNT);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
@@ -303,7 +304,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_CATEGORY_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getCategoryIndexById(item.getCategory()), DLG_ID_CATEGORY);
+                                        DBHelper.TABLE_COLUMN_NAME, DBCategory.getDbIndexById(item.getCategory()), DLG_ID_CATEGORY);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
@@ -328,7 +329,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_TAG_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccess.getTagIndexById(item.getTag()), DLG_ID_TAG);
+                                        DBHelper.TABLE_COLUMN_NAME, DBTag.getDbIndexById(item.getTag()), DLG_ID_TAG);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
@@ -378,20 +379,20 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             int selection = -1;
             switch (id) {
                 case DLG_ID_ACCOUNT:
-                    selection = DBAccess.getAccountIndexById(item.getAccount());
+                    selection = DBAccount.getDbIndexById(item.getAccount());
                     break;
                 case DLG_ID_ACCOUNT2:
-                    selection = DBAccess.getAccountIndexById(item.getAccount2());
+                    selection = DBAccount.getDbIndexById(item.getAccount2());
                     break;
                 case DLG_ID_CATEGORY:
-                    selection = DBAccess.getCategoryIndexById(item.getCategory());
+                    selection = DBCategory.getDbIndexById(item.getCategory());
                     break;
                 case DLG_ID_VENDOR:
                     selection = item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
                             DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor());
                     break;
                 case DLG_ID_TAG:
-                    selection = DBAccess.getTagIndexById(item.getTag());
+                    selection = DBTag.getDbIndexById(item.getTag());
                     break;
             }
             mSelectionDialog.refresh(selection);

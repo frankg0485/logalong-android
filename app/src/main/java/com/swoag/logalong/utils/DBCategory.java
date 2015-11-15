@@ -39,7 +39,6 @@ public class DBCategory {
     }
 
     public static Cursor getCursorSortedBy(Context context, String sortColumn) {
-        SQLiteDatabase db = DBAccess.getReadDb();
         Cursor cur;
         if (sortColumn != null)
             cur = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
@@ -186,5 +185,9 @@ public class DBCategory {
 
     public static long getIdByRid(String rid) {
         return DBAccess.getIdByRid(DBHelper.TABLE_CATEGORY_NAME, rid);
+    }
+
+    public static int getDbIndexById(long id) {
+        return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_CATEGORIES, id);
     }
 }

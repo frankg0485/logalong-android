@@ -224,4 +224,8 @@ public class DBAccount {
     public static String getNameById(long id) {
         return DBAccess.getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
     }
+
+    public static int getDbIndexById(long id) {
+        return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_ACCOUNTS, id);
+    }
 }

@@ -1,6 +1,7 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -28,66 +29,6 @@ import java.util.UUID;
 
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();
-
-    private static DBHelper helper;
-    private static SQLiteDatabase dbRead;
-    private static SQLiteDatabase dbWrite;
-
-    public static boolean dirty;
-    public static final Object dbLock = new Object();
-
-    private static void open() {
-        if (helper == null) helper = new DBHelper(LApp.ctx, DBHelper.DB_VERSION);
-    }
-
-    public static void close() {
-        synchronized (dbLock) {
-            flush();
-            helper = null;
-        }
-    }
-
-    public static SQLiteDatabase getReadDb() {
-        if (dirty) {
-            if (dbWrite != null) {
-                dbWrite.close();
-                dbWrite = null;
-            }
-            dirty = false;
-            if (dbRead != null) {
-                dbRead.close();
-                dbRead = null;
-            }
-        }
-        if (dbRead == null) {
-            open();
-            dbRead = helper.getReadableDatabase();
-        }
-        //File dbFile = LApp.ctx.getDatabasePath("MY_DB_NAME");
-        //YLog.i(TAG, "database at: " + dbFile.getAbsolutePath());
-
-        return dbRead;
-    }
-
-    public static SQLiteDatabase getWriteDb() {
-        if (dbWrite == null) {
-            open();
-            dbWrite = helper.getWritableDatabase();
-        }
-        return dbWrite;
-    }
-
-    private static void flush() {
-        if (dbRead != null) {
-            dbRead.close();
-            dbRead = null;
-        }
-        if (dbWrite != null) {
-            dbWrite.close();
-            dbWrite = null;
-        }
-        dirty = false;
-    }
 
     public static String getStringFromDbById(String table, String column, long id) {
         return getStringFromDbById(LApp.ctx, table, column, id);
@@ -117,12 +58,15 @@ public class DBAccess {
     }
 
     public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
+        return getAllAccountsConfirmedShareUser(LApp.ctx);
+    }
+
+    public static HashSet<Integer> getAllAccountsConfirmedShareUser(Context context) {
         LAccount account = new LAccount();
         HashSet<Integer> set = new HashSet<Integer>();
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_SHARE + " FROM " + DBHelper.TABLE_ACCOUNT_NAME
-                        + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                new String[]{"" + DBHelper.STATE_ACTIVE});
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS,
+                new String[]{DBHelper.TABLE_COLUMN_SHARE}, DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         if (cur != null && cur.getCount() > 0) {
 
             cur.moveToFirst();
@@ -144,14 +88,13 @@ public class DBAccess {
         return set;
     }
 
-    public static int getDbIndexById(String table, String state, int actvState, long id) {
-        SQLiteDatabase db = getReadDb();
+    public static int getDbIndexById(Context context, Uri uri, long id) {
         Cursor csr = null;
         int index = 0;
         int ret = -1;
         try {
-            csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + state + "=? ORDER BY " + DBHelper.TABLE_COLUMN_NAME + " ASC",
-                    new String[]{"" + actvState});
+            csr = context.getContentResolver().query(uri, new String[]{"_id"},
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, DBHelper.TABLE_COLUMN_NAME + " ASC");
 
             csr.moveToFirst();
             while (true) {
@@ -168,22 +111,6 @@ public class DBAccess {
         if (csr != null) csr.close();
         return ret;
     }
-
-    public static int getAccountIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_STATE,
-                DBHelper.STATE_ACTIVE, id);
-    }
-
-    public static int getCategoryIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_STATE,
-                LCategory.CATEGORY_STATE_ACTIVE, id);
-    }
-
-    public static int getTagIndexById(long id) {
-        return getDbIndexById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_STATE,
-                LTag.TAG_STATE_ACTIVE, id);
-    }
-
 
     public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, long id, Cursor cursor) {
         double income = 0;
@@ -203,45 +130,18 @@ public class DBAccess {
         summary.setExpense(expense);
     }
 
-    /*public static void getSummaryForAll(LAccountSummary summary) {
-        SQLiteDatabase db = getReadDb();
-        Cursor csr = null;
-        double income = 0;
-        double expense = 0;
-        try {
-            csr = db.rawQuery("SELECT "
-                            + DBHelper.TABLE_LOG_COLUMN_TYPE + ","
-                            + DBHelper.TABLE_LOG_COLUMN_VALUE + " FROM "
-                            + DBHelper.TABLE_LOG_NAME + " WHERE " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + LTransaction.LOG_STATE_ACTIVE});
-
-            csr.moveToFirst();
-            do {
-                double value = csr.getDouble(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_VALUE));
-                int type = csr.getInt(csr.getColumnIndexOrThrow(DBHelper.TABLE_LOG_COLUMN_TYPE));
-                if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += value;
-                else if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += value;
-            } while (csr.moveToNext());
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get log record: " + e.getMessage());
-        }
-        if (csr != null) csr.close();
-
-        summary.setBalance(income - expense);
-        summary.setIncome(income);
-        summary.setExpense(expense);
-    }*/
-
     public static ArrayList<String> getAccountBalance(long id, LBoxer boxer) {
-        SQLiteDatabase db = getReadDb();
+        return getAccountBalance(LApp.ctx, id, boxer);
+    }
+
+    public static ArrayList<String> getAccountBalance(Context context, long id, LBoxer boxer) {
         Cursor csr = null;
         ArrayList<String> balance = new ArrayList<String>();
         try {
-            csr = db.rawQuery("SELECT " + DBHelper.TABLE_COLUMN_YEAR + ","
-                            + DBHelper.TABLE_COLUMN_BALANCE + " FROM "
-                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? ORDER BY "
-                            + DBHelper.TABLE_COLUMN_YEAR + " ASC",
-                    new String[]{"" + id});
+            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNT_BALANCES,
+                    new String[]{DBHelper.TABLE_COLUMN_YEAR, DBHelper.TABLE_COLUMN_BALANCE}, "_id=?",
+                    new String[]{"" + id},
+                    DBHelper.TABLE_COLUMN_YEAR + " ASC");
             int startYear = -1, endYear = -1;
             if (csr != null && csr.getCount() > 0) {
                 csr.moveToFirst();
@@ -263,14 +163,16 @@ public class DBAccess {
     }
 
     public static String getAccountBalance(long id, int year) {
-        SQLiteDatabase db = getReadDb();
+        return getAccountBalance(LApp.ctx, id, year);
+    }
+
+    public static String getAccountBalance(Context context, long id, int year) {
         Cursor csr = null;
         String balance = "";
         try {
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? AND "
-                            + DBHelper.TABLE_COLUMN_YEAR + "=?",
-                    new String[]{"" + id, "" + year});
+            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNT_BALANCES, null,
+                    "_id=? AND " + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + id, "" + year}, null);
             if (csr != null) {
                 csr.moveToFirst();
                 balance = csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE));
@@ -283,17 +185,19 @@ public class DBAccess {
     }
 
     public static boolean updateAccountBalance(long id, int year, String balance) {
+        return updateAccountBalance(LApp.ctx, id, year, balance);
+    }
+
+    public static boolean updateAccountBalance(Context context, long id, int year, String balance) {
         boolean exists = false;
-        SQLiteDatabase db = getReadDb();
         Cursor csr = null;
         boolean ret = false;
 
         try {
             long rowId = 0;
-            csr = db.rawQuery("SELECT * FROM "
-                            + DBHelper.TABLE_ACCOUNT_BALANCE_NAME + " WHERE _id=? AND "
-                            + DBHelper.TABLE_COLUMN_YEAR + "=?",
-                    new String[]{"" + id, "" + year});
+            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNT_BALANCES, null,
+                    "_id=? AND " + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + id, "" + year}, null);
             if (csr != null) {
                 if (csr.getCount() > 0) {
                     csr.moveToFirst();
@@ -308,17 +212,13 @@ public class DBAccess {
             cv.put(DBHelper.TABLE_COLUMN_YEAR, year);
             cv.put(DBHelper.TABLE_COLUMN_BALANCE, balance);
 
-            synchronized (dbLock) {
-                db = getWriteDb();
-                if (!exists) {
-                    db.insert(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, "", cv);
+            if (!exists) {
+                context.getContentResolver().insert(DBProvider.URI_ACCOUNT_BALANCES, cv);
 
-                } else {
-                    db.update(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, cv, "_id=?", new String[]{"" + rowId});
-                }
-                ret = true;
+            } else {
+                context.getContentResolver().update(DBProvider.URI_ACCOUNT_BALANCES, cv, "_id=?", new String[]{"" + rowId});
             }
-            dirty = true;
+            ret = true;
         } catch (Exception e) {
             LLog.w(TAG, "unable to get log record: " + e.getMessage());
         }
@@ -329,9 +229,11 @@ public class DBAccess {
     // scans through transaction to compile account monthly balances, from the very first transaction to the latest, in that order.
     // return boxer.lx: start timestamp
     //              ly: end timestamp
-
     public static HashMap<Integer, double[]> scanAccountBalanceById(long id, LBoxer boxer) {
-        SQLiteDatabase db = getReadDb();
+        return scanAccountBalanceById(LApp.ctx, id, boxer);
+    }
+
+    public static HashMap<Integer, double[]> scanAccountBalanceById(Context context, long id, LBoxer boxer) {
         Cursor csr = null;
         HashMap<Integer, double[]> balances = new HashMap<Integer, double[]>();
 
@@ -339,15 +241,15 @@ public class DBAccess {
         boxer.lx = -1;
         boxer.ly = -1;
         try {
-            csr = db.rawQuery("SELECT "
-                            + DBHelper.TABLE_COLUMN_AMOUNT + ","
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
-                            + DBHelper.TABLE_COLUMN_TYPE + ","
-                            + DBHelper.TABLE_COLUMN_ACCOUNT + " FROM "
-                            + DBHelper.TABLE_TRANSACTION_NAME + " WHERE "
-                            + DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND "
-                            + DBHelper.TABLE_COLUMN_STATE + "=? ORDER BY " + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC",
-                    new String[]{"" + id, "" + DBHelper.STATE_ACTIVE});
+            csr = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS,
+                    new String[]{DBHelper.TABLE_COLUMN_AMOUNT,
+                            DBHelper.TABLE_COLUMN_TIMESTAMP,
+                            DBHelper.TABLE_COLUMN_TYPE,
+                            DBHelper.TABLE_COLUMN_ACCOUNT},
+                    DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + id, "" + DBHelper.STATE_ACTIVE},
+                    DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
             if (csr != null && csr.getCount() > 0) {
                 csr.moveToFirst();
 
@@ -440,56 +342,50 @@ public class DBAccess {
     }
 
     public static long addJournal(LJournal journal) {
+        return addJournal(LApp.ctx, journal);
+    }
+
+    public static long addJournal(Context context, LJournal journal) {
         long id = -1;
-        synchronized (dbLock) {
-            SQLiteDatabase db = getWriteDb();
+        try {
             ContentValues cv = setJournalValues(journal);
-            id = db.insert(DBHelper.TABLE_JOURNAL_NAME, "", cv);
-            dirty = true;
+            Uri uri = context.getContentResolver().insert(DBProvider.URI_JOURNALS, cv);
+            id = ContentUris.parseId(uri);
+        } catch (Exception e) {
         }
         return id;
     }
 
     public static boolean updateJournal(LJournal journal) {
+        return updateJournal(LApp.ctx, journal);
+    }
+
+    public static boolean updateJournal(Context context, LJournal journal) {
         try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = setJournalValues(journal);
-                db.update(DBHelper.TABLE_JOURNAL_NAME, cv, "_id=?", new String[]{"" + journal.getId()});
-            }
-            dirty = true;
+            ContentValues cv = setJournalValues(journal);
+            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv, "_id=?", new String[]{"" + journal.getId()});
         } catch (Exception e) {
             return false;
         }
-
         return true;
     }
 
     public static boolean deleteJournalById(long id) {
-        try {
-            synchronized (dbLock) {
-                SQLiteDatabase db = getWriteDb();
-                ContentValues cv = new ContentValues();
-                cv.put(DBHelper.TABLE_COLUMN_STATE, LJournal.JOURNAL_STATE_DELETED);
-                db.update(DBHelper.TABLE_JOURNAL_NAME, cv, "_id=?", new String[]{"" + id});
-            }
-            dirty = true;
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+        return updateColumnById(DBHelper.TABLE_JOURNAL_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static Cursor getAllActiveJournalCursor() {
-        SQLiteDatabase db = getReadDb();
-        Cursor cur = db.rawQuery("SELECT * FROM " + DBHelper.TABLE_JOURNAL_NAME
-                + " WHERE State=?", new String[]{"" + DBHelper.STATE_ACTIVE});
+        return getAllActiveJournalCursor(LApp.ctx);
+    }
+
+    public static Cursor getAllActiveJournalCursor(Context context) {
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_JOURNALS, null,
+                DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         return cur;
     }
 
-
-    ////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
     public static boolean isNameAvailable(String table, String name) {
         SQLiteDatabase db = DBAccess.getReadDb();
         try {
@@ -509,6 +405,7 @@ public class DBAccess {
         }
         return true;
     }
+    */
 
     public static boolean updateColumnById(String table, long id, String column, String value) {
         try {
@@ -550,30 +447,17 @@ public class DBAccess {
     }
 
     private static long getIdByColumn(Context context, String table, String column, String value, boolean caseSensitive) {
-        SQLiteDatabase db = DBAccess.getReadDb();
         Cursor csr = null;
         long id = 0;
 
         try {
             Uri uri = table2uri(table);
             if (caseSensitive) {
-                if (uri == null) {
-                    csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? AND "
-                                    + DBHelper.TABLE_COLUMN_STATE + "=?",
-                            new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
-                } else {
-                    csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
-                            + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
-                }
+                csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
+                        + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
             } else {
-                if (uri == null) {
-                    csr = db.rawQuery("SELECT _id FROM " + table + " WHERE " + column + "=? COLLATE NOCASE AND "
-                                    + DBHelper.TABLE_COLUMN_STATE + "=?",
-                            new String[]{"" + value, "" + DBHelper.STATE_ACTIVE});
-                } else {
-                    csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
-                            + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
-                }
+                csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
+                        + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
             }
             if (csr.getCount() != 1) {
                 LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
