@@ -96,6 +96,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TABLE_ACCOUNT_BALANCE = "CREATE TABLE " + TABLE_ACCOUNT_BALANCE_NAME +
             "( _id integer primary key autoincrement," +
+            TABLE_COLUMN_STATE + " INTEGER," +
             TABLE_COLUMN_ACCOUNT + " INTEGER," +
             TABLE_COLUMN_YEAR + " INTEGER," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +

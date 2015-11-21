@@ -9,6 +9,8 @@ import com.swoag.logalong.entities.LAccountShareRequest;
 
 public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
+    private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
+    private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
@@ -26,6 +28,26 @@ public class LPreferences {
         savePreference(LApp.ctx, LAST_DB_RESTORE_DATE, date);
     }
     */
+
+    public static long getFirstDbTransactionTimestamp() {
+        return getPreference(LApp.ctx, FIRST_TRANSACTION_TIMESTAMP, Long.MAX_VALUE);
+    }
+
+    public static void setFirstDbTransactionTimestamp(long timestamp) {
+        if (timestamp < getFirstDbTransactionTimestamp()) {
+            savePreference(LApp.ctx, FIRST_TRANSACTION_TIMESTAMP, timestamp);
+        }
+    }
+
+    public static long getLastDbTransactionTimestamp() {
+        return getPreference(LApp.ctx, LAST_TRANSACTION_TIMESTAMP, 0L);
+    }
+
+    public static void setLastDbTransactionTimestamp(long timestamp) {
+        if (timestamp > getLastDbTransactionTimestamp()) {
+            savePreference(LApp.ctx, LAST_TRANSACTION_TIMESTAMP, timestamp);
+        }
+    }
 
     public static int getUserId() {
         return getPreference(LApp.ctx, USER_ID, (int) 0);

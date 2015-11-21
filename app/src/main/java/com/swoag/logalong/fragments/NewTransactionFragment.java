@@ -1,10 +1,15 @@
 package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,41 +20,27 @@ import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
-import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LAllBalances;
-import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.entities.LTag;
-import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.entities.LUser;
-import com.swoag.logalong.entities.LVendor;
-import com.swoag.logalong.network.LProtocol;
-import com.swoag.logalong.utils.AppPersistency;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.ScheduleActivity;
+import com.swoag.logalong.entities.LAllBalances;
+import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccount;
-import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBPorter;
+import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTransaction;
-import com.swoag.logalong.utils.DBVendor;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
-import com.swoag.logalong.views.LMultiSelectionDialog;
-import com.swoag.logalong.views.LReminderDialog;
-import com.swoag.logalong.views.LRenameDialog;
-import com.swoag.logalong.views.LShareAccountDialog;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashSet;
 
-public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf {
+public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
+        LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
+    private static final int LOADER_BALANCES = 10;
+    private static final int LOADER_ACCOUNTS = 20;
 
     private Button btnExpense, btnIncome, btnTransaction, btnSchedule;
     private ViewFlipper viewFlipper;
@@ -64,14 +55,64 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private MyClickListener myClickListener;
 
     @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri uri;
+        switch (id) {
+            case LOADER_BALANCES:
+                uri = DBProvider.URI_ACCOUNT_BALANCES;
+                return new CursorLoader(
+                        getActivity(),
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+
+            case LOADER_ACCOUNTS:
+                uri = DBProvider.URI_ACCOUNTS;
+                return new CursorLoader(getActivity(),
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE},
+                        DBHelper.TABLE_COLUMN_NAME + " ASC");
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()) {
+            case LOADER_BALANCES:
+                allBalances = new LAllBalances(data);
+                showBalance(balanceTV, 0);
+                adapter.notifyDataSetChanged();
+                break;
+            case LOADER_ACCOUNTS:
+                adapter.swapCursor(data);
+                adapter.notifyDataSetChanged();
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        switch (loader.getId()) {
+            case LOADER_BALANCES:
+                break;
+            case LOADER_ACCOUNTS:
+                adapter.swapCursor(null);
+                adapter.notifyDataSetChanged();
+                break;
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
 
         myClickListener = new MyClickListener();
 
         balanceTV = (TextView) rootView.findViewById(R.id.balance);
-        allBalances = LAllBalances.getInstance(true);
-        showBalance(balanceTV, 0);
 
         listView = (ListView) rootView.findViewById(R.id.listView);
         adapter = new MyCursorAdapter(getActivity(), DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME));
@@ -86,6 +127,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         btnTransaction = setBtnListener(rootView, R.id.transaction);
         btnSchedule = setBtnListener(rootView, R.id.schedule);
 
+        getLoaderManager().restartLoader(LOADER_BALANCES, null, this);
+        getLoaderManager().restartLoader(LOADER_ACCOUNTS, null, this);
         return rootView;
     }
 
@@ -105,16 +148,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         if (edit != null) {
             edit.dismiss();
         }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -152,13 +185,11 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
 
                 LJournal journal = new LJournal();
                 journal.updateItem(item);
-                refresh();
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                 AppPersistency.transactionChanged = changed;
-                refresh();
                 break;
         }
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
@@ -196,21 +227,15 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         return btn;
     }
 
-    private void refresh() {
-        allBalances = LAllBalances.getInstance(true);
-        showBalance(balanceTV, 0);
-
-        adapter.swapCursor(DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME));
-        adapter.notifyDataSetChanged();
-    }
-
     private void showBalance(TextView textView, long accountId) {
+        if (null == allBalances) return;
+
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
         double balance;
 
-        balance = (accountId <= 0) ? allBalances.getBalance(year, month) : allBalances.getBalance(accountId, year, month);
+        balance = (accountId <= 0) ? allBalances.getBalance() : allBalances.getBalance(accountId);
         if (balance < 0) {
             textView.setTextColor(getActivity().getResources().getColor(R.color.base_red));
         } else {

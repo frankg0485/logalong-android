@@ -11,75 +11,71 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class LAllBalances {
-    HashSet<Long> ids;
-    HashMap<Long, LAccountBalance> balances;
-    long startDate, endDate;
+    private HashSet<Long> ids;
+    private HashMap<Long, LAccountBalance> balances;
+    private long startDate, endDate;
 
-    private static LAllBalances instance;
-
-    public static LAllBalances getInstance() {
-        return getInstance(false);
-    }
-
-    public static LAllBalances getInstance(boolean forceScan) {
-        if (instance == null || forceScan) {
-            instance = new LAllBalances(forceScan);
-        }
-
-        return instance;
-    }
-
-    private void getAllAccountIds() {
+    public LAllBalances(Cursor cursor) {
+        balances = new HashMap<Long, LAccountBalance>();
         ids = new HashSet<Long>();
 
-        Cursor cursor = DBAccount.getCursorSortedBy(null);
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
             do {
-                ids.add(cursor.getLong(0));
+                long account = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                int year = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_YEAR));
+                String balance = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE));
+                LAccountBalance accountBalance = balances.get(account);
+                if (accountBalance == null) {
+                    accountBalance = new LAccountBalance(account, year, balance);
+                    balances.put(account, accountBalance);
+                    ids.add(account);
+                } else {
+                    accountBalance.setYearBalance(year, balance);
+                }
             } while (cursor.moveToNext());
-        }
-        if (cursor != null) cursor.close();
-    }
-
-    private LAllBalances(boolean forceScan) {
-        startDate = Long.MAX_VALUE;
-        endDate = 0;
-
-        getAllAccountIds();
-        balances = new HashMap<Long, LAccountBalance>();
-        for (long id : ids) {
-            LAccountBalance balance = new LAccountBalance(id, forceScan);
-
-            balances.put(id, balance);
-
-            if (startDate > balance.getStartDate()) startDate = balance.getStartDate();
-            if (endDate < balance.getEndDate()) endDate = balance.getEndDate();
         }
     }
 
     public double getBalance(int year, int month) {
         double val = 0;
-        getAllAccountIds();
-        for (long id : ids) {
-            LAccountBalance balance = balances.get(id);
-            double[] b = balance.getYearBalance(year);
-            val += b[month];
+        if (ids != null) {
+            for (long id : ids) {
+                LAccountBalance balance = balances.get(id);
+                if (balance != null) {
+                    double[] b = balance.getYearBalanceAccumulated(year);
+                    val += b[month];
+                }
+            }
         }
         return val;
     }
 
     public double getBalance(long accountId, int year, int month) {
         LAccountBalance balance = balances.get(accountId);
-        double[] b = balance.getYearBalance(year);
+        if (null == balance) return 0;
+
+        double[] b = balance.getYearBalanceAccumulated(year);
         return b[month];
     }
 
-    public long getStartDate() {
-        return startDate;
+    public double getBalance() {
+        double val = 0;
+        if (ids != null) {
+            for (long id : ids) {
+                LAccountBalance balance = balances.get(id);
+                if (balance != null) {
+                    val += balance.getYearBalanceAccumulated();
+                }
+            }
+        }
+        return val;
     }
 
-    public long getEndDate() {
-        return endDate;
+    public double getBalance(long accountId) {
+        LAccountBalance balance = balances.get(accountId);
+        if (null == balance) return 0;
+
+        return balance.getYearBalanceAccumulated();
     }
 }

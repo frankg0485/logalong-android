@@ -11,10 +11,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
+import com.swoag.logalong.entities.LAccountBalance;
+import com.swoag.logalong.entities.LTransaction;
+
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.HashMap;
 
 public class DBProvider extends ContentProvider {
+    private static final String TAG = DBProvider.class.getSimpleName();
     private static final String PROVIDER_NAME = "com.swoag.logalong.utils.DBProvider";
     private static DBHelper helper;
     private SQLiteDatabase db;
@@ -138,10 +143,70 @@ public class DBProvider extends ContentProvider {
         }
 
         if (table0 != null) {
-            count = db.update(table0, values, selection, selectionArgs);
+            boolean updated = false;
+
+            if (uriMatcher.match(uri) == TRANSACTIONS_ID) {
+                SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+                qb.setTables(DBHelper.TABLE_TRANSACTION_NAME);
+                Cursor cursor = qb.query(db, new String[]{DBHelper.TABLE_COLUMN_STATE,
+                        DBHelper.TABLE_COLUMN_TYPE,
+                        DBHelper.TABLE_COLUMN_TIMESTAMP,
+                        DBHelper.TABLE_COLUMN_ACCOUNT,
+                        DBHelper.TABLE_COLUMN_ACCOUNT2,
+                        DBHelper.TABLE_COLUMN_AMOUNT}, selection, selectionArgs, null, null, null);
+                if (cursor != null) {
+                    if (cursor.getCount() > 0) {
+                        cursor.moveToFirst();
+
+                        Integer newState = values.getAsInteger(DBHelper.TABLE_COLUMN_STATE);
+
+                        int oldState = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE));
+                        int oldType = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                        double oldAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                        long oldAccount = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                        long oldAccount2 = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                        long oldTimeStamp = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+
+                        count = db.update(table0, values, selection, selectionArgs);
+                        updated = true;
+                        boolean done = false;
+
+                        if (newState != null) {
+                            if (newState.intValue() != oldState) {
+                                //must be either delete or undelete
+                                values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
+                                values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
+                                values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);
+                                values.put(DBHelper.TABLE_COLUMN_TIMESTAMP, oldTimeStamp);
+                                if (newState.intValue() == DBHelper.STATE_DELETED) {
+                                    values.put(DBHelper.TABLE_COLUMN_AMOUNT, -oldAmount);
+                                } else {
+                                    values.put(DBHelper.TABLE_COLUMN_AMOUNT, oldAmount);
+                                }
+                                updateAccountBalance(values);
+                                done = true;
+                            }
+                        }
+
+                        if (!done) {
+                            updateAccountBalance(values);
+
+                            values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
+                            values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
+                            values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);
+                            values.put(DBHelper.TABLE_COLUMN_TIMESTAMP, oldTimeStamp);
+                            values.put(DBHelper.TABLE_COLUMN_AMOUNT, -oldAmount);
+                            updateAccountBalance(values);
+                        }
+                    }
+                    cursor.close();
+                }
+            }
+
+            if (!updated)
+                count = db.update(table0, values, selection, selectionArgs);
             getContext().getContentResolver().notifyChange(uri, null);
 
-            /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
             if (notify)
                 notifyTransactionChange();
         }
@@ -201,7 +266,10 @@ public class DBProvider extends ContentProvider {
                 Uri uri1 = ContentUris.withAppendedId(uri, row);
                 getContext().getContentResolver().notifyChange(uri1, null);
 
-                /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
+                if (uriMatcher.match(uri) == TRANSACTIONS_ID) {
+                    updateAccountBalance(values);
+                }
+
                 if (notify)
                     notifyTransactionChange();
                 return uri1;
@@ -213,6 +281,10 @@ public class DBProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+        return 0;
+
+        /*
+        //TODO:
         int count = 0;
         String table0 = null;
         boolean notify = true;
@@ -262,12 +334,12 @@ public class DBProvider extends ContentProvider {
             count = db.delete(table0, selection, selectionArgs);
             getContext().getContentResolver().notifyChange(uri, null);
 
-            /*if (uriMatcher.match(uri) == TRANSACTIONS_ID)*/
             if (notify)
                 notifyTransactionChange();
         }
 
         return count;
+        */
     }
 
     @Override
@@ -347,5 +419,73 @@ public class DBProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_CATEGORY, null);
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_TAG, null);
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_VENDOR, null);
+    }
+
+    private void updateAccountBalance(long id, double amount, long timeStamp) {
+        boolean exists = false;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timeStamp);
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+
+        try {
+            SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+            qb.setTables(DBHelper.TABLE_ACCOUNT_BALANCE_NAME);
+            Cursor csr = qb.query(db, null, "_id=? AND " + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + id, "" + year}, null, null, null);
+            LAccountBalance accountBalance = null;
+            if (csr != null) {
+                if (csr.getCount() > 0) {
+                    csr.moveToFirst();
+                    accountBalance = new LAccountBalance(id, year,
+                            csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE)));
+                    exists = true;
+                }
+                csr.close();
+            }
+            if (null == accountBalance) {
+                accountBalance = new LAccountBalance(id, year, null);
+            }
+
+            accountBalance.modify(year, month, amount);
+
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
+            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, id);
+            cv.put(DBHelper.TABLE_COLUMN_YEAR, year);
+            cv.put(DBHelper.TABLE_COLUMN_BALANCE, accountBalance.getYearBalanceString(year));
+
+            if (!exists) {
+                db.insert(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, "", cv);
+            } else {
+                db.update(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, cv, "_id=?", new String[]{"" + id});
+            }
+        } catch (Exception e) {
+            LLog.e(TAG, "unable to update account balance: " + e.getMessage());
+        }
+    }
+
+    //trans must contain COLUMN_TYPE/AMOUNT/ACCOUNT/ACCOUNT2/TIMESTAMP
+    private void updateAccountBalance(ContentValues trans) {
+        double amount = trans.getAsDouble(DBHelper.TABLE_COLUMN_AMOUNT);
+        long accountId = trans.getAsLong(DBHelper.TABLE_COLUMN_ACCOUNT);
+        long account2Id = trans.getAsLong(DBHelper.TABLE_COLUMN_ACCOUNT2);
+        long timeStamp = trans.getAsLong(DBHelper.TABLE_COLUMN_TIMESTAMP);
+
+        switch (trans.getAsInteger(DBHelper.TABLE_COLUMN_TYPE)) {
+            case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
+                return;
+            case LTransaction.TRANSACTION_TYPE_TRANSFER:
+                updateAccountBalance(accountId, -amount, timeStamp);
+                updateAccountBalance(account2Id, amount, timeStamp);
+                break;
+            case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                updateAccountBalance(accountId, -amount, timeStamp);
+                break;
+            case LTransaction.TRANSACTION_TYPE_INCOME:
+                updateAccountBalance(accountId, amount, timeStamp);
+                break;
+        }
+        getContext().getContentResolver().notifyChange(URI_ACCOUNT_BALANCES, null);
     }
 }

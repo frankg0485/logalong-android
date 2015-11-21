@@ -72,7 +72,6 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                         did = DBAccount.add(new LAccount(name));
                     }
                     LPreferences.setShowAccountBalance(did, attr1);
-                    LAllBalances.getInstance(true);
                     break;
 
                 case TYPE_CATEGORY:

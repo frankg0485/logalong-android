@@ -45,7 +45,7 @@
                         android:layout_marginRight="15dp"
                         android:layout_toLeftOf="@+id/p1"
                         android:gravity="right|center_vertical"
-                        android:text="1234.45"
+                        android:text="0.00"
                         android:textColor="@color/base_red"
                         android:textSize="14dp" />
                 </RelativeLayout>

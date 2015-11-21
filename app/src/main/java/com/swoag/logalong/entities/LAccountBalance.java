@@ -8,52 +8,89 @@ import com.swoag.logalong.utils.DBAccess;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class LAccountBalance {
-    HashMap<Integer, double[]> balances;
-    long accountId;
-    long startDate, endDate;
-    double latestBalance;
+    private TreeMap<Integer, double[]> balances;
+    private long accountId;
+    private long startDate, endDate;
+    private double latestBalance;
 
-    public LAccountBalance(long accountId, boolean forceScan) {
-        this.balances = new HashMap<Integer, double[]>();
-        this.accountId = accountId;
+    public LAccountBalance(long id, int year, String balance) {
+        this.accountId = id;
+        balances = new TreeMap<Integer, double[]>();
         startDate = Long.MAX_VALUE;
         endDate = 0;
-        latestBalance = 0.0;
 
-        LBoxer boxer = new LBoxer();
-
-        if (!forceScan) {
-            ArrayList<String> b = DBAccess.getAccountBalance(accountId, boxer);
-            for (int ii = 0; ii < b.size() / 2; ii++) {
-                int year = Integer.parseInt(b.get(ii));
-                balances.put(year, parseBalance(b.get(ii + 1)));
-            }
-        }
-        if (forceScan || balances.size() == 0) {
-            scanBalance(boxer);
-        }
-
-        if (this.balances.size() <= 0) return;
-
-        Calendar now = Calendar.getInstance();
-        now.setTimeInMillis(boxer.ly);
-        int endYear = now.get(Calendar.YEAR);
-        latestBalance = balances.get(endYear)[11];
-
-        // set start end date if there's balance
-        startDate = getMsOnStartOfMonth(boxer.lx, false);
-        endDate = getMsOnStartOfMonth(boxer.ly, true);
+        setYearBalance(year, balance);
     }
 
-    private long getMsOnStartOfMonth (long ms, boolean nextMonth) {
-        Calendar now = Calendar.getInstance();
+    public void setYearBalance(int year, String balance) {
+        balances.remove(year);
+        balances.put(year, parseBalance(balance));
 
-        now.setTimeInMillis(ms);
-        int year, month;
-        year = now.get(Calendar.YEAR);
-        month = now.get(Calendar.MONTH);
+        double[] doubles = balances.get(year);
+        for (int ii = 0; ii < 12; ii++) {
+
+            if (doubles[ii] != 0) {
+                long now = getMsOfYearMonth(year, ii, false);
+                if (now < startDate) startDate = now;
+                now = getMsOfYearMonth(year, ii, true);
+                if (now > endDate) endDate = now;
+            }
+        }
+    }
+
+    public void modify(int year, int month, double amount) {
+        balances.get(year)[month] += amount;
+    }
+
+    public String getYearBalanceString(int year) {
+        String str = "";
+        double bal[] = balances.get(year);
+        for (int ii = 0; ii < bal.length - 1; ii++) {
+            str += String.valueOf(bal[ii]) + ",";
+        }
+        str += String.valueOf(bal[bal.length - 1]);
+        return str;
+    }
+
+    public double[] getYearBalanceAccumulated(int year) {
+        double value = 0;
+        double[] balance = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        for (int y : balances.keySet()) {
+            double[] bal = balances.get(y);
+            if (y < year) {
+                for (int ii = 0; ii < 12; ii++) value += bal[ii];
+            } else {
+                if (y == year) {
+                    for (int ii = 0; ii < 12; ii++) balance[ii] = bal[ii];
+                }
+                break;
+            }
+        }
+
+        double vOfPremonth = 0;
+        for (int ii = 0; ii < 12; ii++) {
+            double tmp = balance[ii];
+            balance[ii] += value + vOfPremonth;
+            vOfPremonth = tmp;
+        }
+
+        return balance;
+    }
+
+    public double getYearBalanceAccumulated() {
+        double value = 0;
+        for (int y : balances.keySet()) {
+            double[] bal = balances.get(y);
+            for (int ii = 0; ii < 12; ii++) value += bal[ii];
+        }
+
+        return value;
+    }
+
+    private long getMsOfYearMonth(int year, int month, boolean nextMonth) {
         if (nextMonth) {
             if (month < 11) month++;
             else {
@@ -61,97 +98,24 @@ public class LAccountBalance {
                 year++;
             }
         }
+
+        Calendar now = Calendar.getInstance();
         now.clear();
         now.set(year, month, 1);
         return now.getTimeInMillis();
     }
 
-    public long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(long accountId) {
-        this.accountId = accountId;
-    }
-
-    public HashMap<Integer, double[]> getBalances() {
-        return balances;
-    }
-
-    /*public void setBalances(HashMap<Integer, double[]> balances) {
-        this.balances = balances;
-    }*/
-
     private double[] parseBalance(String str) {
-        double[] balance = new double[12];
-        try {
-            String[] sb = str.split(",");
-            for (int ii = 0; ii < 12; ii++) {
-                balance[ii] = Double.parseDouble(sb[ii]);
-            }
-        } catch (Exception e) {
-        }
-        return balance;
-    }
-
-    public double[] getYearBalance(int year) {
-        double[] balance = balances.get(year);
-
-        if (null == balance) {
-            // this could be null due to,
-            // - there's simply no transaction available for this account
-            // - requested year is beyond this account's start/end point
-            // regardless of what happens, we'll return a valid year balance array
-            // however, do NOT update database here, as what's in database always correponds
-            // to actual start/end date.
-
-            balance = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-            if (balances.size() > 0) {
+        double[] balance = new double[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        if (str != null) {
+            try {
+                String[] sb = str.split(",");
                 for (int ii = 0; ii < 12; ii++) {
-                    balance[ii] = latestBalance;
+                    balance[ii] = Double.parseDouble(sb[ii]);
                 }
+            } catch (Exception e) {
             }
         }
         return balance;
-    }
-
-    // TBD: update to fill all holes, update latestBalance, endDate
-    /*
-    public void setYearBalance(int year, double[] balance) {
-        balances.remove(year);
-        balances.put(year, balance);
-        String str = "";
-        for (int ii = 0; ii < balance.length - 1; ii++) {
-            str += String.valueOf(balance[ii]) + ",";
-        }
-        str += String.valueOf(balance[balance.length - 1]);
-        DBAccess.updateAccountBalance(accountId, year, str);
-    }
-    */
-
-    // heavy API, use with caution
-    private boolean scanBalance(LBoxer boxer) {
-        balances = DBAccess.scanAccountBalanceById(accountId, boxer);
-
-        // update database
-        for (Integer yr : balances.keySet()) {
-            double[] bal = balances.get(yr);
-            String str = "";
-            for (int ii = 0; ii < bal.length - 1; ii++) {
-                str += String.valueOf(bal[ii]) + ",";
-            }
-            str += String.valueOf(bal[bal.length - 1]);
-            DBAccess.updateAccountBalance(accountId, yr, str);
-        }
-
-        return true;
-    }
-
-    public long getStartDate() {
-        return startDate;
-    }
-
-    public long getEndDate() {
-        return endDate;
     }
 }

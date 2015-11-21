@@ -84,6 +84,15 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 + "b." + DBHelper.TABLE_COLUMN_NAME;
 
         switch (id) {
+            case -1:
+                uri = DBProvider.URI_ACCOUNT_BALANCES;
+                return new CursorLoader(
+                        getActivity(),
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
                 return new CursorLoader(
@@ -129,6 +138,12 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+        if (loader.getId() == -1) {
+            allBalances = new LAllBalances(data);
+            initDbLoader();
+            return;
+        }
+
         if (loader.getId() != AppPersistency.viewTransactionFilter) {
             return;
         }
@@ -138,9 +153,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         adapter.swapCursor(data);
         adapter.notifyDataSetChanged();
 
-        //TODO: incremental balance update support
-        //allBalances = LAllBalances.getInstance();
-        allBalances = LAllBalances.getInstance(true);
         showBalance(isAltView, data);
 
         listView.post(new Runnable() {
@@ -317,7 +329,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
         altIncomeTV = (TextView) tmp.findViewById(R.id.income);
 
-        initDbLoader();
+        getLoaderManager().restartLoader(-1, null, this);
         return rootView;
     }
 
@@ -649,7 +661,9 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     }
 
     private void getBalance(LAccountSummary summary, Cursor data) {
-        DBAccess.getAccountSummaryForCurrentCursor(summary, 0, data);
+        if (data != null) DBAccess.getAccountSummaryForCurrentCursor(summary, 0, data);
+        if (allBalances == null) return;
+
         //get balance for All accounts at current year/month
         if (bMonthly)
             summary.setBalance(allBalances.getBalance(
@@ -680,12 +694,12 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             }
         }
 
-        long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        if (ym < allBalances.getStartDate() || ym >= allBalances.getEndDate()) {
-            AppPersistency.viewTransactionYear = year;
-            AppPersistency.viewTransactionMonth = month;
-            return false;
-        }
+        //long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+        //if (ym < allBalances.getStartDate() || ym >= allBalances.getEndDate()) {
+        //    AppPersistency.viewTransactionYear = year;
+        //    AppPersistency.viewTransactionMonth = month;
+        //    return false;
+        //}
         return true;
     }
 
