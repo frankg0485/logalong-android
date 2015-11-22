@@ -346,6 +346,7 @@ public class DBProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         Cursor ret = null;
         String tableName = null;
+        String columnName = null;
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setProjectionMap(PROJECTION_MAP);
 
@@ -355,15 +356,19 @@ public class DBProvider extends ContentProvider {
                 break;
             case TRANSACTIONS_ACCOUNT_ID:
                 tableName = DBHelper.TABLE_ACCOUNT_NAME;
+                columnName = DBHelper.TABLE_COLUMN_ACCOUNT;
                 break;
             case TRANSACTIONS_CATEGORY_ID:
                 tableName = DBHelper.TABLE_CATEGORY_NAME;
+                columnName = DBHelper.TABLE_COLUMN_CATEGORY;
                 break;
             case TRANSACTIONS_TAG_ID:
                 tableName = DBHelper.TABLE_TAG_NAME;
+                columnName = DBHelper.TABLE_COLUMN_TAG;
                 break;
             case TRANSACTIONS_VENDOR_ID:
                 tableName = DBHelper.TABLE_VENDOR_NAME;
+                columnName = DBHelper.TABLE_COLUMN_VENDOR;
                 break;
 
             case ACCOUNTS_ID:
@@ -399,9 +404,9 @@ public class DBProvider extends ContentProvider {
                 break;
         }
 
-        if (uriMatcher.match(uri) != TRANSACTIONS_ID && tableName != null) {
+        if (uriMatcher.match(uri) != TRANSACTIONS_ID && tableName != null && columnName != null) {
             qb.setTables(DBHelper.TABLE_TRANSACTION_NAME + " AS a LEFT JOIN " + tableName + " AS b "
-                    + "ON a." + DBHelper.TABLE_COLUMN_ACCOUNT + " = b._id ");
+                    + "ON a." + columnName + " = b._id ");
         }
 
         ret = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);

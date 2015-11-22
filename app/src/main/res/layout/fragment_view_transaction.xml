@@ -36,8 +36,7 @@
                 android:layout_height="fill_parent"
                 android:layout_above="@+id/bottomBar"
                 android:layout_below="@+id/listViewFlipper"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="1dp" />
+                android:divider="@android:color/transparent" />
 
             <RelativeLayout
                 android:id="@+id/bottomBar"

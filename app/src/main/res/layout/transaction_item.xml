@@ -2,7 +2,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="2dp"
     android:baselineAligned="false"
     android:gravity="center"
     android:orientation="vertical">
@@ -11,6 +10,7 @@
         android:id="@+id/mainView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
         android:background="@drawable/row_selector"
         android:baselineAligned="false"
         android:clickable="true"
