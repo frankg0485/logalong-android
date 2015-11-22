@@ -165,15 +165,15 @@ public class DBAccount {
     }
 
     public static boolean updateColumnById(long id, String column, int value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_ACCOUNT_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_ACCOUNTS, id, column, value);
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_ACCOUNT_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_ACCOUNTS, id, column, value);
     }
 
     public static long getIdByName(String name) {
-        return DBAccess.getIdByName(DBHelper.TABLE_ACCOUNT_NAME, name);
+        return DBAccess.getIdByName(DBProvider.URI_ACCOUNTS, name);
     }
 
     public static HashSet<Integer> getAllShareUser() {
@@ -222,7 +222,7 @@ public class DBAccount {
     }
 
     public static String getNameById(long id) {
-        return DBAccess.getStringFromDbById(DBHelper.TABLE_ACCOUNT_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+        return DBAccess.getStringFromDbById(DBProvider.URI_ACCOUNTS, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static int getDbIndexById(long id) {

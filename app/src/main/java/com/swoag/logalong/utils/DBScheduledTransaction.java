@@ -140,6 +140,6 @@ public class DBScheduledTransaction {
     }
 
     public static void deleteById(long id) {
-        DBAccess.updateColumnById(DBHelper.TABLE_SCHEDULED_TRANSACTION_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        DBAccess.updateColumnById(DBProvider.URI_SCHEDULED_TRANSACTIONS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 }

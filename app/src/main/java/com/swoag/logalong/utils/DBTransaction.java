@@ -96,7 +96,7 @@ public class DBTransaction {
             item2.setAccount2(item.getAccount());
             cv = setValues(item2);
 
-            dbid = DBAccess.getIdByRid(context, DBHelper.TABLE_TRANSACTION_NAME, item2.getRid());
+            dbid = DBAccess.getIdByRid(context, DBProvider.URI_TRANSACTIONS, item2.getRid());
             if (dbid <= 0) {
                 context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
             } else {
@@ -135,7 +135,7 @@ public class DBTransaction {
     }
 
     public static long getIdByRid(String rid) {
-        return DBAccess.getIdByRid(DBHelper.TABLE_TRANSACTION_NAME, rid);
+        return DBAccess.getIdByRid(DBProvider.URI_TRANSACTIONS, rid);
     }
 
     public static LTransaction getByRid(String rid) {

@@ -155,23 +155,23 @@ public class DBVendor {
     }
 
     public static long getIdByRid(String rid) {
-        return DBAccess.getIdByRid(DBHelper.TABLE_VENDOR_NAME, rid);
+        return DBAccess.getIdByRid(DBProvider.URI_VENDORS, rid);
     }
 
     public static String getNameById(long id) {
-        return DBAccess.getStringFromDbById(DBHelper.TABLE_VENDOR_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+        return DBAccess.getStringFromDbById(DBProvider.URI_VENDORS, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_VENDOR_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_VENDORS, id, column, value);
     }
 
     public static boolean updateColumnById(long id, String column, int value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_VENDOR_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_VENDORS, id, column, value);
     }
 
     public static long getIdByName(String name) {
-        return DBAccess.getIdByName(DBHelper.TABLE_VENDOR_NAME, name);
+        return DBAccess.getIdByName(DBProvider.URI_VENDORS, name);
     }
 
     private static int getDbIndexById(int type, long id) {

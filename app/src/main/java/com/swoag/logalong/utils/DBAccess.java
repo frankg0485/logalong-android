@@ -29,30 +29,24 @@ import java.util.UUID;
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();
 
-    public static String getStringFromDbById(String table, String column, long id) {
-        return getStringFromDbById(LApp.ctx, table, column, id);
+    public static String getStringFromDbById(Uri uri, String column, long id) {
+        return getStringFromDbById(LApp.ctx, uri, column, id);
     }
 
-    public static String getStringFromDbById(Context context, String table, String column, long id) {
-        Uri uri = table2uri(table);
-        if (uri == null) return null;
-
-        Cursor csr = null;
+    public static String getStringFromDbById(Context context, Uri uri, String column, long id) {
         String str = "";
         try {
-            csr = context.getContentResolver().query(uri, new String[]{column}, "_id=?", new String[]{"" + id}, null);
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find id: " + id + " from table: " + table + " column: " + column);
+            Cursor csr = context.getContentResolver().query(uri, new String[]{column}, "_id=?", new String[]{"" + id}, null);
+            if (csr != null) {
+                if (csr.getCount() > 0) {
+                    csr.moveToFirst();
+                    str = csr.getString(csr.getColumnIndexOrThrow(column));
+                }
                 csr.close();
-                return "";
             }
-
-            csr.moveToFirst();
-            str = csr.getString(csr.getColumnIndexOrThrow(column));
         } catch (Exception e) {
             LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
         }
-        if (csr != null) csr.close();
         return str;
     }
 
@@ -176,7 +170,7 @@ public class DBAccess {
     }
 
     public static boolean deleteJournalById(long id) {
-        return updateColumnById(DBHelper.TABLE_JOURNAL_NAME, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        return updateColumnById(DBProvider.URI_JOURNALS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
     public static Cursor getAllActiveJournalCursor() {
@@ -190,9 +184,8 @@ public class DBAccess {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public static boolean updateColumnById(String table, long id, String column, String value) {
+    public static boolean updateColumnById(Uri uri, long id, String column, String value) {
         try {
-            Uri uri = table2uri(table);
             ContentValues cv = new ContentValues();
             cv.put(column, value);
             LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
@@ -202,9 +195,8 @@ public class DBAccess {
         return true;
     }
 
-    public static boolean updateColumnById(String table, long id, String column, int value) {
+    public static boolean updateColumnById(Uri uri, long id, String column, int value) {
         try {
-            Uri uri = table2uri(table);
             ContentValues cv = new ContentValues();
             cv.put(column, value);
             LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
@@ -214,6 +206,7 @@ public class DBAccess {
         return true;
     }
 
+    /*
     private static Uri table2uri(String table) {
         if (table.contentEquals(DBHelper.TABLE_TRANSACTION_NAME)) {
             return DBProvider.URI_TRANSACTIONS;
@@ -228,13 +221,13 @@ public class DBAccess {
         }
         return null;
     }
+    */
 
-    private static long getIdByColumn(Context context, String table, String column, String value, boolean caseSensitive) {
+    private static long getIdByColumn(Context context, Uri uri, String column, String value, boolean caseSensitive) {
         Cursor csr = null;
         long id = 0;
 
         try {
-            Uri uri = table2uri(table);
             if (caseSensitive) {
                 csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
                         + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
@@ -243,7 +236,7 @@ public class DBAccess {
                         + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
             }
             if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
+                LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
                 csr.close();
                 return 0;
             }
@@ -251,25 +244,25 @@ public class DBAccess {
             csr.moveToFirst();
             id = csr.getLong(0);
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + table);
+            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
         }
         if (csr != null) csr.close();
         return id;
     }
 
-    public static long getIdByName(String table, String name) {
-        return getIdByName(LApp.ctx, table, name);
+    public static long getIdByName(Uri uri, String name) {
+        return getIdByName(LApp.ctx, uri, name);
     }
 
-    public static long getIdByName(Context context, String table, String name) {
-        return getIdByColumn(context, table, DBHelper.TABLE_COLUMN_NAME, name, false);
+    public static long getIdByName(Context context, Uri uri, String name) {
+        return getIdByColumn(context, uri, DBHelper.TABLE_COLUMN_NAME, name, false);
     }
 
-    public static long getIdByRid(String table, String rid) {
-        return getIdByRid(LApp.ctx, table, rid);
+    public static long getIdByRid(Uri uri, String rid) {
+        return getIdByRid(LApp.ctx, uri, rid);
     }
 
-    public static long getIdByRid(Context context, String table, String rid) {
-        return getIdByColumn(context, table, DBHelper.TABLE_COLUMN_RID, rid, false);
+    public static long getIdByRid(Context context, Uri uri, String rid) {
+        return getIdByColumn(context, uri, DBHelper.TABLE_COLUMN_RID, rid, false);
     }
 }

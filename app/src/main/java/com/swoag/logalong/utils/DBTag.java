@@ -166,19 +166,19 @@ public class DBTag {
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_TAGS, id, column, value);
     }
 
     public static boolean updateColumnById(long id, String column, int value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_TAG_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_TAGS, id, column, value);
     }
 
     public static long getIdByName(String name) {
-        return DBAccess.getIdByName(DBHelper.TABLE_TAG_NAME, name);
+        return DBAccess.getIdByName(DBProvider.URI_TAGS, name);
     }
 
     public static String getNameById(long id) {
-        return DBAccess.getStringFromDbById(DBHelper.TABLE_TAG_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+        return DBAccess.getStringFromDbById(DBProvider.URI_TAGS, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static int getDbIndexById(long id) {

@@ -80,11 +80,11 @@ public class DBCategory {
     }
 
     public static boolean updateColumnById(long id, String column, String value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_CATEGORIES, id, column, value);
     }
 
     public static boolean updateColumnById(long id, String column, int value) {
-        return DBAccess.updateColumnById(DBHelper.TABLE_CATEGORY_NAME, id, column, value);
+        return DBAccess.updateColumnById(DBProvider.URI_CATEGORIES, id, column, value);
     }
 
     public static void deleteById(long id) {
@@ -176,15 +176,15 @@ public class DBCategory {
     }
 
     public static long getIdByName(String name) {
-        return DBAccess.getIdByName(DBHelper.TABLE_CATEGORY_NAME, name);
+        return DBAccess.getIdByName(DBProvider.URI_CATEGORIES, name);
     }
 
     public static String getNameById(long id) {
-        return DBAccess.getStringFromDbById(DBHelper.TABLE_CATEGORY_NAME, DBHelper.TABLE_COLUMN_NAME, id);
+        return DBAccess.getStringFromDbById(DBProvider.URI_CATEGORIES, DBHelper.TABLE_COLUMN_NAME, id);
     }
 
     public static long getIdByRid(String rid) {
-        return DBAccess.getIdByRid(DBHelper.TABLE_CATEGORY_NAME, rid);
+        return DBAccess.getIdByRid(DBProvider.URI_CATEGORIES, rid);
     }
 
     public static int getDbIndexById(long id) {

@@ -382,6 +382,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         if (AppPersistency.viewTransactionQuarter == -1) {
             AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
         }
+        showTime();
 
         getLoaderManager().restartLoader(-2, null, this);
         getLoaderManager().restartLoader(-1, null, this);
@@ -873,25 +874,19 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         initDbLoader();
     }
 
-    private void nextTime() {
+    private  void showTime() {
         switch (AppPersistency.viewTransactionTime) {
-            case AppPersistency.TRANSACTION_TIME_ALL:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
                 monthlyView.setText(getActivity().getString(R.string.monthly));
-                validateYearMonth();
                 break;
-            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
+            case AppPersistency.TRANSACTION_TIME_ALL:
                 monthlyView.setText(getActivity().getString(R.string.all));
                 break;
-            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
                 monthlyView.setText(getActivity().getString(R.string.annually));
                 break;
-            case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_QUARTERLY;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
                 monthlyView.setText(getActivity().getString(R.string.quarterly));
-                AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
                 break;
         }
 
@@ -906,6 +901,26 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             LViewUtils.setAlpha(prevView, 1.0f);
             LViewUtils.setAlpha(nextView, 1.0f);
         }
+    }
+
+    private void nextTime() {
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
+                validateYearMonth();
+                break;
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
+                break;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_QUARTERLY;
+                AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
+                break;
+        }
+        showTime();
     }
 
     private void changeTime() {
