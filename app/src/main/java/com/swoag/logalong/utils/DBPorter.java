@@ -167,9 +167,8 @@ public class DBPorter {
                     else {
                         ll = categoryMap.get(category);
                         if (null == ll) {
-                            ll = DBCategory.getIdByName(category);
-                            if (ll != null) {
-                                categoryId = ll.longValue();
+                            categoryId = DBCategory.getIdByName(category);
+                            if (categoryId != 0) {
                                 DBCategory.updateColumnById(categoryId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 categoryId = DBCategory.add(new LCategory(category, ss[ii]));
@@ -187,9 +186,8 @@ public class DBPorter {
                     else {
                         ll = accountMap.get(account);
                         if (null == ll) {
-                            ll = DBAccount.getIdByName(account);
-                            if (ll != null) {
-                                accountId = ll.longValue();
+                            accountId = DBAccount.getIdByName(account);
+                            if (accountId != 0) {
                                 DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 accountId = DBAccount.add(new LAccount(account, ss[ii]));
@@ -207,9 +205,8 @@ public class DBPorter {
                     else {
                         ll = accountMap.get(account2);
                         if (null == ll) {
-                            ll = DBAccount.getIdByName(account2);
-                            if (ll != null) {
-                                account2Id = ll.longValue();
+                            account2Id = DBAccount.getIdByName(account2);
+                            if (account2Id != 0) {
                                 DBAccount.updateColumnById(account2Id, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 account2Id = DBAccount.add(new LAccount(account2, ss[ii]));
@@ -227,9 +224,8 @@ public class DBPorter {
                     else {
                         ll = tagMap.get(tag);
                         if (null == ll) {
-                            ll = DBTag.getIdByName(tag);
-                            if (ll != null) {
-                                tagId = ll.longValue();
+                            tagId = DBTag.getIdByName(tag);
+                            if (tagId != 0) {
                                 DBTag.updateColumnById(tagId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 tagId = DBTag.add(new LTag(tag, ss[ii]));
@@ -247,9 +243,8 @@ public class DBPorter {
                     else {
                         ll = vendorMap.get(vendor);
                         if (null == ll) {
-                            ll = DBVendor.getIdByName(vendor);
-                            if (ll != null) {
-                                vendorId = ll.longValue();
+                            vendorId = DBVendor.getIdByName(vendor);
+                            if (vendorId != 0) {
                                 DBVendor.updateColumnById(vendorId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
