@@ -56,7 +56,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     private TransactionEdit edit;
 
     private LAllBalances allBalances;
-    private boolean bMonthly;
     private MyClickListener myClickListener;
 
 
@@ -164,9 +163,9 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             if (data != null && data.getCount() > 0) {
                 startEndMsReady = true;
                 data.moveToFirst();
-                allStartMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                allStartMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), false);
                 data.moveToLast();
-                allEndMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                allEndMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), true);
                 if (allBalancesReady && startEndMsReady) initDbLoader();
                 return;
             }
@@ -203,10 +202,18 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         return now.getTimeInMillis();
     }
 
-    private long resetMs(long ms) {
+    private long resetMs(long ms, boolean nextMonth) {
         Calendar now = Calendar.getInstance();
         now.setTimeInMillis(ms);
-        return getMs(now.get(Calendar.YEAR), now.get(Calendar.MONTH));
+        int year = now.get(Calendar.YEAR);
+        int month = now.get(Calendar.MONTH);
+        if (nextMonth) {
+            if (month == 11) {
+                month = 0;
+                year++;
+            } else month++;
+        }
+        return getMs(year, month);
     }
 
     private void setSectionSummary(int filterId, Cursor data) {
@@ -310,14 +317,25 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     }
 
     private void initDbLoader() {
-        if (bMonthly) {
-            startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-            endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
-        } else {
-            startMs = getMs(AppPersistency.viewTransactionYear, 0);
-            endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
-        }
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                startMs = 0;
+                endMs = Long.MAX_VALUE;
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+                endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
+                break;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
+                endMs = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
+                break;
 
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                startMs = getMs(AppPersistency.viewTransactionYear, 0);
+                endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
+                break;
+        }
         getLoaderManager().restartLoader(AppPersistency.viewTransactionFilter, null, this);
     }
 
@@ -330,7 +348,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         nextView = setViewListener(rootView, R.id.next);
         filterView = setViewListener(rootView, R.id.filter);
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
-        bMonthly = true;
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -361,6 +378,9 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             Calendar now = Calendar.getInstance();
             AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
+        }
+        if (AppPersistency.viewTransactionQuarter == -1) {
+            AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
         }
 
         getLoaderManager().restartLoader(-2, null, this);
@@ -425,17 +445,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                     showPrevNext(false);
                     break;
                 case R.id.monthly:
-                    bMonthly = !bMonthly;
-                    if (bMonthly) {
-                        monthlyView.setText(getActivity().getString(R.string.monthly));
-                        prevView.setEnabled(true);
-                        nextView.setEnabled(true);
-                    } else {
-                        monthlyView.setText(getActivity().getString(R.string.annually));
-                        prevView.setEnabled(false);
-                        nextView.setEnabled(false);
-                    }
-                    refreshLogs();
+                    changeTime();
                     break;
                 default:
                     break;
@@ -688,10 +698,20 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        if (bMonthly) {
-            mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
-        } else {
-            mtv.setText("" + AppPersistency.viewTransactionYear);
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                mtv.setText(getString(R.string.balance));
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
+                break;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                mtv.setText("Q" + (AppPersistency.viewTransactionQuarter + 1) + " " + AppPersistency.viewTransactionYear);
+                break;
+
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                mtv.setText("" + AppPersistency.viewTransactionYear);
+                break;
         }
     }
 
@@ -700,52 +720,113 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         if (allBalances == null) return;
 
         //get balance for All accounts at current year/month
-        if (bMonthly)
-            summary.setBalance(allBalances.getBalance(
-                    AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
-        else
-            summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                summary.setBalance(allBalances.getBalance());
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                summary.setBalance(allBalances.getBalance(
+                        AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+                break;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                summary.setBalance(allBalances.getBalance(
+                        AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+                break;
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
+                break;
+        }
     }
 
     private boolean isAltView = false;
     private ListView lv;
 
-    private boolean prevNextMonth(boolean prev) {
-        int year = AppPersistency.viewTransactionYear;
-        int month = AppPersistency.viewTransactionMonth;
-        boolean ret = true;
-
-        if (prev) {
-            AppPersistency.viewTransactionMonth--;
-            if (AppPersistency.viewTransactionMonth < 0) {
-                AppPersistency.viewTransactionYear--;
-                AppPersistency.viewTransactionMonth = 11;
-            }
-        } else {
-            AppPersistency.viewTransactionMonth++;
-            if (AppPersistency.viewTransactionMonth > 11) {
-                AppPersistency.viewTransactionYear++;
-                AppPersistency.viewTransactionMonth = 0;
-            }
-        }
-
+    private boolean validateYearMonth() {
         long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        if (ym < allStartMs || ym > allEndMs) {
-            AppPersistency.viewTransactionYear = year;
-            AppPersistency.viewTransactionMonth = month;
-            return false;
+        if (ym < allStartMs || ym >= allEndMs) {
+            Calendar calendar = Calendar.getInstance();
+            AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
+            AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
+        } else return true;
+
+        ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+        if (ym < allStartMs || ym >= allEndMs) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(allEndMs);
+            calendar.add(Calendar.MONTH, -1);
+            AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
+            AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
         }
-        return true;
+        return false;
     }
 
-    private void refreshLogs() {
-        //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
-        initDbLoader();
-        AppPersistency.transactionChanged = false;
+    private boolean prevNext(boolean prev) {
+        boolean ret = true;
+        int year = AppPersistency.viewTransactionYear;
+        int month = AppPersistency.viewTransactionMonth;
+        int quarter = AppPersistency.viewTransactionQuarter;
+
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                if (prev) {
+                    AppPersistency.viewTransactionMonth--;
+                    if (AppPersistency.viewTransactionMonth < 0) {
+                        AppPersistency.viewTransactionYear--;
+                        AppPersistency.viewTransactionMonth = 11;
+                    }
+                } else {
+                    AppPersistency.viewTransactionMonth++;
+                    if (AppPersistency.viewTransactionMonth > 11) {
+                        AppPersistency.viewTransactionYear++;
+                        AppPersistency.viewTransactionMonth = 0;
+                    }
+                }
+
+                long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+                if (ym < allStartMs || ym >= allEndMs) {
+                    AppPersistency.viewTransactionYear = year;
+                    AppPersistency.viewTransactionMonth = month;
+                    return validateYearMonth() ? false : true;
+                }
+                return true;
+
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                AppPersistency.viewTransactionQuarter += (prev) ? -1 : 1;
+                if (AppPersistency.viewTransactionQuarter >= 4) {
+                    AppPersistency.viewTransactionQuarter = 0;
+                    AppPersistency.viewTransactionYear++;
+                } else if (AppPersistency.viewTransactionQuarter < 0) {
+                    AppPersistency.viewTransactionQuarter = 3;
+                    AppPersistency.viewTransactionYear--;
+                }
+
+                long ymS = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
+                long ymE = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
+
+                if (allStartMs >= ymE || allEndMs <= ymS) {
+                    AppPersistency.viewTransactionYear = year;
+                    AppPersistency.viewTransactionQuarter = quarter;
+                    return false;
+                }
+                return true;
+
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                AppPersistency.viewTransactionYear += (prev) ? -1 : 1;
+                ymS = getMs(AppPersistency.viewTransactionYear, 0);
+                ymE = getMs(AppPersistency.viewTransactionYear + 1, 0);
+                if (allStartMs >= ymE || allEndMs <= ymS) {
+                    AppPersistency.viewTransactionYear = year;
+                    return false;
+                }
+                return true;
+        }
+        return false;
     }
 
     private void showPrevNext(boolean prev) {
-        if (!prevNextMonth(prev)) return;
+        if (!prevNext(prev)) return;
 
         isAltView = !isAltView;
         if (prev) {
@@ -757,7 +838,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
             listViewFlipper.showNext();
         }
-        refreshLogs();
+        initDbLoader();
     }
 
     private View setViewListener(View v, int id) {
@@ -789,6 +870,46 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     private void changeFilter() {
         //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
         nextFilter();
+        initDbLoader();
+    }
+
+    private void nextTime() {
+        switch (AppPersistency.viewTransactionTime) {
+            case AppPersistency.TRANSACTION_TIME_ALL:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
+                monthlyView.setText(getActivity().getString(R.string.monthly));
+                validateYearMonth();
+                break;
+            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
+                monthlyView.setText(getActivity().getString(R.string.all));
+                break;
+            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
+                monthlyView.setText(getActivity().getString(R.string.annually));
+                break;
+            case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_QUARTERLY;
+                monthlyView.setText(getActivity().getString(R.string.quarterly));
+                AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
+                break;
+        }
+
+        if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) {
+            prevView.setEnabled(false);
+            nextView.setEnabled(false);
+            LViewUtils.setAlpha(prevView, 0.5f);
+            LViewUtils.setAlpha(nextView, 0.5f);
+        } else {
+            prevView.setEnabled(true);
+            nextView.setEnabled(true);
+            LViewUtils.setAlpha(prevView, 1.0f);
+            LViewUtils.setAlpha(nextView, 1.0f);
+        }
+    }
+
+    private void changeTime() {
+        nextTime();
         initDbLoader();
     }
 }

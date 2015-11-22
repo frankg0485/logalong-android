@@ -4,6 +4,7 @@
     <string name="account_share_request">Account Share Request</string>
     <string name="action_settings">settings</string>
     <string name="additional_note_here">Additional note here</string>
+    <string name="all">all</string>
     <string name="annually">annually</string>
     <string name="app_name">LogAlong</string>
     <string name="backed_up_on">Backed up on</string>
@@ -50,6 +51,7 @@
     <string name="please_complete_your_profile">Please set your name in profile settings then come back.</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
+    <string name="quarterly">quarterly</string>
     <string name="reminder">Reminder</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>
