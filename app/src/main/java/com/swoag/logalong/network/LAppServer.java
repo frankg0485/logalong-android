@@ -141,7 +141,7 @@ public class LAppServer {
 
                                 Intent intent;
                                 intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
-                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, LProtocol.RSPS_OK);
+                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)LProtocol.RSPS_OK);
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
                             } catch (Exception e) {
                                 LLog.e(TAG, "connection error: " + e.getMessage());

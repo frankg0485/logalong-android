@@ -310,7 +310,12 @@ public class LShareAccountDialog extends Dialog
                 }
                 break;
             case R.id.save:
-                leave(true);
+                String str = "";
+                if (editText.getText() != null) {
+                    str = editText.getText().toString().trim();
+                }
+                if (!str.isEmpty()) do_add_share_user(editText.getText().toString().trim());
+                else leave(true);
                 break;
             case R.id.cancel:
                 leave(false);

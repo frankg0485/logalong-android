@@ -427,18 +427,22 @@ public class DBProvider extends ContentProvider {
         calendar.setTimeInMillis(timeStamp);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
+        long dbEntryId = 0;
 
         try {
             SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
             qb.setTables(DBHelper.TABLE_ACCOUNT_BALANCE_NAME);
-            Cursor csr = qb.query(db, null, "_id=? AND " + DBHelper.TABLE_COLUMN_YEAR + "=?",
-                    new String[]{"" + id, "" + year}, null, null, null);
+            Cursor csr = qb.query(db, null, DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND "
+                            + DBHelper.TABLE_COLUMN_YEAR + "=? AND "
+                            + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + id, "" + year, "" + DBHelper.STATE_ACTIVE}, null, null, null);
             LAccountBalance accountBalance = null;
             if (csr != null) {
                 if (csr.getCount() > 0) {
                     csr.moveToFirst();
                     accountBalance = new LAccountBalance(id, year,
                             csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_BALANCE)));
+                    dbEntryId = csr.getLong(0);
                     exists = true;
                 }
                 csr.close();
@@ -458,7 +462,7 @@ public class DBProvider extends ContentProvider {
             if (!exists) {
                 db.insert(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, "", cv);
             } else {
-                db.update(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, cv, "_id=?", new String[]{"" + id});
+                db.update(DBHelper.TABLE_ACCOUNT_BALANCE_NAME, cv, "_id=?", new String[]{"" + dbEntryId});
             }
         } catch (Exception e) {
             LLog.e(TAG, "unable to update account balance: " + e.getMessage());

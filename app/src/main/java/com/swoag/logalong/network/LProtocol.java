@@ -349,7 +349,7 @@ public class LProtocol {
                     }
                 } else {
                     rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_IDLE));
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, RSPS_OK);
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)RSPS_OK);
                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 }
                 break;
