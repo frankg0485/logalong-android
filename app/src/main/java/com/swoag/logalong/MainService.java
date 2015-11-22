@@ -15,6 +15,7 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
@@ -56,6 +57,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     @Override
     public void onCreate() {
         super.onCreate();
+        DBScheduledTransaction.scanAlarm();
 
         pollHandler = new Handler() {
         };
@@ -210,7 +212,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
 
                     account = DBAccount.getByName(accountName);
-                    account.addShareUser(id, requireConfirmation == 1? LAccount.ACCOUNT_SHARE_INVITED : LAccount.ACCOUNT_SHARE_CONFIRMED);
+                    account.addShareUser(id, requireConfirmation == 1 ? LAccount.ACCOUNT_SHARE_INVITED : LAccount.ACCOUNT_SHARE_CONFIRMED);
                     DBAccount.update(account);
                 } else {
                     LLog.w(TAG, "unable to complete share request");

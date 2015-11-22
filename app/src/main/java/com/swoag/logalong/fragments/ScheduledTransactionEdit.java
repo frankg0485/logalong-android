@@ -31,7 +31,7 @@ import com.swoag.logalong.views.LSelectionDialog;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditItf {
+public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditItf, View.OnClickListener {
     private static final String TAG = ScheduledTransactionEdit.class.getSimpleName();
 
     private Activity activity;
@@ -78,6 +78,12 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.scheduledItem = item;
         this.callback = callback;
 
+        rootView.findViewById(R.id.repeatInterval).setOnClickListener(this);
+        rootView.findViewById(R.id.repeatIntervalH).setOnClickListener(this);
+        rootView.findViewById(R.id.repeatWeekMonth).setOnClickListener(this);
+        rootView.findViewById(R.id.repeatCount).setOnClickListener(this);
+        rootView.findViewById(R.id.repeatCountH).setOnClickListener(this);
+
         this.savedScheduledItem = new LScheduledTransaction(item);
         this.bCreate = bCreate;
 
@@ -87,8 +93,18 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
 
     private void updateItemDisplay() {
         intervalTV.setText("" + scheduledItem.getRepeatInterval());
-        weekMonthTV.setText(activity.getString(savedScheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK ? R.string.week : R.string.month));
-        countTV.setText(activity.getString(R.string.unlimited));
+        if (scheduledItem.getRepeatInterval() > 1) {
+            weekMonthTV.setText(activity.getString(scheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK ? R.string.weeks : R.string.months));
+        } else {
+            weekMonthTV.setText(activity.getString(scheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK ? R.string.week : R.string.month));
+        }
+        if (scheduledItem.getRepeatCount() == 0) {
+            countTV.setText(activity.getString(R.string.unlimited));
+        } else if (scheduledItem.getRepeatCount() == 1) {
+            countTV.setText("1 " + activity.getString(R.string.count_time));
+        } else {
+            countTV.setText(scheduledItem.getRepeatCount() + " " + activity.getString(R.string.count_times));
+        }
     }
 
     private void create() {
@@ -116,6 +132,33 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
                     break;
             }
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.repeatInterval:
+            case R.id.repeatIntervalH:
+                int interval = scheduledItem.getRepeatInterval();
+                interval++;
+                if (interval > 12) interval = 1;
+                scheduledItem.setRepeatInterval(interval);
+                break;
+            case R.id.repeatWeekMonth:
+                if (scheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK)
+                    scheduledItem.setRepeatUnit(LScheduledTransaction.REPEAT_UNIT_MONTH);
+                else
+                    scheduledItem.setRepeatUnit(LScheduledTransaction.REPEAT_UNIT_WEEK);
+                break;
+            case R.id.repeatCount:
+            case R.id.repeatCountH:
+                int count = scheduledItem.getRepeatCount();
+                count++;
+                if (count > 10) count = 0;
+                scheduledItem.setRepeatCount(count);
+                break;
+        }
+        updateItemDisplay();
     }
 
     public void dismiss() {

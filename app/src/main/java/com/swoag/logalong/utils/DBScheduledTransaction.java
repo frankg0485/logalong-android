@@ -51,10 +51,12 @@ public class DBScheduledTransaction {
         try {
             if (sortColumn != null)
                 cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
-                        DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, sortColumn + " ASC");
+                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED}, sortColumn + " ASC");
             else
                 cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
-                        DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED}, null);
         } catch (Exception e) {
         }
         return cur;
@@ -141,5 +143,20 @@ public class DBScheduledTransaction {
 
     public static void deleteById(long id) {
         DBAccess.updateColumnById(DBProvider.URI_SCHEDULED_TRANSACTIONS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+    }
+
+    public static void scanAlarm() {
+        Cursor cursor = getCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
+        if (cursor != null) {
+            if (cursor.getCount() > 0) {
+                LScheduledTransaction sch = new LScheduledTransaction();
+                cursor.moveToFirst();
+                do {
+                    getValues(cursor, sch);
+                    sch.setAlarm();
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
     }
 }

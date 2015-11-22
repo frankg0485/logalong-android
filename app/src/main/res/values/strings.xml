@@ -12,6 +12,8 @@
     <string name="balance">Balance</string>
     <string name="categories">Categories</string>
     <string name="change_user_name">Change User Name</string>
+    <string name="count_time">time</string>
+    <string name="count_times">times</string>
     <string name="data_backup">Data Backup</string>
     <string name="delete">Delete</string>
     <string name="delete_now">Delete now</string>

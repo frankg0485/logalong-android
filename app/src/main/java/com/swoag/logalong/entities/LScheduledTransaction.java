@@ -68,14 +68,33 @@ public class LScheduledTransaction {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
         while (baseTimeMs <= System.currentTimeMillis()) {
-            calendar.add(Calendar.MONTH, 1);
-            baseTimeMs = calendar.getTimeInMillis();
+            if (repeatUnit == REPEAT_UNIT_MONTH) {
+                calendar.add(Calendar.MONTH, repeatInterval);
+                baseTimeMs = calendar.getTimeInMillis();
+            } else {
+                baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
+                calendar.setTimeInMillis(baseTimeMs);
+            }
         }
 
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         timestamp = calendar.getTimeInMillis();
+
+        if (repeatCount == 0) return;
+
+
+        if (repeatUnit == REPEAT_UNIT_MONTH) {
+            calendar.setTimeInMillis(item.getTimeStamp());
+            calendar.add(Calendar.MONTH, repeatCount);
+        } else {
+            calendar.setTimeInMillis(item.getTimeStamp() + (long) repeatCount * 7 * 24 * 3600 * 1000);
+        }
+        if (calendar.getTimeInMillis() + (long) 3 * 24 * 3600 * 1000 < timestamp) {
+            item.setState(DBHelper.STATE_DISABLED);
+            timestamp = item.getTimeStamp();
+        }
     }
 
     public void cancelAlarm() {
@@ -83,9 +102,11 @@ public class LScheduledTransaction {
     }
 
     public void setAlarm() {
-        LLog.d(TAG, "alarm " + item.getId() + " set: " + (new Date(timestamp)));
         cancelAlarm();
-        LAlarm.setAlarm((int) item.getId(), timestamp);
+        if (item.getState() == DBHelper.STATE_ACTIVE) {
+            LLog.d(TAG, "alarm " + item.getId() + " set: " + (new Date(timestamp)));
+            LAlarm.setAlarm((int) item.getId(), timestamp);
+        }
     }
 
     public LTransaction getItem() {

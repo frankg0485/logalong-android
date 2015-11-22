@@ -27,6 +27,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -188,6 +189,7 @@ public class ScheduleActivity extends Activity implements
             TextView tv = (TextView) mainView.findViewById(R.id.category);
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
+            int state = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE));
 
             String category = DBCategory.getNameById(categoryId);
             String tag = DBTag.getNameById(tagId);
@@ -234,6 +236,11 @@ public class ScheduleActivity extends Activity implements
             long id = cursor.getLong(0);
             mainView.setTag(new VTag(id));
 
+            if (state == DBHelper.STATE_DISABLED) {
+                LViewUtils.setAlpha(mainView, 0.4f);
+            } else {
+                LViewUtils.setAlpha(mainView, 1.0f);
+            }
             sectionView.setVisibility(View.GONE);
         }
 
