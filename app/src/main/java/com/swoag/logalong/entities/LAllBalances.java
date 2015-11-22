@@ -13,7 +13,6 @@ import java.util.HashSet;
 public class LAllBalances {
     private HashSet<Long> ids;
     private HashMap<Long, LAccountBalance> balances;
-    private long startDate, endDate;
 
     public LAllBalances(Cursor cursor) {
         balances = new HashMap<Long, LAccountBalance>();

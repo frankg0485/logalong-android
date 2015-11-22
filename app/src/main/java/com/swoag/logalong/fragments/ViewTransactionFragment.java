@@ -45,7 +45,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
-    private long startMs, endMs;
+    private long startMs, endMs, allStartMs, allEndMs;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
@@ -93,6 +93,17 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                         DBHelper.TABLE_COLUMN_STATE + "=?",
                         new String[]{"" + DBHelper.STATE_ACTIVE}, null);
 
+            case -2:
+                uri = DBProvider.URI_TRANSACTIONS;
+                return new CursorLoader(
+                        getActivity(),
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE},
+                        DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+                );
+
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
                 return new CursorLoader(
@@ -136,12 +147,29 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         );
     }
 
+
+    boolean allBalancesReady = false;
+    boolean startEndMsReady = false;
+
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
         if (loader.getId() == -1) {
             allBalances = new LAllBalances(data);
-            initDbLoader();
+            allBalancesReady = true;
+            if (allBalancesReady && startEndMsReady) initDbLoader();
             return;
+        }
+
+        if (loader.getId() == -2) {
+            if (data != null && data.getCount() > 0) {
+                startEndMsReady = true;
+                data.moveToFirst();
+                allStartMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                data.moveToLast();
+                allEndMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                if (allBalancesReady && startEndMsReady) initDbLoader();
+                return;
+            }
         }
 
         if (loader.getId() != AppPersistency.viewTransactionFilter) {
@@ -173,6 +201,12 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         now.clear();
         now.set(year, month, 1);
         return now.getTimeInMillis();
+    }
+
+    private long resetMs(long ms) {
+        Calendar now = Calendar.getInstance();
+        now.setTimeInMillis(ms);
+        return getMs(now.get(Calendar.YEAR), now.get(Calendar.MONTH));
     }
 
     private void setSectionSummary(int filterId, Cursor data) {
@@ -276,12 +310,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     }
 
     private void initDbLoader() {
-        if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
-            Calendar now = Calendar.getInstance();
-            AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
-            AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
-        }
-
         if (bMonthly) {
             startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
             endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
@@ -329,6 +357,13 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
         altIncomeTV = (TextView) tmp.findViewById(R.id.income);
 
+        if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
+            Calendar now = Calendar.getInstance();
+            AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
+            AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
+        }
+
+        getLoaderManager().restartLoader(-2, null, this);
         getLoaderManager().restartLoader(-1, null, this);
         return rootView;
     }
@@ -694,12 +729,12 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             }
         }
 
-        //long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        //if (ym < allBalances.getStartDate() || ym >= allBalances.getEndDate()) {
-        //    AppPersistency.viewTransactionYear = year;
-        //    AppPersistency.viewTransactionMonth = month;
-        //    return false;
-        //}
+        long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+        if (ym < allStartMs || ym > allEndMs) {
+            AppPersistency.viewTransactionYear = year;
+            AppPersistency.viewTransactionMonth = month;
+            return false;
+        }
         return true;
     }
 

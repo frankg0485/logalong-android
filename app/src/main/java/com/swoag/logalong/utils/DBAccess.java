@@ -10,7 +10,6 @@ import android.net.Uri;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LBoxer;
 import com.swoag.logalong.entities.LCategory;

@@ -13,32 +13,17 @@ import java.util.TreeMap;
 public class LAccountBalance {
     private TreeMap<Integer, double[]> balances;
     private long accountId;
-    private long startDate, endDate;
     private double latestBalance;
 
     public LAccountBalance(long id, int year, String balance) {
         this.accountId = id;
         balances = new TreeMap<Integer, double[]>();
-        startDate = Long.MAX_VALUE;
-        endDate = 0;
-
         setYearBalance(year, balance);
     }
 
     public void setYearBalance(int year, String balance) {
         balances.remove(year);
         balances.put(year, parseBalance(balance));
-
-        double[] doubles = balances.get(year);
-        for (int ii = 0; ii < 12; ii++) {
-
-            if (doubles[ii] != 0) {
-                long now = getMsOfYearMonth(year, ii, false);
-                if (now < startDate) startDate = now;
-                now = getMsOfYearMonth(year, ii, true);
-                if (now > endDate) endDate = now;
-            }
-        }
     }
 
     public void modify(int year, int month, double amount) {
@@ -70,11 +55,10 @@ public class LAccountBalance {
             }
         }
 
-        double vOfPremonth = 0;
+        double vOfNow = 0;
         for (int ii = 0; ii < 12; ii++) {
-            double tmp = balance[ii];
-            balance[ii] += value + vOfPremonth;
-            vOfPremonth = tmp;
+            vOfNow += balance[ii];
+            balance[ii] = value + vOfNow;
         }
 
         return balance;
@@ -88,21 +72,6 @@ public class LAccountBalance {
         }
 
         return value;
-    }
-
-    private long getMsOfYearMonth(int year, int month, boolean nextMonth) {
-        if (nextMonth) {
-            if (month < 11) month++;
-            else {
-                month = 0;
-                year++;
-            }
-        }
-
-        Calendar now = Calendar.getInstance();
-        now.clear();
-        now.set(year, month, 1);
-        return now.getTimeInMillis();
     }
 
     private double[] parseBalance(String str) {
