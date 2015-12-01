@@ -37,6 +37,8 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
+import org.w3c.dom.Text;
+
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -482,10 +484,11 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
          */
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            View mainView = view.findViewById(R.id.mainView);
-            View sectionView = view.findViewById(R.id.sectionView);
+            VTag vTag = (VTag) view.getTag();
 
-            TextView tv = (TextView) mainView.findViewById(R.id.category);
+            View mainView = vTag.mainView;
+            View sectionView = vTag.sectionView;
+
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
@@ -500,31 +503,28 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 String account2 = DBAccount.getNameById(account2Id);
 
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
-                    tv.setText(account + " --> " + account2);
+                    vTag.categoryTV.setText(account + " --> " + account2);
                 } else {
-                    tv.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
+                    vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
                 }
 
-                tv = (TextView) mainView.findViewById(R.id.note);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
-                tv.setText(note);
+                vTag.noteTV.setText(note);
             } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                 if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
                     String account2 = DBAccount.getNameById(account2Id);
-                    tv.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
+                    vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
 
-                    tv = (TextView) mainView.findViewById(R.id.note);
                     String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
-                    tv.setText(note);
+                    vTag.noteTV.setText(note);
                 }
             } else {
                 String str = "";
                 if (!tag.isEmpty()) str = tag + ":";
                 str += category;
-                tv.setText(str);
+                vTag.categoryTV.setText(str);
 
-                tv = (TextView) mainView.findViewById(R.id.note);
                 int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
                 String vendor = DBVendor.getNameById(vendorId);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
@@ -534,26 +534,23 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 } else {
                     if ((note != null) && (!note.isEmpty())) vendor += " - " + note;
                 }
-                tv.setText(vendor);
+                vTag.noteTV.setText(vendor);
             }
 
-            tv = (TextView) mainView.findViewById(R.id.date);
             long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
-            tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
-
-            tv = (TextView) mainView.findViewById(R.id.dollor);
+            vTag.dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
             Resources rsc = getActivity().getResources();
             switch (type) {
                 case LTransaction.TRANSACTION_TYPE_EXPENSE:
-                    tv.setTextColor(rsc.getColor(R.color.base_red));
+                    vTag.amountTV.setTextColor(rsc.getColor(R.color.base_red));
                     break;
                 case LTransaction.TRANSACTION_TYPE_INCOME:
-                    tv.setTextColor(rsc.getColor(R.color.base_green));
+                    vTag.amountTV.setTextColor(rsc.getColor(R.color.base_green));
                     break;
                 case LTransaction.TRANSACTION_TYPE_TRANSFER:
                 case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
-                    tv.setTextColor(rsc.getColor(R.color.base_blue));
+                    vTag.amountTV.setTextColor(rsc.getColor(R.color.base_blue));
                     break;
             }
 
@@ -568,31 +565,25 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             //Long modms = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE));
 
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-            tv.setText(String.format("%.2f", dollar));
+            vTag.amountTV.setText(String.format("%.2f", dollar));
 
-
-            mainView.setOnClickListener(clickListener);
             long id = cursor.getLong(0);
-            mainView.setTag(new VTag(id));
+            vTag.id = id;
 
             if (sectionSummary.hasId(id)) {
-                tv = (TextView) sectionView.findViewById(R.id.sortName);
                 LAccountSummary summary = sectionSummary.getSummaryById(id);
-                tv.setText(summary.getName());
+                vTag.sortNameTV.setText(summary.getName());
 
-                tv = (TextView) sectionView.findViewById(R.id.balance);
                 if (summary.getBalance() < 0) {
-                    tv.setTextColor(getActivity().getResources().getColor(R.color.base_red));
-                    tv.setText(String.format("%.2f", -summary.getBalance()));
+                    vTag.balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_red));
+                    vTag.balanceTV.setText(String.format("%.2f", -summary.getBalance()));
                 } else {
-                    tv.setTextColor(getActivity().getResources().getColor(R.color.base_green));
-                    tv.setText(String.format("%.2f", summary.getBalance()));
+                    vTag.balanceTV.setTextColor(getActivity().getResources().getColor(R.color.base_green));
+                    vTag.balanceTV.setText(String.format("%.2f", summary.getBalance()));
                 }
 
-                tv = (TextView) sectionView.findViewById(R.id.income);
-                tv.setText(String.format("%.2f", summary.getIncome()));
-                tv = (TextView) sectionView.findViewById(R.id.expense);
-                tv.setText(String.format("%.2f", summary.getExpense()));
+                vTag.incomeTV.setText(String.format("%.2f", summary.getIncome()));
+                vTag.expenseTV.setText(String.format("%.2f", summary.getExpense()));
 
                 sectionView.setVisibility(View.VISIBLE);
             } else {
@@ -606,6 +597,28 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             View newView = LayoutInflater.from(context).inflate(R.layout.transaction_item, parent, false);
+            View mainView = newView.findViewById(R.id.mainView);
+            mainView.setOnClickListener(clickListener);
+
+            VTag vTag = new VTag(0);
+            vTag.categoryTV = (TextView) mainView.findViewById(R.id.category);
+            vTag.amountTV = (TextView) mainView.findViewById(R.id.dollor);
+            vTag.noteTV = (TextView) mainView.findViewById(R.id.note);
+            vTag.dateTV = (TextView) mainView.findViewById(R.id.date);
+
+            mainView.setTag(vTag);
+
+            vTag.mainView = mainView;
+
+            View sectionView = newView.findViewById(R.id.sectionView);
+            vTag.sectionView = sectionView;
+            vTag.sortNameTV = (TextView) sectionView.findViewById(R.id.sortName);
+            vTag.balanceTV = (TextView) sectionView.findViewById(R.id.balance);
+            vTag.incomeTV = (TextView) sectionView.findViewById(R.id.income);
+            vTag.expenseTV = (TextView) sectionView.findViewById(R.id.expense);
+
+            newView.setTag(vTag);
+
             return newView;
         }
 
@@ -660,6 +673,9 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
         private class VTag {
             long id;
+            View mainView, sectionView;
+            TextView categoryTV, noteTV, dateTV, amountTV;
+            TextView sortNameTV, balanceTV, incomeTV, expenseTV;
 
             public VTag(long id) {
                 this.id = id;
@@ -878,7 +894,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         initDbLoader();
     }
 
-    private  void showTime() {
+    private void showTime() {
         switch (AppPersistency.viewTransactionTime) {
             case AppPersistency.TRANSACTION_TIME_MONTHLY:
                 monthlyView.setText(getActivity().getString(R.string.monthly));
