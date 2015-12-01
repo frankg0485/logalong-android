@@ -564,8 +564,12 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 mainView.setVisibility(View.VISIBLE);
             }
 
+            //String uuid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+            //Long modms = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE));
+
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             tv.setText(String.format("%.2f", dollar));
+
 
             mainView.setOnClickListener(clickListener);
             long id = cursor.getLong(0);
