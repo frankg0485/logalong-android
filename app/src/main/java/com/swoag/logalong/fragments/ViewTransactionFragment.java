@@ -225,6 +225,18 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
         return getMs(year, month);
     }
 
+    private void setAccountSummary(LAccountSummary summary, long id) {
+        if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) return;
+        if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ANNUALLY) {
+            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, 11));
+        } else if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_MONTHLY) {
+            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+        } else {
+            //quarterly
+            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+        }
+    }
+
     private void setSectionSummary(int filterId, Cursor data) {
         String column = "";
         switch (filterId) {
@@ -273,6 +285,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 switch (filterId) {
                     case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                         summary.setName(DBAccount.getNameById(lastId));
+                        setAccountSummary(summary, lastId);
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                         summary.setName(DBCategory.getNameById(lastId));
@@ -304,9 +317,14 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
         if (hasLog) {
             summary = new LAccountSummary();
+            summary.setExpense(expense);
+            summary.setIncome(income);
+            summary.setBalance(income - expense);
+
             switch (filterId) {
                 case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                     summary.setName(DBAccount.getNameById(id));
+                    setAccountSummary(summary, id);
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                     summary.setName(DBCategory.getNameById(id));
@@ -318,9 +336,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                     summary.setName(DBVendor.getNameById(id));
                     break;
             }
-            summary.setExpense(expense);
-            summary.setIncome(income);
-            summary.setBalance(income - expense);
             sectionSummary.addSummary(lastIndex, summary);
         }
     }
