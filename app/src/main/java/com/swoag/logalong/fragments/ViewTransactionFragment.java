@@ -47,7 +47,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
-    private long startMs, endMs, allStartMs, allEndMs;
+    private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
@@ -168,6 +168,13 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 allStartMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), false);
                 data.moveToLast();
                 allEndMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), true);
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(allStartMs);
+                allStartYear = calendar.get(Calendar.YEAR);
+                calendar.setTimeInMillis(allEndMs - 1);
+                allEndYear = calendar.get(Calendar.YEAR);
+
                 if (allBalancesReady && startEndMsReady) initDbLoader();
                 return;
             }
@@ -930,14 +937,20 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 validateYearMonth();
                 break;
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
+                if (allStartYear != allEndYear) {
+                    AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
+                } else {
+                    AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
+                    validateYearMonth();
+                }
                 break;
-            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
-                break;
+            //case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+            //    AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
+            //    break;
             case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_QUARTERLY;
-                AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
+                //AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_QUARTERLY;
+                //AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
+                AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ANNUALLY;
                 break;
         }
         showTime();
