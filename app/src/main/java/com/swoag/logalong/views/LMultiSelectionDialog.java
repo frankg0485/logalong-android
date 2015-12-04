@@ -61,7 +61,7 @@ public class LMultiSelectionDialog extends Dialog
 	 */
 
     private int[] ids;
-    private LMultiSelectionDialog.OnMultiSelectionDialogItf callback;
+    private LMultiSelectionDialog.MultiSelectionDialogItf callback;
 
     /* 0: mainEntryColumn;
      * 1: subEntryColumn;
@@ -71,7 +71,7 @@ public class LMultiSelectionDialog extends Dialog
     private Object obj;
 
     private void init(Context context, Object obj, HashSet<Long> selectedIds,
-                      LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
+                      LMultiSelectionDialog.MultiSelectionDialogItf callback,
                       int[] ids, String[] columns) {
         this.context = context;
         this.callback = callback;
@@ -85,14 +85,14 @@ public class LMultiSelectionDialog extends Dialog
         this.columns = columns;
     }
 
-    public interface OnMultiSelectionDialogItf {
+    public interface MultiSelectionDialogItf {
         public Cursor onMultiSelectionGetCursor(String column);
 
         public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections);
     }
 
     public LMultiSelectionDialog(Context context, Object obj, HashSet<Long> selectedIds,
-                                 LMultiSelectionDialog.OnMultiSelectionDialogItf callback,
+                                 LMultiSelectionDialog.MultiSelectionDialogItf callback,
                                  int[] ids, String[] columns) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
         myClickListener = new MyClickListener();

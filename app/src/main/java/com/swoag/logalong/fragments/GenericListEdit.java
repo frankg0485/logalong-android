@@ -169,7 +169,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             GenericListOptionDialog.GenericListOptionDialogItf,
             LRenameDialog.LRenameDialogItf,
             LShareAccountDialog.LShareAccountDialogItf,
-            LMultiSelectionDialog.OnMultiSelectionDialogItf,
+            LMultiSelectionDialog.MultiSelectionDialogItf,
             LWarnDialog.LWarnDialogItf {
         private GenericListOptionDialog optionDialog;
         private ClickListener clickListener;

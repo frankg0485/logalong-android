@@ -1,0 +1,243 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dialog_bg_color"
+    android:gravity="center">
+
+    <RelativeLayout
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@drawable/dialog_row_bgd"
+        android:padding="3dp">
+
+        <LinearLayout
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dialog_title_height"
+            android:layout_alignParentTop="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:padding="6dp"
+                android:singleLine="true"
+                android:text="@string/select_records"
+                android:textColor="@color/base_text_color"
+                android:textSize="@dimen/settings_option_text_size"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/closeDialog"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="2dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="2dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_action_cancel" />
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/topBar"
+            android:padding="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="#000"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/checkboxView"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/row_selector"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/checkboxAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="20dp"
+                        android:button="@drawable/btn_check_holo_dark"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:text="@string/show_all"
+                        android:textColor="@color/base_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/customFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:id="@+id/accounts"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true">
+
+                        <TextView
+                            android:id="@+id/accountHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:text="@string/accounts"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/selectedAccounts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_toRightOf="@+id/accountHeader"
+                            android:ellipsize="end"
+                            android:gravity="end"
+                            android:singleLine="true"
+                            android:text="@string/all"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/categories"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true">
+
+                        <TextView
+                            android:id="@+id/categoryHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:text="@string/categories"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/selectedCategories"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_toRightOf="@+id/categoryHeader"
+                            android:ellipsize="end"
+                            android:gravity="end"
+                            android:singleLine="true"
+                            android:text="@string/all"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/vendors"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true">
+
+                        <TextView
+                            android:id="@+id/payerHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:text="@string/payee_payers"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/selectedPayers"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_toRightOf="@+id/payerHeader"
+                            android:ellipsize="end"
+                            android:gravity="end"
+                            android:singleLine="true"
+                            android:text="@string/all"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true">
+
+                        <TextView
+                            android:id="@+id/tagHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:text="@string/tags"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/selectedTags"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_toRightOf="@+id/tagHeader"
+                            android:ellipsize="end"
+                            android:gravity="end"
+                            android:singleLine="true"
+                            android:text="@string/all"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </RelativeLayout>
+
+</RelativeLayout>

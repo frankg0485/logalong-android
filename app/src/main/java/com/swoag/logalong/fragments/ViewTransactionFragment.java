@@ -36,6 +36,8 @@ import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LShareAccountDialog;
+import com.swoag.logalong.views.TransactionSearchDialog;
 
 import org.w3c.dom.Text;
 
@@ -43,7 +45,8 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ViewTransactionFragment extends LFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class ViewTransactionFragment extends LFragment implements
+        LoaderManager.LoaderCallbacks<Cursor>, TransactionSearchDialog.TransactionSearchDialogItf {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
@@ -53,7 +56,7 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     private LSectionSummary sectionSummary;
 
     private ViewFlipper viewFlipper, listViewFlipper;
-    private View rootView, prevView, nextView, filterView;
+    private View rootView, prevView, nextView;
     private TextView monthlyView;
     private TransactionEdit edit;
 
@@ -370,7 +373,8 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
-        filterView = setViewListener(rootView, R.id.filter);
+        setViewListener(rootView, R.id.filter);
+        setViewListener(rootView, R.id.search);
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
@@ -417,7 +421,6 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
     public void onDestroyView() {
         prevView = null;
         nextView = null;
-        filterView = null;
         monthlyView = null;
 
         viewFlipper.setInAnimation(null);
@@ -462,6 +465,9 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
             switch (v.getId()) {
                 case R.id.filter:
                     changeFilter();
+                    break;
+                case R.id.search:
+                    changeSearch();
                     break;
                 case R.id.prev:
                     showPrevNext(true);
@@ -908,6 +914,16 @@ public class ViewTransactionFragment extends LFragment implements LoaderManager.
                 AppPersistency.viewTransactionFilter = AppPersistency.TRANSACTION_FILTER_ALL;
                 break;
         }
+    }
+
+    @Override
+    public void onTransactionSearchDialogDismiss() {
+
+    }
+
+    private void changeSearch() {
+        TransactionSearchDialog dialog = new TransactionSearchDialog(getActivity(), this);
+        dialog.show();
     }
 
     private void changeFilter() {
