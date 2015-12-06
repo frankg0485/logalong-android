@@ -236,6 +236,79 @@
                             android:textStyle="bold" />
                     </RelativeLayout>
                 </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/checkboxViewTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/row_selector"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <CheckBox
+                        android:id="@+id/checkboxAllTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="20dp"
+                        android:button="@drawable/btn_check_holo_dark"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:text="@string/all_time"
+                        android:textColor="@color/base_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/customTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/fromTime"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/settings_item_height"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical|left"
+                            android:text="Dec 6, 2015"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="5dp"
+                            android:text="@string/to"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/toTime"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/settings_item_height"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_weight="1"
+                            android:gravity="center_vertical|right"
+                            android:text="Dec 6, 2015"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </ScrollView>
     </RelativeLayout>

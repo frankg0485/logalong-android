@@ -102,6 +102,17 @@
                     android:paddingTop="6dp"
                     android:src="@drawable/ic_action_right" />
 
+                <TextView
+                    android:id="@+id/customTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="20dp"
+                    android:gravity="center"
+                    android:textColor="#ccc"
+                    android:textSize="12dp"
+                    android:visibility="gone" />
+
                 <include
                     android:id="@+id/undobar"
                     layout="@layout/undo_bar"

@@ -7,10 +7,15 @@ import android.content.SharedPreferences;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 
+import java.util.Calendar;
+
 public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
+    private static final String SEARCH_ALLTIME = "SearchAllTime";
+    private static final String SEARCH_ALLTIME_FROM = "SearchAllTimeFrom";
+    private static final String SEARCH_ALLTIME_TO = "SearchAllTimeTo";
     private static final String SEARCH_ALL = "SearchAll";
     private static final String SEARCH_ACCOUNTS = "SearchAccounts";
     private static final String SEARCH_CATEGORIES = "SearchCategories";
@@ -167,6 +172,48 @@ public class LPreferences {
         }
 
         return request;
+    }
+
+    public static boolean getSearchAllTime() {
+        return getPreference(LApp.ctx, SEARCH_ALLTIME, true);
+    }
+
+    public static void setSearchAllTime(boolean all) {
+        savePreference(LApp.ctx, SEARCH_ALLTIME, all);
+    }
+
+    private static long defaultSearchAllTime(boolean from) {
+        Calendar calendar = Calendar.getInstance();
+        if (from) calendar.add(Calendar.MONTH, -1);
+
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        calendar.clear();
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month);
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+
+        return calendar.getTimeInMillis();
+    }
+
+    public static long getSearchAllTimeFrom() {
+        return getPreference(LApp.ctx, SEARCH_ALLTIME_FROM, defaultSearchAllTime(true));
+    }
+
+    public static void setSearchAllTimeFrom(long from) {
+        if (from == 0) from = defaultSearchAllTime(true);
+        savePreference(LApp.ctx, SEARCH_ALLTIME_FROM, from);
+    }
+
+    public static long getSearchAllTimeTo() {
+        return getPreference(LApp.ctx, SEARCH_ALLTIME_TO, defaultSearchAllTime(false));
+    }
+
+    public static void setSearchAllTimeTo(long to) {
+        if (to == 0) to = defaultSearchAllTime(false);
+        savePreference(LApp.ctx, SEARCH_ALLTIME_TO, to);
     }
 
     private static long[] getLongArray(String key) {

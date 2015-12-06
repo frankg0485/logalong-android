@@ -5,6 +5,7 @@
     <string name="action_settings">settings</string>
     <string name="additional_note_here">Additional note here</string>
     <string name="all">all</string>
+    <string name="all_time">All Time</string>
     <string name="annually">annually</string>
     <string name="app_name">LogAlong</string>
     <string name="backed_up_on">Backed up on</string>
@@ -70,7 +71,6 @@
     <string name="restore_now">Restore now</string>
     <string name="save">Save</string>
     <string name="scheduled_transactions">Scheduled Transactions</string>
-
     <string name="select_account">Select Account</string>
     <string name="select_accounts">Select Accounts</string>
     <string name="select_all">all</string>
@@ -88,6 +88,7 @@
     <string name="show_balance">Show balance</string>
     <string name="show_password">show password</string>
     <string name="tags">Tags</string>
+    <string name="to">to</string>
     <string name="transfer">Transfer</string>
     <string name="transfer_from">FROM:</string>
     <string name="transfer_from_report_view">from:</string>

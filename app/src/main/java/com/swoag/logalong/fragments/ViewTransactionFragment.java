@@ -62,7 +62,7 @@ public class ViewTransactionFragment extends LFragment implements
 
     private ViewFlipper viewFlipper, listViewFlipper;
     private View rootView, prevView, nextView;
-    private TextView monthlyView;
+    private TextView monthlyView, customTimeView;
     private TransactionEdit edit;
 
     private LAllBalances allBalances;
@@ -330,7 +330,7 @@ public class ViewTransactionFragment extends LFragment implements
                 switch (filterId) {
                     case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                         summary.setName(DBAccount.getNameById(lastId));
-                        setAccountSummary(summary, lastId);
+                        if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
                         break;
                     case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                         summary.setName(DBCategory.getNameById(lastId));
@@ -386,25 +386,31 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void initDbLoader() {
-        switch (AppPersistency.viewTransactionTime) {
-            case AppPersistency.TRANSACTION_TIME_ALL:
-                startMs = 0;
-                endMs = Long.MAX_VALUE;
-                break;
-            case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-                endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
-                break;
-            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
-                endMs = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
-                break;
+        if (LPreferences.getSearchAllTime()) {
+            switch (AppPersistency.viewTransactionTime) {
+                case AppPersistency.TRANSACTION_TIME_ALL:
+                    startMs = 0;
+                    endMs = Long.MAX_VALUE;
+                    break;
+                case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                    startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+                    endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
+                    break;
+                case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                    startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
+                    endMs = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
+                    break;
 
-            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                startMs = getMs(AppPersistency.viewTransactionYear, 0);
-                endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
-                break;
+                case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                    startMs = getMs(AppPersistency.viewTransactionYear, 0);
+                    endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
+                    break;
+            }
+        } else {
+            startMs = LPreferences.getSearchAllTimeFrom();
+            endMs = LPreferences.getSearchAllTimeTo();
         }
+
         getLoaderManager().restartLoader(AppPersistency.viewTransactionFilter, null, this);
     }
 
@@ -420,6 +426,7 @@ public class ViewTransactionFragment extends LFragment implements
         setViewListener(rootView, R.id.filter);
         setViewListener(rootView, R.id.search);
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
+        customTimeView = (TextView) rootView.findViewById(R.id.customTime);
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -466,6 +473,7 @@ public class ViewTransactionFragment extends LFragment implements
         prevView = null;
         nextView = null;
         monthlyView = null;
+        customTimeView = null;
 
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
@@ -791,25 +799,34 @@ public class ViewTransactionFragment extends LFragment implements
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        switch (AppPersistency.viewTransactionTime) {
-            case AppPersistency.TRANSACTION_TIME_ALL:
-                mtv.setText(getString(R.string.balance));
-                break;
-            case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
-                break;
-            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                mtv.setText("Q" + (AppPersistency.viewTransactionQuarter + 1) + " " + AppPersistency.viewTransactionYear);
-                break;
+        if (LPreferences.getSearchAllTime()) {
+            switch (AppPersistency.viewTransactionTime) {
+                case AppPersistency.TRANSACTION_TIME_ALL:
+                    mtv.setText(getString(R.string.balance));
+                    break;
+                case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                    mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
+                    break;
+                case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+                    mtv.setText("Q" + (AppPersistency.viewTransactionQuarter + 1) + " " + AppPersistency.viewTransactionYear);
+                    break;
 
-            case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                mtv.setText("" + AppPersistency.viewTransactionYear);
-                break;
+                case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                    mtv.setText("" + AppPersistency.viewTransactionYear);
+                    break;
+            }
+        } else {
+            mtv.setText(getString(R.string.balance));
         }
     }
 
     private void getBalance(LAccountSummary summary, Cursor data) {
-        if (data != null) DBAccess.getAccountSummaryForCurrentCursor(summary, 0, data);
+        if (data != null) DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
+        if (!LPreferences.getSearchAllTime()) {
+            summary.setBalance(summary.getIncome() - summary.getExpense());
+            return;
+        }
+
         if (allBalances == null) return;
 
         //get balance for All accounts at current year/month
@@ -1024,6 +1041,7 @@ public class ViewTransactionFragment extends LFragment implements
     @Override
     public void onTransactionSearchDialogDismiss() {
         resetSelections();
+        showTime();
         getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
     }
 
@@ -1039,6 +1057,22 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void showTime() {
+        if (LPreferences.getSearchAllTime()) {
+            customTimeView.setVisibility(View.GONE);
+            monthlyView.setVisibility(View.VISIBLE);
+            prevView.setVisibility(View.VISIBLE);
+            nextView.setVisibility(View.VISIBLE);
+
+        } else {
+            customTimeView.setVisibility(View.VISIBLE);
+            monthlyView.setVisibility(View.GONE);
+            prevView.setVisibility(View.GONE);
+            nextView.setVisibility(View.GONE);
+
+            customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
+                    new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+        }
+
         switch (AppPersistency.viewTransactionTime) {
             case AppPersistency.TRANSACTION_TIME_MONTHLY:
                 monthlyView.setText(getActivity().getString(R.string.monthly));

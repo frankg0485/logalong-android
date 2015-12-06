@@ -105,7 +105,7 @@ public class DBAccess {
         return ret;
     }
 
-    public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, long id, Cursor cursor) {
+    public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, Cursor cursor, boolean considerTransfer) {
         double income = 0;
         double expense = 0;
 
@@ -116,6 +116,13 @@ public class DBAccess {
                 int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                 if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += value;
                 else if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += value;
+                if (considerTransfer) {
+                    if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                        expense += value;
+                    } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                        income += value;
+                    }
+                }
             } while (cursor.moveToNext());
         }
         summary.setBalance(income - expense);

@@ -2,18 +2,22 @@ package com.swoag.logalong.views;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.fragments.TransactionEdit;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
@@ -24,20 +28,22 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashSet;
 
 public class TransactionSearchDialog extends Dialog implements
-        DialogInterface.OnDismissListener {
+        DialogInterface.OnDismissListener, DatePickerDialog.OnDateSetListener {
 
     private Context context;
-    private View filterView;
-    private TextView accountV, categoryV, vendorV, tagV;
+    private View filterCheckView, filterView, timeCheckView, timeView;
+    private TextView accountV, categoryV, vendorV, tagV, fromV, toV;
     private TransactionSearchDialogItf callback;
     private MyClickListener myClickListener;
-    private CheckBox checkBox;
-    private boolean showAll;
+    private CheckBox checkBox, checkBoxTime;
+    private boolean showAll, allTime;
 
     private LMultiSelectionDialog.MultiSelectionDialogItf accountSelectionDlgItf;
     private LMultiSelectionDialog.MultiSelectionDialogItf categorySelectionDlgItf;
@@ -149,6 +155,11 @@ public class TransactionSearchDialog extends Dialog implements
 
     @Override
     public void onDismiss(DialogInterface dialog) {
+        if (LPreferences.getSearchAllTimeFrom() >= LPreferences.getSearchAllTimeTo()) {
+            LPreferences.setSearchAllTimeFrom(0);
+            LPreferences.setSearchAllTimeTo(0);
+        }
+
         callback.onTransactionSearchDialogDismiss();
     }
 
@@ -165,17 +176,36 @@ public class TransactionSearchDialog extends Dialog implements
         findViewById(R.id.vendors).setOnClickListener(myClickListener);
         findViewById(R.id.tags).setOnClickListener(myClickListener);
 
+        findViewById(R.id.fromTime).setOnClickListener(myClickListener);
+        findViewById(R.id.toTime).setOnClickListener(myClickListener);
+
         filterView = findViewById(R.id.customFilter);
         accountV = (TextView) findViewById(R.id.selectedAccounts);
         categoryV = (TextView) findViewById(R.id.selectedCategories);
         vendorV = (TextView) findViewById(R.id.selectedPayers);
         tagV = (TextView) findViewById(R.id.selectedTags);
 
-        findViewById(R.id.checkboxView).setOnClickListener(myClickListener);
+        timeView = findViewById(R.id.customTime);
+        fromV = (TextView) findViewById(R.id.fromTime);
+        toV = (TextView) findViewById(R.id.toTime);
+
+        filterCheckView = findViewById(R.id.checkboxView);
+        filterCheckView.setOnClickListener(myClickListener);
         checkBox = (CheckBox) findViewById(R.id.checkboxAll);
         showAll = LPreferences.getSearchAll();
 
-        displayUpdate(showAll);
+        timeCheckView = findViewById(R.id.checkboxViewTime);
+        timeCheckView.setOnClickListener(myClickListener);
+        checkBoxTime = (CheckBox) findViewById(R.id.checkboxAllTime);
+        allTime = LPreferences.getSearchAllTime();
+
+        displayUpdateFilter(showAll);
+
+        if (LPreferences.getSearchAllTimeFrom() >= LPreferences.getSearchAllTimeTo()) {
+            LPreferences.setSearchAllTimeFrom(0);
+            LPreferences.setSearchAllTimeTo(0);
+        }
+        displayUpdateTime(allTime);
 
         this.setOnDismissListener(this);
     }
@@ -236,18 +266,38 @@ public class TransactionSearchDialog extends Dialog implements
         }
     }
 
-    private void displayUpdate(boolean all) {
+    private void displayUpdateFilter(boolean all) {
         checkBox.setChecked(all);
         LViewUtils.disableEnableControls(!all, (ViewGroup) filterView);
         if (all) {
-            LViewUtils.setAlpha(filterView, 0.75f);
+            //LViewUtils.setAlpha(filterView, 0.8f);
+            filterView.setVisibility(View.GONE);
+            LViewUtils.setAlpha(filterCheckView, 1.0f);
         } else {
-            LViewUtils.setAlpha(filterView, 1.0f);
+            //LViewUtils.setAlpha(filterView, 1.0f);
+            filterView.setVisibility(View.VISIBLE);
+            LViewUtils.setAlpha(filterCheckView, 0.8f);
         }
         displayAccounts();
         displayCategories();
         displayVendors();
         displayTags();
+    }
+
+    private void displayUpdateTime(boolean all) {
+        checkBoxTime.setChecked(all);
+        LViewUtils.disableEnableControls(!all, (ViewGroup) timeView);
+        if (all) {
+            //LViewUtils.setAlpha(timeView, 0.8f);
+            timeView.setVisibility(View.GONE);
+            LViewUtils.setAlpha(timeCheckView, 1.0f);
+        } else {
+            //LViewUtils.setAlpha(timeView, 1.0f);
+            timeView.setVisibility(View.VISIBLE);
+            LViewUtils.setAlpha(timeCheckView, 0.8f);
+        }
+        fromV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()));
+        toV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -274,7 +324,13 @@ public class TransactionSearchDialog extends Dialog implements
                 case R.id.checkboxView:
                     showAll = !showAll;
                     LPreferences.setSearchAll(showAll);
-                    displayUpdate(showAll);
+                    displayUpdateFilter(showAll);
+                    return;
+
+                case R.id.checkboxViewTime:
+                    allTime = !allTime;
+                    LPreferences.setSearchAllTime(allTime);
+                    displayUpdateTime(allTime);
                     return;
 
                 case R.id.accounts:
@@ -333,11 +389,49 @@ public class TransactionSearchDialog extends Dialog implements
                     dialog.show();
                     return;
 
+                case R.id.fromTime:
+                    showDatePicker(true);
+                    return;
+
+                case R.id.toTime:
+                    showDatePicker(false);
+                    return;
+
                 case R.id.closeDialog:
                 default:
                     break;
             }
             dismiss();
         }
+    }
+
+    boolean setFromTime;
+
+    private void showDatePicker(boolean from) {
+        setFromTime = from;
+
+        final Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(from ? LPreferences.getSearchAllTimeFrom() : LPreferences.getSearchAllTimeTo());
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(context, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
+                TransactionSearchDialog.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        datePickerDialog.show();
+    }
+
+    @Override
+    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, monthOfYear, dayOfMonth);
+        TextView tv = fromV;
+
+        if (setFromTime) {
+            LPreferences.setSearchAllTimeFrom(calendar.getTimeInMillis());
+        } else {
+            tv = toV;
+            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis());
+        }
+
+        tv.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
     }
 }
