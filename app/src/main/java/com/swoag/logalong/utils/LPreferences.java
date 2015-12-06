@@ -11,6 +11,10 @@ public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
+    private static final String SEARCH_ACCOUNTS = "SearchAccounts";
+    private static final String SEARCH_CATEGORIES = "SearchCategories";
+    private static final String SEARCH_VENDORS = "SearchVendors";
+    private static final String SEARCH_TAGS = "SearchTags";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
@@ -162,6 +166,67 @@ public class LPreferences {
         }
 
         return request;
+    }
+
+    private static long[] getLongArray(String key) {
+        String str = getPreference(LApp.ctx, key, "");
+        if (str.isEmpty()) return null;
+
+        String[] ss = str.split(",");
+        if (ss.length > 0) {
+            long[] vals = new long[ss.length];
+            for (int ii = 0; ii < ss.length; ii++) {
+                vals[ii] = Long.parseLong(ss[ii]);
+            }
+            return vals;
+        }
+        return null;
+    }
+
+    private static void setLongArray(String key, long[] vals) {
+        if (null == vals) {
+            savePreference(LApp.ctx, key, "");
+            return;
+        }
+
+        String str = "";
+        for (int ii = 0; ii < vals.length - 1; ii++) {
+            str += String.valueOf(vals[ii]) + ",";
+        }
+        str += String.valueOf(vals[vals.length - 1]);
+        savePreference(LApp.ctx, key, str);
+    }
+
+    public static long[] getSearchAccounts() {
+        return getLongArray(SEARCH_ACCOUNTS);
+    }
+
+    public static void setSearchAccounts(long[] accounts) {
+        setLongArray(SEARCH_ACCOUNTS, accounts);
+    }
+
+    public static long[] getSearchCategories() {
+        return getLongArray(SEARCH_CATEGORIES);
+    }
+
+    public static void setSearchCategories(long[] categories) {
+        setLongArray(SEARCH_CATEGORIES, categories);
+    }
+
+    public static long[] getSearchVendors() {
+        return getLongArray(SEARCH_VENDORS);
+    }
+
+    public static void setSearchVendors(long[] vendors) {
+        setLongArray(SEARCH_VENDORS, vendors);
+    }
+
+    public static long[] getSearchTags() {
+        return getLongArray(SEARCH_TAGS);
+    }
+
+    public static void setSearchTags(long[] tags) {
+        setLongArray(SEARCH_TAGS, tags);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////

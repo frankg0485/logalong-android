@@ -47,6 +47,8 @@ public class LMultiSelectionDialog extends Dialog
     public Context context;
     private ListView mList;
     private MyClickListener myClickListener;
+    private boolean allSelected;
+    private CheckBox allSelectionCB;
 
 	/* 0: layoutId;
      * 1: itemLayoutId;
@@ -88,7 +90,7 @@ public class LMultiSelectionDialog extends Dialog
     public interface MultiSelectionDialogItf {
         public Cursor onMultiSelectionGetCursor(String column);
 
-        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections);
+        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected);
     }
 
     public LMultiSelectionDialog(Context context, Object obj, HashSet<Long> selectedIds,
@@ -121,6 +123,16 @@ public class LMultiSelectionDialog extends Dialog
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
+
+        allSelected = isAllSelected();
+        allSelectionCB = (CheckBox) findViewById(ids[6]);
+        allSelectionCB.setChecked(allSelected);
+    }
+
+    private boolean isAllSelected() {
+        if (selectedIds.isEmpty()) return false;
+        if (null == mCursor || mCursor.getCount() < 1) return false;
+        return (selectedIds.size() == mCursor.getCount());
     }
 
     @Override
@@ -166,6 +178,7 @@ public class LMultiSelectionDialog extends Dialog
                 try {
                     CheckBox cb = (CheckBox) v.findViewById(ids[6]);
                     cb.setChecked(!cb.isChecked());
+                    allSelected = cb.isChecked();
 
                     mCursor.moveToFirst();
                     for (int ii = 0; ii < mCursor.getCount(); ii++) {
@@ -185,6 +198,7 @@ public class LMultiSelectionDialog extends Dialog
                 leave();
             } else if (id == ids[4]) {
                 selectedIds.clear();
+                allSelected = false;
                 leave();
             }
         }
@@ -204,10 +218,13 @@ public class LMultiSelectionDialog extends Dialog
         CheckBox cb = (CheckBox) arg1.findViewById(ids[6]);
         cb.setChecked(checked);
         arg1.findViewById(ids[7]).setSelected(checked);
+
+        allSelected = isAllSelected();
+        allSelectionCB.setChecked(allSelected);
     }
 
     private void leave() {
-        callback.onMultiSelectionDialogExit(obj, selectedIds);
+        callback.onMultiSelectionDialogExit(obj, selectedIds, allSelected);
         dismiss();
     }
 

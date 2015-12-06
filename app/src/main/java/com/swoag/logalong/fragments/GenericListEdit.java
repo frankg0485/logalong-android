@@ -512,7 +512,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
 
 
         @Override
-        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections) {
+        public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
             VTag tag = (VTag) obj;
 
             DBVendor.setCategories(tag.id, selections);
