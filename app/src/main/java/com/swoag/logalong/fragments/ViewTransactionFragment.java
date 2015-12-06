@@ -13,6 +13,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
@@ -55,6 +56,8 @@ public class ViewTransactionFragment extends LFragment implements
     private static final int LOADER_INIT_BALANCE = -1;
 
     private ListView listView;
+    private ImageView filterView, searchView;
+
     private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
@@ -369,7 +372,7 @@ public class ViewTransactionFragment extends LFragment implements
             switch (filterId) {
                 case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
                     summary.setName(DBAccount.getNameById(id));
-                    setAccountSummary(summary, id);
+                    if (LPreferences.getSearchAllTime()) setAccountSummary(summary, id);
                     break;
                 case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
                     summary.setName(DBCategory.getNameById(id));
@@ -423,8 +426,15 @@ public class ViewTransactionFragment extends LFragment implements
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
-        setViewListener(rootView, R.id.filter);
-        setViewListener(rootView, R.id.search);
+        filterView = (ImageView) setViewListener(rootView, R.id.filter);
+        searchView = (ImageView) setViewListener(rootView, R.id.search);
+
+        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
+            LViewUtils.setAlpha(searchView, 0.5f);
+        } else {
+            LViewUtils.setAlpha(searchView, 1.0f);
+        }
+
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
         customTimeView = (TextView) rootView.findViewById(R.id.customTime);
 
@@ -462,6 +472,7 @@ public class ViewTransactionFragment extends LFragment implements
             AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
         }
         showTime();
+        showFilterView();
 
         getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
         getLoaderManager().restartLoader(LOADER_INIT_BALANCE, null, this);
@@ -821,7 +832,8 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void getBalance(LAccountSummary summary, Cursor data) {
-        if (data != null) DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
+        if (data != null)
+            DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
@@ -1042,6 +1054,13 @@ public class ViewTransactionFragment extends LFragment implements
     public void onTransactionSearchDialogDismiss() {
         resetSelections();
         showTime();
+
+        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
+            LViewUtils.setAlpha(searchView, 0.5f);
+        } else {
+            LViewUtils.setAlpha(searchView, 1.0f);
+        }
+
         getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
     }
 
@@ -1053,7 +1072,28 @@ public class ViewTransactionFragment extends LFragment implements
     private void changeFilter() {
         //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
         nextFilter();
+        showFilterView();
         initDbLoader();
+    }
+
+    private void showFilterView() {
+        switch (AppPersistency.viewTransactionFilter) {
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                filterView.setImageResource(R.drawable.ic_menu_sort_by_size);
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                filterView.setImageResource(R.drawable.ic_menu_sort_by_account);
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                filterView.setImageResource(R.drawable.ic_menu_sort_by_category);
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                filterView.setImageResource(R.drawable.ic_menu_sort_by_tag);
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                filterView.setImageResource(R.drawable.ic_menu_sort_by_payer);
+                break;
+        }
     }
 
     private void showTime() {
