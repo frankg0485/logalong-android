@@ -77,4 +77,22 @@ public class LAllBalances {
 
         return balance.getYearBalanceAccumulated();
     }
+
+    public double getBalance(long accountIds[]) {
+        if (accountIds == null || accountIds.length == 0) return getBalance();
+        double bal = 0;
+        for (int ii = 0; ii < accountIds.length; ii++) {
+            bal += getBalance(accountIds[ii]);
+        }
+        return bal;
+    }
+
+    public double getBalance(long accountIds[], int year, int month) {
+        if (accountIds == null || accountIds.length == 0) return getBalance(year, month);
+        double bal = 0;
+        for (int ii = 0; ii < accountIds.length; ii++) {
+            bal += getBalance(accountIds[ii], year, month);
+        }
+        return bal;
+    }
 }

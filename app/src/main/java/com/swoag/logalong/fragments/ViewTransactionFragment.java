@@ -35,6 +35,7 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LShareAccountDialog;
 import com.swoag.logalong.views.TransactionSearchDialog;
@@ -43,11 +44,15 @@ import org.w3c.dom.Text;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class ViewTransactionFragment extends LFragment implements
         LoaderManager.LoaderCallbacks<Cursor>, TransactionSearchDialog.TransactionSearchDialogItf {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
+
+    private static final int LOADER_INIT_START_END_MS = -2;
+    private static final int LOADER_INIT_BALANCE = -1;
 
     private ListView listView;
     private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear;
@@ -63,9 +68,13 @@ public class ViewTransactionFragment extends LFragment implements
     private LAllBalances allBalances;
     private MyClickListener myClickListener;
 
+    private String selections = "";
+    private ArrayList<String> selectionArgs = new ArrayList<String>();
 
     @Override
     public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String s, ds;
+        String[] sa, dsa;
         Uri uri;
         String projection = "a._id,"
                 + "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
@@ -88,7 +97,7 @@ public class ViewTransactionFragment extends LFragment implements
                 + "b." + DBHelper.TABLE_COLUMN_NAME;
 
         switch (id) {
-            case -1:
+            case LOADER_INIT_BALANCE:
                 uri = DBProvider.URI_ACCOUNT_BALANCES;
                 return new CursorLoader(
                         getActivity(),
@@ -97,27 +106,49 @@ public class ViewTransactionFragment extends LFragment implements
                         DBHelper.TABLE_COLUMN_STATE + "=?",
                         new String[]{"" + DBHelper.STATE_ACTIVE}, null);
 
-            case -2:
+            case LOADER_INIT_START_END_MS:
                 uri = DBProvider.URI_TRANSACTIONS;
+                s = ds = DBHelper.TABLE_COLUMN_STATE + "=?";
+                sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE};
+
+                if (!selections.isEmpty()) {
+                    s = selections + " AND " + ds;
+                    ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
+                    for (int ii = 0; ii < dsa.length; ii++) {
+                        tmp.add(dsa[ii]);
+                    }
+                    sa = tmp.toArray(new String[tmp.size()]);
+                }
                 return new CursorLoader(
                         getActivity(),
                         uri,
                         null,
-                        DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE},
+                        s,
+                        sa,
                         DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
                 );
 
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
+                s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
+                sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+
+                if (!selections.isEmpty()) {
+                    s = selections + " AND " + ds;
+                    ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
+                    for (int ii = 0; ii < dsa.length; ii++) {
+                        tmp.add(dsa[ii]);
+                    }
+                    sa = tmp.toArray(new String[tmp.size()]);
+                }
                 return new CursorLoader(
                         getActivity(),
                         uri,
                         null,
-                        DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                                + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                                + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                        s,
+                        sa,
                         DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
                 );
 
@@ -139,32 +170,43 @@ public class ViewTransactionFragment extends LFragment implements
                 return null;
         }
 
+        s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
+        sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+
+        if (!selections.isEmpty()) {
+            s = selections + " AND " + ds;
+            ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
+            for (int ii = 0; ii < dsa.length; ii++) {
+                tmp.add(dsa[ii]);
+            }
+            sa = tmp.toArray(new String[tmp.size()]);
+        }
+
         return new CursorLoader(
                 getActivity(),
                 uri,
                 new String[]{projection},
-                "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                        + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                        + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                s,
+                sa,
                 "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
         );
     }
-
 
     boolean allBalancesReady = false;
     boolean startEndMsReady = false;
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == -1) {
+        if (loader.getId() == LOADER_INIT_BALANCE) {
             allBalances = new LAllBalances(data);
             allBalancesReady = true;
             if (allBalancesReady && startEndMsReady) initDbLoader();
             return;
         }
 
-        if (loader.getId() == -2) {
+        if (loader.getId() == LOADER_INIT_START_END_MS) {
             if (data != null && data.getCount() > 0) {
                 startEndMsReady = true;
                 data.moveToFirst();
@@ -371,6 +413,8 @@ public class ViewTransactionFragment extends LFragment implements
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
         myClickListener = new MyClickListener();
 
+        resetSelections();
+
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
         setViewListener(rootView, R.id.filter);
@@ -412,8 +456,8 @@ public class ViewTransactionFragment extends LFragment implements
         }
         showTime();
 
-        getLoaderManager().restartLoader(-2, null, this);
-        getLoaderManager().restartLoader(-1, null, this);
+        getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
+        getLoaderManager().restartLoader(LOADER_INIT_BALANCE, null, this);
         return rootView;
     }
 
@@ -771,18 +815,33 @@ public class ViewTransactionFragment extends LFragment implements
         //get balance for All accounts at current year/month
         switch (AppPersistency.viewTransactionTime) {
             case AppPersistency.TRANSACTION_TIME_ALL:
-                summary.setBalance(allBalances.getBalance());
+                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                    summary.setBalance(allBalances.getBalance());
+                else
+                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts()));
                 break;
             case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                summary.setBalance(allBalances.getBalance(
-                        AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                    summary.setBalance(allBalances.getBalance(
+                            AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+                else
+                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(),
+                            AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
                 break;
             case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                summary.setBalance(allBalances.getBalance(
-                        AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                    summary.setBalance(allBalances.getBalance(
+                            AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+                else
+                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(),
+                            AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+
                 break;
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
+                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                    summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
+                else
+                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(), AppPersistency.viewTransactionYear, 11));
                 break;
         }
     }
@@ -916,9 +975,56 @@ public class ViewTransactionFragment extends LFragment implements
         }
     }
 
+    private void setSelections(long[] ids, String column) {
+        selections += "(";
+        for (int ii = 0; ii < ids.length - 1; ii++) {
+            selections += column + "=? OR ";
+            selectionArgs.add("" + ids[ii]);
+        }
+        selections += column + "=?)";
+        selectionArgs.add("" + ids[ids.length - 1]);
+    }
+
+    private void resetSelections() {
+        if (LPreferences.getSearchAll()) {
+            selections = "";
+        } else {
+            selections = "";
+            selectionArgs.clear();
+
+            boolean and = false;
+            long[] ids = LPreferences.getSearchAccounts();
+            if (ids != null) {
+                setSelections(ids, DBHelper.TABLE_COLUMN_ACCOUNT);
+                and = true;
+            }
+
+            ids = LPreferences.getSearchCategories();
+            if (ids != null) {
+                if (and) selections += " AND ";
+                setSelections(ids, DBHelper.TABLE_COLUMN_CATEGORY);
+                and = true;
+            }
+
+            ids = LPreferences.getSearchVendors();
+            if (ids != null) {
+                if (and) selections += " AND ";
+                setSelections(ids, DBHelper.TABLE_COLUMN_VENDOR);
+                and = true;
+            }
+
+            ids = LPreferences.getSearchTags();
+            if (ids != null) {
+                if (and) selections += " AND ";
+                setSelections(ids, DBHelper.TABLE_COLUMN_TAG);
+            }
+        }
+    }
+
     @Override
     public void onTransactionSearchDialogDismiss() {
-
+        resetSelections();
+        getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
     }
 
     private void changeSearch() {

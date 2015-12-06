@@ -173,7 +173,7 @@ public class TransactionSearchDialog extends Dialog implements
 
         findViewById(R.id.checkboxView).setOnClickListener(myClickListener);
         checkBox = (CheckBox) findViewById(R.id.checkboxAll);
-        showAll = true;
+        showAll = LPreferences.getSearchAll();
 
         displayUpdate(showAll);
 
@@ -273,6 +273,7 @@ public class TransactionSearchDialog extends Dialog implements
             switch (v.getId()) {
                 case R.id.checkboxView:
                     showAll = !showAll;
+                    LPreferences.setSearchAll(showAll);
                     displayUpdate(showAll);
                     return;
 

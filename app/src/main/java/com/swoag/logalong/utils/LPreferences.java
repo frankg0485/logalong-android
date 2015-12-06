@@ -11,6 +11,7 @@ public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
+    private static final String SEARCH_ALL = "SearchAll";
     private static final String SEARCH_ACCOUNTS = "SearchAccounts";
     private static final String SEARCH_CATEGORIES = "SearchCategories";
     private static final String SEARCH_VENDORS = "SearchVendors";
@@ -195,6 +196,14 @@ public class LPreferences {
         }
         str += String.valueOf(vals[vals.length - 1]);
         savePreference(LApp.ctx, key, str);
+    }
+
+    public static boolean getSearchAll() {
+        return getPreference(LApp.ctx, SEARCH_ALL, true);
+    }
+
+    public static void setSearchAll(boolean all) {
+        savePreference(LApp.ctx, SEARCH_ALL, all);
     }
 
     public static long[] getSearchAccounts() {
