@@ -16,19 +16,16 @@
             android:background="@color/base_bgd_color"
             android:orientation="horizontal">
 
-            <TextView
+            <ImageView
                 android:id="@+id/tab0"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
-                android:clickable="true"
-                android:gravity="center"
                 android:onClick="onReports"
-                android:paddingBottom="5dp"
-                android:paddingTop="5dp"
-                android:text="@string/reports"
-                android:textColor="@color/tab_text_color"
-                android:textSize="16sp" />
+                android:paddingBottom="6dp"
+                android:paddingTop="6dp"
+                android:src="@drawable/ic_action_go_to_today" />
 
             <TextView
                 android:id="@+id/tab1"
@@ -44,19 +41,17 @@
                 android:textColor="@color/tab_text_color"
                 android:textSize="16sp" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/tab2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
-                android:clickable="true"
-                android:gravity="center"
                 android:onClick="onAccounts"
-                android:paddingBottom="5dp"
-                android:paddingTop="5dp"
-                android:text="@string/settings"
-                android:textColor="@color/tab_text_color"
-                android:textSize="16sp" />
+                android:paddingBottom="8dp"
+                android:paddingTop="8dp"
+                android:src="@drawable/ic_action_settings" />
+
         </LinearLayout>
 
         <View
