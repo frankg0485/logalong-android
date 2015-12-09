@@ -155,7 +155,7 @@ public class TransactionSearchDialog extends Dialog implements
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        if (LPreferences.getSearchAllTimeFrom() >= LPreferences.getSearchAllTimeTo()) {
+        if (LPreferences.getSearchAllTimeFrom() > LPreferences.getSearchAllTimeTo()) {
             LPreferences.setSearchAllTimeFrom(0);
             LPreferences.setSearchAllTimeTo(0);
         }
@@ -201,7 +201,7 @@ public class TransactionSearchDialog extends Dialog implements
 
         displayUpdateFilter(showAll);
 
-        if (LPreferences.getSearchAllTimeFrom() >= LPreferences.getSearchAllTimeTo()) {
+        if (LPreferences.getSearchAllTimeFrom() > LPreferences.getSearchAllTimeTo()) {
             LPreferences.setSearchAllTimeFrom(0);
             LPreferences.setSearchAllTimeTo(0);
         }
@@ -422,6 +422,7 @@ public class TransactionSearchDialog extends Dialog implements
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         Calendar calendar = Calendar.getInstance();
+        calendar.clear();
         calendar.set(year, monthOfYear, dayOfMonth);
         TextView tv = fromV;
 
@@ -429,7 +430,7 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeFrom(calendar.getTimeInMillis());
         } else {
             tv = toV;
-            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis());
+            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis() + (long) 23 * 3600 * 1000 - 1);
         }
 
         tv.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));

@@ -35,6 +35,7 @@ import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -47,6 +48,7 @@ import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 public class ViewTransactionFragment extends LFragment implements
         LoaderManager.LoaderCallbacks<Cursor>, TransactionSearchDialog.TransactionSearchDialogItf {
@@ -133,6 +135,7 @@ public class ViewTransactionFragment extends LFragment implements
 
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
+
                 s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
                         + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
                         + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
@@ -412,6 +415,7 @@ public class ViewTransactionFragment extends LFragment implements
         } else {
             startMs = LPreferences.getSearchAllTimeFrom();
             endMs = LPreferences.getSearchAllTimeTo();
+            //LLog.d(TAG, "start: " + startMs + "@" + (new Date(startMs) + " end: " + endMs + "@" + (new Date(endMs))));
         }
 
         getLoaderManager().restartLoader(AppPersistency.viewTransactionFilter, null, this);
