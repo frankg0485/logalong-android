@@ -14,86 +14,183 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <LinearLayout
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_weight="1">
 
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="25dp"
-                    android:background="#e4e6e8"
-                    android:gravity="center_vertical">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/month"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:layout_marginLeft="15dp"
-                        android:layout_toLeftOf="@+id/balance"
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="25dp"
+                            android:background="#e4e6e8"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/month"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentLeft="true"
+                                android:layout_marginLeft="15dp"
+                                android:layout_toLeftOf="@+id/balance"
+                                android:gravity="center_vertical"
+                                android:text="@string/balance"
+                                android:textSize="14dp" />
+
+                            <TextView
+                                android:id="@+id/balance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_marginRight="15dp"
+                                android:layout_toLeftOf="@+id/p1"
+                                android:gravity="right|center_vertical"
+                                android:text="0.00"
+                                android:textColor="@color/base_red"
+                                android:textSize="14dp" />
+                        </RelativeLayout>
+
+                        <ListView
+                            android:id="@+id/listView"
+                            android:layout_width="match_parent"
+                            android:layout_height="fill_parent"
+                            android:divider="@android:color/transparent" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/selectType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|right"
+                    android:background="@drawable/dialog_row_bgd"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/expense"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/list_item_height"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true"
                         android:gravity="center_vertical"
-                        android:text="@string/balance"
-                        android:textSize="14dp" />
+                        android:orientation="horizontal"
+                        android:paddingLeft="15dp">
 
-                    <TextView
-                        android:id="@+id/balance"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_marginRight="15dp"
-                        android:layout_toLeftOf="@+id/p1"
-                        android:gravity="right|center_vertical"
-                        android:text="0.00"
-                        android:textColor="@color/base_red"
-                        android:textSize="14dp" />
-                </RelativeLayout>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="right"
+                            android:padding="10dp"
+                            android:text="@string/expense"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
 
-                <ListView
-                    android:id="@+id/listView"
-                    android:layout_width="match_parent"
-                    android:layout_height="fill_parent"
-                    android:divider="@android:color/transparent" />
-            </LinearLayout>
+                        <ImageView
+                            android:layout_width="@dimen/settings_row_icon_w"
+                            android:layout_height="@dimen/settings_row_icon_h"
+                            android:background="@drawable/ic_action_right" />
+                    </LinearLayout>
 
-            <LinearLayout
+                    <LinearLayout
+                        android:id="@+id/income"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/list_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="right"
+                            android:padding="10dp"
+                            android:text="@string/income"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="@dimen/settings_row_icon_w"
+                            android:layout_height="@dimen/settings_row_icon_h"
+                            android:background="@drawable/ic_action_right" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/transaction"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/list_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="right"
+                            android:padding="10dp"
+                            android:text="@string/transfer"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="@dimen/settings_row_icon_w"
+                            android:layout_height="@dimen/settings_row_icon_h"
+                            android:background="@drawable/ic_action_right" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+            <RelativeLayout
+                android:id="@+id/bottomBar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp">
+                android:layout_height="@dimen/footer_height"
+                android:layout_alignParentBottom="true"
+                android:background="#C0080c10"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/expense"
-                    style="@style/setTimeButtons"
-                    android:text="+ Expense" />
-
-                <Button
-                    android:id="@+id/income"
-                    style="@style/setTimeButtons"
-                    android:text="+ Income" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingBottom="5dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp">
-
-                <Button
-                    android:id="@+id/transaction"
-                    style="@style/setTimeButtons"
-                    android:text="+ Transfer" />
-
-                <Button
+                <ImageView
                     android:id="@+id/schedule"
-                    style="@style/setTimeButtons"
-                    android:text="+ Schedule" />
-            </LinearLayout>
+                    android:layout_width="120dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="10dp"
+                    android:clickable="true"
+                    android:paddingBottom="4dp"
+                    android:paddingRight="60dp"
+                    android:paddingTop="4dp"
+                    android:src="@drawable/ic_action_alarms" />
 
+                <ImageView
+                    android:id="@+id/add"
+                    android:layout_width="160dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:paddingBottom="4dp"
+                    android:paddingLeft="100dp"
+                    android:paddingTop="4dp"
+                    android:src="@drawable/ic_action_new" />
+            </RelativeLayout>
         </LinearLayout>
 
         <LinearLayout

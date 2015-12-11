@@ -42,7 +42,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private static final int LOADER_BALANCES = 10;
     private static final int LOADER_ACCOUNTS = 20;
 
-    private Button btnExpense, btnIncome, btnTransaction, btnSchedule;
+    private View btnExpense, btnIncome, btnTransaction, btnSchedule, selectTypeV;
     private ViewFlipper viewFlipper;
 
     private View rootView;
@@ -109,6 +109,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
+        selectTypeV = rootView.findViewById(R.id.selectType);
+        selectTypeV.setVisibility(View.GONE);
 
         myClickListener = new MyClickListener();
 
@@ -122,10 +124,11 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.setAnimateFirstView(false);
         viewFlipper.setDisplayedChild(0);
 
-        btnExpense = setBtnListener(rootView, R.id.expense);
-        btnIncome = setBtnListener(rootView, R.id.income);
-        btnTransaction = setBtnListener(rootView, R.id.transaction);
-        btnSchedule = setBtnListener(rootView, R.id.schedule);
+        btnExpense = setViewListener(rootView, R.id.expense);
+        btnIncome = setViewListener(rootView, R.id.income);
+        btnTransaction = setViewListener(rootView, R.id.transaction);
+        btnSchedule = setViewListener(rootView, R.id.schedule);
+        setViewListener(rootView, R.id.add);
 
         getLoaderManager().restartLoader(LOADER_BALANCES, null, this);
         getLoaderManager().restartLoader(LOADER_ACCOUNTS, null, this);
@@ -168,9 +171,18 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     startActivity(new Intent(getActivity(), ScheduleActivity.class));
                     break;
 
+                case R.id.add:
+                    if (selectTypeV.getVisibility() != View.VISIBLE) {
+                        selectTypeV.setVisibility(View.VISIBLE);
+                    } else {
+                        selectTypeV.setVisibility(View.GONE);
+                    }
+                    return;
+
                 default:
                     break;
             }
+            selectTypeV.setVisibility(View.GONE);
         }
     }
 
@@ -221,10 +233,10 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.showNext();
     }
 
-    private Button setBtnListener(View v, int id) {
-        Button btn = (Button) v.findViewById(id);
-        btn.setOnClickListener(myClickListener);
-        return btn;
+    private View setViewListener(View v, int id) {
+        View view = v.findViewById(id);
+        view.setOnClickListener(myClickListener);
+        return view;
     }
 
     private void showBalance(TextView textView, long accountId) {
