@@ -225,10 +225,9 @@ public class ViewTransactionFragment extends LFragment implements
                 allStartYear = calendar.get(Calendar.YEAR);
                 calendar.setTimeInMillis(allEndMs - 1);
                 allEndYear = calendar.get(Calendar.YEAR);
-
-                if (allBalancesReady && startEndMsReady) initDbLoader();
-                return;
             }
+            if (allBalancesReady && startEndMsReady) initDbLoader();
+            return;
         }
 
         if (loader.getId() != AppPersistency.viewTransactionFilter) {
@@ -392,6 +391,8 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void initDbLoader() {
+        validateYearMonth();
+
         if (LPreferences.getSearchAllTime()) {
             switch (AppPersistency.viewTransactionTime) {
                 case AppPersistency.TRANSACTION_TIME_ALL:
@@ -814,7 +815,7 @@ public class ViewTransactionFragment extends LFragment implements
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        if (LPreferences.getSearchAllTime()) {
+        if (LPreferences.getSearchAllTime() && data != null && data.getCount() > 0) {
             switch (AppPersistency.viewTransactionTime) {
                 case AppPersistency.TRANSACTION_TIME_ALL:
                     mtv.setText(getString(R.string.balance));
@@ -836,8 +837,9 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void getBalance(LAccountSummary summary, Cursor data) {
-        if (data != null)
-            DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
+        if (data == null || data.getCount() < 1) return;
+
+        DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
@@ -893,8 +895,7 @@ public class ViewTransactionFragment extends LFragment implements
         ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
         if (ym < allStartMs || ym >= allEndMs) {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(allEndMs);
-            calendar.add(Calendar.MONTH, -1);
+            calendar.setTimeInMillis(allEndMs - 1);
             AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
         }
@@ -1149,14 +1150,12 @@ public class ViewTransactionFragment extends LFragment implements
         switch (AppPersistency.viewTransactionTime) {
             case AppPersistency.TRANSACTION_TIME_ALL:
                 AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
-                validateYearMonth();
                 break;
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
                 if (allStartYear != allEndYear) {
                     AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
                 } else {
                     AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
-                    validateYearMonth();
                 }
                 break;
             //case AppPersistency.TRANSACTION_TIME_QUARTERLY:
