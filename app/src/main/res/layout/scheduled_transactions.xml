@@ -144,46 +144,7 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <LinearLayout
-                android:id="@+id/bottomBar"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/footer_height"
-                android:background="#C0080c10"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/exit"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical|left"
-                    android:paddingLeft="10dp">
-
-                    <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="36dp"
-                        android:paddingBottom="4dp"
-                        android:paddingTop="4dp"
-                        android:src="@drawable/ic_action_left" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/add"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="2"
-                    android:gravity="center_vertical|right"
-                    android:paddingRight="10dp">
-
-                    <ImageView
-                        android:layout_width="60dp"
-                        android:layout_height="36dp"
-                        android:paddingBottom="4dp"
-                        android:paddingTop="4dp"
-                        android:src="@drawable/ic_action_new" />
-                </LinearLayout>
-            </LinearLayout>
+            <include layout="@layout/bottom" />
         </LinearLayout>
 
         <LinearLayout

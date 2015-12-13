@@ -12,6 +12,7 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
@@ -121,10 +122,13 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     private void create() {
-        setViewListener(rootView, R.id.goback);
+        setViewListener(rootView, R.id.exit);
         if (!bScheduleMode) setViewListener(rootView, R.id.back);
 
-        viewSave = setViewListener(rootView, R.id.save);
+        viewSave = setViewListener(rootView, R.id.add);
+        ImageView iv = (ImageView) viewSave.findViewById(R.id.addImg);
+        iv.setImageResource(R.drawable.ic_action_accept);
+        iv.setClickable(false);
 
         setViewListener(rootView, R.id.amountRow);
         setViewListener(rootView, R.id.accountRow);
@@ -344,7 +348,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     warnDialog.show();
                     break;
 
-                case R.id.goback:
+                case R.id.exit:
                 case R.id.back:
                     callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                     destroy();

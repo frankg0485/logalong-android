@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -19,7 +20,7 @@ public class SettingsFragment extends LFragment implements
 
     ViewFlipper viewFlipper;
     View profileV, accountsV, categoriesV, vendorsV, tagsV;
-    View backV, editV, addV;
+    ImageView addV;
     private ProfileEdit profileEdit;
     private GenericListEdit listEdit;
     private DataBackupEdit dataBackupEdit;
@@ -44,9 +45,8 @@ public class SettingsFragment extends LFragment implements
         tagsV = setViewListener(view, R.id.tags);
 
         view = rootView.findViewById(R.id.viewSettings);
-        backV = setViewListener(view, R.id.goback);
-        editV = setViewListener(view, R.id.edit);
-        addV = setViewListener(view, R.id.add);
+        setViewListener(view, R.id.exit);
+        addV = (ImageView) setViewListener(view, R.id.addImg);
 
         return rootView;
     }
@@ -58,8 +58,6 @@ public class SettingsFragment extends LFragment implements
         vendorsV = null;
         tagsV = null;
 
-        backV = null;
-        editV = null;
         addV = null;
         super.onDestroyView();
     }
@@ -98,10 +96,8 @@ public class SettingsFragment extends LFragment implements
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.VISIBLE);
 
-                    viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
-                    TextView tv = (TextView) viewSettings.findViewById(R.id.save);
-                    tv.setVisibility(View.VISIBLE);
-                    tv.setText(getActivity().getString(R.string.done));
+                    addV.setImageResource(R.drawable.ic_action_accept);
+                    addV.setClickable(false);
 
                     dataBackupEdit = new DataBackupEdit(getActivity(), viewSettings, SettingsFragment.this);
 
@@ -115,8 +111,8 @@ public class SettingsFragment extends LFragment implements
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.VISIBLE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
 
-                    viewSettings.findViewById(R.id.add).setVisibility(View.GONE);
-                    viewSettings.findViewById(R.id.save).setVisibility(View.VISIBLE);
+                    addV.setImageResource(R.drawable.ic_action_accept);
+                    addV.setClickable(false);
 
                     profileEdit = new ProfileEdit(getActivity(), viewSettings, SettingsFragment.this);
 
@@ -133,8 +129,8 @@ public class SettingsFragment extends LFragment implements
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
 
-                    viewSettings.findViewById(R.id.add).setVisibility(View.VISIBLE);
-                    viewSettings.findViewById(R.id.save).setVisibility(View.GONE);
+                    addV.setImageResource(R.drawable.ic_action_new);
+                    addV.setClickable(false);
 
                     listEdit = new GenericListEdit(getActivity(),
                             viewSettings, v.getId(), SettingsFragment.this);
@@ -144,7 +140,7 @@ public class SettingsFragment extends LFragment implements
                     viewFlipper.showNext();
                     break;
 
-                case R.id.goback:
+                case R.id.exit:
                     onBackPressed();
                     break;
                 default:

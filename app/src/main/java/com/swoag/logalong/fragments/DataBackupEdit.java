@@ -55,7 +55,7 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     private void create() {
         setViewListener(rootView, R.id.backupView);
         restoreView = setViewListener(rootView, R.id.restoreView);
-        View saveV = setViewListener(rootView, R.id.save);
+        View saveV = setViewListener(rootView, R.id.add);
         LViewUtils.setAlpha(saveV, 1.0f);
         saveV.setEnabled(true);
 
@@ -101,7 +101,7 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
                     warnDialog.show();
                     break;
 
-                case R.id.save:
+                case R.id.add:
                     /*countDownTimer = new CountDownTimer(15000, 15000) {
                         @Override
                         public void onTick(long millisUntilFinished) {

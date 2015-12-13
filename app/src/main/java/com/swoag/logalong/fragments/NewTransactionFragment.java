@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
@@ -32,6 +33,7 @@ import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 
 import java.util.Calendar;
@@ -42,10 +44,10 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private static final int LOADER_BALANCES = 10;
     private static final int LOADER_ACCOUNTS = 20;
 
-    private View btnExpense, btnIncome, btnTransaction, btnSchedule, selectTypeV;
+    private View btnExpense, btnIncome, btnTransaction, selectTypeV;
     private ViewFlipper viewFlipper;
 
-    private View rootView;
+    private View rootView, entryView;
     private TransactionEdit edit;
     private LTransaction item;
     private ListView listView;
@@ -109,14 +111,16 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
-        selectTypeV = rootView.findViewById(R.id.selectType);
+        entryView = rootView.findViewById(R.id.entryView);
+
+        selectTypeV = entryView.findViewById(R.id.selectType);
         selectTypeV.setVisibility(View.GONE);
 
         myClickListener = new MyClickListener();
 
-        balanceTV = (TextView) rootView.findViewById(R.id.balance);
+        balanceTV = (TextView) entryView.findViewById(R.id.balance);
 
-        listView = (ListView) rootView.findViewById(R.id.listView);
+        listView = (ListView) entryView.findViewById(R.id.listView);
         adapter = new MyCursorAdapter(getActivity(), DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME));
         listView.setAdapter(adapter);
 
@@ -124,11 +128,11 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.setAnimateFirstView(false);
         viewFlipper.setDisplayedChild(0);
 
-        btnExpense = setViewListener(rootView, R.id.expense);
-        btnIncome = setViewListener(rootView, R.id.income);
-        btnTransaction = setViewListener(rootView, R.id.transaction);
-        btnSchedule = setViewListener(rootView, R.id.schedule);
-        setViewListener(rootView, R.id.add);
+        btnExpense = setViewListener(entryView, R.id.expense);
+        btnIncome = setViewListener(entryView, R.id.income);
+        btnTransaction = setViewListener(entryView, R.id.transaction);
+
+        bottombarSetup();
 
         getLoaderManager().restartLoader(LOADER_BALANCES, null, this);
         getLoaderManager().restartLoader(LOADER_ACCOUNTS, null, this);
@@ -153,6 +157,15 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         }
     }
 
+    private void bottombarSetup() {
+        setViewListener(entryView, R.id.exit);
+        setViewListener(entryView, R.id.add);
+
+        ImageView iv = (ImageView) entryView.findViewById(R.id.exitImg);
+        iv.setImageResource(R.drawable.ic_action_alarms);
+        iv.setClickable(false);
+    }
+
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
@@ -167,7 +180,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
                     break;
 
-                case R.id.schedule:
+                case R.id.exit:
                     startActivity(new Intent(getActivity(), ScheduleActivity.class));
                     break;
 
@@ -226,7 +239,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         //item.setAccount(4);
         //item.setCategory(2);
 
-        edit = new TransactionEdit(getActivity(), rootView, item, true, false, this);
+        edit = new TransactionEdit(getActivity(), rootView.findViewById(R.id.editView), item, true, false, this);
 
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);

@@ -112,7 +112,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         oldUserName = LPreferences.getUserFullName();
         //userPass = LPreferences.getUserPass();
         //checkboxShowPass = (CheckBox) rootView.findViewById(R.id.showPass);
-        saveV = setViewListener(rootView, R.id.save);
+        saveV = setViewListener(rootView, R.id.add);
 
         if (oldUserName.isEmpty()) {
             LViewUtils.setAlpha(saveV, 0.5f);
@@ -238,7 +238,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                 }
                 break;*/
 
-                case R.id.save:
+                case R.id.add:
                     countDownTimer = new CountDownTimer(15000, 15000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
