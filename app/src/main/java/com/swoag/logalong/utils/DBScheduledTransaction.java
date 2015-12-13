@@ -32,7 +32,7 @@ public class DBScheduledTransaction {
         return cv;
     }
 
-    private static void getValues(Cursor cur, LScheduledTransaction sch) {
+    public static void getValues(Cursor cur, LScheduledTransaction sch) {
 
         DBTransaction.getValues(cur, sch.getItem());
 
@@ -143,6 +143,30 @@ public class DBScheduledTransaction {
 
     public static void deleteById(long id) {
         DBAccess.updateColumnById(DBProvider.URI_SCHEDULED_TRANSACTIONS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+    }
+
+    public static void deleteByAccount(long accountId) {
+        deleteByAccount(LApp.ctx, accountId);
+    }
+
+    public static void deleteByAccount(Context context, long accountId) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        context.getContentResolver().update(DBProvider.URI_SCHEDULED_TRANSACTIONS, cv,
+                DBHelper.TABLE_COLUMN_STATE + "=? AND " +
+                        DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+    }
+
+    public static Cursor getCursorByAccount(long accountId) {
+        return getCursorByAccount(LApp.ctx, accountId);
+    }
+
+    public static Cursor getCursorByAccount(Context context, long accountId) {
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId}, null);
+        return cur;
     }
 
     public static void scanAlarm() {

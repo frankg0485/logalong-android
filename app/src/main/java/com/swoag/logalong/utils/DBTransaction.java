@@ -159,10 +159,6 @@ public class DBTransaction {
         return null;
     }
 
-    public static Cursor getCursorByAccount(long accountId) {
-        return getCursorByAccount(LApp.ctx, accountId);
-    }
-
     public static void deleteByAccount(long accountId) {
         deleteByAccount(LApp.ctx, accountId);
     }
@@ -198,6 +194,10 @@ public class DBTransaction {
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
+    }
+
+    public static Cursor getCursorByAccount(long accountId) {
+        return getCursorByAccount(LApp.ctx, accountId);
     }
 
     public static Cursor getCursorByAccount(Context context, long accountId) {

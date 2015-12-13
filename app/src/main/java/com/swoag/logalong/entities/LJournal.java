@@ -526,6 +526,12 @@ public class LJournal {
                 if (account.getTimeStampLast() < timestampLast) {
                     if (!name.isEmpty()) account.setName(name);
                     if (stateFound) account.setState(state);
+
+                    if (account.getState() == DBHelper.STATE_DELETED) {
+                        DBTransaction.deleteByAccount(account.getId());
+                        DBScheduledTransaction.deleteByAccount(account.getId());
+                    }
+
                     account.setTimeStampLast(timestampLast);
                     DBAccount.update(account);
                 }
@@ -720,6 +726,19 @@ public class LJournal {
                 DBTransaction.getValues(cursor, item);
                 String record = LJournal.transactionItemString(item);
                 LProtocol.ui.shareTransitionRecord(userId, record);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) cursor.close();
+
+        cursor = DBScheduledTransaction.getCursorByAccount(account.getId());
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            LJournal journal = new LJournal();
+
+            do {
+                LScheduledTransaction sitem = new LScheduledTransaction();
+                DBScheduledTransaction.getValues(cursor, sitem);
+                journal.updateScheduledItem(sitem);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();

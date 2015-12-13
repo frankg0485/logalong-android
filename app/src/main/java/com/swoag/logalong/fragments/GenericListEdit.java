@@ -22,6 +22,7 @@ import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -418,6 +419,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     case R.id.accounts:
                         //TODO: send this to background?
                         DBTransaction.deleteByAccount(tag.id);
+                        DBScheduledTransaction.deleteByAccount(tag.id);
 
                         LAccount account = DBAccount.getById(tag.id);
                         account.setState(DBHelper.STATE_DELETED);
