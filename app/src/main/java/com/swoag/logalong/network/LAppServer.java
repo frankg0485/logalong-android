@@ -24,7 +24,8 @@ public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
     //private static final String serverIp = "192.168.1.107";
-    private static final String serverIp = "162.209.48.52";
+    //private static final String serverIp = "162.209.48.52";
+    private static final String serverIp = "auto";
     private static final int serverPort = 1723;
 
     private Socket socket = null;
@@ -117,8 +118,8 @@ public class LAppServer {
                             }
 
                             try {
-                                LLog.d(TAG, "open at: " + serverIp + "@" + serverPort);
-                                InetAddress serverAddr = InetAddress.getByName(serverIp);
+                                InetAddress serverAddr = (serverIp.contentEquals("auto")) ?
+                                        InetAddress.getByName("swoag.com") : InetAddress.getByName(serverIp);
                                 LLog.d(TAG, "server addr:" + serverAddr);
                                 socket = new Socket(serverAddr, serverPort);
                                 LLog.d(TAG, "stream opened: " + socket);
@@ -141,7 +142,7 @@ public class LAppServer {
 
                                 Intent intent;
                                 intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
-                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)LProtocol.RSPS_OK);
+                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int) LProtocol.RSPS_OK);
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
                             } catch (Exception e) {
                                 LLog.e(TAG, "connection error: " + e.getMessage());
