@@ -23,6 +23,7 @@ import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
@@ -410,21 +411,48 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
 
         @Override
         public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
-            VTag tag = (VTag)obj;
+            VTag tag = (VTag) obj;
 
             if (confirm && ok) {
                 switch (listId) {
                     case R.id.accounts:
-                        DBAccount.deleteById(tag.id);
+                        //TODO: send this to background?
+                        DBTransaction.deleteByAccount(tag.id);
+
+                        LAccount account = DBAccount.getById(tag.id);
+                        account.setState(DBHelper.STATE_DELETED);
+                        account.setTimeStampLast(System.currentTimeMillis());
+                        DBAccount.update(account);
+
+                        LJournal journal = new LJournal();
+                        journal.updateAccount(account);
                         break;
                     case R.id.categories:
-                        DBCategory.deleteById(tag.id);
+                        LCategory category = DBCategory.getById(tag.id);
+                        category.setState(DBHelper.STATE_DELETED);
+                        category.setTimeStampLast(System.currentTimeMillis());
+                        DBCategory.update(category);
+
+                        journal = new LJournal();
+                        journal.updateCategory(category);
                         break;
                     case R.id.vendors:
-                        DBVendor.deleteById(tag.id);
+                        LVendor vendor = DBVendor.getById(tag.id);
+                        vendor.setState(DBHelper.STATE_DELETED);
+                        vendor.setTimeStampLast(System.currentTimeMillis());
+                        DBVendor.update(vendor);
+
+                        journal = new LJournal();
+                        journal.updateVendor(vendor);
                         break;
                     case R.id.tags:
-                        DBTag.deleteById(tag.id);
+                        LTag tag1 = DBTag.getById(tag.id);
+                        tag1.setState(DBHelper.STATE_DELETED);
+                        tag1.setTimeStampLast(System.currentTimeMillis());
+                        DBTag.update(tag1);
+
+                        journal = new LJournal();
+                        journal.updateTag(tag1);
                         break;
                 }
 

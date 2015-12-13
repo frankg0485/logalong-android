@@ -163,6 +163,43 @@ public class DBTransaction {
         return getCursorByAccount(LApp.ctx, accountId);
     }
 
+    public static void deleteByAccount(long accountId) {
+        deleteByAccount(LApp.ctx, accountId);
+    }
+
+    public static void deleteByAccount(Context context, long accountId) {
+        /*ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv,
+                DBHelper.TABLE_COLUMN_STATE + "=? AND " +
+                        DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+        */
+        Cursor cursor = getCursorByAccount(context, accountId);
+        if (cursor != null && cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            LTransaction item = new LTransaction();
+            do {
+                DBTransaction.getValues(cursor, item);
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
+                        || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                    LTransaction item2 = new LTransaction(item);
+                    item2.setTimeStampLast(System.currentTimeMillis());
+                    item2.setAccount(item.getAccount2());
+                    item2.setRid(UUID.randomUUID().toString());
+                    item2.setType((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
+                            LTransaction.TRANSACTION_TYPE_INCOME : LTransaction.TRANSACTION_TYPE_EXPENSE);
+                    add(context, item2);
+                }
+
+                item.setTimeStampLast(System.currentTimeMillis());
+                item.setState(DBHelper.STATE_DELETED);
+                update(context, item);
+            } while (cursor.moveToNext());
+        }
+        if (cursor != null) cursor.close();
+    }
+
     public static Cursor getCursorByAccount(Context context, long accountId) {
         Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
