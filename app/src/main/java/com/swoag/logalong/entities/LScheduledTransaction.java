@@ -20,7 +20,7 @@ public class LScheduledTransaction {
     int repeatCount;
     int repeatUnit;
     int repeatInterval;
-    long timestamp;
+    long timestamp; //next alarm time
 
     private void init() {
         this.item = new LTransaction();
@@ -64,7 +64,10 @@ public class LScheduledTransaction {
                 this.item.isEqual(sch.getItem()));
     }
 
-    public void calculateNextTimeMs(long baseTimeMs) {
+    public void calculateNextTimeMs() {
+        long baseTimeMs = item.getTimeStamp();
+        int count = 0;
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
         while (baseTimeMs <= System.currentTimeMillis()) {
@@ -75,6 +78,7 @@ public class LScheduledTransaction {
                 baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
                 calendar.setTimeInMillis(baseTimeMs);
             }
+            count++;
         }
 
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -84,14 +88,7 @@ public class LScheduledTransaction {
 
         if (repeatCount == 0) return;
 
-
-        if (repeatUnit == REPEAT_UNIT_MONTH) {
-            calendar.setTimeInMillis(item.getTimeStamp());
-            calendar.add(Calendar.MONTH, repeatCount);
-        } else {
-            calendar.setTimeInMillis(item.getTimeStamp() + (long) repeatCount * 7 * 24 * 3600 * 1000);
-        }
-        if (calendar.getTimeInMillis() + (long) 3 * 24 * 3600 * 1000 < timestamp) {
+        if (repeatCount < count) {
             item.setState(DBHelper.STATE_DISABLED);
             timestamp = item.getTimeStamp();
         }

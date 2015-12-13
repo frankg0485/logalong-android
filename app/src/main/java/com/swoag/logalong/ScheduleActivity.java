@@ -52,17 +52,18 @@ public class ScheduleActivity extends Activity implements
         myClickListener = new MyClickListener();
 
         rootView = findViewById(R.id.scheduleEdit);
+        View entryView = findViewById(R.id.entryView);
 
-        selectTypeV = findViewById(R.id.selectType);
+        selectTypeV = entryView.findViewById(R.id.selectType);
         selectTypeV.setVisibility(View.GONE);
 
-        findViewById(R.id.exit).setOnClickListener(myClickListener);
-        findViewById(R.id.expense).setOnClickListener(myClickListener);
-        findViewById(R.id.income).setOnClickListener(myClickListener);
-        findViewById(R.id.transaction).setOnClickListener(myClickListener);
-        findViewById(R.id.add).setOnClickListener(myClickListener);
+        entryView.findViewById(R.id.exit).setOnClickListener(myClickListener);
+        entryView.findViewById(R.id.expense).setOnClickListener(myClickListener);
+        entryView.findViewById(R.id.income).setOnClickListener(myClickListener);
+        entryView.findViewById(R.id.transaction).setOnClickListener(myClickListener);
+        entryView.findViewById(R.id.add).setOnClickListener(myClickListener);
 
-        listView = (ListView) findViewById(R.id.logsList);
+        listView = (ListView) entryView.findViewById(R.id.logsList);
         initListView();
 
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
@@ -107,10 +108,11 @@ public class ScheduleActivity extends Activity implements
                 if (changed) {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis(scheduledItem.getItem().getTimeStamp());
-                    calendar.set(Calendar.HOUR_OF_DAY, 23);
-                    calendar.set(Calendar.MINUTE, 59);
-                    calendar.set(Calendar.SECOND, 59);
-                    scheduledItem.calculateNextTimeMs(calendar.getTimeInMillis());
+                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    scheduledItem.getItem().setTimeStamp(calendar.getTimeInMillis());
+                    scheduledItem.calculateNextTimeMs();
 
                     scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
                     if (createNew) DBScheduledTransaction.add(scheduledItem);

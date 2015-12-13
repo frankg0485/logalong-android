@@ -69,7 +69,7 @@ public class LAlarmReceiver extends BroadcastReceiver {
                 LJournal journal = new LJournal();
                 journal.updateItem(item);
 
-                sch.calculateNextTimeMs(System.currentTimeMillis());
+                sch.calculateNextTimeMs();
                 sch.setAlarm();
                 DBScheduledTransaction.update(sch);
             }

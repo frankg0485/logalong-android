@@ -354,7 +354,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     destroy();
                     break;
 
-                case R.id.save:
+                case R.id.add:
                     saveLog();
                     break;
 

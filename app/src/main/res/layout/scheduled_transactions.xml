@@ -33,6 +33,7 @@
         android:layout_alignParentTop="true">
 
         <LinearLayout
+            android:id="@+id/entryView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="1dp"
@@ -148,12 +149,11 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/scheduleEdit"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <include
-                android:id="@+id/scheduleEdit"
-                layout="@layout/scheduled_transaction_edit" />
+            <include layout="@layout/scheduled_transaction_edit" />
         </LinearLayout>
     </ViewFlipper>
 </LinearLayout>
