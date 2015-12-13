@@ -35,7 +35,7 @@ import java.util.Calendar;
 public class ScheduleActivity extends Activity implements
         ScheduledTransactionEdit.ScheduledTransitionEditItf {
 
-    private View rootView;
+    private View rootView, selectTypeV;
     private ViewFlipper viewFlipper;
 
     private ScheduledTransactionEdit edit;
@@ -52,10 +52,15 @@ public class ScheduleActivity extends Activity implements
         myClickListener = new MyClickListener();
 
         rootView = findViewById(R.id.scheduleEdit);
-        findViewById(R.id.goback).setOnClickListener(myClickListener);
-        findViewById(R.id.addExpense).setOnClickListener(myClickListener);
-        findViewById(R.id.addIncome).setOnClickListener(myClickListener);
-        findViewById(R.id.addTransfer).setOnClickListener(myClickListener);
+
+        selectTypeV = findViewById(R.id.selectType);
+        selectTypeV.setVisibility(View.GONE);
+
+        findViewById(R.id.exit).setOnClickListener(myClickListener);
+        findViewById(R.id.expense).setOnClickListener(myClickListener);
+        findViewById(R.id.income).setOnClickListener(myClickListener);
+        findViewById(R.id.transaction).setOnClickListener(myClickListener);
+        findViewById(R.id.add).setOnClickListener(myClickListener);
 
         listView = (ListView) findViewById(R.id.logsList);
         initListView();
@@ -69,16 +74,25 @@ public class ScheduleActivity extends Activity implements
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
-                case R.id.goback:
+                case R.id.exit:
                     finish();
                     break;
 
-                case R.id.addExpense:
-                case R.id.addIncome:
-                case R.id.addTransfer:
+                case R.id.add:
+                    if (selectTypeV.getVisibility() != View.VISIBLE) {
+                        selectTypeV.setVisibility(View.VISIBLE);
+                    } else {
+                        selectTypeV.setVisibility(View.GONE);
+                    }
+                    return;
+
+                case R.id.expense:
+                case R.id.income:
+                case R.id.transaction:
                     addNewSchedule(v.getId());
                     break;
             }
+            selectTypeV.setVisibility(View.GONE);
         }
     }
 
@@ -138,13 +152,13 @@ public class ScheduleActivity extends Activity implements
         scheduledItem = new LScheduledTransaction();
 
         switch (id) {
-            case R.id.addExpense:
+            case R.id.expense:
                 scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_EXPENSE);
                 break;
-            case R.id.addIncome:
+            case R.id.income:
                 scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_INCOME);
                 break;
-            case R.id.addTransfer:
+            case R.id.transaction:
                 scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 break;
         }
