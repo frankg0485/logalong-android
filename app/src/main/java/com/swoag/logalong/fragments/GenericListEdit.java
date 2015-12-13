@@ -29,6 +29,7 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
 import com.swoag.logalong.views.LNewEntryDialog;
@@ -88,6 +89,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
     private void create() {
         this.listView = (ListView) rootView.findViewById(R.id.listView);
         addV = rootView.findViewById(R.id.add);
+        LViewUtils.setAlpha(addV, 1.0f);
+        addV.setEnabled(true);
         addV.setOnClickListener(myClickListener);
 
         Cursor cursor = getMyCursor();

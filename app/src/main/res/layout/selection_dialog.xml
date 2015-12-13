@@ -86,27 +86,28 @@
                 android:listSelector="@android:color/transparent"
                 android:orientation="vertical"></ListView>
 
+
             <LinearLayout
                 android:id="@+id/buttons"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/dialog_btn_height"
+                android:layout_marginLeft="1dp"
+                android:layout_marginRight="1dp"
                 android:layout_marginTop="2dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="1dp">
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/cancel"
-                    style="@style/dialogButtons"
+                    style="@style/dialogButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="5dp"
+                    android:layout_marginRight="1dp"
                     android:layout_weight="1"
                     android:text="@android:string/cancel" />
 
                 <Button
                     android:id="@+id/save"
-                    style="@style/dialogButtons"
+                    style="@style/dialogButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"

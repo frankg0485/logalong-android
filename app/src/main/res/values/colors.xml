@@ -12,7 +12,7 @@
     <color name="dark_gray_text_color">#808080</color>
     <color name="red_text_color">#6d5246</color>
     <color name="header_color">#304050</color>
-    <color name="tab_text_color">#405060</color>
+    <color name="tab_text_color">#dddddd</color>
     <color name="header_text_color">#c0c0c0</color>
     <color name="footer_text_color">#f0f0f0</color>
     <color name="footer_color">#405060</color>
@@ -21,7 +21,7 @@
     <color name="base_green">#42bb38</color>
     <color name="base_blue">#4238bb</color>
     <color name="base_blue_color">#2487ab</color>
-    <color name="dialog_bg_color">#a0000000</color>
+    <color name="dialog_bg_color">#90000000</color>
     <color name="dialog_border_color">#848688</color>
     <color name="released_base_btn_background">#42bb38</color>
     <color name="pressed_base_btn_background">#52cb48</color>
@@ -39,4 +39,5 @@
     <color name="pressed_alt_login_btn_background">#879f9f</color>
     <color name="pressed_dialog_btn_background">#979f9f</color>
     <color name="released_dialog_btn_background">#a4a6a8</color>
+    <color name="topbar_bgd_color">#C0585c60</color>
 </resources>

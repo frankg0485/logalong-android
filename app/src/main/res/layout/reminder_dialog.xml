@@ -45,7 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#000"
+                android:background="#808080"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -55,9 +55,7 @@
                     android:layout_marginTop="1dp"
                     android:background="@drawable/row_selector"
                     android:orientation="vertical"
-                    android:paddingBottom="3dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
+                    android:paddingBottom="1dp"
                     android:paddingTop="5dp">
 
                     <TextView
@@ -66,7 +64,10 @@
                         android:layout_height="0dp"
                         android:layout_marginBottom="15dp"
                         android:layout_weight="1"
-                        android:padding="10dp"
+                        android:paddingBottom="10dp"
+                        android:paddingLeft="20dp"
+                        android:paddingRight="20dp"
+                        android:paddingTop="10dp"
                         android:singleLine="false"
                         android:textColor="@color/base_text_color"
                         android:textSize="18sp" />
@@ -75,13 +76,13 @@
                         android:id="@+id/buttons"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dialog_btn_height"
-                        android:layout_margin="10dp"
-                        android:orientation="horizontal"
-                        android:padding="2dp">
+                        android:layout_marginLeft="1dp"
+                        android:layout_marginRight="1dp"
+                        android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/confirmDialog"
-                            style="@style/dialogButtons"
+                            style="@style/dialogButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

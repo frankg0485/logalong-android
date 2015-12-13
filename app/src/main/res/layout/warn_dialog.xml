@@ -58,14 +58,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#000"
+                android:background="#606060"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:background="#ffb4b6b8"
+                    android:background="@drawable/row_selector"
                     android:orientation="vertical">
 
                     <LinearLayout

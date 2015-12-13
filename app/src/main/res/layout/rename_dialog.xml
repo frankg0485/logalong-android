@@ -57,7 +57,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#000"
+                android:background="#606060"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -67,17 +67,14 @@
                     android:layout_marginTop="1dp"
                     android:background="@drawable/row_selector"
                     android:orientation="vertical"
-                    android:paddingBottom="3dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
                     android:paddingTop="5dp">
 
                     <TextView
                         android:id="@+id/oldname"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginRight="5dp"
+                        android:layout_marginLeft="15dp"
+                        android:layout_marginRight="15dp"
                         android:layout_marginTop="15dp"
                         android:ellipsize="end"
                         android:gravity="left"
@@ -121,22 +118,22 @@
                         android:id="@+id/buttons"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dialog_btn_height"
-                        android:layout_margin="10dp"
-                        android:orientation="horizontal"
-                        android:padding="2dp">
+                        android:layout_marginLeft="1dp"
+                        android:layout_marginRight="1dp"
+                        android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/cancelDialog"
-                            style="@style/dialogButtons"
+                            style="@style/dialogButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginRight="5dp"
+                            android:layout_marginRight="1dp"
                             android:layout_weight="1"
                             android:text="@android:string/cancel" />
 
                         <Button
                             android:id="@+id/confirmDialog"
-                            style="@style/dialogButtons"
+                            style="@style/dialogButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"

@@ -14,7 +14,6 @@
         android:layout_height="wrap_content"
         android:layout_weight="@integer/dialog_width_weight"
         android:background="@drawable/button_bgd"
-        android:minHeight="180dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -84,27 +83,29 @@
                 android:id="@+id/buttons"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/dialog_btn_height"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="1dp">
+                android:layout_marginLeft="1dp"
+                android:layout_marginRight="1dp"
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/cancel"
-                    style="@style/dialogButtons"
+                    style="@style/dialogButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="2dp"
+                    android:layout_marginRight="1dp"
                     android:layout_weight="1"
                     android:text="@android:string/cancel" />
 
                 <Button
                     android:id="@+id/save"
-                    style="@style/dialogButtons"
+                    style="@style/dialogButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@android:string/ok" />
             </LinearLayout>
+
         </LinearLayout>
     </LinearLayout>
 
