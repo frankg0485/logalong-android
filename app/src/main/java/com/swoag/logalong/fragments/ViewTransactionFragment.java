@@ -435,7 +435,7 @@ public class ViewTransactionFragment extends LFragment implements
         searchView = (ImageView) setViewListener(rootView, R.id.search);
 
         if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-            LViewUtils.setAlpha(searchView, 0.5f);
+            LViewUtils.setAlpha(searchView, 0.8f);
         } else {
             LViewUtils.setAlpha(searchView, 1.0f);
         }
@@ -1061,7 +1061,7 @@ public class ViewTransactionFragment extends LFragment implements
         showTime();
 
         if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-            LViewUtils.setAlpha(searchView, 0.5f);
+            LViewUtils.setAlpha(searchView, 0.8f);
         } else {
             LViewUtils.setAlpha(searchView, 1.0f);
         }
@@ -1136,8 +1136,8 @@ public class ViewTransactionFragment extends LFragment implements
         if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) {
             prevView.setEnabled(false);
             nextView.setEnabled(false);
-            LViewUtils.setAlpha(prevView, 0.5f);
-            LViewUtils.setAlpha(nextView, 0.5f);
+            LViewUtils.setAlpha(prevView, 0.8f);
+            LViewUtils.setAlpha(nextView, 0.8f);
         } else {
             prevView.setEnabled(true);
             nextView.setEnabled(true);

@@ -3,7 +3,6 @@
     android:id="@+id/bottomBar"
     android:layout_width="match_parent"
     android:layout_height="@dimen/footer_height"
-    android:background="#C0080c10"
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
@@ -12,6 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:background="@drawable/bottom_bar_btn_selector_dark"
         android:gravity="center_vertical|left">
 
         <ImageView
@@ -37,7 +37,8 @@
         android:id="@+id/add"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
+        android:layout_weight="1.62"
+        android:background="@drawable/bottom_bar_btn_selector"
         android:gravity="center_vertical|right">
 
         <ImageView

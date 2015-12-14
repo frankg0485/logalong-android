@@ -38,44 +38,42 @@
                 android:layout_below="@+id/listViewFlipper"
                 android:divider="@android:color/transparent" />
 
-            <RelativeLayout
+            <LinearLayout
                 android:id="@+id/bottomBar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/footer_height"
                 android:layout_alignParentBottom="true"
-                android:background="#C0080c10"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/filter"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_alignParentLeft="true"
-                    android:layout_centerVertical="true"
-                    android:layout_marginLeft="10dp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
                     android:clickable="true"
-                    android:paddingBottom="6dp"
-                    android:paddingTop="6dp"
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp"
                     android:src="@drawable/ic_menu_sort_by_size" />
 
                 <ImageView
                     android:id="@+id/search"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_centerVertical="true"
-                    android:layout_marginLeft="5dp"
-                    android:layout_toRightOf="@+id/filter"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
                     android:clickable="true"
-                    android:paddingBottom="6dp"
-                    android:paddingTop="6dp"
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp"
                     android:src="@drawable/ic_action_search" />
 
                 <TextView
                     android:id="@+id/monthly"
-                    android:layout_width="100dp"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_centerInParent="true"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
                     android:gravity="center"
                     android:text="@string/monthly"
                     android:textColor="#ccc"
@@ -84,41 +82,35 @@
 
                 <ImageView
                     android:id="@+id/prev"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_centerVertical="true"
-                    android:layout_toLeftOf="@+id/next"
-                    android:paddingBottom="6dp"
-                    android:paddingTop="6dp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp"
                     android:src="@drawable/ic_action_left" />
 
                 <ImageView
                     android:id="@+id/next"
-                    android:layout_width="60dp"
-                    android:layout_height="36dp"
-                    android:layout_alignParentRight="true"
-                    android:layout_centerVertical="true"
-                    android:paddingBottom="6dp"
-                    android:paddingTop="6dp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
+                    android:paddingBottom="10dp"
+                    android:paddingTop="10dp"
                     android:src="@drawable/ic_action_right" />
 
                 <TextView
                     android:id="@+id/customTime"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_alignParentRight="true"
-                    android:layout_marginRight="20dp"
+                    android:layout_weight="3.5"
+                    android:background="@drawable/bottom_bar_btn_selector_dark"
                     android:gravity="center"
                     android:textColor="#ccc"
                     android:textSize="12dp"
                     android:visibility="gone" />
-
-                <include
-                    android:id="@+id/undobar"
-                    layout="@layout/undo_bar"
-                    android:visibility="gone" />
-            </RelativeLayout>
-
+            </LinearLayout>
         </RelativeLayout>
 
         <LinearLayout
