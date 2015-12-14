@@ -133,7 +133,7 @@ public class LSelectionDialog extends Dialog
                     mCursor, ids[1], column, ids[6], ids[5]);
             mList.setAdapter(myCursorAdapter);
 
-            if (startPosition != -1) {
+            if (startPosition != -1 && startPosition < mCursor.getCount()) {
                 bitSet.set(startPosition, true);
                 mList.setSelection(startPosition);
             }
@@ -150,9 +150,11 @@ public class LSelectionDialog extends Dialog
     public void refresh(int selectPosition) {
         mCursor = callback.onSelectionGetCursor(table, column);
         myCursorAdapter.swapCursor(mCursor);
+        myCursorAdapter.initIndexer(mCursor);
+
         myCursorAdapter.notifyDataSetChanged();
 
-        if (selectPosition != -1) {
+        if (selectPosition != -1 && startPosition < mCursor.getCount()) {
             mList.setSelection(selectPosition);
             bitSet.set(selectPosition, true);
         }
@@ -161,7 +163,7 @@ public class LSelectionDialog extends Dialog
 
     public void setSelection(int position) {
         try {
-            if (position != -1) {
+            if (position != -1 && startPosition < mList.getCount()) {
                 mList.setSelection(position);
                 bitSet.set(position, true);
                 mList.invalidateViews();
@@ -291,6 +293,10 @@ public class LSelectionDialog extends Dialog
             this.column1 = column1;
             this.textId1 = textId1;
             this.radioButtonId = radioButtonId;
+            initIndexer(cursor);
+        }
+
+        public void initIndexer(Cursor cursor) {
             mAlphabetIndexer = new AlphabetIndexer(cursor, cursor.getColumnIndex(column1),
                     " ABCDEFGHIJKLMNOPQRTSUVWXYZ");
             mAlphabetIndexer.setCursor(cursor);

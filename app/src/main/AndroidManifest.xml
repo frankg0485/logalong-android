@@ -32,7 +32,7 @@
 
         <receiver android:name="com.swoag.logalong.receivers.LAlarmReceiver" />
 
-        <receiver android:name="com.swoag.logalong.receivers.BootIntentReceiver" >
+        <receiver android:name="com.swoag.logalong.receivers.BootIntentReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -40,7 +40,7 @@
 
         <service
             android:name="com.swoag.logalong.MainService"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <provider
             android:name=".utils.DBProvider"
