@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.swoag.logalong.LApp;
@@ -226,7 +227,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
     private void clearInputString() {
         inputString = "";
         valueTV.setText("0.0");
-        ((Button) viewSave).setText(LApp.ctx.getString(android.R.string.ok));
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
 
         mathOperator = -1;
         lastValue = 0;
@@ -266,7 +267,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
             } else {
                 if (lastDigit == '+' || lastDigit == '-' || lastDigit == '*' || lastDigit == '/') {
                     mathOperator = -1;
-                    ((Button) viewSave).setText(LApp.ctx.getString(android.R.string.ok));
+                    ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
                 }
             }
 
@@ -344,7 +345,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
         lastValueEnd = inputString.length();
         lastValue = string2value(inputString.substring(0, lastValueEnd - 1));
         enableMath(false);
-        ((Button) viewSave).setText("=");
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_equal);
         enableDot(true);
 
         mathOperator = operator;

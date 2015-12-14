@@ -27,8 +27,8 @@
     <color name="pressed_base_btn_background">#52cb48</color>
     <color name="released_quickie_btn_background">#b4cdcd</color>
     <color name="pressed_quickie_btn_background">#e0eeee</color>
-    <color name="released_btn_background">#607078</color>
-    <color name="pressed_btn_background">#778f8f</color>
+    <color name="released_btn_background">#b0b0b8</color>
+    <color name="pressed_btn_background">#97afaf</color>
     <color name="released_emoji_btn_background">#d4d6d8</color>
     <color name="pressed_emoji_btn_background">#c4c6c8</color>
     <color name="released_emoji_backspace_btn_background">#e4e6e8</color>
