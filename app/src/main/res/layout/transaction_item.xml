@@ -53,8 +53,9 @@
                 android:layout_below="@id/category"
                 android:layout_marginLeft="5dp"
                 android:layout_toRightOf="@id/date"
-                android:ellipsize="middle"
+                android:ellipsize="end"
                 android:gravity="center_vertical"
+                android:singleLine="true"
                 android:textColor="@color/gray_text_color"
                 android:textSize="12dp" />
         </RelativeLayout>

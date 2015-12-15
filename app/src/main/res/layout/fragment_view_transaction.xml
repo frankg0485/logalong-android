@@ -34,7 +34,7 @@
                 android:id="@+id/logsList"
                 android:layout_width="match_parent"
                 android:layout_height="fill_parent"
-                android:layout_above="@+id/bottomBar"
+                android:layout_above="@+id/mainBottomBar"
                 android:layout_below="@+id/listViewFlipper"
                 android:divider="@android:color/transparent" />
 
@@ -106,8 +106,8 @@
                     android:layout_height="match_parent"
                     android:layout_weight="3.5"
                     android:background="@drawable/bottom_bar_btn_selector_dark"
-                    android:gravity="center"
                     android:clickable="false"
+                    android:gravity="center"
                     android:textColor="#ccc"
                     android:textSize="12dp"
                     android:visibility="gone" />

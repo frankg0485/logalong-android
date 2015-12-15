@@ -153,6 +153,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (!bScheduleMode) {
             noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
             noteET.setText(item.getNote());
+            setViewListener(rootView, R.id.clearText);
         }
 
         String inputString = value2string(item.getValue());
@@ -197,6 +198,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             viewDiscard = setViewListener(rootView, R.id.discard);
             viewDiscard.setVisibility(View.VISIBLE);
         }
+
+        hideIME();
     }
 
     private void destroy() {
@@ -269,6 +272,10 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         }
                     } catch (Exception e) {
                     }
+                    break;
+
+                case R.id.clearText:
+                    noteET.setText("");
                     break;
 
                 case R.id.amountRow:
