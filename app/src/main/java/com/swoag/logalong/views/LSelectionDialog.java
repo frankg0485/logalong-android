@@ -154,7 +154,10 @@ public class LSelectionDialog extends Dialog
 
         myCursorAdapter.notifyDataSetChanged();
 
-        if (selectPosition != -1 && startPosition < mCursor.getCount()) {
+        if (selectPosition != -1 && selectPosition < mCursor.getCount()) {
+            bitSet.clear();
+            mList.setItemChecked(-1, true);
+
             mList.setSelection(selectPosition);
             bitSet.set(selectPosition, true);
         }
@@ -163,7 +166,7 @@ public class LSelectionDialog extends Dialog
 
     public void setSelection(int position) {
         try {
-            if (position != -1 && startPosition < mList.getCount()) {
+            if (position != -1 && position < mList.getCount()) {
                 mList.setSelection(position);
                 bitSet.set(position, true);
                 mList.invalidateViews();

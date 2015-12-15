@@ -383,20 +383,21 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             int selection = -1;
             switch (id) {
                 case DLG_ID_ACCOUNT:
-                    selection = DBAccount.getDbIndexById(item.getAccount());
+                    selection = DBAccount.getDbIndexById(DBAccount.getIdByName(name));
                     break;
                 case DLG_ID_ACCOUNT2:
-                    selection = DBAccount.getDbIndexById(item.getAccount2());
+                    selection = DBAccount.getDbIndexById(DBAccount.getIdByName(name));
                     break;
                 case DLG_ID_CATEGORY:
-                    selection = DBCategory.getDbIndexById(item.getCategory());
+                    selection = DBCategory.getDbIndexById(DBCategory.getIdByName(name));
                     break;
                 case DLG_ID_VENDOR:
                     selection = item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
-                            DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor());
+                            DBVendor.getPayerIndexById(DBVendor.getIdByName(name))
+                            : DBVendor.getPayeeIndexById(DBVendor.getIdByName(name));
                     break;
                 case DLG_ID_TAG:
-                    selection = DBTag.getDbIndexById(item.getTag());
+                    selection = DBTag.getDbIndexById(DBTag.getIdByName(name));
                     break;
             }
             mSelectionDialog.refresh(selection);
@@ -422,6 +423,15 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             case DLG_ID_VENDOR:
                 title = activity.getString(R.string.new_vendor);
                 type = LNewEntryDialog.TYPE_VENDOR;
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_EXPENSE) {
+                    attr1 = true;
+                    attr2 = false;
+                } else if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME) {
+                    attr1 = false;
+                    attr2 = true;
+                } else {
+                    attr1 = attr2 = true;
+                }
                 break;
             case DLG_ID_TAG:
                 title = activity.getString(R.string.new_tag);

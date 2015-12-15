@@ -186,8 +186,9 @@ public class DBVendor {
             csr = context.getContentResolver().query(DBProvider.URI_VENDORS, new String[]{"_id"},
                     DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
                             + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? ) ORDER BY " + DBHelper.TABLE_COLUMN_NAME + " ASC",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + type, "" + LVendor.TYPE_PAYEE_PAYER}, null);
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + type, "" + LVendor.TYPE_PAYEE_PAYER},
+                    DBHelper.TABLE_COLUMN_NAME + " ASC");
 
             csr.moveToFirst();
             while (true) {

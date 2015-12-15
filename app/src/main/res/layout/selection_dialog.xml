@@ -79,7 +79,7 @@
                 android:layout_marginLeft="1dp"
                 android:layout_marginRight="1dp"
                 android:layout_weight="1"
-                android:choiceMode="multipleChoice"
+                android:choiceMode="singleChoice"
                 android:divider="@android:color/transparent"
                 android:dividerHeight="1dp"
                 android:fadingEdgeLength="0dp"
