@@ -21,10 +21,14 @@
 
         <LinearLayout
             android:id="@+id/viewSettings"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_marginTop="1dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:orientation="vertical">
+
+            <!-- marginTop has bug in API-10 devices-->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp" />
 
             <include
                 android:id="@+id/dataBackupSettings"

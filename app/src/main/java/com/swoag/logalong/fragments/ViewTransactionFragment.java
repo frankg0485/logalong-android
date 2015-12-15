@@ -425,6 +425,7 @@ public class ViewTransactionFragment extends LFragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
+
         myClickListener = new MyClickListener();
 
         resetSelections();
@@ -1116,6 +1117,10 @@ public class ViewTransactionFragment extends LFragment implements
 
             customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
                     new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+
+            prevView.setEnabled(false);
+            nextView.setEnabled(false);
+            return;
         }
 
         switch (AppPersistency.viewTransactionTime) {

@@ -39,7 +39,7 @@
                 android:divider="@android:color/transparent" />
 
             <LinearLayout
-                android:id="@+id/bottomBar"
+                android:id="@+id/mainBottomBar"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/footer_height"
                 android:layout_alignParentBottom="true"
@@ -107,6 +107,7 @@
                     android:layout_weight="3.5"
                     android:background="@drawable/bottom_bar_btn_selector_dark"
                     android:gravity="center"
+                    android:clickable="false"
                     android:textColor="#ccc"
                     android:textSize="12dp"
                     android:visibility="gone" />
