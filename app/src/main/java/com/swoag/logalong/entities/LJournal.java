@@ -61,12 +61,14 @@ public class LJournal {
     public static void flush() {
         Cursor cursor = DBAccess.getAllActiveJournalCursor();
         if (cursor != null && cursor.getCount() > 0) {
+            LLog.d(TAG, "journal count: " + cursor.getCount());
             cursor.moveToFirst();
             do {
                 int userId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER));
                 String rec = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD));
                 long id = cursor.getLong(0);
                 LProtocol.ui.postJournal(userId, id + ":" + rec);
+                break;
             } while (cursor.moveToNext());
             cursor.close();
         }

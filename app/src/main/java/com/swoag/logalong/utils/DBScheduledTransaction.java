@@ -33,7 +33,6 @@ public class DBScheduledTransaction {
     }
 
     public static void getValues(Cursor cur, LScheduledTransaction sch) {
-
         DBTransaction.getValues(cur, sch.getItem());
 
         sch.setRepeatCount(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_COUNT)));
@@ -177,6 +176,7 @@ public class DBScheduledTransaction {
                 cursor.moveToFirst();
                 do {
                     getValues(cursor, sch);
+                    sch.calculateNextTimeMs();
                     sch.setAlarm();
                 } while (cursor.moveToNext());
             }

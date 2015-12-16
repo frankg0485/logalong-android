@@ -267,6 +267,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     long journalId = intent.getLongExtra("journalId", 0);
                     DBAccess.deleteJournalById(journalId);
                 }
+                LJournal.flush();
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
