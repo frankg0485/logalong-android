@@ -65,8 +65,25 @@ public class LScheduledTransaction {
     }
 
     public void calculateNextTimeMs() {
+        nextTimeMs();
+    }
+
+    public void initNextTimeMs() {
         long baseTimeMs = item.getTimeStamp();
-        int count = 0;
+        long curTimeMs = System.currentTimeMillis();
+
+        if (baseTimeMs <= curTimeMs) {
+            if (curTimeMs - baseTimeMs < (long)24 * 3600 * 1000) {
+                timestamp = baseTimeMs;
+                return;
+            }
+        }
+        nextTimeMs();
+    }
+
+    private void nextTimeMs() {
+        long baseTimeMs = item.getTimeStamp();
+        int count = 1;
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);

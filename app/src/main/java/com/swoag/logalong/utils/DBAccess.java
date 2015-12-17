@@ -176,6 +176,22 @@ public class DBAccess {
         return true;
     }
 
+    public static boolean deleteJournalAll() {
+        return deleteJournalAll(LApp.ctx);
+    }
+
+    public static boolean deleteJournalAll(Context context) {
+        try {
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE});
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     public static boolean deleteJournalById(long id) {
         return updateColumnById(DBProvider.URI_JOURNALS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }

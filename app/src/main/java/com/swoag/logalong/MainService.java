@@ -266,6 +266,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (ret == LProtocol.RSPS_OK) {
                     long journalId = intent.getLongExtra("journalId", 0);
                     DBAccess.deleteJournalById(journalId);
+                    //DBAccess.deleteJournalAll();
                 }
                 LJournal.flush();
                 break;

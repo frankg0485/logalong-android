@@ -112,7 +112,7 @@ public class ScheduleActivity extends Activity implements
                     calendar.set(Calendar.MINUTE, 0);
                     calendar.set(Calendar.SECOND, 0);
                     scheduledItem.getItem().setTimeStamp(calendar.getTimeInMillis());
-                    scheduledItem.calculateNextTimeMs();
+                    scheduledItem.initNextTimeMs();
 
                     scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
                     if (createNew) DBScheduledTransaction.add(scheduledItem);
