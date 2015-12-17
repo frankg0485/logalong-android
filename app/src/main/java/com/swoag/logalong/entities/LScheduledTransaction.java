@@ -3,6 +3,7 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LLog;
 
@@ -15,6 +16,7 @@ public class LScheduledTransaction {
 
     public static final int REPEAT_UNIT_WEEK = 10;
     public static final int REPEAT_UNIT_MONTH = 20;
+    private static boolean TEST_SCAN_LOGIC = false;
 
     LTransaction item;
     int repeatCount;
@@ -73,21 +75,61 @@ public class LScheduledTransaction {
         long curTimeMs = System.currentTimeMillis();
 
         if (baseTimeMs <= curTimeMs) {
-            if (curTimeMs - baseTimeMs < (long)24 * 3600 * 1000) {
+            if (curTimeMs - baseTimeMs < (long) 24 * 3600 * 1000) {
                 timestamp = baseTimeMs;
                 return;
             }
         }
-        nextTimeMs();
+        if (TEST_SCAN_LOGIC)
+            timestamp = baseTimeMs;
+        else
+            nextTimeMs();
     }
 
-    private void nextTimeMs() {
-        long baseTimeMs = item.getTimeStamp();
-        int count = 1;
+    private long getEndMs() {
+        if (repeatCount == 0) return Long.MAX_VALUE;
+
+        long ms = item.getTimeStamp();
+        if (repeatUnit == REPEAT_UNIT_MONTH) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(item.getTimeStamp());
+            calendar.add(Calendar.MONTH, repeatInterval * repeatCount);
+            ms = calendar.getTimeInMillis();
+        } else {
+            ms += (long) repeatInterval * 7 * 24 * 3600 * 1000 * repeatCount;
+        }
+        return ms;
+    }
+
+    public void scanNextTimeMs() {
+        if (timestamp >= System.currentTimeMillis()) return;
+
+        //we missed the alarm, let's check to populate the DB
+        long baseTimeMs = timestamp;
+        long endTimeMs = getEndMs();
 
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
-        while (baseTimeMs <= System.currentTimeMillis()) {
+        while (baseTimeMs <= System.currentTimeMillis() && baseTimeMs < endTimeMs) {
+            //check to update DB
+            String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
+
+            LTransaction transaction = DBTransaction.getByRid(item.getRid() + ymd);
+            if (transaction == null) {
+                transaction = new LTransaction(item);
+
+                transaction.setTimeStampLast(System.currentTimeMillis());
+                transaction.setRid(transaction.getRid() + ymd);
+                transaction.setTimeStamp(baseTimeMs);
+
+                DBTransaction.add(transaction);
+
+                LJournal journal = new LJournal();
+                journal.updateItem(transaction);
+            } else {
+                //entry already exits, do nothing
+            }
+
             if (repeatUnit == REPEAT_UNIT_MONTH) {
                 calendar.add(Calendar.MONTH, repeatInterval);
                 baseTimeMs = calendar.getTimeInMillis();
@@ -95,7 +137,6 @@ public class LScheduledTransaction {
                 baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
                 calendar.setTimeInMillis(baseTimeMs);
             }
-            count++;
         }
 
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -103,11 +144,46 @@ public class LScheduledTransaction {
         calendar.set(Calendar.SECOND, 0);
         timestamp = calendar.getTimeInMillis();
 
-        if (repeatCount == 0) return;
+        if (repeatCount > 0) {
+            if (baseTimeMs >= endTimeMs) {
+                item.setState(DBHelper.STATE_DISABLED);
+                timestamp = item.getTimeStamp();
+            }
+        }
+        DBScheduledTransaction.update(this);
+    }
 
-        if (repeatCount < count) {
-            item.setState(DBHelper.STATE_DISABLED);
-            timestamp = item.getTimeStamp();
+    private void nextTimeMs() {
+        if (TEST_SCAN_LOGIC)
+            return;
+        else {
+            long baseTimeMs = item.getTimeStamp();
+            int count = 1;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(baseTimeMs);
+            while (baseTimeMs <= System.currentTimeMillis()) {
+                if (repeatUnit == REPEAT_UNIT_MONTH) {
+                    calendar.add(Calendar.MONTH, repeatInterval);
+                    baseTimeMs = calendar.getTimeInMillis();
+                } else {
+                    baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
+                    calendar.setTimeInMillis(baseTimeMs);
+                }
+                count++;
+            }
+
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            timestamp = calendar.getTimeInMillis();
+
+            if (repeatCount == 0) return;
+
+            if (repeatCount < count) {
+                item.setState(DBHelper.STATE_DISABLED);
+                timestamp = item.getTimeStamp();
+            }
         }
     }
 

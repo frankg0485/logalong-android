@@ -168,15 +168,35 @@ public class DBScheduledTransaction {
         return cur;
     }
 
+    private static Cursor getActiveCursor(String sortColumn) {
+        return getActiveCursor(LApp.ctx, sortColumn);
+    }
+
+    private static Cursor getActiveCursor(Context context, String sortColumn) {
+        Cursor cur = null;
+        try {
+            if (sortColumn != null)
+                cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, sortColumn + " ASC");
+            else
+                cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+        } catch (Exception e) {
+        }
+        return cur;
+    }
+
     public static void scanAlarm() {
-        Cursor cursor = getCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
+        Cursor cursor = getActiveCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
         if (cursor != null) {
             if (cursor.getCount() > 0) {
                 LScheduledTransaction sch = new LScheduledTransaction();
                 cursor.moveToFirst();
                 do {
                     getValues(cursor, sch);
-                    sch.calculateNextTimeMs();
+                    sch.scanNextTimeMs();
                     sch.setAlarm();
                 } while (cursor.moveToNext());
             }
