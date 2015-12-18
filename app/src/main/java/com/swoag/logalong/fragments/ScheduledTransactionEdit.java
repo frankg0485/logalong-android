@@ -44,7 +44,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
     private ScheduledTransitionEditItf callback;
 
     private TextView weekMonthTV, intervalTV, countTV;
-    private MyClickListener myClickListener;
+    private boolean clickDisabled = false;
 
     public interface ScheduledTransitionEditItf {
         public static final int EXIT_DELETE = 10;
@@ -58,10 +58,12 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
     public void onTransactionEditExit(int action, boolean changed) {
         switch (action) {
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                clickDisabled = true;
                 callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_DELETE, false);
                 destroy();
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
+                clickDisabled = true;
                 callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
                 destroy();
                 break;
@@ -77,6 +79,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.rootView = rootView;
         this.scheduledItem = item;
         this.callback = callback;
+        clickDisabled = false;
 
         rootView.findViewById(R.id.repeatInterval).setOnClickListener(this);
         rootView.findViewById(R.id.repeatIntervalH).setOnClickListener(this);
@@ -123,19 +126,10 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         savedScheduledItem = null;
     }
 
-    private class MyClickListener extends LOnClickListener {
-        @Override
-        public void onClicked(View v) {
-            LTransaction item = scheduledItem.getItem();
-            switch (v.getId()) {
-                default:
-                    break;
-            }
-        }
-    }
-
     @Override
     public void onClick(View v) {
+        if (clickDisabled) return;
+
         switch (v.getId()) {
             case R.id.repeatInterval:
             case R.id.repeatIntervalH:
@@ -162,20 +156,16 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
     }
 
     public void dismiss() {
+        clickDisabled = true;
         callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_CANCEL, false);
         destroy();
     }
 
 
-    private View setViewListener(View v, int id) {
-        View view = v.findViewById(id);
-        view.setOnClickListener(myClickListener);
-        return view;
-    }
-
     private void saveLog() {
         boolean changed = !scheduledItem.isEqual(savedScheduledItem);
         if (changed) scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
+        clickDisabled = true;
         callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_OK, changed);
         destroy();
     }

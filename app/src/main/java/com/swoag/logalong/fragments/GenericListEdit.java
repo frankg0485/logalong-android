@@ -53,6 +53,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
     private View addV;
     private MyClickListener myClickListener;
 
+
     public interface GenericListEditItf {
         public void onGenericListEditExit();
     }
@@ -159,10 +160,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
     }
 
     public void dismiss() {
+        myClickListener.disableEnable(false);
+        adapter.clickListener.disableEnable(false);
         callback.onGenericListEditExit();
         destroy();
     }
-
 
     private View setViewListener(View v, int id) {
         View view = v.findViewById(id);

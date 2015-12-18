@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.DatePicker;
@@ -240,6 +241,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             }
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
+                myClickListener.disableEnable(false);
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                 destroy();
                 return;
@@ -357,6 +359,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
                 case R.id.exit:
                 case R.id.back:
+                    myClickListener.disableEnable(false);
                     callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                     destroy();
                     break;
@@ -372,6 +375,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     public void dismiss() {
+        myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
         destroy();
     }
@@ -379,6 +383,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     @Override
     public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
         if (confirm && ok) {
+            myClickListener.disableEnable(false);
             callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
             destroy();
         }
@@ -540,6 +545,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (!bScheduleMode) item.setNote(noteET.getText().toString());
         boolean changed = !item.isEqual(savedItem);
         if (changed) item.setTimeStampLast(System.currentTimeMillis());
+        myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
         destroy();
     }

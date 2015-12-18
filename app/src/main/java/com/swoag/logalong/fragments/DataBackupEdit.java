@@ -133,6 +133,7 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     }
 
     public void dismiss() {
+        myClickListener.disableEnable(false);
         this.callback.onDataBackupEditExit();
         destroy();
     }

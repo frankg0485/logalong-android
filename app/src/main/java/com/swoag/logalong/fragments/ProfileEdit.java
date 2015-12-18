@@ -283,6 +283,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     }
 
     public void dismiss() {
+        myClickListener.disableEnable(false);
         this.callback.onProfileEditExit();
         destroy();
     }
