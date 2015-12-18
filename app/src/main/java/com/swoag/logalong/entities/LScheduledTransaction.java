@@ -104,6 +104,13 @@ public class LScheduledTransaction {
     public void scanNextTimeMs() {
         if (timestamp >= System.currentTimeMillis()) return;
 
+        if (timestamp == 0) {
+            //special case, this must be a schedule that is just imported.
+            nextTimeMs();
+            DBScheduledTransaction.update(this);
+            return;
+        }
+
         //we missed the alarm, let's check to populate the DB
         long baseTimeMs = timestamp;
         long endTimeMs = getEndMs();

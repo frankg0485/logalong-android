@@ -157,6 +157,10 @@ public class DBScheduledTransaction {
                 new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
     }
 
+    public static long getIdByRid(String rid) {
+        return DBAccess.getIdByRid(DBProvider.URI_SCHEDULED_TRANSACTIONS, rid);
+    }
+
     public static Cursor getCursorByAccount(long accountId) {
         return getCursorByAccount(LApp.ctx, accountId);
     }

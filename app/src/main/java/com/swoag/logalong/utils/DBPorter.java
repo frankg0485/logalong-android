@@ -7,6 +7,7 @@ import android.os.Environment;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LVendor;
@@ -26,6 +27,69 @@ public class DBPorter {
     private static final String TAG = DBPorter.class.getSimpleName();
 
     public DBPorter() {
+    }
+
+    private static String exportTransactionItem(Cursor cursor) {
+        LAccount lAccount = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
+        LAccount lAccount2 = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
+        LCategory lCategory = DBCategory.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
+        LVendor lVendor = DBVendor.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+        LTag lTag = DBTag.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
+
+        String row = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ",";
+
+        if (lCategory != null)
+            row += lCategory.getName() + "," + lCategory.getRid() + ",";
+        else
+            row += "," + ",";
+
+        if (lAccount != null)
+            row += lAccount.getName() + "," + lAccount.getRid() + ",";
+        else
+            row += "," + ",";
+
+        if (lAccount2 != null)
+            row += lAccount2.getName() + "," + lAccount2.getRid() + ",";
+        else
+            row += "," + ",";
+
+        if (lTag != null)
+            row += lTag.getName() + "," + lTag.getRid() + ",";
+        else
+            row += "," + ",";
+
+        if (lVendor != null)
+            row += lVendor.getName() + "," + lVendor.getRid() + "," + lVendor.getType() + ",";
+        else
+            row += "," + "," + ",";
+
+        row += cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
+                + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) + ","
+                + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)) + ","
+                + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)) + ","
+                + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)) + ","
+                + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)) + ","
+                + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
+        return row;
+    }
+
+    private static void exportSchedules(MyCSV myCSV) {
+        myCSV.add("---");
+        Cursor cursor = DBScheduledTransaction.getCursor(null);
+
+        if (cursor == null || cursor.getCount() < 1) return;
+
+        cursor.moveToFirst();
+        do {
+            String row = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_UNIT)) + ",";
+            row += cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL)) + ",";
+            row += cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_COUNT)) + ",";
+
+            row += exportTransactionItem(cursor);
+            myCSV.add(row);
+        } while (cursor.moveToNext());
+
+        cursor.close();
     }
 
     public static boolean exportDb(int dbVersion) {
@@ -61,52 +125,11 @@ public class DBPorter {
 
             cursor.moveToFirst();
             do {
-                String accountRid, account, account2Rid, account2 = "", categoryRid, category, vendorRid, vendor = "", tagRid, tag, note;
-                int vendorType = LVendor.TYPE_PAYEE;
-
-                LAccount lAccount = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
-                LAccount lAccount2 = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
-                LCategory lCategory = DBCategory.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-                LVendor lVendor = DBVendor.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
-                LTag lTag = DBTag.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
-
-                String row = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ",";
-
-                if (lCategory != null)
-                    row += lCategory.getName() + "," + lCategory.getRid() + ",";
-                else
-                    row += "," + ",";
-
-                if (lAccount != null)
-                    row += lAccount.getName() + "," + lAccount.getRid() + ",";
-                else
-                    row += "," + ",";
-
-                if (lAccount2 != null)
-                    row += lAccount2.getName() + "," + lAccount2.getRid() + ",";
-                else
-                    row += "," + ",";
-
-                if (lTag != null)
-                    row += lTag.getName() + "," + lTag.getRid() + ",";
-                else
-                    row += "," + ",";
-
-                if (lVendor != null)
-                    row += lVendor.getName() + "," + lVendor.getRid() + "," + lVendor.getType() + ",";
-                else
-                    row += "," + "," + ",";
-
-                row += cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)) + ","
-                        + cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) + ","
-                        + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)) + ","
-                        + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)) + ","
-                        + cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)) + ","
-                        + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)) + ","
-                        + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
-                myCSV.add(row);
+                myCSV.add(exportTransactionItem(cursor));
             } while (cursor.moveToNext());
             cursor.close();
+
+            exportSchedules(myCSV);
 
             File file = new File(path, generateFilename(dbVersion));
             FileOutputStream fos = new FileOutputStream(file);
@@ -145,8 +168,15 @@ public class DBPorter {
 
             boolean header = true;
             boolean userInfo = true;
+            boolean schedule = false;
             for (String str : myCSV.getCsv()) {
                 LLog.d(TAG, "" + str);
+
+                if (str.contentEquals("---")) {
+                    schedule = true;
+                    continue;
+                }
+
                 String[] ss = str.split(",", -1);
                 if (userInfo) {
                     userInfo = false;
@@ -158,6 +188,14 @@ public class DBPorter {
                 } else {
                     int ii = 0;
                     Long ll;
+
+                    int repeatInterval = 0, repeatUnit = 0, repeatCount = 0;
+
+                    if (schedule) {
+                        repeatUnit = Integer.valueOf(ss[ii++]);
+                        repeatInterval = Integer.valueOf(ss[ii++]);
+                        repeatCount = Integer.valueOf(ss[ii++]);
+                    }
 
                     double amount = Double.valueOf(ss[ii++]);
 
@@ -264,18 +302,32 @@ public class DBPorter {
                     String rid = ss[ii++];
                     String note = ss[ii];
 
-                    long tid = DBTransaction.getIdByRid(rid);
-                    if (tid != 0) {
-                        LTransaction trans = new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
+                    LTransaction trans = new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
                             accountId, account2Id, madeby, timestamp, timestampLast, note);
-                        trans.setId(tid);
-                        DBTransaction.update(trans);
+
+                    if (schedule) {
+                        long sid = DBScheduledTransaction.getIdByRid(rid);
+                        trans.setId(sid);
+
+                        LScheduledTransaction lScheduledTransaction = new LScheduledTransaction(repeatInterval, repeatUnit, repeatCount, 0, trans);
+                        if (sid != 0) {
+                            trans.setId(sid);
+                            DBScheduledTransaction.update(lScheduledTransaction);
+                        } else {
+                            DBScheduledTransaction.add(lScheduledTransaction);
+                        }
                     } else {
-                        DBTransaction.add(new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
-                                accountId, account2Id, madeby, timestamp, timestampLast, note));
+                        long tid = DBTransaction.getIdByRid(rid);
+                        if (tid != 0) {
+                            trans.setId(tid);
+                            DBTransaction.update(trans);
+                        } else {
+                            DBTransaction.add(trans);
+                        }
                     }
                 }
             }
+            if (schedule) DBScheduledTransaction.scanAlarm();
 
             ois.close();
 
