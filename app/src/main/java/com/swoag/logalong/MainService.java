@@ -67,8 +67,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if ((!LProtocol.ui.isConnected()) && (pollingCount++ > 3)) {
                     LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
                     stopSelf();
-                }
-                else {
+                } else {
                     LProtocol.ui.poll();
                     pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 }

@@ -16,9 +16,12 @@ public class LTransaction {
 
     public static int getTypeStringId(int type) {
         switch (type) {
-            case TRANSACTION_TYPE_EXPENSE: break;
-            case TRANSACTION_TYPE_INCOME: return R.string.income;
-            case TRANSACTION_TYPE_TRANSFER: return R.string.transfer;
+            case TRANSACTION_TYPE_EXPENSE:
+                break;
+            case TRANSACTION_TYPE_INCOME:
+                return R.string.income;
+            case TRANSACTION_TYPE_TRANSFER:
+                return R.string.transfer;
         }
         return R.string.expense;
     }
@@ -59,7 +62,7 @@ public class LTransaction {
         init();
     }
 
-    public void copy (LTransaction item) {
+    public void copy(LTransaction item) {
         this.timeStamp = item.timeStamp;
         this.timeStampLast = item.timeStampLast;
         this.value = item.value;
