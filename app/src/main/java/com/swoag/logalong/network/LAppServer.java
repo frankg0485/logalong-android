@@ -47,6 +47,7 @@ public class LAppServer {
     private int tried;
     private static final int AUTO_RECONNECT_DEFAULT_TIME_SECONDS = 3600;
     private static final int AUTO_RECONNECT_RETRY_TIME_SECONDS = 30;
+
     private Context context;
     private LProtocol lProtocol;
 
@@ -255,6 +256,7 @@ public class LAppServer {
             }
 
             // signal the end of connection.
+            LLog.d(TAG, "app server stopped");
             lProtocol.parse(null);
             synchronized (netLock) {
                 netThreadState = STATE_EXIT;

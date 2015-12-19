@@ -16,16 +16,21 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
+import com.swoag.logalong.utils.LLog;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 public class LAlarmReceiver extends BroadcastReceiver {
+    private static final String TAG = LAlarmReceiver.class.getSimpleName();
+
     @Override
     public void onReceive(Context context, Intent intent) {
         int action = intent.getIntExtra("action", 0);
         switch (action) {
             case LAlarm.ACTION_AUTO_RECONNECT:
+                LLog.d(TAG, "auto reconnect at: " + (new Date()));
                 MainService.start(LApp.ctx);
                 break;
 

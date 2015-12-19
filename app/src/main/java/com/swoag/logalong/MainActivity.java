@@ -55,6 +55,7 @@ public class MainActivity extends LFragmentActivity
     private BroadcastReceiver broadcastReceiver;
     private Handler handler;
     private Runnable confirmAccountShare;
+    private boolean shareAccountConfirmDialogOpened = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,6 @@ public class MainActivity extends LFragmentActivity
             return;
         }
 
-        LLog.d(TAG, "enter");
         LViewUtils.screenInit();
 
         //the combo of the following will cause client to reauthenticate upon startup
@@ -82,8 +82,13 @@ public class MainActivity extends LFragmentActivity
         confirmAccountShare = new Runnable() {
             @Override
             public void run() {
-                LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this, accountShareRequest, MainActivity.this);
-                dialog.show();
+                accountShareRequest = LPreferences.getAccountShareRequest();
+                if ((accountShareRequest != null) && (!shareAccountConfirmDialogOpened)) {
+                    shareAccountConfirmDialogOpened = true;
+                    LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this,
+                            accountShareRequest, MainActivity.this);
+                    dialog.show();
+                }
             }
         };
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
@@ -145,6 +150,8 @@ public class MainActivity extends LFragmentActivity
                 }
             }
         });
+
+        handler.post(confirmAccountShare);
     }
 
     /*
@@ -382,10 +389,7 @@ public class MainActivity extends LFragmentActivity
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
-                accountShareRequest = LPreferences.getAccountShareRequest();
-                if (accountShareRequest != null) {
-                    handler.post(confirmAccountShare);
-                }
+                handler.post(confirmAccountShare);
                 break;
         }
     }
@@ -435,11 +439,9 @@ public class MainActivity extends LFragmentActivity
         } else {
 
         }
-
+        shareAccountConfirmDialogOpened = false;
         LPreferences.deleteAccountShareRequest(request);
-        accountShareRequest = LPreferences.getAccountShareRequest();
-        if (accountShareRequest != null) {
-            handler.post(confirmAccountShare);
-        }
+
+        handler.post(confirmAccountShare);
     }
 }

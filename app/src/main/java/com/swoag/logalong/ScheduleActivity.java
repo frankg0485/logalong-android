@@ -32,7 +32,7 @@ import com.swoag.logalong.utils.LViewUtils;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class ScheduleActivity extends Activity implements
+public class ScheduleActivity extends LFragmentActivity implements
         ScheduledTransactionEdit.ScheduledTransitionEditItf {
 
     private View rootView, selectTypeV;

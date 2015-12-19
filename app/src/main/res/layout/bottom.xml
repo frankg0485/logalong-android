@@ -23,30 +23,31 @@
             android:src="@drawable/ic_action_left" />
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleInverse"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_centerInParent="true"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="15dp"
-        android:visibility="gone" />
-
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/add"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1.62"
         android:background="@drawable/bottom_bar_btn_selector"
-        android:gravity="center_vertical|right">
+        android:gravity="center_vertical">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleInverse"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="15dp"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/addImg"
             android:layout_width="60dp"
             android:layout_height="36dp"
+            android:layout_alignParentRight="true"
             android:paddingBottom="5dp"
             android:paddingTop="5dp"
             android:src="@drawable/ic_action_new" />
-    </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

@@ -64,7 +64,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         pollRunnable = new Runnable() {
             @Override
             public void run() {
-                if ((!LProtocol.ui.isConnected()) && (pollingCount++ > 3)) stopSelf();
+                if ((!LProtocol.ui.isConnected()) && (pollingCount++ > 3)) {
+                    LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
+                    stopSelf();
+                }
                 else {
                     LProtocol.ui.poll();
                     pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
@@ -96,6 +99,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             broadcastReceiver = null;
         }
         LProtocol.ui.disconnect();
+        LLog.d(TAG, "service destroyed");
         super.onDestroy();
     }
 
@@ -107,10 +111,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case CMD_START:
                     pollingCount = 0;
                     requestToStop = false;
-                    LProtocol.ui.connect();
+                    LLog.d(TAG, "starting service, already connected: " + LProtocol.ui.isConnected());
+                    if (LProtocol.ui.isConnected()) {
+                        LProtocol.ui.login();
+                    } else {
+                        LProtocol.ui.connect();
+                    }
                     break;
 
                 case CMD_STOP:
+                    LLog.d(TAG, "requested to stop service, connected: " + LProtocol.ui.isConnected());
                     if (LProtocol.ui.isConnected()) {
                         requestToStop = true;
                     } else {
@@ -126,6 +136,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
+                LLog.d(TAG, "network connected");
                 LProtocol.ui.initScrambler();
                 if (LPreferences.getUserName().isEmpty()) {
                     if (!LPreferences.getUserFullName().isEmpty())
@@ -150,7 +161,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LProtocol.ui.updateUserProfile();
                     LLog.d(TAG, "user logged in");
                     LJournal.flush();
-                    pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+                    pollHandler.postDelayed(pollRunnable, 1000);
                 } else {
                     LLog.w(TAG, "unable to login");
                     //the only reason that user is unable to login: user name no longer valid
@@ -160,7 +171,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_IDLE:
-                if (requestToStop) {
+                if (requestToStop || (!LFragmentActivity.upRunning)) {
+                    LLog.d(TAG, "IDLE: stop self, requested: " + requestToStop + " active: " + LFragmentActivity.upRunning);
                     stopSelf();
                 }
                 break;
@@ -180,6 +192,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 String uuid = intent.getStringExtra("UUID");
                 byte requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
 
+                LLog.d(TAG, "requested to share with: " + userFullName + " : " + userName);
                 LPreferences.setShareUserName(userId, userName);
                 LPreferences.setShareUserFullName(userId, userFullName);
                 LAccount account = DBAccount.getByName(accountName);

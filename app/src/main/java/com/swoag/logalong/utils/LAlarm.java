@@ -9,7 +9,11 @@ import android.content.Intent;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.receivers.LAlarmReceiver;
 
+import java.util.Date;
+
 public class LAlarm {
+    private static final String TAG = LAlarm.class.getSimpleName();
+
     public static final String SCHEDULE_ID = "scheduleId";
     public static final int ACTION_SCHEDULE = 10;
     public static final int ACTION_AUTO_RECONNECT = 20;
@@ -22,7 +26,7 @@ public class LAlarm {
         alarmIntent.putExtra(SCHEDULE_ID, scheduleId);
         PendingIntent alarmPendingIntent = PendingIntent.getBroadcast
                 (LApp.ctx, scheduleId, alarmIntent, PendingIntent.FLAG_ONE_SHOT);
-
+        LLog.d(TAG, "schedule alarm set to: " + (new Date(timems)));
         alarmManager.set(AlarmManager.RTC_WAKEUP, timems, alarmPendingIntent);
     }
 
@@ -41,7 +45,7 @@ public class LAlarm {
         alarmIntent.putExtra("action", ACTION_AUTO_RECONNECT);
         PendingIntent alarmPendingIntent = PendingIntent.getBroadcast
                 (LApp.ctx, -1, alarmIntent, PendingIntent.FLAG_ONE_SHOT);
-
+        LLog.d(TAG, "auto reconnect alarm set to: " + (new Date(timems)));
         alarmManager.set(AlarmManager.RTC_WAKEUP, timems, alarmPendingIntent);
     }
 
