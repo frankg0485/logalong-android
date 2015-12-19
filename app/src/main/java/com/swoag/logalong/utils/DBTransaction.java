@@ -188,7 +188,9 @@ public class DBTransaction {
                     add(context, item2);
                 }
 
-                item.setTimeStampLast(System.currentTimeMillis());
+                //do NOT change timestamp, otherwise, deleted record can not be revived by
+                //sharing account again from peer.
+                //item.setTimeStampLast(System.currentTimeMillis());
                 item.setState(DBHelper.STATE_DELETED);
                 update(context, item);
             } while (cursor.moveToNext());

@@ -16,6 +16,7 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -432,6 +433,10 @@ public class LJournal {
                 item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
                 DBTransaction.update(item);
+            } else {
+                LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
+                + (new Date(item.getTimeStampLast()) + ":"
+                + (new Date(receivedItem.getTimeStampLast()))));
             }
         } else {
             DBTransaction.add(new LTransaction(receivedItem.getRid().toString(),
