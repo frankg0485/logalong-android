@@ -436,7 +436,9 @@ public class LJournal {
             } else {
                 LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
                         + (new Date(item.getTimeStampLast()) + ":"
-                        + (new Date(receivedItem.getTimeStampLast()))));
+                        + (new Date(receivedItem.getTimeStampLast())))
+                        + " last: " + item.getTimeStampLast()
+                        + " new: " + receivedItem.getTimeStampLast());
             }
         } else {
             DBTransaction.add(new LTransaction(receivedItem.getRid().toString(),

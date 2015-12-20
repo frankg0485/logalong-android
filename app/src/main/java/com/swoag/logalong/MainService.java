@@ -289,7 +289,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                 userId = intent.getIntExtra("id", 0);
                 userName = intent.getStringExtra("userName");
-                LLog.d(TAG, "received journal from: " + userId + "@" + userName);
+                LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
                 LJournal.receive(intent.getStringExtra("record"));
                 break;
 

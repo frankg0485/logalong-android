@@ -180,19 +180,31 @@ public class DBTransaction {
                 if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER
                         || item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
                     LTransaction item2 = new LTransaction(item);
-                    item2.setTimeStampLast(System.currentTimeMillis());
+                    //item2.setTimeStampLast(System.currentTimeMillis());
                     item2.setAccount(item.getAccount2());
-                    item2.setRid(UUID.randomUUID().toString());
-                    item2.setType((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
-                            LTransaction.TRANSACTION_TYPE_INCOME : LTransaction.TRANSACTION_TYPE_EXPENSE);
-                    add(context, item2);
-                }
 
-                //do NOT change timestamp, otherwise, deleted record can not be revived by
-                //sharing account again from peer.
-                //item.setTimeStampLast(System.currentTimeMillis());
-                item.setState(DBHelper.STATE_DELETED);
-                update(context, item);
+                    if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                        item2.setType(LTransaction.TRANSACTION_TYPE_INCOME);
+                        item2.setRid(item.getRid());
+                    } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                        item2.setType(LTransaction.TRANSACTION_TYPE_EXPENSE);
+                        item2.setRid(item.getRid().substring(0, item.getRid().length() - 1));
+                    }
+                    item2.setId(getIdByRid(item2.getRid()));
+
+                    //delete both records first
+                    item.setState(DBHelper.STATE_DELETED);
+                    update(context, item);
+
+                    //update the original record
+                    update(context, item2);
+                } else {
+                    //do NOT change timestamp, otherwise, deleted record can not be revived by
+                    //sharing account again from peer.
+                    //item.setTimeStampLast(System.currentTimeMillis());
+                    item.setState(DBHelper.STATE_DELETED);
+                    update(context, item);
+                }
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
