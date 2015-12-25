@@ -50,8 +50,6 @@ public class MainActivity extends LFragmentActivity
     LViewPager mViewPager;
     View footerV;
     View spinner;
-    TextView errorMsgV;
-    //LoginReceiverHelper loginReceiver;
 
     private BroadcastReceiver broadcastReceiver;
     private Handler handler;
@@ -100,15 +98,8 @@ public class MainActivity extends LFragmentActivity
         setContentView(R.layout.top);
         footerV = findViewById(R.id.footer);
         spinner = (ProgressBar) findViewById(R.id.progressBar);
-        errorMsgV = (TextView) findViewById(R.id.errorMsg);
 
-        //if (YaventPreferences.getLoginState()) {
         footerV.setVisibility(View.GONE);
-        //LoginReceiverHelper.checkAccount(this);
-        //} else {
-        //	loginReceiver = new LoginReceiverHelper(this, spinner, errorMsgV, this);
-        //	loginReceiver.register();
-        //}
 
         fragmentManager = getSupportFragmentManager();
         lPagerAdapter = new LPagerAdapter(fragmentManager);
@@ -165,16 +156,6 @@ public class MainActivity extends LFragmentActivity
     }
     */
 
-    /*@Override
-    public void onLoginStatus (Context arg0, boolean success, Intent arg1) {
-        if (success) {
-            LLog.d(TAG, "login done");
-            footerV.setVisibility(View.GONE);
-        } else {
-            LViewUtils.disableEnableControls(true, (ViewGroup)footerV);
-        }
-    };
-    */
     private View selectedTabView;
     private int deselectedPosition;
 
@@ -228,18 +209,8 @@ public class MainActivity extends LFragmentActivity
     protected void onResume() {
         super.onResume();
 
-        hideErrorMsg();
-        //if (LPreferences.getLoginState()) {
         footerV.setVisibility(View.GONE);
-        /*} else {
-            if (AppPersistency.loginPending) {
-				spinner.setVisibility(View.VISIBLE);
-				LViewUtils.disableEnableControls(false, (ViewGroup)footerV);
-			} else {
-				spinner.setVisibility(View.INVISIBLE);
-				LViewUtils.disableEnableControls(true, (ViewGroup)footerV);
-			}
-		}*/
+
         MainService.start(this);
     }
 
@@ -272,28 +243,8 @@ public class MainActivity extends LFragmentActivity
         }
 
         LLog.d(TAG, "destroyed");
-        /*if (loginReceiver != null) {
-            loginReceiver.unregister();
-			loginReceiver = null;
-		}
-		LNotification.dismiss();*/
         super.onDestroy();
     }
-
-    public void onLogin(View v) {
-        /*if (LConnection.getService() == null) {
-            LLog.w(TAG, "service not ready");
-			return;
-		}
-
-		hideErrorMsg();
-		startActivity(new Intent(this, LoginActivity.class));*/
-    }
-
-    private void hideErrorMsg() {
-        errorMsgV.setVisibility(View.GONE);
-    }
-
 
     private static String[] accounts = {
             "Checking",

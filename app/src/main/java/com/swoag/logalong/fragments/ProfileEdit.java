@@ -37,7 +37,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     private static final int MAX_USER_NAME_LEN = 16;
     //private static final int MAX_USER_PASS_LEN = 16;
     private Activity activity;
-    private View rootView, saveV;
+    private View parentView, rootView, saveV;
     //private CheckBox checkboxShowPass;
     private EditText userNameTV;
     private TextView userIdTV;
@@ -60,7 +60,8 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
 
     public ProfileEdit(Activity activity, View rootView, ProfileEditItf callback) {
         this.activity = activity;
-        this.rootView = rootView;
+        this.parentView = rootView;
+        this.rootView = parentView.findViewById(R.id.profileSettings);
         this.callback = callback;
         myClickListener = new MyClickListener();
         create();
@@ -113,7 +114,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         oldUserName = LPreferences.getUserFullName();
         //userPass = LPreferences.getUserPass();
         //checkboxShowPass = (CheckBox) rootView.findViewById(R.id.showPass);
-        saveV = setViewListener(rootView, R.id.add);
+        saveV = setViewListener(parentView, R.id.add);
 
         if (TextUtils.isEmpty(oldUserName)) {
             LViewUtils.setAlpha(saveV, 0.5f);
@@ -159,7 +160,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         //userPassTV.setText(userPass);
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
-        progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        progressBar = (ProgressBar) parentView.findViewById(R.id.progressBar);
         errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
         hideErrorMsg();
         hideIME();
@@ -254,6 +255,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                         }
                     }.start();
 
+                    hideErrorMsg();
                     progressBar.setVisibility(View.VISIBLE);
 
                     LPreferences.setUserFullName(userNameTV.getText().toString().trim());
