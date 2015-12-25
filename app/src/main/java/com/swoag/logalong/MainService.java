@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.IBinder;
+import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LJournal;
@@ -137,8 +138,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 LLog.d(TAG, "network connected");
                 LProtocol.ui.initScrambler();
-                if (LPreferences.getUserName().isEmpty()) {
-                    if (!LPreferences.getUserFullName().isEmpty())
+                if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                    if (!TextUtils.isEmpty(LPreferences.getUserFullName()))
                         LProtocol.ui.requestUserName();
                 } else {
                     LProtocol.ui.login();

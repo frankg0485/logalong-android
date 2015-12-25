@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
@@ -91,7 +92,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                     userNameTV.setSelection(str.length());
                 }
 
-                if (str.isEmpty() || str.length() < 2) {
+                if (TextUtils.isEmpty(str) || str.length() < 2) {
                     LViewUtils.setAlpha(saveV, 0.5f);
                     saveV.setEnabled(false);
                 } else {
@@ -114,7 +115,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         //checkboxShowPass = (CheckBox) rootView.findViewById(R.id.showPass);
         saveV = setViewListener(rootView, R.id.add);
 
-        if (oldUserName.isEmpty()) {
+        if (TextUtils.isEmpty(oldUserName)) {
             LViewUtils.setAlpha(saveV, 0.5f);
             saveV.setEnabled(false);
         } else {
@@ -190,7 +191,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                 if (countDownTimer != null) countDownTimer.cancel();
                 progressBar.setVisibility(View.GONE);
                 if (ret == LProtocol.RSPS_OK) {
-                    if (oldUserId.isEmpty()) {
+                    if (TextUtils.isEmpty(oldUserId)) {
                         userIdTV.setText(LPreferences.getUserName());
                     } else if (this.callback != null) {
                         dismiss();
@@ -258,7 +259,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                     LPreferences.setUserFullName(userNameTV.getText().toString().trim());
                     //LPreferences.setUserPass(userPassTV.getText().toString().trim());
 
-                    if (LPreferences.getUserName().isEmpty()) {
+                    if (TextUtils.isEmpty(LPreferences.getUserName())) {
                         LProtocol.ui.requestUserName();
                         //profile is automatically updated when username is first-time generated.
                     } else {

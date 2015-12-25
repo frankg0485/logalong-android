@@ -3,6 +3,7 @@ package com.swoag.logalong.entities;
 
 
 import android.database.Cursor;
+import android.text.TextUtils;
 
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
@@ -100,27 +101,27 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + item.getTimeStampLast() + ","
                 + DBHelper.TABLE_COLUMN_MADEBY + "=" + item.getBy() + ",";
 
-        if (category != null && (!category.getName().isEmpty())) {
+        if (category != null && (!TextUtils.isEmpty(category.getName()))) {
             str += DBHelper.TABLE_COLUMN_CATEGORY + "=" + category.getName()
                     + ";" + category.getRid()
                     + ";" + category.getTimeStampLast()
                     + ",";
         }
-        if (vendor != null && (!vendor.getName().isEmpty())) {
+        if (vendor != null && (!TextUtils.isEmpty(vendor.getName()))) {
             str += DBHelper.TABLE_COLUMN_VENDOR + "=" + vendor.getName()
                     + ";" + vendor.getRid()
                     + ";" + vendor.getTimeStampLast()
                     + ";" + vendor.getType()
                     + ",";
         }
-        if (tag != null && (!tag.getName().isEmpty())) {
+        if (tag != null && (!TextUtils.isEmpty(tag.getName()))) {
             str += DBHelper.TABLE_COLUMN_TAG + "=" + tag.getName()
                     + ";" + tag.getRid()
                     + ";" + tag.getTimeStampLast()
                     + ",";
         }
 
-        if (!item.getNote().isEmpty()) {
+        if (!TextUtils.isEmpty(item.getNote())) {
             str += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
         }
 
@@ -527,13 +528,13 @@ public class LJournal {
             }
         }
 
-        if (!rid.isEmpty()) {
+        if (!TextUtils.isEmpty(rid)) {
             LAccount account = DBAccount.getByRid(rid);
             if (account == null) {
                 LLog.w(TAG, "account removed?");
             } else {
                 if (account.getTimeStampLast() < timestampLast) {
-                    if (!name.isEmpty()) account.setName(name);
+                    if (!TextUtils.isEmpty(name)) account.setName(name);
                     if (stateFound) account.setState(state);
 
                     if (account.getState() == DBHelper.STATE_DELETED) {
@@ -570,14 +571,14 @@ public class LJournal {
             }
         }
 
-        if (!rid.isEmpty()) {
+        if (!TextUtils.isEmpty(rid)) {
             LCategory category = DBCategory.getByRid(rid);
             if (category == null) {
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
             } else {
                 if (category.getTimeStampLast() < timestampLast) {
-                    if (!name.isEmpty()) category.setName(name);
+                    if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
                     category.setTimeStampLast(timestampLast);
                     DBCategory.update(category);
@@ -613,14 +614,14 @@ public class LJournal {
             }
         }
 
-        if (!rid.isEmpty()) {
+        if (!TextUtils.isEmpty(rid)) {
             LVendor vendor = DBVendor.getByRid(rid);
             if (vendor == null) {
                 vendor = new LVendor(name, type, rid, timestampLast);
                 DBVendor.add(vendor);
             } else {
                 if (vendor.getTimeStampLast() < timestampLast) {
-                    if (!name.isEmpty()) vendor.setName(name);
+                    if (!TextUtils.isEmpty(name)) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
                     if (typeFound) vendor.setType(type);
                     vendor.setTimeStampLast(timestampLast);
@@ -652,14 +653,14 @@ public class LJournal {
             }
         }
 
-        if (!rid.isEmpty()) {
+        if (!TextUtils.isEmpty(rid)) {
             LTag tag = DBTag.getByRid(rid);
             if (tag == null) {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
             } else {
                 if (tag.getTimeStampLast() < timestampLast) {
-                    if (!name.isEmpty()) tag.setName(name);
+                    if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
                     tag.setTimeStampLast(timestampLast);
                     DBTag.update(tag);
@@ -684,7 +685,7 @@ public class LJournal {
             }
         }
 
-        if ((!vendorRid.isEmpty()) && (!categoryRid.isEmpty())) {
+        if ((!TextUtils.isEmpty(vendorRid)) && (!TextUtils.isEmpty(categoryRid))) {
             long vendor = DBVendor.getIdByRid(vendorRid);
             long category = DBCategory.getIdByRid(categoryRid);
             DBVendor.updateCategory(vendor, category, state == DBHelper.STATE_ACTIVE);

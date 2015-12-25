@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -361,18 +362,18 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void initDb() {
-        if (DBAccount.getNameById(1).isEmpty()) {
+        if (TextUtils.isEmpty(DBAccount.getNameById(1))) {
             addAccounts();
         }
 
-        if (DBCategory.getNameById(1).isEmpty()) {
+        if (TextUtils.isEmpty(DBCategory.getNameById(1))) {
             addCategories();
         }
-        if (DBVendor.getNameById(1).isEmpty()) {
+        if (TextUtils.isEmpty(DBVendor.getNameById(1))) {
             addVendors();
         }
 
-        /*if (DBAccess.getTagById(1).isEmpty()) {
+        /*if (TextUtils.isEmpty(DBAccess.getTagById(1))) {
             addTags();
         }*/
     }

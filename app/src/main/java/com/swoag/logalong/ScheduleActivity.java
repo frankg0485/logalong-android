@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.CursorAdapter;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -212,7 +213,7 @@ public class ScheduleActivity extends LFragmentActivity implements
             String tag = DBTag.getNameById(tagId);
 
             String str = "";
-            if (!tag.isEmpty()) str = tag + ":";
+            if (!TextUtils.isEmpty(tag)) str = tag + ":";
             str += category;
             tv.setText(str);
 
@@ -221,10 +222,10 @@ public class ScheduleActivity extends LFragmentActivity implements
             String vendor = DBVendor.getNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
-            if (vendor.isEmpty()) {
-                if ((note != null) && (!note.isEmpty())) vendor = note;
+            if (TextUtils.isEmpty(vendor)) {
+                if ((note != null) && (!TextUtils.isEmpty(note))) vendor = note;
             } else {
-                if ((note != null) && (!note.isEmpty())) vendor += " - " + note;
+                if ((note != null) && (!TextUtils.isEmpty(note))) vendor += " - " + note;
             }
             tv.setText(vendor);
 

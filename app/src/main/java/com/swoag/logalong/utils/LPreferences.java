@@ -3,6 +3,7 @@ package com.swoag.logalong.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
@@ -218,7 +219,7 @@ public class LPreferences {
 
     private static long[] getLongArray(String key) {
         String str = getPreference(LApp.ctx, key, "");
-        if (str.isEmpty()) return null;
+        if (TextUtils.isEmpty(str)) return null;
 
         String[] ss = str.split(",");
         if (ss.length > 0) {

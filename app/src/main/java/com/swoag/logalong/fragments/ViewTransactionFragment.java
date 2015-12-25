@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -308,7 +309,7 @@ public class ViewTransactionFragment extends LFragment implements
 
         sectionSummary.clear();
         // generate section summary
-        if (column.isEmpty()) return;
+        if (TextUtils.isEmpty(column)) return;
         if (AppPersistency.TRANSACTION_FILTER_ALL == filterId) return;
         if (data == null || data.getCount() <= 0) return;
 
@@ -618,7 +619,7 @@ public class ViewTransactionFragment extends LFragment implements
                 }
             } else {
                 String str = "";
-                if (!tag.isEmpty()) str = tag + ":";
+                if (!TextUtils.isEmpty(tag)) str = tag + ":";
                 str += category;
                 vTag.categoryTV.setText(str);
 
@@ -626,10 +627,10 @@ public class ViewTransactionFragment extends LFragment implements
                 String vendor = DBVendor.getNameById(vendorId);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
 
-                if (vendor.isEmpty()) {
-                    if ((note != null) && (!note.isEmpty())) vendor = note;
+                if (TextUtils.isEmpty(vendor)) {
+                    if ((note != null) && (!TextUtils.isEmpty(note))) vendor = note;
                 } else {
-                    if ((note != null) && (!note.isEmpty())) vendor += " - " + note;
+                    if ((note != null) && (!TextUtils.isEmpty(note))) vendor += " - " + note;
                 }
                 vTag.noteTV.setText(vendor);
             }

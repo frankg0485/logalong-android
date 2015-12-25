@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.text.TextUtils;
+
 import com.swoag.logalong.utils.DBHelper;
 
 import java.util.ArrayList;
@@ -130,7 +132,7 @@ public class LAccount {
     }
 
     public void setSharedIdsString(String str) {
-        if (!str.isEmpty()) {
+        if (!TextUtils.isEmpty(str)) {
             String[] sb = str.split(",");
             shareIds.clear();
             shareStates.clear();

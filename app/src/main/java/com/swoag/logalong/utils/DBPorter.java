@@ -3,6 +3,7 @@ package com.swoag.logalong.utils;
 
 import android.database.Cursor;
 import android.os.Environment;
+import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
@@ -201,7 +202,7 @@ public class DBPorter {
 
                     String category = ss[ii++];
                     long categoryId;
-                    if (category.isEmpty()) categoryId = 0;
+                    if (TextUtils.isEmpty(category)) categoryId = 0;
                     else {
                         ll = categoryMap.get(category);
                         if (null == ll) {
@@ -220,7 +221,7 @@ public class DBPorter {
 
                     String account = ss[ii++];
                     long accountId;
-                    if (account.isEmpty()) accountId = 0;
+                    if (TextUtils.isEmpty(account)) accountId = 0;
                     else {
                         ll = accountMap.get(account);
                         if (null == ll) {
@@ -239,7 +240,7 @@ public class DBPorter {
 
                     String account2 = ss[ii++];
                     long account2Id;
-                    if (account2.isEmpty()) account2Id = 0;
+                    if (TextUtils.isEmpty(account2)) account2Id = 0;
                     else {
                         ll = accountMap.get(account2);
                         if (null == ll) {
@@ -258,7 +259,7 @@ public class DBPorter {
 
                     String tag = ss[ii++];
                     long tagId;
-                    if (tag.isEmpty()) tagId = 0;
+                    if (TextUtils.isEmpty(tag)) tagId = 0;
                     else {
                         ll = tagMap.get(tag);
                         if (null == ll) {
@@ -277,7 +278,7 @@ public class DBPorter {
 
                     String vendor = ss[ii++];
                     long vendorId;
-                    if (vendor.isEmpty()) vendorId = 0;
+                    if (TextUtils.isEmpty(vendor)) vendorId = 0;
                     else {
                         ll = vendorMap.get(vendor);
                         if (null == ll) {

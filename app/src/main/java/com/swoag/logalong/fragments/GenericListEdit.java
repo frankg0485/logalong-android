@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -147,7 +148,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
 
     @Override
     public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2) {
-        if (created && name != null && !name.isEmpty()) {
+        if (created && name != null && !TextUtils.isEmpty(name)) {
             Cursor cursor = getMyCursor();
             if (null == cursor) {
                 LLog.e(TAG, "fatal: unable to open database");
@@ -244,7 +245,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.share:
-                        if (LPreferences.getUserFullName().isEmpty()) {
+                        if (TextUtils.isEmpty(LPreferences.getUserFullName())) {
                             new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
                             break;
                         }
@@ -252,7 +253,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         ArrayList<LUser> users = new ArrayList<LUser>();
                         HashSet<Integer> userSet = DBAccount.getAllShareUser();
                         for (int ii : userSet) {
-                            if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                            if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
                                 users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences.getShareUserFullName(ii), ii));
                             }
                         }
@@ -262,7 +263,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         HashSet<Integer> selectedUsers = new HashSet<Integer>();
                         if (account.getShareIds() != null) {
                             for (int ii : account.getShareIds()) {
-                                if (!LPreferences.getShareUserName(ii).isEmpty()) {
+                                if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
                                     selectedUsers.add(ii);
                                 } else updateAccount = true;
                             }

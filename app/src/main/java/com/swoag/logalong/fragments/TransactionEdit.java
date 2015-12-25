@@ -7,6 +7,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -184,7 +185,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             }
         }
 
-        if (inputString.isEmpty()) {
+        if (TextUtils.isEmpty(inputString)) {
             amountTV.setText("0.0");
         } else {
             amountTV.setText(inputString);
@@ -234,7 +235,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (save) {
             item.setValue(value);
             String inputString = value2string(value);
-            if (inputString.isEmpty()) {
+            if (TextUtils.isEmpty(inputString)) {
                 amountTV.setText("0.0");
             } else {
                 amountTV.setText(inputString);
@@ -391,7 +392,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     @Override
     public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2) {
-        if (created && (!name.isEmpty())) {
+        if (created && (!TextUtils.isEmpty(name))) {
             int selection = -1;
             switch (id) {
                 case DLG_ID_ACCOUNT:
