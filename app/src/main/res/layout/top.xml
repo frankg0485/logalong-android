@@ -74,7 +74,8 @@
         android:clickable="true"
         android:gravity="center"
         android:onClick="onLogin"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <ProgressBar
             android:id="@+id/progressBar"

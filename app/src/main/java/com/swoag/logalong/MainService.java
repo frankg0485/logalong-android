@@ -23,7 +23,6 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = MainService.class.getSimpleName();

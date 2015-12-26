@@ -3,23 +3,18 @@ package com.swoag.logalong;
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
@@ -37,8 +32,6 @@ import com.swoag.logalong.views.LShareAccountConfirmDialog;
 import com.swoag.logalong.views.LViewPager;
 
 import java.util.ArrayList;
-import java.util.UUID;
-
 
 public class MainActivity extends LFragmentActivity
         implements LBroadcastReceiver.BroadcastReceiverListener,
@@ -48,8 +41,6 @@ public class MainActivity extends LFragmentActivity
     FragmentManager fragmentManager;
     LPagerAdapter lPagerAdapter;
     LViewPager mViewPager;
-    View footerV;
-    View spinner;
 
     private BroadcastReceiver broadcastReceiver;
     private Handler handler;
@@ -73,10 +64,6 @@ public class MainActivity extends LFragmentActivity
 
         LViewUtils.screenInit();
 
-        //the combo of the following will cause client to reauthenticate upon startup
-        //AppPersistency.reauthenticate = true;
-
-        //LNotification.dismiss();
         handler = new Handler();
         confirmAccountShare = new Runnable() {
             @Override
@@ -87,19 +74,19 @@ public class MainActivity extends LFragmentActivity
                     LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this,
                             accountShareRequest, MainActivity.this);
                     dialog.show();
+                } else if (!TextUtils.isEmpty(LPreferences.getServerMsg())) {
+                    new LReminderDialog(MainActivity.this, LPreferences.getServerMsg()).show();
+                    LPreferences.setServerMsg("");
                 }
             }
         };
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
+                LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED
         }, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
-        footerV = findViewById(R.id.footer);
-        spinner = (ProgressBar) findViewById(R.id.progressBar);
-
-        footerV.setVisibility(View.GONE);
 
         fragmentManager = getSupportFragmentManager();
         lPagerAdapter = new LPagerAdapter(fragmentManager);
@@ -107,7 +94,7 @@ public class MainActivity extends LFragmentActivity
         mViewPager = (LViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(lPagerAdapter);
 
-        mViewPager.setOnPageChangeListener(
+        mViewPager.addOnPageChangeListener(
                 new ViewPager.SimpleOnPageChangeListener() {
                     @Override
                     public void onPageScrollStateChanged(int state) {
@@ -208,9 +195,6 @@ public class MainActivity extends LFragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-
-        footerV.setVisibility(View.GONE);
-
         MainService.start(this);
     }
 
@@ -341,6 +325,7 @@ public class MainActivity extends LFragmentActivity
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+            case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
                 handler.post(confirmAccountShare);
                 break;
         }

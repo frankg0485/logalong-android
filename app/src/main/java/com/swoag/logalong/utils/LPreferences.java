@@ -25,6 +25,7 @@ public class LPreferences {
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
+    private static final String SERVER_MSG_BROADCAST = "SrvMsgBroadcast";
     private static final String USER_NAME = "UserName";
     private static final String USER_PASS = "UserPass";
     private static final String USER_ID = "UserId";
@@ -284,6 +285,14 @@ public class LPreferences {
 
     public static void setSearchTags(long[] tags) {
         setLongArray(SEARCH_TAGS, tags);
+    }
+
+    public static String getServerMsg() {
+     return getPreference(LApp.ctx, SERVER_MSG_BROADCAST, "");
+    }
+
+    public static void setServerMsg(String msg) {
+        savePreference(LApp.ctx, SERVER_MSG_BROADCAST, msg);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////

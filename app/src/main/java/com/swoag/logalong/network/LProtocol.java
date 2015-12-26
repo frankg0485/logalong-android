@@ -66,6 +66,7 @@ public class LProtocol {
     private static final short CMD_SHARED_TRANSITION_RECORD = 0x000c;
     private static final short CMD_RECEIVED_JOURNAL = 0x0010;
     private static final short CMD_SHARE_ACCOUNT_USER_CHANGE = 0x0014;
+    private static final short CMD_SYSTEM_MSG_BROADCAST = 0x7373;
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -202,6 +203,22 @@ public class LProtocol {
         rspsIntent.putExtra("UUID", uuid);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
+
+    private void handleSystemMsgBroadcast(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+
+        int utc = pkt.getIntAutoInc();
+        short bytes = pkt.getShortAutoInc();
+        String msg = pkt.getStringAutoInc(bytes);
+        String str = msg.replaceAll("\\\\n", "\\\n");
+        LPreferences.setServerMsg(str);
+        LProtocol.ui.pollAck(cacheId);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    ;
 
     private int consumePacket(LBuffer pkt) {
         Intent rspsIntent;
@@ -346,10 +363,19 @@ public class LProtocol {
                         case CMD_SHARE_ACCOUNT_USER_CHANGE:
                             handleShareAccountUserChange(pkt, status, LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE, cacheId);
                             break;
+
+                        case CMD_SYSTEM_MSG_BROADCAST:
+                            handleSystemMsgBroadcast(pkt, status, LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED, cacheId);
+                            break;
+
+                        default:
+                            LLog.w(TAG, "ignore: unknown command: " + cmd + " cacheId: " + cacheId);
+                            LProtocol.ui.pollAck(cacheId);
+                            break;
                     }
                 } else {
                     rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_IDLE));
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int)RSPS_OK);
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int) RSPS_OK);
                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 }
                 break;
