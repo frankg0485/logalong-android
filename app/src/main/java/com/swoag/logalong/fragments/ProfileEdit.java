@@ -267,6 +267,8 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                     } else {
                         LProtocol.ui.updateUserProfile();
                     }
+
+                    oldUserId = LPreferences.getUserName();
                     break;
             }
         }
