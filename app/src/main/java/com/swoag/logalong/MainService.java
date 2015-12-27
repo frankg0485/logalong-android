@@ -68,6 +68,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
                     stopSelf();
                 } else {
+                    LLog.d(TAG, "timed polling");
                     LProtocol.ui.poll();
                     pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 }
@@ -179,6 +180,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_POLL_ACKED:
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+                LLog.d(TAG, "polling after being acked");
                 LProtocol.ui.poll();
                 break;
 

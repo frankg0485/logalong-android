@@ -381,8 +381,12 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_POLL_ACK:
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_ACKED));
-                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                if (status == RSPS_OK) {
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_ACKED));
+                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                } else {
+                    LLog.w(TAG, "unable to acknowledge polling");
+                }
                 break;
         }
 
@@ -523,6 +527,7 @@ public class LProtocol {
         }
 
         public static boolean pollAck(int cacheId) {
+            LLog.d(TAG, "acking: " + cacheId);
             return LTransport.send_rqst(server, RQST_POLL_ACK, cacheId, scrambler);
         }
 
