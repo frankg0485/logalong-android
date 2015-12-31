@@ -337,8 +337,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid());
                         }
                     }
-
-                    LLog.d(TAG, "TODO: unshare with user: " + ii + " " + LPreferences.getShareUserName(ii));
                 }
             }
         }

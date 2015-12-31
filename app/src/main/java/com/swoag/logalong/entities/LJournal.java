@@ -729,6 +729,8 @@ public class LJournal {
 
     //////////////////////////////////////////////////////////////////////////
     public static void pushAllAccountRecords(int userId, LAccount account) {
+        if (null == account) return;
+
         Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();

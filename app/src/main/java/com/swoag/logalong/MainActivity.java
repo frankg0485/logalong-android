@@ -367,7 +367,7 @@ public class MainActivity extends LFragmentActivity
             ArrayList<Integer> states = account.getShareStates();
             for (int jj = 0; jj < ids.size(); jj++) {
                 if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED && ids.get(jj) != userId) {
-                    LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
+                    LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid());
                 }
             }
 

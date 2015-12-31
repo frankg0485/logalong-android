@@ -254,7 +254,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     ArrayList<Integer> states = account.getShareStates();
                     for (int jj = 0; jj < ids.size(); jj++) {
                         if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid().toString());
+                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid());
                         }
                     }
 
@@ -315,13 +315,22 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.w(TAG, "warning: account removed?");
                 } else {
                     if (change == 1) {
+                        //we receive this add request, *ONLY* because one of the shared peer accepted
+                        //this user to share this account, so we add silently.
                         account.addShareUser(changeUserId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                         DBAccount.update(account);
+
+                        //this is to notify the counter part that we received the change request to add me
+                        //basically this also says: hey, I confirm you to share account with me, and you've
+                        //already got all my records (from one of my shared peer), now it is your turn to
+                        //push me all your current records, so we're in sync.
                         LProtocol.ui.shareAccountWithUser(changeUserId, accountName, uuid, false);
                     } else {
                         if (changeUserId == LPreferences.getUserId()) {
+                            //sorry, I am removed from the share group by one of the peer.
                             account.removeAllShareUsers();
                         } else {
+                            //this is to remove somebody who was removed from group by someone else.
                             account.removeShareUser(changeUserId);
                         }
                         DBAccount.update(account);
