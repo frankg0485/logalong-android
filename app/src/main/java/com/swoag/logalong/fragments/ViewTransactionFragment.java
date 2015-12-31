@@ -61,7 +61,7 @@ public class ViewTransactionFragment extends LFragment implements
     private ListView listView;
     private ImageView filterView, searchView;
 
-    private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear;
+    private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear, allStartMonth, allEndMonth;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
@@ -117,7 +117,7 @@ public class ViewTransactionFragment extends LFragment implements
                 s = ds = DBHelper.TABLE_COLUMN_STATE + "=?";
                 sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE};
 
-                if (!selections.isEmpty()) {
+                if (!TextUtils.isEmpty(selections)) {
                     s = selections + " AND " + ds;
                     ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
                     for (int ii = 0; ii < dsa.length; ii++) {
@@ -142,7 +142,7 @@ public class ViewTransactionFragment extends LFragment implements
                         + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
                 sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
 
-                if (!selections.isEmpty()) {
+                if (!TextUtils.isEmpty(selections)) {
                     s = selections + " AND " + ds;
                     ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
                     for (int ii = 0; ii < dsa.length; ii++) {
@@ -182,7 +182,7 @@ public class ViewTransactionFragment extends LFragment implements
                 + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
         sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
 
-        if (!selections.isEmpty()) {
+        if (!TextUtils.isEmpty(selections)) {
             s = selections + " AND " + ds;
             ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
             for (int ii = 0; ii < dsa.length; ii++) {
@@ -224,8 +224,10 @@ public class ViewTransactionFragment extends LFragment implements
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(allStartMs);
                 allStartYear = calendar.get(Calendar.YEAR);
+                allStartMonth = calendar.get(Calendar.MONTH);
                 calendar.setTimeInMillis(allEndMs - 1);
                 allEndYear = calendar.get(Calendar.YEAR);
+                allEndMonth = calendar.get(Calendar.MONTH);
             }
             if (allBalancesReady && startEndMsReady) initDbLoader();
             return;
@@ -888,7 +890,19 @@ public class ViewTransactionFragment extends LFragment implements
 
     private boolean validateYearMonth() {
         long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+
         if (ym < allStartMs || ym >= allEndMs) {
+            //first remedy: honor user selected year, set to valid month of the year
+            if (AppPersistency.viewTransactionYear == allStartYear) {
+                AppPersistency.viewTransactionMonth = 11;
+            } else if (AppPersistency.viewTransactionYear == allEndYear) {
+                AppPersistency.viewTransactionMonth = 0;
+            }
+        }
+
+        ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
+        if (ym < allStartMs || ym >= allEndMs) {
+            //next try: current year month
             Calendar calendar = Calendar.getInstance();
             AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
@@ -896,6 +910,7 @@ public class ViewTransactionFragment extends LFragment implements
 
         ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
         if (ym < allStartMs || ym >= allEndMs) {
+            //last resort: last valid year/month of current DB
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(allEndMs - 1);
             AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
