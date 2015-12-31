@@ -132,6 +132,7 @@ public class LJournal {
                     + ";" + account2.getTimeStampLast()
                     + ",";
         } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+            //always transmit the original TRANSFER, not the copy.
             LAccount account2 = DBAccount.getById(item.getAccount2());
             str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account.getName()
                     + ";" + account.getRid()

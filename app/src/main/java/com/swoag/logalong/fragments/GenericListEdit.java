@@ -307,7 +307,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 for (int jj = 0; jj < ids.size(); jj++) {
                     if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
                         LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(),
-                                false, account.getName(), account.getRid().toString());
+                                false, account.getName(), account.getRid());
                     }
                 }
                 account.removeAllShareUsers();
@@ -318,7 +318,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             for (Integer ii : selections) {
                 if (!origSelections.contains(ii)) {
                     // new share
-                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid().toString(), true);
+                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid(), true);
                 }
             }
 
@@ -328,13 +328,13 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     DBAccount.update(account);
 
                     // notify the other party
-                    LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid().toString());
+                    LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid());
 
                     ArrayList<Integer> ids = account.getShareIds();
                     ArrayList<Integer> states = account.getShareStates();
                     for (int jj = 0; jj < ids.size(); jj++) {
                         if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid().toString());
+                            LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid());
                         }
                     }
 

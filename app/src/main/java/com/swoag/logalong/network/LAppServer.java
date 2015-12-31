@@ -73,7 +73,7 @@ public class LAppServer {
     }
 
     private void autoReconnect(int timeS) {
-        if (tried++ >= 3) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
+        if (tried++ >= 5) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(calendar.getTimeInMillis() + timeS * 1000);
         LAlarm.cancelAutoReconnectAlarm();

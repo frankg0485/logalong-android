@@ -72,6 +72,15 @@ public class LScheduledTransaction {
 
     public void initNextTimeMs() {
         long baseTimeMs = item.getTimeStamp();
+
+        // always align time to 00:00:00 of the day
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTimeMs);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        baseTimeMs = calendar.getTimeInMillis();
+
         long curTimeMs = System.currentTimeMillis();
 
         if (baseTimeMs <= curTimeMs) {
@@ -90,9 +99,16 @@ public class LScheduledTransaction {
         if (repeatCount == 0) return Long.MAX_VALUE;
 
         long ms = item.getTimeStamp();
+
+        // always align time to 00:00:00 of the day
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(ms);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        ms = calendar.getTimeInMillis();
+
         if (repeatUnit == REPEAT_UNIT_MONTH) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(item.getTimeStamp());
             calendar.add(Calendar.MONTH, repeatInterval * repeatCount);
             ms = calendar.getTimeInMillis();
         } else {
@@ -115,8 +131,14 @@ public class LScheduledTransaction {
         long baseTimeMs = timestamp;
         long endTimeMs = getEndMs();
 
+        // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        baseTimeMs = calendar.getTimeInMillis();
+
         while (baseTimeMs <= System.currentTimeMillis() && baseTimeMs < endTimeMs) {
             //check to update DB
             String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
@@ -142,14 +164,10 @@ public class LScheduledTransaction {
                 baseTimeMs = calendar.getTimeInMillis();
             } else {
                 baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
-                calendar.setTimeInMillis(baseTimeMs);
             }
         }
 
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        timestamp = calendar.getTimeInMillis();
+        timestamp = baseTimeMs;
 
         if (repeatCount > 0) {
             if (baseTimeMs >= endTimeMs) {
@@ -167,23 +185,25 @@ public class LScheduledTransaction {
             long baseTimeMs = item.getTimeStamp();
             int count = 1;
 
+            // always align time to 00:00:00 of the day
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(baseTimeMs);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            baseTimeMs = calendar.getTimeInMillis();
+
             while (baseTimeMs <= System.currentTimeMillis()) {
                 if (repeatUnit == REPEAT_UNIT_MONTH) {
                     calendar.add(Calendar.MONTH, repeatInterval);
                     baseTimeMs = calendar.getTimeInMillis();
                 } else {
                     baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
-                    calendar.setTimeInMillis(baseTimeMs);
                 }
                 count++;
             }
 
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            timestamp = calendar.getTimeInMillis();
+            timestamp = baseTimeMs;
 
             if (repeatCount == 0) return;
 
@@ -210,9 +230,10 @@ public class LScheduledTransaction {
         return item;
     }
 
-    public void setItem(LTransaction item) {
+    /*public void setItem(LTransaction item) {
         this.item = item;
     }
+    */
 
     public int getRepeatCount() {
         return repeatCount;

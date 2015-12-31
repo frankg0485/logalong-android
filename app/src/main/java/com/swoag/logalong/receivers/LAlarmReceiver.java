@@ -38,42 +38,53 @@ public class LAlarmReceiver extends BroadcastReceiver {
                 int scheduleId = intent.getIntExtra(LAlarm.SCHEDULE_ID, 0);
 
                 LScheduledTransaction sch = DBScheduledTransaction.getById(scheduleId);
+                if (sch == null) {
+                    LLog.w(TAG, "schedule no longer valid: " + scheduleId);
+                    return;
+                }
+
                 if (sch.getItem().getState() != DBHelper.STATE_ACTIVE) {
                     //this schedule has been disabled
                     return;
                 }
 
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(sch.getTimestamp());
-                String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
+                if (sch.getTimestamp() <= System.currentTimeMillis()) {
+                    // only update DB record if this is *our* alarm: meaning it must have been scheduled in the past
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(sch.getTimestamp());
+                    String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
 
-                LTransaction item = DBTransaction.getByRid(sch.getItem().getRid() + ymd);
-                if (item == null) {
-                    item = new LTransaction(sch.getItem());
+                    LTransaction item = DBTransaction.getByRid(sch.getItem().getRid() + ymd);
+                    if (item == null) {
+                        item = new LTransaction(sch.getItem());
 
-                    item.setTimeStampLast(System.currentTimeMillis());
-                    item.setRid(item.getRid() + ymd);
-                    item.setTimeStamp(sch.getTimestamp());
+                        item.setTimeStampLast(System.currentTimeMillis());
+                        item.setRid(item.getRid() + ymd);
+                        item.setTimeStamp(sch.getTimestamp());
 
-                    DBTransaction.add(item);
+                        DBTransaction.add(item);
+                    } else {
+                        //this is the case where other party has already had alarm triggered and created the DB entry
+                        long saveId = item.getId();
+
+                        //copy over current schedule settings, in case *current* schedule has update
+                        item.copy(sch.getItem());
+
+                        //restore the following fields after the copy
+                        item.setId(saveId);
+                        item.setTimeStampLast(System.currentTimeMillis());
+                        item.setRid(item.getRid() + ymd);
+                        item.setTimeStamp(sch.getTimestamp());
+
+                        DBTransaction.update(item);
+                    }
+                    LJournal journal = new LJournal();
+                    journal.updateItem(item);
                 } else {
-                    //this is the case where other party has already had alarm triggered and created the DB entry
-                    long saveId = item.getId();
-
-                    //copy over current schedule settings, in case *current* schedule has update
-                    item.copy(sch.getItem());
-
-                    //restore the following fields after the copy
-                    item.setId(saveId);
-                    item.setTimeStampLast(System.currentTimeMillis());
-                    item.setRid(item.getRid() + ymd);
-                    item.setTimeStamp(sch.getTimestamp());
-
-                    DBTransaction.update(item);
+                    LLog.w(TAG, "schedule already happened? " + (new Date(sch.getTimestamp())) + " now: " + (new Date()));
                 }
-                LJournal journal = new LJournal();
-                journal.updateItem(item);
 
+                // always check to schedule next alarm locally.
                 sch.calculateNextTimeMs();
                 sch.setAlarm();
                 DBScheduledTransaction.update(sch);
