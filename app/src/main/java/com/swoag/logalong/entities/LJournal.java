@@ -27,6 +27,7 @@ public class LJournal {
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
 
+    private static final int ACTION_SHARE_ITEM = 9;
     private static final int ACTION_UPDATE_ITEM = 10;
     private static final int ACTION_UPDATE_SCHEDULED_ITEM = 15;
     private static final int ACTION_UPDATE_ACCOUNT = 20;
@@ -148,6 +149,12 @@ public class LJournal {
                 + ";" + account.getTimeStampLast();
 
         return str;
+    }
+
+    public boolean shareItem(int userId, LTransaction item) {
+        record = ACTION_SHARE_ITEM + ":" + transactionItemString(item);
+        post(userId);
+        return true;
     }
 
     public boolean updateItem(LTransaction item) {
@@ -697,6 +704,7 @@ public class LJournal {
         String[] ss = recvRecord.split(":", 3);
         int action = Integer.parseInt(ss[1]);
         switch (action) {
+            case ACTION_SHARE_ITEM:
             case ACTION_UPDATE_ITEM:
                 updateItemFromReceivedRecord(ss[2]);
                 break;
@@ -734,11 +742,18 @@ public class LJournal {
         Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
+
+            //TODO: rewrite journal subsystem, and enable this journal
+            //LJournal journal = new LJournal();
+
             do {
                 LTransaction item = new LTransaction();
                 DBTransaction.getValues(cursor, item);
+
                 String record = LJournal.transactionItemString(item);
                 LProtocol.ui.shareTransitionRecord(userId, record);
+
+                //journal.shareItem(userId, item);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();

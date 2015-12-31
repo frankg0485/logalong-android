@@ -352,6 +352,7 @@ public class LProtocol {
                             handleAccountShareConfirm(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE, cacheId);
                             break;
 
+                        //TODO: remove me: obsolete
                         case CMD_SHARED_TRANSITION_RECORD:
                             handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD, cacheId);
                             break;

@@ -162,7 +162,7 @@ public class DBAccess {
         return id;
     }
 
-    public static boolean updateJournal(LJournal journal) {
+    /*public static boolean updateJournal(LJournal journal) {
         return updateJournal(LApp.ctx, journal);
     }
 
@@ -175,8 +175,9 @@ public class DBAccess {
         }
         return true;
     }
+    */
 
-    public static boolean deleteJournalAll() {
+    /*public static boolean deleteJournalAll() {
         return deleteJournalAll(LApp.ctx);
     }
 
@@ -191,6 +192,7 @@ public class DBAccess {
         }
         return true;
     }
+    */
 
     public static boolean deleteJournalById(long id) {
         return updateColumnById(DBProvider.URI_JOURNALS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
