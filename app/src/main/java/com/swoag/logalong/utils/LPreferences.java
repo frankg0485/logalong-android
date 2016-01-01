@@ -22,6 +22,7 @@ public class LPreferences {
     private static final String SEARCH_CATEGORIES = "SearchCategories";
     private static final String SEARCH_VENDORS = "SearchVendors";
     private static final String SEARCH_TAGS = "SearchTags";
+    private static final String SEARCH_FILTER_BY_EDIT_TIME = "SearchFilterByEditTime";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
@@ -288,11 +289,19 @@ public class LPreferences {
     }
 
     public static String getServerMsg() {
-     return getPreference(LApp.ctx, SERVER_MSG_BROADCAST, "");
+        return getPreference(LApp.ctx, SERVER_MSG_BROADCAST, "");
     }
 
     public static void setServerMsg(String msg) {
         savePreference(LApp.ctx, SERVER_MSG_BROADCAST, msg);
+    }
+
+    public static boolean getSearchFilterByEditTIme() {
+        return getPreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, false);
+    }
+
+    public static void setSearchFilterByEditTime(boolean yes) {
+        savePreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, yes);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////

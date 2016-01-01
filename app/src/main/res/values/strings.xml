@@ -20,7 +20,9 @@
     <string name="delete_now">Delete now</string>
     <string name="done">Done</string>
     <string name="edit">Edit</string>
+    <string name="edit_time">Edit Time</string>
     <string name="expense">Expense</string>
+    <string name="filter_by">Filter by</string>
     <string name="hint_account_share_accept">Once accepted, all local data under given account are shared with the requester, and users the requester already shared this account with.</string>
     <string name="hint_additional_note">Additional note here</string>
     <string name="hint_category_not_specified">Category not specified</string>
@@ -56,6 +58,7 @@
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="quarterly">quarterly</string>
+    <string name="record_time">Record Time</string>
     <string name="reminder">Reminder</string>
     <string name="remove">Remove</string>
     <string name="rename">Rename</string>

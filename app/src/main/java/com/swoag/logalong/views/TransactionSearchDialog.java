@@ -39,7 +39,7 @@ public class TransactionSearchDialog extends Dialog implements
 
     private Context context;
     private View filterCheckView, filterView, timeCheckView, timeView;
-    private TextView accountV, categoryV, vendorV, tagV, fromV, toV;
+    private TextView accountV, categoryV, vendorV, tagV, fromV, toV, filterByV;
     private TransactionSearchDialogItf callback;
     private MyClickListener myClickListener;
     private CheckBox checkBox, checkBoxTime;
@@ -178,6 +178,7 @@ public class TransactionSearchDialog extends Dialog implements
 
         findViewById(R.id.fromTime).setOnClickListener(myClickListener);
         findViewById(R.id.toTime).setOnClickListener(myClickListener);
+        findViewById(R.id.filterBy).setOnClickListener(myClickListener);
 
         filterView = findViewById(R.id.customFilter);
         accountV = (TextView) findViewById(R.id.selectedAccounts);
@@ -188,6 +189,7 @@ public class TransactionSearchDialog extends Dialog implements
         timeView = findViewById(R.id.customTime);
         fromV = (TextView) findViewById(R.id.fromTime);
         toV = (TextView) findViewById(R.id.toTime);
+        filterByV = (TextView) findViewById(R.id.filterByValue);
 
         filterCheckView = findViewById(R.id.checkboxView);
         filterCheckView.setOnClickListener(myClickListener);
@@ -206,6 +208,7 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeTo(0);
         }
         displayUpdateTime(allTime);
+        displayFilterBy();
 
         this.setOnDismissListener(this);
     }
@@ -298,6 +301,11 @@ public class TransactionSearchDialog extends Dialog implements
         }
         fromV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()));
         toV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+    }
+
+    private void displayFilterBy() {
+        filterByV.setText(context.getString
+                (LPreferences.getSearchFilterByEditTIme() ? R.string.edit_time : R.string.record_time));
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -397,6 +405,11 @@ public class TransactionSearchDialog extends Dialog implements
                     showDatePicker(false);
                     return;
 
+                case R.id.filterBy:
+                    LPreferences.setSearchFilterByEditTime(!LPreferences.getSearchFilterByEditTIme());
+                    displayFilterBy();
+                    return;
+
                 case R.id.closeDialog:
                 default:
                     break;
@@ -430,7 +443,7 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeFrom(calendar.getTimeInMillis());
         } else {
             tv = toV;
-            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis() + (long) 23 * 3600 * 1000 - 1);
+            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis() + (long) 24 * 3600 * 1000 - 1);
         }
 
         tv.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));

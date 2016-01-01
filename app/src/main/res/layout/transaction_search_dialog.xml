@@ -266,14 +266,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/settings_item_height"
                         android:background="@drawable/row_selector"
                         android:clickable="true"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/fromTime"
@@ -308,6 +309,44 @@
                             android:textSize="@dimen/settings_option_text_size"
                             android:textStyle="bold" />
                     </LinearLayout>
+
+
+                    <RelativeLayout
+                        android:id="@+id/filterBy"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
+                        android:background="@drawable/row_selector"
+                        android:clickable="true">
+
+                        <TextView
+                            android:id="@+id/filterByHeader"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentLeft="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/settings_row_margin_left"
+                            android:text="@string/filter_by"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
+
+                        <TextView
+                            android:id="@+id/filterByValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentRight="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="5dp"
+                            android:layout_marginRight="@dimen/settings_row_margin_left"
+                            android:layout_toRightOf="@+id/filterByHeader"
+                            android:ellipsize="end"
+                            android:gravity="end"
+                            android:singleLine="true"
+                            android:text="@string/record_time"
+                            android:textColor="@color/base_text_color"
+                            android:textSize="@dimen/settings_option_text_size"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>

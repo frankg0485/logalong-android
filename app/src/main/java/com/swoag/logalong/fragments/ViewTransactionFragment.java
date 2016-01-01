@@ -79,7 +79,7 @@ public class ViewTransactionFragment extends LFragment implements
 
     @Override
     public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String s, ds;
+        String s, ds, sort;
         String[] sa, dsa;
         Uri uri;
         String projection = "a._id,"
@@ -137,10 +137,19 @@ public class ViewTransactionFragment extends LFragment implements
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
 
-                s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
-                sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+                if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
+                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
+                } else {
+                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
+                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
+                }
 
                 if (!TextUtils.isEmpty(selections)) {
                     s = selections + " AND " + ds;
@@ -156,7 +165,7 @@ public class ViewTransactionFragment extends LFragment implements
                         null,
                         s,
                         sa,
-                        DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+                        sort
                 );
 
             case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
@@ -177,10 +186,19 @@ public class ViewTransactionFragment extends LFragment implements
                 return null;
         }
 
-        s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
-        sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+        if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+            s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
+                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
+            sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
+        } else {
+            s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
+            sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
+        }
 
         if (!TextUtils.isEmpty(selections)) {
             s = selections + " AND " + ds;
@@ -197,7 +215,7 @@ public class ViewTransactionFragment extends LFragment implements
                 new String[]{projection},
                 s,
                 sa,
-                "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+                sort
         );
     }
 
@@ -1131,9 +1149,13 @@ public class ViewTransactionFragment extends LFragment implements
             prevView.setVisibility(View.GONE);
             nextView.setVisibility(View.GONE);
 
-            customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
-                    new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
-
+            if (LPreferences.getSearchFilterByEditTIme()) {
+                customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
+                        new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo())));
+            } else {
+                customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
+                        new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+            }
             prevView.setEnabled(false);
             nextView.setEnabled(false);
             return;
