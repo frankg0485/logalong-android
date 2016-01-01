@@ -27,6 +27,7 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LNewEntryDialog;
@@ -51,7 +52,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private TransitionEditItf callback;
 
     private View viewDiscard, viewSave, viewFrom, viewTo, viewAccount2, viewCategory, viewVendor, viewTag;
-    private TextView amountTV, accountTV, account2TV, categoryTV, vendorTV, tagTV;
+    private TextView amountTV, accountTV, account2TV, categoryTV, vendorTV, tagTV, lastChangeTV;
 
     private TextView dateTV;
     private EditText noteET;
@@ -151,6 +152,25 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         vendorTV = (TextView) rootView.findViewById(R.id.tvVendor);
         tagTV = (TextView) rootView.findViewById(R.id.tvTag);
         updateItemDisplay();
+
+        lastChangeTV = (TextView) rootView.findViewById(R.id.tvLastChangeBy);
+        if (item.getBy() == 0) {
+            lastChangeTV.setText("");
+        } else {
+            String uname = "";
+            String name = "";
+            if (item.getBy() == LPreferences.getUserId()) {
+                uname = "myself";
+            } else {
+                String fname = LPreferences.getShareUserFullName(item.getBy());
+                String id =  LPreferences.getShareUserName(item.getBy());
+                if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
+                    uname = fname + " (" + id + ")";
+                }
+            }
+            if (!TextUtils.isEmpty(uname)) name = " by " + uname;
+            lastChangeTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStampLast()) + name);
+        }
 
         if (!bScheduleMode) {
             noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
@@ -543,9 +563,21 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     private void saveLog() {
-        if (!bScheduleMode) item.setNote(noteET.getText().toString());
+        if (!bScheduleMode) {
+            String note = noteET.getText().toString();
+            if (!TextUtils.isEmpty(note)) {
+                if (note.length() > 200) {
+                    note = note.substring(0, 200);
+                }
+            }
+            item.setNote(note);
+        }
+
         boolean changed = !item.isEqual(savedItem);
-        if (changed) item.setTimeStampLast(System.currentTimeMillis());
+        if (changed) {
+            item.setTimeStampLast(System.currentTimeMillis());
+            item.setBy(LPreferences.getUserId());
+        }
         myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
         destroy();

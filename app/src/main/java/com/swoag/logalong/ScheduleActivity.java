@@ -22,6 +22,7 @@ import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.fragments.ScheduledTransactionEdit;
 import com.swoag.logalong.fragments.TransactionEdit;
 import com.swoag.logalong.utils.DBAccess;
+import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
@@ -208,13 +209,22 @@ public class ScheduleActivity extends LFragmentActivity implements
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
             int state = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE));
+            int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
             String category = DBCategory.getNameById(categoryId);
             String tag = DBTag.getNameById(tagId);
 
             String str = "";
-            if (!TextUtils.isEmpty(tag)) str = tag + ":";
-            str += category;
+            if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                String account = DBAccount.getNameById(accountId);
+                String account2 = DBAccount.getNameById(account2Id);
+                str = account + " --> " + account2;
+            } else {
+                if (!TextUtils.isEmpty(tag)) str = tag + ":";
+                str += category;
+            }
             tv.setText(str);
 
             tv = (TextView) mainView.findViewById(R.id.note);
@@ -234,7 +244,7 @@ public class ScheduleActivity extends LFragmentActivity implements
             tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
             tv = (TextView) mainView.findViewById(R.id.dollor);
-            int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+
             Resources rsc = getResources();
             switch (type) {
                 case LTransaction.TRANSACTION_TYPE_EXPENSE:

@@ -210,7 +210,6 @@
                     android:layout_height="32dp"
                     android:layout_marginLeft="30dp"
                     android:background="@drawable/ic_action_right" />
-
             </LinearLayout>
 
             <RelativeLayout
@@ -252,6 +251,16 @@
                     android:paddingTop="22dp"
                     android:src="@drawable/ic_action_cancel" />
             </RelativeLayout>
+
+            <TextView
+                android:id="@+id/tvLastChangeBy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:paddingRight="15dp"
+                android:text="Jan 25, 2015 by Michael"
+                android:textColor="#aaa"
+                android:textSize="12dp" />
         </LinearLayout>
     </ScrollView>
 

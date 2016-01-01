@@ -438,6 +438,7 @@ public class LJournal {
                 item.setCategory(receivedItem.getCategory());
                 item.setVendor(receivedItem.getVendor());
                 item.setTag(receivedItem.getTag());
+                item.setBy(receivedItem.getBy());
                 item.setTimeStamp(receivedItem.getTimeStamp());
                 item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
@@ -499,6 +500,7 @@ public class LJournal {
                 item.setCategory(receivedItem.getCategory());
                 item.setVendor(receivedItem.getVendor());
                 item.setTag(receivedItem.getTag());
+                item.setBy(receivedItem.getBy());
                 item.setTimeStamp(receivedItem.getTimeStamp());
                 item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
