@@ -36,10 +36,11 @@ public class LScheduledTransaction {
         init();
     }
 
-    public LScheduledTransaction(LTransaction item) {
+    /*public LScheduledTransaction(LTransaction item) {
         init();
         this.item = item;
     }
+    */
 
     public LScheduledTransaction(int repeatInterval, int repeatUnit, int repeatCount, long timestamp, LTransaction item) {
         this.repeatInterval = repeatInterval;
@@ -192,6 +193,8 @@ public class LScheduledTransaction {
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
             baseTimeMs = calendar.getTimeInMillis();
+
+            if (repeatInterval == 0) repeatInterval = 1; //JIC
 
             while (baseTimeMs <= System.currentTimeMillis()) {
                 if (repeatUnit == REPEAT_UNIT_MONTH) {
