@@ -50,6 +50,7 @@
     <string name="password">Password</string>
     <string name="password_hint">password</string>
     <string name="payee">Payee</string>
+    <string name="payee_payers">Payee/Payers</string>
     <string name="payer">Payer</string>
     <string name="please_complete_your_profile">Please set your name in profile settings then come back.</string>
     <string name="profile">Profile</string>
@@ -100,7 +101,7 @@
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
-    <string name="payee_payers">Payee/Payers</string>
+    <string name="version">Version</string>
     <string name="warning_delete_account">Account and all its associated records will be permanently deleted.</string>
     <string name="warning_delete_category">Category will be permanently deleted.</string>
     <string name="warning_delete_record">Record will be permanently deleted.</string>

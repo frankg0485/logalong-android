@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
+import com.swoag.logalong.BuildConfig;
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
@@ -48,6 +49,8 @@ public class SettingsFragment extends LFragment implements
         setViewListener(view, R.id.exit);
         addV = (ImageView) setViewListener(view, R.id.addImg);
 
+        TextView versionV = (TextView)rootView.findViewById(R.id.version);
+        versionV.setText(BuildConfig.VERSION_NAME);
         return rootView;
     }
 
