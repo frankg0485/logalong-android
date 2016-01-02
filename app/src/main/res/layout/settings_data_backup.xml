@@ -6,97 +6,136 @@
     android:clickable="true"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/backupView"
         android:layout_width="match_parent"
         android:layout_height="55dp"
+        android:layout_marginTop="1dp"
         android:background="@drawable/row_selector"
         android:gravity="center_vertical"
-        android:orientation="vertical"
         android:paddingLeft="15dp"
         android:paddingRight="25dp">
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/view1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:text="@string/backup_data_to_sd_card"
-            android:textColor="@color/base_text_color"
-            android:textSize="16sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/backupProgress"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="5dp"
                 android:gravity="center_vertical"
-                android:text="@string/backed_up_on"
-                android:textColor="@color/gray_text_color"
-                android:textSize="12sp" />
+                android:text="@string/backup_data_to_sd_card"
+                android:textColor="@color/base_text_color"
+                android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/backupDate"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:gravity="center_vertical"
-                android:text="May 18 2015"
-                android:textColor="@color/gray_text_color"
-                android:textSize="12sp" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/backed_up_on"
+                    android:textColor="@color/gray_text_color"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/backupDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center_vertical"
+                    android:text="May 18 2015"
+                    android:textColor="@color/gray_text_color"
+                    android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
-    <LinearLayout
+        <ProgressBar
+            android:id="@+id/backupProgress"
+            style="?android:attr/progressBarStyleInverse"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
+    <RelativeLayout
         android:id="@+id/restoreView"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:layout_marginTop="1dp"
         android:background="@drawable/row_selector"
         android:gravity="center_vertical"
-        android:orientation="vertical"
         android:paddingLeft="15dp"
         android:paddingRight="25dp">
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:text="@string/restore_data_from_sd_card"
-            android:textColor="@color/base_text_color"
-            android:textSize="16sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:orientation="horizontal">
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/restoreProgress"
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="5dp"
                 android:gravity="center_vertical"
-                android:text="@string/restored_on"
-                android:textColor="@color/gray_text_color"
-                android:textSize="12sp" />
+                android:text="@string/restore_data_from_sd_card"
+                android:textColor="@color/base_text_color"
+                android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/restoreDate"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:gravity="center_vertical"
-                android:text="May 18 2015"
-                android:textColor="@color/gray_text_color"
-                android:textSize="12sp" />
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/restored_on"
+                    android:textColor="@color/gray_text_color"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/restoreDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center_vertical"
+                    android:text="May 18 2015"
+                    android:textColor="@color/gray_text_color"
+                    android:textSize="12sp" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/restoreProgress"
+            style="?android:attr/progressBarStyleInverse"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
 
     <TextView
         android:id="@+id/errorMsg"

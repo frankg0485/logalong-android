@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -28,11 +29,13 @@ import com.swoag.logalong.views.LWarnDialog;
 
 public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     private static final String TAG = DataBackupEdit.class.getSimpleName();
+    private static final int BACKUP = 10;
+    private static final int RESTORE = 20;
 
     private Activity activity;
     private View rootView;
     private DataBackupEditItf callback;
-    private ProgressBar progressBar;
+    private ProgressBar backupProgressBar, restoreProgressBar;
     private CountDownTimer countDownTimer;
     private TextView errorMsgV, backupDateTV, restoreDateTV;
 
@@ -71,7 +74,9 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
         //restoreDateTV = (TextView) rootView.findViewById(R.id.restoreDate);
         //restoreDateTV.setText(DBPorter.getImportDate());
 
-        progressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        backupProgressBar = (ProgressBar) rootView.findViewById(R.id.backupProgress);
+        restoreProgressBar = (ProgressBar) rootView.findViewById(R.id.restoreProgress);
+
         errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
         hideErrorMsg();
     }
@@ -84,21 +89,23 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
         public void onClicked(View v) {
             switch (v.getId()) {
                 case R.id.backupView:
-                    if (DBPorter.exportDb(DBHelper.DB_VERSION)) {
-                        backupDateTV.setText(DBPorter.getExportDate());
-                        displayErrorMsg(activity.getString(R.string.hint_data_backup_to_sd_card_done));
-                    } else {
-                        displayErrorMsg(activity.getString(R.string.hint_data_backup_to_sd_card_error));
+                    if (restoreProgressBar.getVisibility() != View.VISIBLE && backupProgressBar.getVisibility() != View.VISIBLE) {
+                        hideErrorMsg();
+                        backupProgressBar.setVisibility(View.VISIBLE);
+                        new MyTask().execute(BACKUP);
                     }
                     break;
 
                 case R.id.restoreView:
-                    LWarnDialog warnDialog = new LWarnDialog(activity, null, DataBackupEdit.this,
-                            activity.getString(R.string.restore_db),
-                            activity.getString(R.string.warning_restore_db),
-                            activity.getString(R.string.restore_now),
-                            true);
-                    warnDialog.show();
+                    if (restoreProgressBar.getVisibility() != View.VISIBLE && backupProgressBar.getVisibility() != View.VISIBLE) {
+                        hideErrorMsg();
+                        LWarnDialog warnDialog = new LWarnDialog(activity, null, DataBackupEdit.this,
+                                activity.getString(R.string.restore_db),
+                                activity.getString(R.string.warning_restore_db),
+                                activity.getString(R.string.restore_now),
+                                true);
+                        warnDialog.show();
+                    }
                     break;
 
                 case R.id.add:
@@ -133,9 +140,11 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     }
 
     public void dismiss() {
-        myClickListener.disableEnable(false);
-        this.callback.onDataBackupEditExit();
-        destroy();
+        if (restoreProgressBar.getVisibility() != View.VISIBLE && backupProgressBar.getVisibility() != View.VISIBLE) {
+            myClickListener.disableEnable(false);
+            this.callback.onDataBackupEditExit();
+            destroy();
+        }
     }
 
     private View setViewListener(View v, int id) {
@@ -147,13 +156,64 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     @Override
     public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
         if (confirm && ok) {
-            if (DBPorter.importDb(DBHelper.DB_VERSION)) {
-                //restoreDateTV.setText(DBPorter.getImportDate());
-                displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_done));
-            } else {
-                displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_error));
-            }
+            restoreProgressBar.setVisibility(View.VISIBLE);
+            new MyTask().execute(RESTORE);
         }
     }
+
+    private class MyTask extends AsyncTask<Integer, Void, Boolean> {
+        private int task;
+
+        @Override
+        protected Boolean doInBackground(Integer... params) {
+            Boolean ret = false;
+            task = params[0];
+            switch (task) {
+                case BACKUP:
+                    ret = DBPorter.exportDb(DBHelper.DB_VERSION);
+                    break;
+                case RESTORE:
+                    ret = DBPorter.importDb(DBHelper.DB_VERSION);
+                    break;
+            }
+            /*
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+            }
+            */
+            return ret;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            switch (task) {
+                case BACKUP:
+                    if (result) {
+                        backupDateTV.setText(DBPorter.getExportDate());
+                        displayErrorMsg(activity.getString(R.string.hint_data_backup_to_sd_card_done));
+                    } else {
+                        displayErrorMsg(activity.getString(R.string.hint_data_backup_to_sd_card_error));
+                    }
+                    backupProgressBar.setVisibility(View.INVISIBLE);
+                    break;
+
+                case RESTORE:
+                    if (result) {
+                        //restoreDateTV.setText(DBPorter.getImportDate());
+                        displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_done));
+                    } else {
+                        displayErrorMsg(activity.getString(R.string.hint_data_restore_from_sd_card_error));
+                    }
+                    restoreProgressBar.setVisibility(View.INVISIBLE);
+                    break;
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+        }
+    }
+
 }
 
