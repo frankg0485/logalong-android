@@ -270,17 +270,18 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_ID:
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_ID));
-                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
                     short bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
-                    rspsIntent.putExtra("id", userId);
-                    rspsIntent.putExtra("name", userName);
-                    LLog.d(TAG, "user returned as: " + userName);
+                    bytes = pkt.getShortAutoInc();
+                    String userFullName = pkt.getStringAutoInc(bytes);
+
+                    //LLog.d(TAG, "user returned as: " + userName + " : " + userFullName);
+
+                    LPreferences.setShareUserName(userId, userName);
+                    LPreferences.setShareUserFullName(userId, userFullName);
                 }
-                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:

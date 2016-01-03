@@ -118,10 +118,12 @@ public class GenericListOptionDialog extends Dialog implements
                     return;
 
                 default:
+                    //findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
                     if (callback.onGenericListOptionDialogExit(context, v.getId()))
                         return;
                     break;
             }
+            //findViewById(R.id.progressBar).setVisibility(View.GONE);
             dismiss();
         }
     }

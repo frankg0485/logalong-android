@@ -180,6 +180,7 @@ public class LJournal {
 
     public boolean shareItem(int userId, LTransaction item) {
         record = ACTION_SHARE_ITEM + ":" + transactionItemString(item);
+        //LLog.d(TAG, "share with user: " + userId + " item: " + record);
         post(userId);
         return true;
     }
@@ -470,11 +471,13 @@ public class LJournal {
                 item.setNote(receivedItem.getNote());
                 DBTransaction.update(item);
             } else {
-                LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
+                LLog.w(TAG, "conflicts: received journal ignored amount: " + item.getValue());
+                /*LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
                         + (new Date(item.getTimeStampLast()) + ":"
                         + (new Date(receivedItem.getTimeStampLast())))
                         + " last: " + item.getTimeStampLast()
                         + " new: " + receivedItem.getTimeStampLast());
+                        */
             }
         } else {
             DBTransaction.add(new LTransaction(receivedItem.getRid().toString(),

@@ -18,7 +18,6 @@ public class LBroadcastReceiver {
     public static final int ACTION_POLL_IDLE = 2;
     public static final int ACTION_USER_CREATED = 4;
     public static final int ACTION_LOGIN = 5;
-    public static final int ACTION_GET_SHARE_USER_BY_ID = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
     public static final int ACTION_SHARE_ACCOUNT_WITH_USER = 30;
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;

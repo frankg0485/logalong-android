@@ -314,6 +314,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.w(TAG, "warning: account removed?");
                 } else {
                     if (change == 1) {
+                        LLog.d(TAG, "account: " + accountName + " add share user: " + changeUserId);
                         //we receive this add request, *ONLY* because one of the shared peer accepted
                         //this user to share this account, so we add silently.
                         account.addShareUser(changeUserId, LAccount.ACCOUNT_SHARE_CONFIRMED);
@@ -323,11 +324,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         //basically this also says: hey, I confirm you to share account with me, and you've
                         //already got all my records (from one of my shared peer), now it is your turn to
                         //push me all your current records, so we're in sync.
+                        LProtocol.ui.getShareUserById(changeUserId);
                         LProtocol.ui.shareAccountWithUser(changeUserId, accountName, uuid, false);
                     } else {
+                        LLog.d(TAG, "account: " + accountName + " remove share user: " + changeUserId);
                         if (changeUserId == LPreferences.getUserId()) {
                             //sorry, I am removed from the share group by one of the peer.
                             account.removeAllShareUsers();
+                            LLog.d(TAG, "remove myself from share list");
                         } else {
                             //this is to remove somebody who was removed from group by someone else.
                             account.removeShareUser(changeUserId);
