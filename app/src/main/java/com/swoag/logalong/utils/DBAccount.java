@@ -110,22 +110,30 @@ public class DBAccount {
 
     public static LAccount getByRid(Context context, String rid) {
         Cursor csr = null;
-        LAccount account = new LAccount();
-
+        LAccount account = null;
         try {
             csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
                     DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find account with rid: " + rid);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find account with rid: " + rid);
 
-            csr.moveToFirst();
-            getValues(csr, account);
+                    csr.close();
+                    return null;
+                }
+
+                if (csr.getCount() > 1) {
+                    LLog.w(TAG, "duplicated account with rid: " + rid + " : " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
+
+                account = new LAccount();
+                csr.moveToFirst();
+                getValues(csr, account);
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with rid: " + rid + ":" + e.getMessage());
-            account = null;
         }
         if (csr != null) csr.close();
         return account;
