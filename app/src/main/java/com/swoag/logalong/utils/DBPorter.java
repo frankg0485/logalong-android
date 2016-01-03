@@ -109,7 +109,6 @@ public class DBPorter {
                 return false;
             }
 
-            myCSV.add(LPreferences.getUserId() + "," + LPreferences.getUserName() + "," + LPreferences.getUserFullName());
             myCSV.add(DBHelper.TABLE_COLUMN_AMOUNT + "," +
                     DBHelper.TABLE_COLUMN_CATEGORY + "," + DBHelper.TABLE_COLUMN_RID + "," +
                     DBHelper.TABLE_COLUMN_ACCOUNT + "," + DBHelper.TABLE_COLUMN_RID + "," +
@@ -149,7 +148,67 @@ public class DBPorter {
         return true;
     }
 
+    private static File openCacheDir() {
+        return LStorage.openDir("cache");
+    }
+
+    public static boolean saveUserInfo() {
+        if (!LStorage.isExternalStorageWritable()) return false;
+
+        try {
+            File path = openCacheDir();
+            if (path == null) return false;
+
+            File file = new File(path, "user.info");
+            if (file != null) {
+                file.delete();
+            }
+            file = new File(path, "user.info");
+
+            MyCSV myCSV = new MyCSV();
+            myCSV.add(LPreferences.getUserId() + "," + LPreferences.getUserName() + "," + LPreferences.getUserFullName());
+
+            FileOutputStream fos = new FileOutputStream(file);
+
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(myCSV);
+            oos.close();
+        } catch (Exception e) {
+            LLog.e(TAG, "unable to export user info");
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean restoreUserInfo() {
+        try {
+            File path = openCacheDir();
+            if (path == null) return false;
+            File file = new File(path, "user.info");
+            if (file == null) return false;
+
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            MyCSV myCSV = (MyCSV) ois.readObject();
+
+            for (String str : myCSV.getCsv()) {
+                String[] ss = str.split(",", -1);
+                LPreferences.setUserId(Integer.valueOf(ss[0]));
+                LPreferences.setUserName(ss[1]);
+                LPreferences.setUserFullName(ss[2]);
+                break;
+            }
+
+            ois.close();
+        } catch (Exception e) {
+            LLog.e(TAG, "unable to restore user info");
+            return false;
+        }
+        return true;
+    }
+
     public static boolean importDb(int dbVersion) {
+        boolean ret = false;
         try {
             File path = openDbDir();
             if (path == null) return false;
@@ -168,7 +227,6 @@ public class DBPorter {
             HashMap<String, Long> tagMap = new HashMap<String, Long>();
 
             boolean header = true;
-            boolean userInfo = true;
             boolean schedule = false;
             for (String str : myCSV.getCsv()) {
                 LLog.d(TAG, "" + str);
@@ -179,12 +237,7 @@ public class DBPorter {
                 }
 
                 String[] ss = str.split(",", -1);
-                if (userInfo) {
-                    userInfo = false;
-                    LPreferences.setUserId(Integer.valueOf(ss[0]));
-                    LPreferences.setUserName(ss[1]);
-                    LPreferences.setUserFullName(ss[2]);
-                } else if (header) {
+                if (header) {
                     header = false;
                 } else {
                     int ii = 0;
@@ -333,16 +386,26 @@ public class DBPorter {
             ois.close();
 
             //LPreferences.setLastDbRestoreDate("" + (new SimpleDateFormat("EEEE, MMM d yyyy")).format(new Date()));
-        } catch (
-                Exception e
-                )
-
-        {
+            ret = true;
+        } catch (Exception e) {
             LLog.e(TAG, "unable to importport database version: " + dbVersion);
-            return false;
+            ret = false;
         }
 
-        return true;
+        //remove stale file if error happens.
+        if (!ret) {
+            try {
+                File path = openDbDir();
+                if (path == null) return false;
+                File file = getOldFile(path);
+                if (file != null) {
+                    file.delete();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        return ret;
     }
 
     public static String getExportDate() {

@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
+import com.swoag.logalong.utils.DBPorter;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
@@ -192,6 +193,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                 if (countDownTimer != null) countDownTimer.cancel();
                 progressBar.setVisibility(View.GONE);
                 if (ret == LProtocol.RSPS_OK) {
+                    DBPorter.saveUserInfo();
                     if (TextUtils.isEmpty(oldUserId)) {
                         userIdTV.setText(LPreferences.getUserName());
                     } else if (this.callback != null) {

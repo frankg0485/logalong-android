@@ -21,6 +21,7 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBPorter;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
@@ -314,9 +315,12 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void doOneTimeInit() {
-        //initDb();
-        /*if (LPreferences.getOneTimeInit()) return;
-        LPreferences.setOneTimeInit(true);*/
+        if (LPreferences.getOneTimeInit()) return;
+
+        initDb();
+        DBPorter.restoreUserInfo();
+
+        LPreferences.setOneTimeInit(true);
     }
 
     private LAccountShareRequest accountShareRequest;

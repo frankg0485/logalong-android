@@ -17,6 +17,7 @@ public class LPreferences {
     private static final String CACHE_LENGTH = "CacheLength";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
+    private static final String ONE_TIME_INIT = "OneTimeInit";
     private static final String SEARCH_ALLTIME = "SearchAllTime";
     private static final String SEARCH_ALLTIME_FROM = "SearchAllTimeFrom";
     private static final String SEARCH_ALLTIME_TO = "SearchAllTimeTo";
@@ -202,6 +203,14 @@ public class LPreferences {
         }
 
         return request;
+    }
+
+    public static boolean getOneTimeInit() {
+        return getPreference(LApp.ctx, ONE_TIME_INIT, false);
+    }
+
+    public static void setOneTimeInit(Boolean yes) {
+        savePreference(LApp.ctx, ONE_TIME_INIT, yes);
     }
 
     public static boolean getSearchAllTime() {
