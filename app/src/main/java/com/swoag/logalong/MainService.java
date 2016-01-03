@@ -32,7 +32,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     private Handler pollHandler;
     private Runnable pollRunnable;
+    private Runnable journalPostRunnable;
     static final int NETWORK_POLLING_MS = 5000;
+    static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 30000;
     private boolean requestToStop;
     private int pollingCount;
     private BroadcastReceiver broadcastReceiver;
@@ -74,6 +76,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 }
             }
         };
+        journalPostRunnable = new Runnable() {
+            @Override
+            public void run() {
+                LJournal.flush();
+                pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
+            }
+        };
+
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_NETWORK_CONNECTED,
                 LBroadcastReceiver.ACTION_USER_CREATED,
@@ -92,7 +102,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     @Override
     public void onDestroy() {
         pollHandler.removeCallbacks(pollRunnable);
+        pollHandler.removeCallbacks(journalPostRunnable);
         pollRunnable = null;
+        journalPostRunnable = null;
         pollHandler = null;
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
@@ -160,7 +172,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (ret == LProtocol.RSPS_OK) {
                     LProtocol.ui.updateUserProfile();
                     LLog.d(TAG, "user logged in");
-                    LJournal.flush();
+                    pollHandler.post(journalPostRunnable);
                     pollHandler.postDelayed(pollRunnable, 1000);
                 } else {
                     LLog.w(TAG, "unable to login");
@@ -277,11 +289,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
+                pollHandler.removeCallbacks(journalPostRunnable);
+                pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
+
                 if (ret == LProtocol.RSPS_OK) {
                     long journalId = intent.getLongExtra("journalId", 0);
                     LJournal.deleteById(journalId);
+                    LJournal.flush();
+                } else {
+                    // upon post error, do not flush immediately, instead let it timeout and retry
+                    // this is to prevent flooding network layer when something goes wrong.
+                    LLog.w(TAG, "journal post error");
                 }
-                LJournal.flush();
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
@@ -290,7 +309,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                 userId = intent.getIntExtra("id", 0);
                 userName = intent.getStringExtra("userName");
-                LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
+                //LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
                 LJournal.receive(intent.getStringExtra("record"));
                 break;
 

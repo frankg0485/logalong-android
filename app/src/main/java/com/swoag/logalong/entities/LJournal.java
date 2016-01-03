@@ -91,15 +91,25 @@ public class LJournal {
     }
     */
 
+    private static long lastFlushMs;
+    private static long lastFlushId;
     public static void flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (entry != null) {
-            LProtocol.ui.postJournal(entry.userId, entry.id + ":" + entry.data);
+            if (lastFlushId == entry.id && (lastFlushMs - System.currentTimeMillis() < 15000)) {
+                LLog.w(TAG, "journal flush request ignored: " + entry.id);
+            } else {
+                lastFlushId = entry.id;
+                lastFlushMs = System.currentTimeMillis();
+                LLog.d(TAG, "post journal: " + entry.id);
+                LProtocol.ui.postJournal(entry.userId, entry.id + ":" + entry.data);
+                //LLog.d(TAG, "journal length: " + LStorage.getInstance().getCacheLength() + " posted: " + entry.data);
+            }
         }
-        LLog.d(TAG, "journal length: " + LStorage.getInstance().getCacheLength());
     }
 
     public static void deleteById(long journalId) {
+        LLog.d(TAG, "release journal: " + journalId);
         LStorage.getInstance().release(journalId);
     }
 
@@ -107,7 +117,17 @@ public class LJournal {
         LStorage.Entry entry = new LStorage.Entry();
         entry.userId = userId;
         entry.data = this.record;
+
+        //automatically flush the very first journal, so we don't always wait for polling handler to time out.
+        //this is not thread safe, unlikely but possible that the following may happen,
+        // 1. postNow = FALSE (since there's pending journal)
+        // 2. other thread prempts, and release journal, do a flush(), and nothing happens, since
+        //    there's no more journal available
+        // 3. this thread comes back, create the new journal, but will not post the journal immediately
+        //remedy: when this happens the journal will be posted when polling handler times out in main service thread.
+        boolean postNow = LStorage.getInstance().getCacheLength() <= 0;
         LStorage.getInstance().put(entry);
+        if (postNow) flush();
     }
 
     public static String transactionItemString(LTransaction item) {
@@ -198,11 +218,10 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
-        flush();
         return true;
     }
 
-    public boolean updateScheduledItem(LScheduledTransaction sch, boolean postNow) {
+    public boolean updateScheduledItem(LScheduledTransaction sch) {
         LTransaction item = sch.getItem();
         LAccount account = DBAccount.getById(item.getAccount());
         if ((null == account) || (!account.isShared())) return false;
@@ -221,7 +240,6 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
-        if (postNow) flush();
         return true;
     }
 
@@ -241,7 +259,6 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
-        flush();
         return true;
     }
 
@@ -256,7 +273,6 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
 
         for (int user : users) post(user);
-        flush();
         return true;
     }
 
@@ -272,7 +288,6 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
 
         for (int user : users) post(user);
-        flush();
         return true;
     }
 
@@ -287,7 +302,6 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
 
         for (int user : users) post(user);
-        flush();
         return true;
     }
 
@@ -301,7 +315,6 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_RID + ".category=" + category;
 
         for (int user : users) post(user);
-        flush();
         return true;
     }
 
@@ -796,7 +809,7 @@ public class LJournal {
             do {
                 LScheduledTransaction sitem = new LScheduledTransaction();
                 DBScheduledTransaction.getValues(cursor, sitem);
-                journal.updateScheduledItem(sitem, false);
+                journal.updateScheduledItem(sitem);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
@@ -823,7 +836,6 @@ public class LJournal {
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             if (aBoolean) {
-                flush();
             }
         }
     }

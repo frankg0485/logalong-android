@@ -124,7 +124,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     scheduledItem.setAlarm();
 
                     LJournal journal = new LJournal();
-                    journal.updateScheduledItem(scheduledItem, true);
+                    journal.updateScheduledItem(scheduledItem);
                 }
                 break;
 
@@ -134,7 +134,10 @@ public class ScheduleActivity extends LFragmentActivity implements
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                 scheduledItem.cancelAlarm();
                 DBScheduledTransaction.deleteById(scheduledItem.getItem().getId());
-                //TODO: journal support
+
+                LJournal journal = new LJournal();
+                scheduledItem.getItem().setState(DBHelper.STATE_DELETED);
+                journal.updateScheduledItem(scheduledItem);
                 break;
         }
 

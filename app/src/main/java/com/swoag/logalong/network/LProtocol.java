@@ -336,6 +336,7 @@ public class LProtocol {
                     String[] ss = str.split(":");
                     long journalId = Long.parseLong(ss[0]);
                     rspsIntent.putExtra("journalId", journalId);
+                    LLog.d(TAG, "posted journal: " + journalId);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
