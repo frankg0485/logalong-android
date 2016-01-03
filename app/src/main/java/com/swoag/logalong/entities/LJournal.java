@@ -376,7 +376,7 @@ public class LJournal {
                 if (null == account1) {
                     accountId = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
                         account1.setRid(sss[1]);
                         DBAccount.update(account1);
                     }
@@ -390,7 +390,7 @@ public class LJournal {
                 if (null == account1) {
                     account2Id = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) > account1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
                         account1.setRid(sss[1]);
                         DBAccount.update(account1);
                     }
@@ -404,7 +404,7 @@ public class LJournal {
                 if (null == category1) {
                     categoryId = DBCategory.add(new LCategory(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) > category1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
                         category1.setRid(sss[1]);
                         DBCategory.update(category1);
                     }
@@ -417,7 +417,7 @@ public class LJournal {
                 if (null == vendor1) {
                     vendorId = DBVendor.add(new LVendor(sss[0], sss[1], Integer.valueOf(sss[3])));
                 } else {
-                    if (Long.valueOf(sss[2]) > vendor1.getTimeStampLast()) {
+                    if (Long.valueOf(sss[2]) >= vendor1.getTimeStampLast()) {
                         vendor1.setRid(sss[1]);
                         vendor1.setType(Integer.valueOf(sss[3]));
                         vendor1.setTimeStampLast(Long.valueOf(sss[2]));
@@ -433,7 +433,7 @@ public class LJournal {
                 if (null == tag1) {
                     tagId = DBTag.add(new LTag(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) > tag1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
                         tag1.setRid(sss[1]);
                         DBTag.update(tag1);
                     }
@@ -469,7 +469,7 @@ public class LJournal {
 
         LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
         if (item != null) {
-            if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
+            if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -533,7 +533,7 @@ public class LJournal {
         LScheduledTransaction sch = DBScheduledTransaction.getByRid(receivedItem.getRid());
         if (sch != null) {
             LTransaction item = sch.getItem();
-            if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
+            if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -585,7 +585,7 @@ public class LJournal {
             if (account == null) {
                 LLog.w(TAG, "account removed?");
             } else {
-                if (account.getTimeStampLast() < timestampLast) {
+                if (account.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) account.setName(name);
                     if (stateFound) account.setState(state);
 
@@ -629,7 +629,7 @@ public class LJournal {
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
             } else {
-                if (category.getTimeStampLast() < timestampLast) {
+                if (category.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
                     category.setTimeStampLast(timestampLast);
@@ -672,7 +672,7 @@ public class LJournal {
                 vendor = new LVendor(name, type, rid, timestampLast);
                 DBVendor.add(vendor);
             } else {
-                if (vendor.getTimeStampLast() < timestampLast) {
+                if (vendor.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
                     if (typeFound) vendor.setType(type);
@@ -711,7 +711,7 @@ public class LJournal {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
             } else {
-                if (tag.getTimeStampLast() < timestampLast) {
+                if (tag.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
                     tag.setTimeStampLast(timestampLast);
