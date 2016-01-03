@@ -94,7 +94,7 @@ public class DBPorter {
     }
 
     public static boolean exportDb(int dbVersion) {
-        if (!isExternalStorageWritable()) return false;
+        if (!LStorage.isExternalStorageWritable()) return false;
 
         try {
             File path = openDbDir();
@@ -363,28 +363,8 @@ public class DBPorter {
     }
     */
 
-    public static boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
     private static File openDbDir() {
-        // Get the directory for the user's public pictures directory.
-        File path = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), dbPath());
-        if (!path.exists()) {
-            if (!path.mkdirs()) {
-                return null;
-            }
-        }
-        return path;
-    }
-
-    private static String dbPath() {
-        return "logalong" + File.separator + "db";
+        return LStorage.openDir("db");
     }
 
     private static File getOldFile(File path) {

@@ -3,6 +3,7 @@ package com.swoag.logalong.entities;
 
 
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 
 import com.swoag.logalong.network.LProtocol;
@@ -15,7 +16,9 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LStorage;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,7 +39,6 @@ public class LJournal {
     private static final int ACTION_UPDATE_TAG = 50;
     private static final int ACTION_UPDATE_VENDOR_CATEGORY = 60;
 
-    long id;
     int state;
     int userId;
     String record;
@@ -61,6 +63,7 @@ public class LJournal {
         this.record = record;
     }
 
+    /*
     public static void flush() {
         Cursor cursor = DBAccess.getAllActiveJournalCursor();
         if (cursor != null && cursor.getCount() > 0) {
@@ -77,10 +80,34 @@ public class LJournal {
         }
     }
 
+    public static void deleteById (long journalId) {
+        DBAccess.deleteJournalById(journalId);
+    }
+
     private void post(int userId) {
         this.userId = userId;
-        this.id = DBAccess.addJournal(this);
-        LProtocol.ui.postJournal(userId, this.id + ":" + this.record);
+        long id = DBAccess.addJournal(this);
+        LProtocol.ui.postJournal(userId, id + ":" + this.record);
+    }
+    */
+
+    public static void flush() {
+        LStorage.Entry entry = LStorage.getInstance().get();
+        if (entry != null) {
+            LProtocol.ui.postJournal(entry.userId, entry.id + ":" + entry.data);
+        }
+        LLog.d(TAG, "journal length: " + LStorage.getInstance().getCacheLength());
+    }
+
+    public static void deleteById(long journalId) {
+        LStorage.getInstance().release(journalId);
+    }
+
+    private void post(int userId) {
+        LStorage.Entry entry = new LStorage.Entry();
+        entry.userId = userId;
+        entry.data = this.record;
+        LStorage.getInstance().put(entry);
     }
 
     public static String transactionItemString(LTransaction item) {
@@ -170,10 +197,11 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
+        flush();
         return true;
     }
 
-    public boolean updateScheduledItem(LScheduledTransaction sch) {
+    public boolean updateScheduledItem(LScheduledTransaction sch, boolean postNow) {
         LTransaction item = sch.getItem();
         LAccount account = DBAccount.getById(item.getAccount());
         if ((null == account) || (!account.isShared())) return false;
@@ -192,6 +220,7 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
+        if (postNow) flush();
         return true;
     }
 
@@ -211,6 +240,7 @@ public class LJournal {
                 post(ids.get(ii));
             }
         }
+        flush();
         return true;
     }
 
@@ -225,6 +255,7 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
 
         for (int user : users) post(user);
+        flush();
         return true;
     }
 
@@ -240,6 +271,7 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
 
         for (int user : users) post(user);
+        flush();
         return true;
     }
 
@@ -254,6 +286,7 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
 
         for (int user : users) post(user);
+        flush();
         return true;
     }
 
@@ -267,6 +300,7 @@ public class LJournal {
                 + DBHelper.TABLE_COLUMN_RID + ".category=" + category;
 
         for (int user : users) post(user);
+        flush();
         return true;
     }
 
@@ -280,14 +314,6 @@ public class LJournal {
 
     public String getRecord() {
         return record;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public void setRecord(String record) {
@@ -739,23 +765,22 @@ public class LJournal {
 
     //////////////////////////////////////////////////////////////////////////
     public static void pushAllAccountRecords(int userId, LAccount account) {
-        if (null == account) return;
+        new MyTask().execute(new MyParams(userId, account));
+    }
+
+    private static boolean do_pushAllAccountRecords(int userId, LAccount account) {
+        if (null == account) return false;
 
         Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
 
-            //TODO: rewrite journal subsystem, and enable this journal
-            //LJournal journal = new LJournal();
+            LJournal journal = new LJournal();
 
             do {
                 LTransaction item = new LTransaction();
                 DBTransaction.getValues(cursor, item);
-
-                String record = LJournal.transactionItemString(item);
-                LProtocol.ui.shareTransitionRecord(userId, record);
-
-                //journal.shareItem(userId, item);
+                journal.shareItem(userId, item);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
@@ -768,9 +793,35 @@ public class LJournal {
             do {
                 LScheduledTransaction sitem = new LScheduledTransaction();
                 DBScheduledTransaction.getValues(cursor, sitem);
-                journal.updateScheduledItem(sitem);
+                journal.updateScheduledItem(sitem, false);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
+        return true;
+    }
+
+    private static class MyParams {
+        int userId;
+        LAccount account;
+
+        MyParams(int userId, LAccount account) {
+            this.userId = userId;
+            this.account = account;
+        }
+    }
+
+    private static class MyTask extends AsyncTask<MyParams, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(MyParams... params) {
+            MyParams p = params[0];
+            return do_pushAllAccountRecords(p.userId, p.account);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            if (aBoolean) {
+                flush();
+            }
+        }
     }
 }

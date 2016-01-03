@@ -124,7 +124,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     scheduledItem.setAlarm();
 
                     LJournal journal = new LJournal();
-                    journal.updateScheduledItem(scheduledItem);
+                    journal.updateScheduledItem(scheduledItem, true);
                 }
                 break;
 

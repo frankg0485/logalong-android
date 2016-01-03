@@ -12,6 +12,9 @@ import java.util.Calendar;
 
 public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
+    private static final String CACHE_READ_POINTER = "CacheRdPtr";
+    private static final String CACHE_WRITE_POINTER = "CacheWrPtr";
+    private static final String CACHE_LENGTH = "CacheLength";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
     private static final String SEARCH_ALLTIME = "SearchAllTime";
@@ -41,6 +44,30 @@ public class LPreferences {
         savePreference(LApp.ctx, LAST_DB_RESTORE_DATE, date);
     }
     */
+
+    public static long getCacheReadPointer() {
+        return getPreference(LApp.ctx, CACHE_READ_POINTER, 0L);
+    }
+
+    public static void setCacheReadPointer(long ptr) {
+        savePreference(LApp.ctx, CACHE_READ_POINTER, ptr);
+    }
+
+    public static long getCacheWritePointer() {
+        return getPreference(LApp.ctx, CACHE_WRITE_POINTER, 0L);
+    }
+
+    public static void setCacheWritePointer(long ptr) {
+        savePreference(LApp.ctx, CACHE_WRITE_POINTER, ptr);
+    }
+
+    public static long getCacheLength() {
+        return getPreference(LApp.ctx, CACHE_LENGTH, 0L);
+    }
+
+    public static void setCacheLength(long length) {
+        savePreference(LApp.ctx, CACHE_LENGTH, length);
+    }
 
     public static long getFirstDbTransactionTimestamp() {
         return getPreference(LApp.ctx, FIRST_TRANSACTION_TIMESTAMP, Long.MAX_VALUE);

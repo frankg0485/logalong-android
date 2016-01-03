@@ -144,7 +144,6 @@ public class DBAccess {
         journal.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
         journal.setUserId(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER)));
         journal.setRecord(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD)));
-        journal.setId(cur.getLong(0));
     }
 
     public static long addJournal(LJournal journal) {

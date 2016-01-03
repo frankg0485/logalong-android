@@ -279,8 +279,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
                 if (ret == LProtocol.RSPS_OK) {
                     long journalId = intent.getLongExtra("journalId", 0);
-                    DBAccess.deleteJournalById(journalId);
-                    //DBAccess.deleteJournalAll();
+                    LJournal.deleteById(journalId);
                 }
                 LJournal.flush();
                 break;
