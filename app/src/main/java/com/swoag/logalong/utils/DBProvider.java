@@ -173,14 +173,28 @@ public class DBProvider extends ContentProvider {
 
                         if (newState != null) {
                             if (newState.intValue() != oldState) {
-                                //must be either delete or undelete
-                                values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
-                                values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
-                                values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);
-                                values.put(DBHelper.TABLE_COLUMN_TIMESTAMP, oldTimeStamp);
                                 if (newState.intValue() == DBHelper.STATE_DELETED) {
+                                    //delete
+                                    values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
+                                    values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
+                                    values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);
+                                    values.put(DBHelper.TABLE_COLUMN_TIMESTAMP, oldTimeStamp);
                                     values.put(DBHelper.TABLE_COLUMN_AMOUNT, -oldAmount);
                                 } else {
+                                    //undelete: restore old values, unless request has them
+                                    if (!values.containsKey(DBHelper.TABLE_COLUMN_TYPE))
+                                        values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
+                                    if (!values.containsKey(DBHelper.TABLE_COLUMN_ACCOUNT))
+                                        values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
+                                    if (!values.containsKey(DBHelper.TABLE_COLUMN_ACCOUNT2))
+                                        values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);
+                                    if (!values.containsKey(DBHelper.TABLE_COLUMN_TIMESTAMP))
+                                        values.put(DBHelper.TABLE_COLUMN_TIMESTAMP, oldTimeStamp);
+
+                                    if (values.containsKey(DBHelper.TABLE_COLUMN_AMOUNT)) {
+                                        if (oldAmount != values.getAsDouble(DBHelper.TABLE_COLUMN_AMOUNT))
+                                            LLog.w(TAG, "UNEXPECTED: amount changed whiling deleting/undeleting");
+                                    }
                                     values.put(DBHelper.TABLE_COLUMN_AMOUNT, oldAmount);
                                 }
                                 updateAccountBalance(values);
@@ -190,7 +204,6 @@ public class DBProvider extends ContentProvider {
 
                         if (!done) {
                             updateAccountBalance(values);
-
                             values.put(DBHelper.TABLE_COLUMN_TYPE, oldType);
                             values.put(DBHelper.TABLE_COLUMN_ACCOUNT, oldAccount);
                             values.put(DBHelper.TABLE_COLUMN_ACCOUNT2, oldAccount2);

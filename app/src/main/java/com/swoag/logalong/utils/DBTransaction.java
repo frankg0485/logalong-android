@@ -27,7 +27,7 @@ public class DBTransaction {
         cv.put(DBHelper.TABLE_COLUMN_NOTE, trans.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, trans.getTag());
         cv.put(DBHelper.TABLE_COLUMN_VENDOR, trans.getVendor());
-        cv.put(DBHelper.TABLE_COLUMN_RID, trans.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_RID, trans.getRid());
     }
 
     public static void getValues(Cursor cursor, LTransaction trans) {
@@ -197,6 +197,9 @@ public class DBTransaction {
                     update(context, item);
 
                     //update the original record
+                    //WARNING: this update changes the record state (from DELETED to ACTIVE), it also
+                    //         may change the ACCOUNT, thus it has impact on how delete/undelete is
+                    //         supported in DbProvider, when updating account balance.
                     update(context, item2);
                 } else {
                     //do NOT change timestamp, otherwise, deleted record can not be revived by
