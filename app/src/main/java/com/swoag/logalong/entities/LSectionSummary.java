@@ -7,7 +7,7 @@ import java.util.HashSet;
 public class LSectionSummary {
     private static final String TAG = LSectionSummary.class.getSimpleName();
 
-    HashMap<Long, LAccountSummary> map;
+    private HashMap<Long, LAccountSummary> map;
 
     public LSectionSummary() {
         map = new HashMap<Long, LAccountSummary>();

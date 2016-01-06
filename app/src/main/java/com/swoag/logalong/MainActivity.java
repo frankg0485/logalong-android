@@ -235,10 +235,8 @@ public class MainActivity extends LFragmentActivity
             "Checking",
             "Savings",
             "Cash",
-            "Credit:Discover",
             "Credit:Master",
-            "Credit:Visa",
-            "Credit:American Express"
+            "Credit:Visa"
     };
 
     private static String[] categories = {
@@ -315,12 +313,12 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void doOneTimeInit() {
-        //if (LPreferences.getOneTimeInit()) return;
+        if (LPreferences.getOneTimeInit()) return;
 
         initDb();
         DBPorter.restoreUserInfo();
 
-        //LPreferences.setOneTimeInit(true);
+        LPreferences.setOneTimeInit(true);
     }
 
     private LAccountShareRequest accountShareRequest;

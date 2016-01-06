@@ -17,6 +17,7 @@ import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LStorage;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -39,9 +40,9 @@ public class LJournal {
     private static final int ACTION_UPDATE_TAG = 50;
     private static final int ACTION_UPDATE_VENDOR_CATEGORY = 60;
 
-    int state;
-    int userId;
-    String record;
+    private int state;
+    private int userId;
+    private String record;
 
     private void init() {
         this.state = JOURNAL_STATE_ACTIVE;
@@ -244,11 +245,9 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateAccount(LAccount account) {
-        if (!account.isShared()) return false;
+    private boolean post_account_update(LAccount account) {
 
-        record = ACTION_UPDATE_ACCOUNT + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
+        record += DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + account.getTimeStampLast();
@@ -263,13 +262,25 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateCategory(LCategory category) {
+    public boolean updateAccount(LAccount account, String oldName) {
+        if (!account.isShared()) return false;
+        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        return post_account_update(account);
+    }
+
+    public boolean updateAccount(LAccount account, int oldState) {
+        if (!account.isShared()) return false;
+
+        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_account_update(account);
+    }
+
+    private boolean post_category_update(LCategory category) {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
         LLog.d(TAG, "updating category: " + category.getName() + " UUID: " + category.getRid());
-        record = ACTION_UPDATE_CATEGORY + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
+        record += DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + category.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + category.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
@@ -278,12 +289,26 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateVendor(LVendor vendor) {
+    public boolean updateCategory(LCategory category, String oldName) {
+        record = ACTION_UPDATE_CATEGORY + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        return post_category_update(category);
+    }
+
+    public boolean updateCategory(LCategory category, int oldState) {
+        record = ACTION_UPDATE_CATEGORY + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_category_update(category);
+    }
+
+    public boolean updateCategory(LCategory category) {
+        record = ACTION_UPDATE_CATEGORY + ":";
+        return post_category_update(category);
+    }
+
+    private boolean post_vendor_update(LVendor vendor) {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
-        record = ACTION_UPDATE_VENDOR + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
+        record += DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
                 + DBHelper.TABLE_COLUMN_TYPE + "=" + vendor.getType() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + vendor.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + vendor.getRid() + ","
@@ -291,20 +316,50 @@ public class LJournal {
 
         for (int user : users) post(user);
         return true;
+
     }
 
-    public boolean updateTag(LTag tag) {
+    public boolean updateVendor(LVendor vendor, String oldName) {
+        record = ACTION_UPDATE_VENDOR + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        return post_vendor_update(vendor);
+    }
+
+    public boolean updateVendor(LVendor vendor, int oldState) {
+        record = ACTION_UPDATE_VENDOR + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_vendor_update(vendor);
+    }
+
+    public boolean updateVendor(LVendor vendor) {
+        record = ACTION_UPDATE_VENDOR + ":";
+        return post_vendor_update(vendor);
+    }
+
+    private boolean post_tag_update(LTag tag) {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
-        record = ACTION_UPDATE_TAG + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
+        record += DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + tag.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + tag.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
 
         for (int user : users) post(user);
         return true;
+    }
+
+    public boolean updateTag(LTag tag, String oldName) {
+        record = ACTION_UPDATE_TAG + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        return post_tag_update(tag);
+    }
+
+    public boolean updateTag(LTag tag, int oldState) {
+        record = ACTION_UPDATE_TAG + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_tag_update(tag);
+    }
+
+    public boolean updateTag(LTag tag) {
+        record = ACTION_UPDATE_TAG + ":";
+        return post_tag_update(tag);
     }
 
     public boolean updateVendorCategory(boolean add, String vendorRid, String category) {
@@ -385,6 +440,7 @@ public class LJournal {
                     }
 
                     if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
+                        account1.setTimeStampLast(Long.parseLong(sss[2]));
                         DBAccount.update(account1);
                     }
 
@@ -404,6 +460,7 @@ public class LJournal {
                     }
 
                     if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
+                        account1.setTimeStampLast(Long.parseLong(sss[2]));
                         DBAccount.update(account1);
                     }
 
@@ -425,12 +482,8 @@ public class LJournal {
                     }
 
                     if (update || Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
+                        category1.setTimeStampLast(Long.parseLong(sss[2]));
                         DBCategory.update(category1);
-
-                        /*LCategory cc = DBCategory.getByRid(category1.getRid());
-                        if (cc == null) {
-                            LLog.e(TAG, "not able to update category: " + category1.getName() + "UUID: " + category1.getRid());
-                        }*/
                     }
                     categoryId = category1.getId();
                 }
@@ -469,6 +522,7 @@ public class LJournal {
                     }
 
                     if (update || Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
+                        tag1.setTimeStampLast(Long.parseLong(sss[2]));
                         DBTag.update(tag1);
                     }
 
@@ -598,6 +652,10 @@ public class LJournal {
         int state = DBHelper.STATE_ACTIVE;
         long timestampLast = 0;
         String name = "";
+        boolean oldNameFound = false;
+        String oldName = "";
+        boolean oldStateFound = false;
+        int oldState = DBHelper.STATE_ACTIVE;
         boolean stateFound = false;
 
         for (String str : splitRecords) {
@@ -605,12 +663,18 @@ public class LJournal {
             if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
                 state = Integer.parseInt(ss[1]);
                 stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldState = Integer.parseInt(ss[1]);
+                oldStateFound = true;
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
                 timestampLast = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
                 name = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
+                oldName = ss[1];
+                oldNameFound = true;
             }
         }
 
@@ -619,7 +683,9 @@ public class LJournal {
             if (account == null) {
                 LLog.w(TAG, "account removed?");
             } else {
-                if (account.getTimeStampLast() <= timestampLast) {
+                if ((oldStateFound && oldState == account.getState())
+                        || (oldNameFound && oldName.contentEquals(account.getName()))
+                        || (account.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) account.setName(name);
                     if (stateFound) account.setState(state);
 
@@ -628,7 +694,8 @@ public class LJournal {
                         DBScheduledTransaction.deleteByAccount(account.getId());
                     }
 
-                    account.setTimeStampLast(timestampLast);
+                    if (account.getTimeStampLast() < timestampLast)
+                        account.setTimeStampLast(timestampLast);
                     DBAccount.update(account);
                 }
             }
@@ -642,18 +709,28 @@ public class LJournal {
         long timestampLast = 0;
         String name = "";
         boolean stateFound = false;
+        int oldState = DBHelper.STATE_ACTIVE;
+        boolean oldStateFound = false;
+        String oldName = "";
+        boolean oldNameFound = false;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
             if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
                 state = Integer.parseInt(ss[1]);
                 stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldState = Integer.parseInt(ss[1]);
+                oldStateFound = true;
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
                 timestampLast = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
                 name = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
+                oldName = ss[1];
+                oldNameFound = true;
             }
         }
 
@@ -663,10 +740,13 @@ public class LJournal {
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
             } else {
-                if (category.getTimeStampLast() <= timestampLast) {
+                if ((oldStateFound && oldState == category.getState())
+                        || (oldNameFound && oldName.contentEquals(category.getName()))
+                        || (category.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
-                    category.setTimeStampLast(timestampLast);
+                    if (category.getTimeStampLast() < timestampLast)
+                        category.setTimeStampLast(timestampLast);
                     DBCategory.update(category);
                 }
             }
@@ -682,18 +762,28 @@ public class LJournal {
         String name = "";
         boolean stateFound = false;
         boolean typeFound = false;
+        int oldState = DBHelper.STATE_ACTIVE;
+        boolean oldStateFound = false;
+        String oldName = "";
+        boolean oldNameFound = false;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
             if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
                 state = Integer.parseInt(ss[1]);
                 stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldState = Integer.parseInt(ss[1]);
+                oldStateFound = true;
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
                 timestampLast = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
                 name = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
+                oldName = ss[1];
+                oldNameFound = true;
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE)) {
                 type = Integer.valueOf(ss[1]);
                 typeFound = true;
@@ -706,11 +796,14 @@ public class LJournal {
                 vendor = new LVendor(name, type, rid, timestampLast);
                 DBVendor.add(vendor);
             } else {
-                if (vendor.getTimeStampLast() <= timestampLast) {
+                if ((oldStateFound && oldState == vendor.getState())
+                        || (oldNameFound && oldName.contentEquals(vendor.getName()))
+                        || (vendor.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
                     if (typeFound) vendor.setType(type);
-                    vendor.setTimeStampLast(timestampLast);
+                    if (vendor.getTimeStampLast() < timestampLast)
+                        vendor.setTimeStampLast(timestampLast);
                     DBVendor.update(vendor);
                 }
             }
@@ -724,18 +817,28 @@ public class LJournal {
         long timestampLast = 0;
         String name = "";
         boolean stateFound = false;
+        int oldState = DBHelper.STATE_ACTIVE;
+        boolean oldStateFound = false;
+        String oldName = "";
+        boolean oldNameFound = false;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
             if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
                 state = Integer.parseInt(ss[1]);
                 stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldState = Integer.parseInt(ss[1]);
+                oldStateFound = true;
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
                 timestampLast = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
                 name = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
+                oldName = ss[1];
+                oldNameFound = true;
             }
         }
 
@@ -745,10 +848,12 @@ public class LJournal {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
             } else {
-                if (tag.getTimeStampLast() <= timestampLast) {
+                if ((oldStateFound && oldState == tag.getState())
+                        || (oldNameFound && oldName.contentEquals(tag.getName()))
+                        || (tag.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
-                    tag.setTimeStampLast(timestampLast);
+                    if (tag.getTimeStampLast() < timestampLast) tag.setTimeStampLast(timestampLast);
                     DBTag.update(tag);
                 }
             }

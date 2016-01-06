@@ -9,11 +9,11 @@ public class LTag {
     public static final int TAG_STATE_ACTIVE = 10;
     public static final int TAG_STATE_DELETED = 20;
 
-    long id;
-    int state;
-    String name;
-    String rid;
-    long timeStampLast;
+    private long id;
+    private int state;
+    private String name;
+    private String rid;
+    private long timeStampLast;
 
     private void init() {
         this.state = TAG_STATE_ACTIVE;

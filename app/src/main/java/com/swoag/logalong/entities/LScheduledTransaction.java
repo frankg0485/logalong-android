@@ -18,11 +18,11 @@ public class LScheduledTransaction {
     public static final int REPEAT_UNIT_MONTH = 20;
     private static boolean TEST_SCAN_LOGIC = false;
 
-    LTransaction item;
-    int repeatCount;
-    int repeatUnit;
-    int repeatInterval;
-    long timestamp; //next alarm time
+    private LTransaction item;
+    private int repeatCount;
+    private int repeatUnit;
+    private int repeatInterval;
+    private long timestamp; //next alarm time
 
     private void init() {
         this.item = new LTransaction();

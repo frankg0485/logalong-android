@@ -348,41 +348,45 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 switch (listId) {
                     case R.id.accounts:
                         LAccount account = DBAccount.getById(tag.id);
+                        String oldName = account.getName();
                         account.setName(newName);
                         account.setTimeStampLast(System.currentTimeMillis());
                         DBAccount.update(account);
 
                         LJournal journal = new LJournal();
-                        journal.updateAccount(account);
+                        journal.updateAccount(account, oldName);
                         break;
 
                     case R.id.categories:
                         LCategory category = DBCategory.getById(tag.id);
+                        oldName = category.getName();
                         category.setName(newName);
                         category.setTimeStampLast(System.currentTimeMillis());
                         DBCategory.update(category);
 
                         journal = new LJournal();
-                        journal.updateCategory(category);
+                        journal.updateCategory(category, oldName);
                         break;
 
                     case R.id.vendors:
                         LVendor vendor = DBVendor.getById(tag.id);
+                        oldName = vendor.getName();
                         vendor.setName(newName);
                         vendor.setTimeStampLast(System.currentTimeMillis());
                         DBVendor.update(vendor);
 
                         journal = new LJournal();
-                        journal.updateVendor(vendor);
+                        journal.updateVendor(vendor, oldName);
                         break;
                     case R.id.tags:
                         LTag tag1 = DBTag.getById(tag.id);
+                        oldName = tag1.getName();
                         tag1.setName(newName);
                         tag1.setTimeStampLast(System.currentTimeMillis());
                         DBTag.update(tag1);
 
                         journal = new LJournal();
-                        journal.updateTag(tag1);
+                        journal.updateTag(tag1, oldName);
                         break;
 
                 }
@@ -431,7 +435,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         DBAccount.update(account);
 
                         LJournal journal = new LJournal();
-                        journal.updateAccount(account);
+                        journal.updateAccount(account, DBHelper.STATE_ACTIVE);
                         break;
                     case R.id.categories:
                         LCategory category = DBCategory.getById(tag.id);
@@ -440,7 +444,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         DBCategory.update(category);
 
                         journal = new LJournal();
-                        journal.updateCategory(category);
+                        journal.updateCategory(category, DBHelper.STATE_ACTIVE);
                         break;
                     case R.id.vendors:
                         LVendor vendor = DBVendor.getById(tag.id);
@@ -449,7 +453,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         DBVendor.update(vendor);
 
                         journal = new LJournal();
-                        journal.updateVendor(vendor);
+                        journal.updateVendor(vendor, DBHelper.STATE_ACTIVE);
                         break;
                     case R.id.tags:
                         LTag tag1 = DBTag.getById(tag.id);
@@ -458,7 +462,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         DBTag.update(tag1);
 
                         journal = new LJournal();
-                        journal.updateTag(tag1);
+                        journal.updateTag(tag1, DBHelper.STATE_ACTIVE);
                         break;
                 }
 

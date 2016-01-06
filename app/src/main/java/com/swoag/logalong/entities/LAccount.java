@@ -20,14 +20,14 @@ public class LAccount {
     //added to local database, but not yet invited, this is for GUI update only
     public static final int ACCOUNT_SHARE_PREPARED = 4;
 
-    int state;
-    String name;
-    String rid;
-    long timeStampLast;
+    private int state;
+    private String name;
+    private String rid;
+    private long timeStampLast;
 
-    ArrayList<Integer> shareIds;
-    ArrayList<Integer> shareStates;
-    long id;
+    private ArrayList<Integer> shareIds;
+    private ArrayList<Integer> shareStates;
+    private long id;
 
     private void init() {
         this.state = DBHelper.STATE_ACTIVE;
