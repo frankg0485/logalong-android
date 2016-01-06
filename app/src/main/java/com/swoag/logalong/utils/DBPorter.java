@@ -109,6 +109,7 @@ public class DBPorter {
                 return false;
             }
 
+            myCSV.add(LPreferences.getUserId() + "," + LPreferences.getUserName() + "," + LPreferences.getUserFullName());
             myCSV.add(DBHelper.TABLE_COLUMN_AMOUNT + "," +
                     DBHelper.TABLE_COLUMN_CATEGORY + "," + DBHelper.TABLE_COLUMN_RID + "," +
                     DBHelper.TABLE_COLUMN_ACCOUNT + "," + DBHelper.TABLE_COLUMN_RID + "," +
@@ -227,6 +228,7 @@ public class DBPorter {
             HashMap<String, Long> tagMap = new HashMap<String, Long>();
 
             boolean header = true;
+            boolean userInfo = true;
             boolean schedule = false;
             for (String str : myCSV.getCsv()) {
                 LLog.d(TAG, "" + str);
@@ -237,7 +239,12 @@ public class DBPorter {
                 }
 
                 String[] ss = str.split(",", -1);
-                if (header) {
+                if (userInfo) {
+                    userInfo = false;
+                    LPreferences.setUserId(Integer.valueOf(ss[0]));
+                    LPreferences.setUserName(ss[1]);
+                    LPreferences.setUserFullName(ss[2]);
+                } else if (header) {
                     header = false;
                 } else {
                     int ii = 0;

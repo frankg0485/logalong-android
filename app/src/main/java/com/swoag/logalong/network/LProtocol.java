@@ -53,7 +53,8 @@ public class LProtocol {
     private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
     private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
-    private static final short RQST_CONFIRM_ACCOUNT_SHARE = RQST_SYS | 0x10d;
+    private static final short RQST_CONFIRM_ACCOUNT_SHARE = RQST_SYS | 0x10d; /* obsolete */
+    private static final short RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID = RQST_SYS | 0x10e;
     private static final short RQST_SHARE_TRANSITION_RECORD = RQST_SYS | 0x110;
     private static final short RQST_SHARE_ACCOUNT_USER_CHANGE = RQST_SYS | 0x114;
     private static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -62,7 +63,8 @@ public class LProtocol {
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
     private static final short CMD_SHARE_ACCOUNT_REQUEST = 0x0004;
-    private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008;
+    private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008; /* obsolete */
+    private static final short CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID = 0x0009;
     private static final short CMD_SHARED_TRANSITION_RECORD = 0x000c;
     private static final short CMD_RECEIVED_JOURNAL = 0x0010;
     private static final short CMD_SHARE_ACCOUNT_USER_CHANGE = 0x0014;
@@ -139,8 +141,12 @@ public class LProtocol {
         String userFullName = pkt.getStringAutoInc(bytes);
 
         bytes = pkt.getShortAutoInc();
-        String accountName = pkt.getStringAutoInc(bytes);
-        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName);
+        String str = pkt.getStringAutoInc(bytes);
+        String[] ss = str.split(",");
+
+        String accountName = ss[0];
+        String uuid = ss[1];
+        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " : " + uuid);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
@@ -149,6 +155,7 @@ public class LProtocol {
         rspsIntent.putExtra("userName", userName);
         rspsIntent.putExtra("userFullName", userFullName);
         rspsIntent.putExtra("accountName", accountName);
+        rspsIntent.putExtra("UUID", uuid);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -317,7 +324,8 @@ public class LProtocol {
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
-            case RSPS | RQST_CONFIRM_ACCOUNT_SHARE:
+            case RSPS | RQST_CONFIRM_ACCOUNT_SHARE: /* obsolete */
+            case RSPS | RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID:
                 break;
 
             case RSPS | RQST_SHARE_TRANSITION_RECORD:
@@ -350,8 +358,8 @@ public class LProtocol {
                             handleAccountShareRequest(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
                             break;
 
-                        case CMD_CONFIRMED_ACCOUNT_SHARE:
-                            handleAccountShareConfirm(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE, cacheId);
+                        case CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID:
+                            handleAccountShareConfirm(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID, cacheId);
                             break;
 
                         //TODO: remove me: obsolete
@@ -534,8 +542,8 @@ public class LProtocol {
             return LTransport.send_rqst(server, RQST_POLL_ACK, cacheId, scrambler);
         }
 
-        public static boolean confirmAccountShare(int userId, String accountName) {
-            return LTransport.send_rqst(server, RQST_CONFIRM_ACCOUNT_SHARE, userId, accountName, scrambler);
+        public static boolean confirmAccountShare(int userId, String accountName, String uuid) {
+            return LTransport.send_rqst(server, RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID, userId, accountName + "," + uuid, scrambler);
         }
 
         public static boolean postJournal(int userId, String record) {

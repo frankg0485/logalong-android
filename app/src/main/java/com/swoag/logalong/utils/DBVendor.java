@@ -77,25 +77,27 @@ public class DBVendor {
     }
 
     public static LVendor getById(Context context, long id) {
-        Cursor csr = null;
         LVendor vendor = new LVendor();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
                     "_id=?", new String[]{"" + id}, null);
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find vendor with id: " + id);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, vendor);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find vendor with id: " + id);
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, vendor);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get vendor with id: " + id + ":" + e.getMessage());
             vendor = null;
         }
-        if (csr != null) csr.close();
         return vendor;
     }
 
@@ -104,25 +106,27 @@ public class DBVendor {
     }
 
     public static LVendor getByRid(Context context, String rid) {
-        Cursor csr = null;
         LVendor vendor = new LVendor();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
                     DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find vendor with RID: " + rid);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, vendor);
+            if (csr != null) {
+                if (csr.getCount() > 1 || csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find vendor with rid: " + rid + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, vendor);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get vendor with RID: " + rid + ":" + e.getMessage());
             vendor = null;
         }
-        if (csr != null) csr.close();
         return vendor;
     }
 
@@ -131,26 +135,28 @@ public class DBVendor {
     }
 
     public static LVendor getByName(Context context, String name) {
-        Cursor csr = null;
         LVendor vendor = new LVendor();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with name: " + name);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, vendor);
+            if (csr != null) {
+                if (csr.getCount() > 1 || csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find vendor with name: " + name + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, vendor);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
             vendor = null;
         }
-        if (csr != null) csr.close();
         return vendor;
     }
 

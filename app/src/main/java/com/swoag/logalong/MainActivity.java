@@ -317,7 +317,7 @@ public class MainActivity extends LFragmentActivity
     private void doOneTimeInit() {
         //if (LPreferences.getOneTimeInit()) return;
 
-        //initDb();
+        initDb();
         DBPorter.restoreUserInfo();
 
         //LPreferences.setOneTimeInit(true);
@@ -354,18 +354,14 @@ public class MainActivity extends LFragmentActivity
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.add(account);
             } else {
-                //NOTE: potential racing issue that would cause account RID inconsistent?
-                //if the racing ever happens where account share has been initiated from both
-                //ends 'simultaneously', account will be left in an inconsistent state, but it
-                //will cure itself when any transaction record is shared among users.
                 account.setState(DBHelper.STATE_ACTIVE);
-                account.setRid(uuid);
+                if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.update(account);
             }
 
             // inform all existing peers about this new user
-            LProtocol.ui.confirmAccountShare(userId, accountName);
+            LProtocol.ui.confirmAccountShare(userId, accountName, account.getRid());
 
             ArrayList<Integer> ids = account.getShareIds();
             ArrayList<Integer> states = account.getShareStates();

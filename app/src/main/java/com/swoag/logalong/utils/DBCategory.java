@@ -21,7 +21,7 @@ public class DBCategory {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
-        cv.put(DBHelper.TABLE_COLUMN_RID, category.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_RID, category.getRid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, category.getTimeStampLast());
         return cv;
     }
@@ -61,6 +61,7 @@ public class DBCategory {
             Uri uri = context.getContentResolver().insert(DBProvider.URI_CATEGORIES, cv);
             id = ContentUris.parseId(uri);
         } catch (Exception e) {
+            LLog.w(TAG, "unable to add category: " + e.getMessage());
         }
         return id;
     }
@@ -96,25 +97,26 @@ public class DBCategory {
     }
 
     public static LCategory getById(Context context, long id) {
-        Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
                     "_id=?", new String[]{"" + id}, null);
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with id: " + id);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find category with id: " + id);
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, category);
+                csr.moveToFirst();
+                getValues(csr, category);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get category with id: " + id + ":" + e.getMessage());
             category = null;
         }
-        if (csr != null) csr.close();
         return category;
     }
 
@@ -123,27 +125,28 @@ public class DBCategory {
     }
 
     public static LCategory getByName(Context context, String name) {
-        Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with name: " + name);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() < 1 || csr.getCount() > 1) {
+                    LLog.w(TAG, "unable to find category with name: " + name + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, category);
-            category.setId(csr.getLong(0));
+                csr.moveToFirst();
+                getValues(csr, category);
+                category.setId(csr.getLong(0));
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get category with name: " + name + ":" + e.getMessage());
             category = null;
         }
-        if (csr != null) csr.close();
         return category;
     }
 
@@ -152,26 +155,27 @@ public class DBCategory {
     }
 
     public static LCategory getByRid(Context context, String rid) {
-        Cursor csr = null;
         LCategory category = new LCategory();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
                     DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find category with rid: " + rid);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() > 1 || csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find category with rid: " + rid + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, category);
-            category.setId(csr.getLong(0));
+                csr.moveToFirst();
+                getValues(csr, category);
+                category.setId(csr.getLong(0));
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get category with rid: " + rid + ":" + e.getMessage());
             category = null;
         }
-        if (csr != null) csr.close();
         return category;
     }
 

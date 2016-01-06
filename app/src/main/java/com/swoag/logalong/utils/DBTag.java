@@ -22,7 +22,7 @@ public class DBTag {
         cv.put(DBHelper.TABLE_COLUMN_NAME, tag.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, tag.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, tag.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_RID, tag.getRid());
         return cv;
     }
 
@@ -72,25 +72,27 @@ public class DBTag {
     }
 
     public static LTag getById(Context context, long id) {
-        Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
                     "_id=?", new String[]{"" + id}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with id: " + id);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, tag);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find tag with id: " + id);
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, tag);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get tag with id: " + id + ":" + e.getMessage());
             tag = null;
         }
-        if (csr != null) csr.close();
         return tag;
     }
 
@@ -99,26 +101,28 @@ public class DBTag {
     }
 
     public static LTag getByName(Context context, String name) {
-        Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with name: " + name);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, tag);
+            if (csr != null) {
+                if (csr.getCount() > 1 || csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find tag with name: " + name + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, tag);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get tag with name: " + name + ":" + e.getMessage());
             tag = null;
         }
-        if (csr != null) csr.close();
         return tag;
     }
 
@@ -127,25 +131,27 @@ public class DBTag {
     }
 
     public static LTag getByRid(Context context, String rid) {
-        Cursor csr = null;
         LTag tag = new LTag();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_TAGS, null,
                     DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find tag with rid: " + rid);
-                csr.close();
-                return null;
-            }
 
-            csr.moveToFirst();
-            getValues(csr, tag);
+            if (csr != null) {
+                if (csr.getCount() > 1 || csr.getCount() < 1) {
+                    LLog.w(TAG, "unable to find tag with rid: " + rid + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, tag);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get tag with rid: " + rid + ":" + e.getMessage());
             tag = null;
         }
-        if (csr != null) csr.close();
         return tag;
     }
 

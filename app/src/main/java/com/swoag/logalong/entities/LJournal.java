@@ -93,6 +93,7 @@ public class LJournal {
 
     private static long lastFlushMs;
     private static long lastFlushId;
+
     public static void flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (entry != null) {
@@ -266,6 +267,7 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        LLog.d(TAG, "updating category: " + category.getName() + " UUID: " + category.getRid());
         record = ACTION_UPDATE_CATEGORY + ":"
                 + DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + category.getName() + ","
@@ -376,8 +378,13 @@ public class LJournal {
                 if (null == account1) {
                     accountId = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
+                    boolean update = false;
+                    if (sss[1].compareTo(account1.getRid()) > 0) {
                         account1.setRid(sss[1]);
+                        update = true;
+                    }
+
+                    if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
                         DBAccount.update(account1);
                     }
 
@@ -390,8 +397,13 @@ public class LJournal {
                 if (null == account1) {
                     account2Id = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
+                    boolean update = false;
+                    if (sss[1].compareTo(account1.getRid()) > 0) {
                         account1.setRid(sss[1]);
+                        update = true;
+                    }
+
+                    if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
                         DBAccount.update(account1);
                     }
 
@@ -402,11 +414,23 @@ public class LJournal {
 
                 LCategory category1 = DBCategory.getByName(sss[0]);
                 if (null == category1) {
+                    LLog.d(TAG, "adding category: " + sss[0] + " UUID: " + sss[1]);
                     categoryId = DBCategory.add(new LCategory(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
+                    boolean update = false;
+                    if (sss[1].compareTo(category1.getRid()) > 0) {
+                        LLog.d(TAG, "updating category: " + sss[0] + " UUID to : " + sss[1] + " from: " + category1.getRid());
                         category1.setRid(sss[1]);
+                        update = true;
+                    }
+
+                    if (update || Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
                         DBCategory.update(category1);
+
+                        /*LCategory cc = DBCategory.getByRid(category1.getRid());
+                        if (cc == null) {
+                            LLog.e(TAG, "not able to update category: " + category1.getName() + "UUID: " + category1.getRid());
+                        }*/
                     }
                     categoryId = category1.getId();
                 }
@@ -417,8 +441,13 @@ public class LJournal {
                 if (null == vendor1) {
                     vendorId = DBVendor.add(new LVendor(sss[0], sss[1], Integer.valueOf(sss[3])));
                 } else {
-                    if (Long.valueOf(sss[2]) >= vendor1.getTimeStampLast()) {
+                    boolean update = false;
+                    if (sss[1].compareTo(vendor1.getRid()) > 0) {
                         vendor1.setRid(sss[1]);
+                        update = true;
+                    }
+
+                    if (update || Long.valueOf(sss[2]) >= vendor1.getTimeStampLast()) {
                         vendor1.setType(Integer.valueOf(sss[3]));
                         vendor1.setTimeStampLast(Long.valueOf(sss[2]));
                         DBVendor.update(vendor1);
@@ -433,8 +462,13 @@ public class LJournal {
                 if (null == tag1) {
                     tagId = DBTag.add(new LTag(sss[0], sss[1]));
                 } else {
-                    if (Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
+                    boolean update = false;
+                    if (sss[1].compareTo(tag1.getRid()) > 0) {
                         tag1.setRid(sss[1]);
+                        update = true;
+                    }
+
+                    if (update || Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
                         DBTag.update(tag1);
                     }
 
@@ -508,7 +542,7 @@ public class LJournal {
         }
     }
 
-    public static void updateScheduledItemFromReceivedRecord(String receivedRecord) {
+    private static void updateScheduledItemFromReceivedRecord(String receivedRecord) {
         LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
 
         String[] splitRecords = receivedRecord.split(",", -1);
@@ -558,7 +592,7 @@ public class LJournal {
         }
     }
 
-    public static void updateAccountFromReceivedRecord(String receivedRecord) {
+    private static void updateAccountFromReceivedRecord(String receivedRecord) {
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;

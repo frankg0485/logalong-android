@@ -35,7 +35,7 @@ public class DBAccount {
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid().toString());
+        cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid());
         return cv;
     }
 
@@ -53,26 +53,26 @@ public class DBAccount {
     }
 
     public static LAccount getById(Context context, long id) {
-        Cursor csr = null;
-        String str = "";
         LAccount account = new LAccount();
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
                     "_id=?", new String[]{"" + id}, null);
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find account with id: " + id);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find account with id: " + id);
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, account);
-            account.setId(id);
+                csr.moveToFirst();
+                getValues(csr, account);
+                account.setId(id);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
             account = null;
         }
-        if (csr != null) csr.close();
         return account;
     }
 
@@ -81,26 +81,27 @@ public class DBAccount {
     }
 
     public static LAccount getByName(Context context, String name) {
-        Cursor csr = null;
         LAccount account = new LAccount();
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
-            if (csr != null && csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find account with name: " + name);
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() < 1 || csr.getCount() > 1) {
+                    LLog.w(TAG, "unable to find account with name: " + name + " count: " + csr.getCount());
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, account);
+                csr.moveToFirst();
+                getValues(csr, account);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with name: " + name + ":" + e.getMessage());
             account = null;
         }
-        if (csr != null) csr.close();
         return account;
     }
 
@@ -109,21 +110,14 @@ public class DBAccount {
     }
 
     public static LAccount getByRid(Context context, String rid) {
-        Cursor csr = null;
         LAccount account = null;
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
                     DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
             if (csr != null) {
-                if (csr.getCount() < 1) {
-                    LLog.w(TAG, "unable to find account with rid: " + rid);
 
-                    csr.close();
-                    return null;
-                }
-
-                if (csr.getCount() > 1) {
-                    LLog.w(TAG, "duplicated account with rid: " + rid + " : " + csr.getCount());
+                if (csr.getCount() < 1 || csr.getCount() > 1) {
+                    LLog.w(TAG, "unable to find account with uuid: " + rid + " count: " + csr.getCount());
                     csr.close();
                     return null;
                 }
@@ -131,11 +125,11 @@ public class DBAccount {
                 account = new LAccount();
                 csr.moveToFirst();
                 getValues(csr, account);
+                csr.close();
             }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with rid: " + rid + ":" + e.getMessage());
         }
-        if (csr != null) csr.close();
         return account;
     }
 
@@ -150,6 +144,7 @@ public class DBAccount {
             Uri uri = context.getContentResolver().insert(DBProvider.URI_ACCOUNTS, cv);
             id = ContentUris.parseId(uri);
         } catch (Exception e) {
+            LLog.w(TAG, "unable to add account: " + e.getMessage());
         }
         return id;
     }

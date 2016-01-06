@@ -92,7 +92,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_POLL_IDLE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
-                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE,
+                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID,
                 LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD,
                 LBroadcastReceiver.ACTION_JOURNAL_POSTED,
                 LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
@@ -217,11 +217,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                         DBAccount.add(account);
                     } else {
-                        //NOTE: potential racing issue that would cause account RID inconsistent?
-                        //if the racing ever happens where account share has been initiated from both
-                        //ends 'simultaneously', account will be left in an inconsistent state, but it
-                        //will cure itself when any transaction record is shared among users.
-                        account.setRid(uuid);
+                        if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
                         account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                         DBAccount.update(account);
                     }
@@ -249,19 +245,25 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 }
                 break;
 
-            case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE:
+            case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 userId = intent.getIntExtra("id", 0);
                 userName = intent.getStringExtra("userName");
                 accountName = intent.getStringExtra("accountName");
+                userFullName = intent.getStringExtra("userFullName");
+                uuid = intent.getStringExtra("UUID");
                 //TODO: notify user
 
                 LPreferences.setShareUserName(userId, userName);
+                LPreferences.setShareUserFullName(userId, userFullName);
+
                 account = DBAccount.getByName(accountName);
                 if (account == null) {
                     //TODO: the account name has been changed??
                     LLog.w(TAG, "warning: account renamed, account sharing ignored");
                 } else {
+                    if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
+
                     ArrayList<Integer> ids = account.getShareIds();
                     ArrayList<Integer> states = account.getShareStates();
                     for (int jj = 0; jj < ids.size(); jj++) {
@@ -328,10 +330,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountName = intent.getStringExtra("accountName");
                 uuid = intent.getStringExtra("UUID");
 
-                account = DBAccount.getByRid(uuid);
+                account = DBAccount.getByName(accountName);
                 if (account == null) {
                     LLog.w(TAG, "warning: account removed?");
                 } else {
+                    if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
+
                     if (change == 1) {
                         LLog.d(TAG, "account: " + accountName + " add share user: " + changeUserId);
                         //we receive this add request, *ONLY* because one of the shared peer accepted
@@ -344,7 +348,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         //already got all my records (from one of my shared peer), now it is your turn to
                         //push me all your current records, so we're in sync.
                         LProtocol.ui.getShareUserById(changeUserId);
-                        LProtocol.ui.shareAccountWithUser(changeUserId, accountName, uuid, false);
+                        LProtocol.ui.shareAccountWithUser(changeUserId, accountName, account.getRid(), false);
                     } else {
                         LLog.d(TAG, "account: " + accountName + " remove share user: " + changeUserId);
                         if (changeUserId == LPreferences.getUserId()) {
