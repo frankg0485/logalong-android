@@ -209,14 +209,14 @@ public class LJournal {
 
     private boolean post_item_update(LTransaction item) {
         LAccount account = DBAccount.getById(item.getAccount());
-        if (!account.isShared()) return false;
+        if (!account.isShareConfirmed()) return false;
 
         record += transactionItemString(item);
 
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
         for (int ii = 0; ii < states.size(); ii++) {
-            if ((states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) || (states.get(ii) == LAccount.ACCOUNT_SHARE_INVITED)) {
+            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
                 post(ids.get(ii));
             }
         }
@@ -306,7 +306,7 @@ public class LJournal {
     private boolean post_schedule_item_update(LScheduledTransaction sch) {
         LTransaction item = sch.getItem();
         LAccount account = DBAccount.getById(item.getAccount());
-        if ((null == account) || (!account.isShared())) return false;
+        if ((null == account) || (!account.isShareConfirmed())) return false;
 
         record += transactionItemString(item) + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_COUNT + "=" + sch.getRepeatCount() + ","
@@ -317,7 +317,7 @@ public class LJournal {
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
         for (int ii = 0; ii < states.size(); ii++) {
-            if ((states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) || (states.get(ii) == LAccount.ACCOUNT_SHARE_INVITED)) {
+            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
                 post(ids.get(ii));
             }
         }
@@ -361,7 +361,7 @@ public class LJournal {
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
         for (int ii = 0; ii < states.size(); ii++) {
-            if ((states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) || (states.get(ii) == LAccount.ACCOUNT_SHARE_INVITED)) {
+            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
                 post(ids.get(ii));
             }
         }
@@ -369,13 +369,13 @@ public class LJournal {
     }
 
     public boolean updateAccount(LAccount account, String oldName) {
-        if (!account.isShared()) return false;
+        if (!account.isShareConfirmed()) return false;
         record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
         return post_account_update(account);
     }
 
     public boolean updateAccount(LAccount account, int oldState) {
-        if (!account.isShared()) return false;
+        if (!account.isShareConfirmed()) return false;
 
         record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_account_update(account);
