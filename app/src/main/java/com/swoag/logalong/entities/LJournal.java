@@ -756,19 +756,22 @@ public class LJournal {
         return item;
     }
 
-    private static boolean itemHasConflict(LTransaction item, OldRecord old) {
+    //return 0: has old value, but no conflict
+    //       1: has old value, has conflict
+    //       2. no old value
+    private static int itemHasConflict(LTransaction item, OldRecord old) {
         if ((old.oldState && old.state != item.getState())
                 || (old.oldAmount && old.amount != item.getValue())
                 || (old.oldTimestamp && old.timestamp != item.getTimeStamp())
                 || (old.oldType && old.type != item.getType())
                 || (old.oldNote && (!old.note.contentEquals(item.getNote()))))
-            return true;
+            return 1;
 
         if (old.oldAccount) {
             LAccount account = DBAccount.getById(item.getAccount());
             if (!old.accountName.contentEquals(account.getName())) {
                 LLog.w(TAG, "account conflict: " + old.accountName + " : " + account.getName());
-                return true;
+                return 1;
             }
         }
 
@@ -776,7 +779,7 @@ public class LJournal {
             LAccount account = DBAccount.getById(item.getAccount2());
             if (!old.account2Name.contentEquals(account.getName())) {
                 LLog.w(TAG, "account2 conflict: " + old.account2Name + " : " + account.getName());
-                return true;
+                return 1;
             }
         }
 
@@ -784,7 +787,7 @@ public class LJournal {
             LCategory category = DBCategory.getById(item.getCategory());
             if (!old.categoryName.contentEquals(category.getName())) {
                 LLog.w(TAG, "category conflict: " + old.categoryName + " : " + category.getName());
-                return true;
+                return 1;
             }
         }
 
@@ -792,7 +795,7 @@ public class LJournal {
             LVendor vendor = DBVendor.getById(item.getVendor());
             if (!old.vendorName.contentEquals(vendor.getName())) {
                 LLog.w(TAG, "vendor conflict: " + old.vendorName + " : " + vendor.getName());
-                return true;
+                return 1;
             }
 
         }
@@ -801,11 +804,20 @@ public class LJournal {
             LTag tag = DBTag.getById(item.getTag());
             if (!old.tagName.contentEquals(tag.getName())) {
                 LLog.w(TAG, "tag conflict: " + old.tagName + " : " + tag.getName());
-                return true;
+                return 1;
             }
         }
 
-        return false;
+        return ((!old.oldState)
+                && (!old.oldAmount)
+                && (!old.oldTimestamp)
+                && (!old.oldType)
+                && (!old.oldNote)
+                && (!old.oldAccount)
+                && (!old.oldAccount2)
+                && (!old.oldCategory)
+                && (!old.oldVendor)
+                && (!old.oldTag)) ? 2 : 0;
     }
 
     public static void updateItemFromReceivedRecord(String receivedRecord) {
@@ -814,9 +826,27 @@ public class LJournal {
 
         LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
         if (item != null) {
-            boolean conflict = itemHasConflict(item, oldRecord);
+            int conflict = itemHasConflict(item, oldRecord);
+            LLog.d(TAG, "update item conflict? " + conflict);
+            if (conflict == 0) {
+                if (oldRecord.oldState) item.setState(receivedItem.getState());
+                if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
+                if (oldRecord.oldType) item.setType(receivedItem.getType());
+                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
+                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
+                if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
+                if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
+                if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
+                if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
+                if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
 
-            if (!conflict || item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+                item.setBy(receivedItem.getBy());
+                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
+
+                LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
+                DBTransaction.update(item);
+            } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -830,9 +860,10 @@ public class LJournal {
                 if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
                     item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
+                LLog.d(TAG, "override: update item, amount: " + item.getValue());
                 DBTransaction.update(item);
             } else {
-                LLog.w(TAG, "conflicts: received journal ignored amount: " + item.getValue());
+                LLog.w(TAG, "conflicts: " + conflict + " received journal ignored amount: " + item.getValue());
                 /*LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
                         + (new Date(item.getTimeStampLast()) + ":"
                         + (new Date(receivedItem.getTimeStampLast())))
@@ -902,15 +933,39 @@ public class LJournal {
         LScheduledTransaction sch = DBScheduledTransaction.getByRid(receivedItem.getRid());
         if (sch != null) {
             LTransaction item = sch.getItem();
-            boolean conflict = itemHasConflict(item, oldRecord);
-            if (!conflict) {
-                conflict = ((oldCountFound && oldCount != repeatCount)
+            int conflict = itemHasConflict(item, oldRecord);
+            if (conflict != 1) {
+                if ((oldCountFound && oldCount != repeatCount)
                         || (oldIntervalFound && oldInterval != repeatInterval)
                         || (oldUnitFound && oldUnit != repeatUnit)
-                        || (oldTimestampFound && oldTimestamp != timestamp));
+                        || (oldTimestampFound && oldTimestamp != timestamp)) {
+                    conflict = 1;
+                } else {
+                    conflict = ((!oldCountFound) && (!oldIntervalFound) && (!oldUnitFound) && (!oldTimestampFound)) ? 2 : 0;
+                }
             }
 
-            if (!conflict || item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+            if (conflict == 0) {
+                if (oldRecord.oldState) item.setState(receivedItem.getState());
+                if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
+                if (oldRecord.oldType) item.setType(receivedItem.getType());
+                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
+                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
+                if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
+                if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
+                if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
+                if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
+                if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
+                item.setBy(receivedItem.getBy());
+                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
+
+                if (oldCountFound) sch.setRepeatCount(repeatCount);
+                if (oldIntervalFound) sch.setRepeatInterval(repeatInterval);
+                if (oldUnitFound) sch.setRepeatUnit(repeatUnit);
+                if (oldTimestampFound) sch.setTimestamp(timestamp);
+                DBScheduledTransaction.update(sch);
+            } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
