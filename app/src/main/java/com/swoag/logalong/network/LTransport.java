@@ -5,7 +5,6 @@ import com.swoag.logalong.utils.LBuffer;
 
 public class LTransport {
     private static final String TAG = LTransport.class.getSimpleName();
-    private static int sequence;
 
     public static void scramble(byte[] buf, int off, int bytes, int scrambler) {
         byte[] ss = new byte[4];

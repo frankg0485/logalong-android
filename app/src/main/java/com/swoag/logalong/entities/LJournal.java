@@ -207,11 +207,11 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateItem(LTransaction item) {
+    private boolean post_item_update(LTransaction item) {
         LAccount account = DBAccount.getById(item.getAccount());
         if (!account.isShared()) return false;
 
-        record = ACTION_UPDATE_ITEM + ":" + transactionItemString(item);
+        record += transactionItemString(item);
 
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
@@ -223,13 +223,92 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateScheduledItem(LScheduledTransaction sch) {
+    public boolean updateItem(LTransaction item, int oldState) {
+        record = ACTION_UPDATE_ITEM + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_item_update(item);
+    }
+
+    private void item_diff(LTransaction item, LTransaction oldItem) {
+        if (oldItem.getValue() != item.getValue()) {
+            record += DBHelper.TABLE_COLUMN_AMOUNT + "old=" + oldItem.getValue() + ",";
+        }
+        if (oldItem.getAccount() != item.getAccount()) {
+            LAccount oldAccount = DBAccount.getById(oldItem.getAccount());
+            record += DBHelper.TABLE_COLUMN_ACCOUNT + "old=" + oldAccount.getName()
+                    + ";" + oldAccount.getRid()
+                    + ";" + oldAccount.getTimeStampLast()
+                    + ",";
+        }
+        if (oldItem.getAccount2() != item.getAccount2()) {
+            LAccount oldAccount = DBAccount.getById(oldItem.getAccount2());
+            if (oldAccount != null && (!TextUtils.isEmpty(oldAccount.getName()))) {
+                record += DBHelper.TABLE_COLUMN_ACCOUNT2 + "old=" + oldAccount.getName()
+                        + ";" + oldAccount.getRid()
+                        + ";" + oldAccount.getTimeStampLast()
+                        + ",";
+            }
+        }
+        if (oldItem.getType() != item.getType()) {
+            record += DBHelper.TABLE_COLUMN_TYPE + "old=" + oldItem.getType() + ",";
+        }
+        if (oldItem.getCategory() != item.getCategory()) {
+            LCategory category = DBCategory.getById(oldItem.getCategory());
+            if (category != null && (!TextUtils.isEmpty(category.getName()))) {
+                record += DBHelper.TABLE_COLUMN_CATEGORY + "old=" + category.getName()
+                        + ";" + category.getRid()
+                        + ";" + category.getTimeStampLast()
+                        + ",";
+            }
+        }
+        if (oldItem.getVendor() != item.getVendor()) {
+            LVendor vendor = DBVendor.getById(oldItem.getVendor());
+            if (vendor != null && (!TextUtils.isEmpty(vendor.getName()))) {
+                record += DBHelper.TABLE_COLUMN_VENDOR + "old=" + vendor.getName()
+                        + ";" + vendor.getRid()
+                        + ";" + vendor.getTimeStampLast()
+                        + ";" + vendor.getType()
+                        + ",";
+            }
+        }
+        if (oldItem.getTag() != item.getTag()) {
+            LTag tag = DBTag.getById(oldItem.getTag());
+            if (tag != null && (!TextUtils.isEmpty(tag.getName()))) {
+                record += DBHelper.TABLE_COLUMN_TAG + "old=" + tag.getName()
+                        + ";" + tag.getRid()
+                        + ";" + tag.getTimeStampLast()
+                        + ",";
+            }
+        }
+        if (oldItem.getTimeStamp() != item.getTimeStamp()) {
+            record += DBHelper.TABLE_COLUMN_TIMESTAMP + "old=" + oldItem.getTimeStamp() + ",";
+        }
+
+        if (!oldItem.getNote().contentEquals(item.getNote())) {
+            if (!TextUtils.isEmpty(oldItem.getNote())) {
+                record += DBHelper.TABLE_COLUMN_NOTE + "old=" + oldItem.getNote() + ",";
+            } else {
+                record += DBHelper.TABLE_COLUMN_NOTE + "old=_,";
+            }
+        }
+    }
+
+    public boolean updateItem(LTransaction item, LTransaction oldItem) {
+        record = ACTION_UPDATE_ITEM + ":";
+        item_diff(item, oldItem);
+        return post_item_update(item);
+    }
+
+    public boolean updateItem(LTransaction item) {
+        record = ACTION_UPDATE_ITEM + ":";
+        return post_item_update(item);
+    }
+
+    private boolean post_schedule_item_update(LScheduledTransaction sch) {
         LTransaction item = sch.getItem();
         LAccount account = DBAccount.getById(item.getAccount());
         if ((null == account) || (!account.isShared())) return false;
 
-        record = ACTION_UPDATE_SCHEDULED_ITEM + ":" + transactionItemString(item);
-        record += ","
+        record += transactionItemString(item) + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_COUNT + "=" + sch.getRepeatCount() + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_INTERVAL + "=" + sch.getRepeatInterval() + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_UNIT + "=" + sch.getRepeatUnit() + ","
@@ -245,8 +324,35 @@ public class LJournal {
         return true;
     }
 
-    private boolean post_account_update(LAccount account) {
+    public boolean updateScheduledItem(LScheduledTransaction sch, int oldState) {
+        record = ACTION_UPDATE_SCHEDULED_ITEM + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        return post_schedule_item_update(sch);
+    }
 
+    public boolean updateScheduledItem(LScheduledTransaction sch, LScheduledTransaction oldSch) {
+        record = ACTION_UPDATE_SCHEDULED_ITEM + ":";
+        if (oldSch.getRepeatCount() != sch.getRepeatCount()) {
+            record += DBHelper.TABLE_COLUMN_REPEAT_COUNT + "old=" + oldSch.getRepeatCount() + ",";
+        }
+        if (oldSch.getRepeatUnit() != sch.getRepeatUnit()) {
+            record += DBHelper.TABLE_COLUMN_REPEAT_UNIT + "old=" + oldSch.getRepeatUnit() + ",";
+        }
+        if (oldSch.getRepeatInterval() != sch.getRepeatInterval()) {
+            record += DBHelper.TABLE_COLUMN_REPEAT_INTERVAL + "old=" + oldSch.getRepeatInterval() + ",";
+        }
+        if (oldSch.getTimestamp() != sch.getTimestamp()) {
+            record += DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + "old=" + oldSch.getTimestamp() + ",";
+        }
+        item_diff(sch.getItem(), oldSch.getItem());
+        return post_schedule_item_update(sch);
+    }
+
+    public boolean updateScheduledItem(LScheduledTransaction sch) {
+        record = ACTION_UPDATE_SCHEDULED_ITEM + ":";
+        return post_schedule_item_update(sch);
+    }
+
+    private boolean post_account_update(LAccount account) {
         record += DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
@@ -400,7 +506,59 @@ public class LJournal {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    private static LTransaction parseItemFromReceivedRecord(String receivedRecord) {
+    private static class OldRecord {
+        boolean oldState;
+        boolean oldAccount;
+        boolean oldAccount2;
+        boolean oldCategory;
+        boolean oldVendor;
+        boolean oldTag;
+        boolean oldType;
+        boolean oldNote;
+        boolean oldAmount;
+        boolean oldTimestamp;
+
+        int state;
+        String accountName;
+        String accountRid;
+        long accountTimeStampLast;
+
+        String account2Name;
+        String account2Rid;
+        long account2TimeStampLast;
+
+        String categoryName;
+        String categoryRid;
+        long categoryTimeStampLast;
+
+        String vendorName;
+        String vendorRid;
+        long vendorTimeStampLast;
+
+        String tagName;
+        String tagRid;
+        long tagTimeStampLast;
+
+        int type;
+        String note;
+        double amount;
+        long timestamp;
+
+        public OldRecord() {
+            oldState = false;
+            oldAccount = false;
+            oldAccount2 = false;
+            oldAmount = false;
+            oldCategory = false;
+            oldVendor = false;
+            oldTag = false;
+            oldType = false;
+            oldNote = false;
+            oldTimestamp = false;
+        }
+    }
+
+    private static LTransaction parseItemFromReceivedRecord(String receivedRecord, OldRecord oldRecord) {
         LTransaction item = new LTransaction();
 
         String[] splitRecords = receivedRecord.split(",", -1);
@@ -438,33 +596,31 @@ public class LJournal {
                         account1.setRid(sss[1]);
                         update = true;
                     }
-
-                    if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
                         account1.setTimeStampLast(Long.parseLong(sss[2]));
-                        DBAccount.update(account1);
+                        update = true;
                     }
-
+                    if (update) DBAccount.update(account1);
                     accountId = account1.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2)) {
                 String[] sss = ss[1].split(";");
 
-                LAccount account1 = DBAccount.getByName(sss[0]);
-                if (null == account1) {
+                LAccount account2 = DBAccount.getByName(sss[0]);
+                if (null == account2) {
                     account2Id = DBAccount.add(new LAccount(sss[0], sss[1]));
                 } else {
                     boolean update = false;
-                    if (sss[1].compareTo(account1.getRid()) > 0) {
-                        account1.setRid(sss[1]);
+                    if (sss[1].compareTo(account2.getRid()) > 0) {
+                        account2.setRid(sss[1]);
                         update = true;
                     }
-
-                    if (update || Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
-                        account1.setTimeStampLast(Long.parseLong(sss[2]));
-                        DBAccount.update(account1);
+                    if (Long.parseLong(sss[2]) >= account2.getTimeStampLast()) {
+                        account2.setTimeStampLast(Long.parseLong(sss[2]));
+                        update = true;
                     }
-
-                    account2Id = account1.getId();
+                    if (update) DBAccount.update(account2);
+                    account2Id = account2.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
                 String[] sss = ss[1].split(";");
@@ -480,11 +636,10 @@ public class LJournal {
                         category1.setRid(sss[1]);
                         update = true;
                     }
-
-                    if (update || Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
                         category1.setTimeStampLast(Long.parseLong(sss[2]));
-                        DBCategory.update(category1);
                     }
+                    if (update) DBCategory.update(category1);
                     categoryId = category1.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR)) {
@@ -499,13 +654,12 @@ public class LJournal {
                         vendor1.setRid(sss[1]);
                         update = true;
                     }
-
-                    if (update || Long.valueOf(sss[2]) >= vendor1.getTimeStampLast()) {
+                    if (Long.valueOf(sss[2]) >= vendor1.getTimeStampLast()) {
                         vendor1.setType(Integer.valueOf(sss[3]));
                         vendor1.setTimeStampLast(Long.valueOf(sss[2]));
-                        DBVendor.update(vendor1);
+                        update = true;
                     }
-
+                    if (update) DBVendor.update(vendor1);
                     vendorId = vendor1.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TAG)) {
@@ -520,18 +674,67 @@ public class LJournal {
                         tag1.setRid(sss[1]);
                         update = true;
                     }
-
-                    if (update || Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
+                    if (Long.parseLong(sss[2]) >= tag1.getTimeStampLast()) {
                         tag1.setTimeStampLast(Long.parseLong(sss[2]));
-                        DBTag.update(tag1);
+                        update = true;
                     }
-
+                    if (update) DBTag.update(tag1);
                     tagId = tag1.getId();
                 }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NOTE)) {
                 note = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldRecord.oldState = true;
+                oldRecord.state = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TYPE + "old")) {
+                oldRecord.oldType = true;
+                oldRecord.type = Integer.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_AMOUNT + "old")) {
+                oldRecord.oldAmount = true;
+                oldRecord.amount = Double.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP + "old")) {
+                oldRecord.oldTimestamp = true;
+                oldRecord.timestamp = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NOTE + "old")) {
+                oldRecord.oldNote = true;
+                oldRecord.note = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT + "old")) {
+                oldRecord.oldAccount = true;
+
+                String[] sss = ss[1].split(";");
+                oldRecord.accountName = sss[0];
+                oldRecord.accountRid = sss[1];
+                oldRecord.accountTimeStampLast = Long.parseLong(sss[2]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2 + "old")) {
+                oldRecord.oldAccount2 = true;
+
+                String[] sss = ss[1].split(";");
+                oldRecord.account2Name = sss[0];
+                oldRecord.account2Rid = sss[1];
+                oldRecord.account2TimeStampLast = Long.parseLong(sss[2]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY + "old")) {
+                oldRecord.oldCategory = true;
+
+                String[] sss = ss[1].split(";");
+                oldRecord.categoryName = sss[0];
+                oldRecord.categoryRid = sss[1];
+                oldRecord.categoryTimeStampLast = Long.parseLong(sss[2]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR + "old")) {
+                oldRecord.oldVendor = true;
+
+                String[] sss = ss[1].split(";");
+                oldRecord.vendorName = sss[0];
+                oldRecord.vendorRid = sss[1];
+                oldRecord.vendorTimeStampLast = Long.parseLong(sss[2]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TAG + "old")) {
+                oldRecord.oldTag = true;
+
+                String[] sss = ss[1].split(";");
+                oldRecord.tagName = sss[0];
+                oldRecord.tagRid = sss[1];
+                oldRecord.tagTimeStampLast = Long.parseLong(sss[2]);
             }
         }
 
@@ -552,12 +755,67 @@ public class LJournal {
         return item;
     }
 
+    private static boolean itemHasConflict(LTransaction item, OldRecord old) {
+        if ((old.oldState && old.state != item.getState())
+                || (old.oldAmount && old.amount != item.getValue())
+                || (old.oldTimestamp && old.timestamp != item.getTimeStamp())
+                || (old.oldType && old.type != item.getType())
+                || (old.oldNote && (!old.note.contentEquals(item.getNote()))))
+            return true;
+
+        if (old.oldAccount) {
+            LAccount account = DBAccount.getById(item.getAccount());
+            if (!old.accountName.contentEquals(account.getName())) {
+                LLog.w(TAG, "account conflict: " + old.accountName + " : " + account.getName());
+                return true;
+            }
+        }
+
+        if (old.oldAccount2) {
+            LAccount account = DBAccount.getById(item.getAccount2());
+            if (!old.account2Name.contentEquals(account.getName())) {
+                LLog.w(TAG, "account2 conflict: " + old.account2Name + " : " + account.getName());
+                return true;
+            }
+        }
+
+        if (old.oldCategory) {
+            LCategory category = DBCategory.getById(item.getCategory());
+            if (!old.categoryName.contentEquals(category.getName())) {
+                LLog.w(TAG, "category conflict: " + old.categoryName + " : " + category.getName());
+                return true;
+            }
+        }
+
+        if (old.oldVendor) {
+            LVendor vendor = DBVendor.getById(item.getVendor());
+            if (!old.vendorName.contentEquals(vendor.getName())) {
+                LLog.w(TAG, "vendor conflict: " + old.vendorName + " : " + vendor.getName());
+                return true;
+            }
+
+        }
+
+        if (old.oldTag) {
+            LTag tag = DBTag.getById(item.getTag());
+            if (!old.tagName.contentEquals(tag.getName())) {
+                LLog.w(TAG, "tag conflict: " + old.tagName + " : " + tag.getName());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static void updateItemFromReceivedRecord(String receivedRecord) {
-        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
+        OldRecord oldRecord = new OldRecord();
+        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord, oldRecord);
 
         LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
         if (item != null) {
-            if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+            boolean conflict = itemHasConflict(item, oldRecord);
+
+            if (!conflict || item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -568,7 +826,8 @@ public class LJournal {
                 item.setTag(receivedItem.getTag());
                 item.setBy(receivedItem.getBy());
                 item.setTimeStamp(receivedItem.getTimeStamp());
-                item.setTimeStampLast(receivedItem.getTimeStampLast());
+                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
                 DBTransaction.update(item);
             } else {
@@ -581,7 +840,7 @@ public class LJournal {
                         */
             }
         } else {
-            DBTransaction.add(new LTransaction(receivedItem.getRid().toString(),
+            DBTransaction.add(new LTransaction(receivedItem.getRid(),
                     receivedItem.getValue(),
                     receivedItem.getType(),
                     receivedItem.getCategory(),
@@ -597,13 +856,22 @@ public class LJournal {
     }
 
     private static void updateScheduledItemFromReceivedRecord(String receivedRecord) {
-        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord);
+        OldRecord oldRecord = new OldRecord();
+        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord, oldRecord);
 
         String[] splitRecords = receivedRecord.split(",", -1);
         long timestamp = 0;
         int repeatUnit = LScheduledTransaction.REPEAT_UNIT_MONTH;
         int repeatInterval = 1;
         int repeatCount = 0;
+        boolean oldTimestampFound = false;
+        boolean oldIntervalFound = false;
+        boolean oldUnitFound = false;
+        boolean oldCountFound = false;
+        long oldTimestamp = 0;
+        int oldInterval = 0;
+        int oldUnit = 0;
+        int oldCount = 0;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
@@ -615,13 +883,33 @@ public class LJournal {
                 repeatUnit = Integer.parseInt(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)) {
                 timestamp = Long.parseLong(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_COUNT + "old")) {
+                oldCountFound = true;
+                oldCount = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL + "old")) {
+                oldIntervalFound = true;
+                oldInterval = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_REPEAT_UNIT + "old")) {
+                oldUnitFound = true;
+                oldUnit = Integer.parseInt(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + "old")) {
+                oldTimestampFound = true;
+                oldTimestamp = Long.parseLong(ss[1]);
             }
         }
 
         LScheduledTransaction sch = DBScheduledTransaction.getByRid(receivedItem.getRid());
         if (sch != null) {
             LTransaction item = sch.getItem();
-            if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+            boolean conflict = itemHasConflict(item, oldRecord);
+            if (!conflict) {
+                conflict = ((oldCountFound && oldCount != repeatCount)
+                        || (oldIntervalFound && oldInterval != repeatInterval)
+                        || (oldUnitFound && oldUnit != repeatUnit)
+                        || (oldTimestampFound && oldTimestamp != timestamp));
+            }
+
+            if (!conflict || item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -632,7 +920,8 @@ public class LJournal {
                 item.setTag(receivedItem.getTag());
                 item.setBy(receivedItem.getBy());
                 item.setTimeStamp(receivedItem.getTimeStamp());
-                item.setTimeStampLast(receivedItem.getTimeStampLast());
+                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
                 item.setNote(receivedItem.getNote());
 
                 sch.setTimestamp(timestamp);
@@ -681,11 +970,17 @@ public class LJournal {
         if (!TextUtils.isEmpty(rid)) {
             LAccount account = DBAccount.getByRid(rid);
             if (account == null) {
-                LLog.w(TAG, "account removed?");
+                LLog.w(TAG, "account removed? " + name + " : " + rid);
             } else {
-                if ((oldStateFound && oldState == account.getState())
-                        || (oldNameFound && oldName.contentEquals(account.getName()))
-                        || (account.getTimeStampLast() <= timestampLast)) {
+                boolean conflict = true;
+                if (oldNameFound || oldStateFound) {
+                    conflict = false;
+                    if ((oldStateFound && oldState != account.getState())
+                            || (oldNameFound && !oldName.contentEquals(account.getName())))
+                        conflict = true;
+                }
+
+                if (!conflict || (account.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) account.setName(name);
                     if (stateFound) account.setState(state);
 
@@ -740,9 +1035,15 @@ public class LJournal {
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
             } else {
-                if ((oldStateFound && oldState == category.getState())
-                        || (oldNameFound && oldName.contentEquals(category.getName()))
-                        || (category.getTimeStampLast() <= timestampLast)) {
+                boolean conflict = true;
+                if (oldNameFound || oldStateFound) {
+                    conflict = false;
+                    if ((oldStateFound && oldState != category.getState())
+                            || (oldNameFound && !oldName.contentEquals(category.getName())))
+                        conflict = true;
+                }
+
+                if (!conflict || (category.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
                     if (category.getTimeStampLast() < timestampLast)
@@ -796,9 +1097,15 @@ public class LJournal {
                 vendor = new LVendor(name, type, rid, timestampLast);
                 DBVendor.add(vendor);
             } else {
-                if ((oldStateFound && oldState == vendor.getState())
-                        || (oldNameFound && oldName.contentEquals(vendor.getName()))
-                        || (vendor.getTimeStampLast() <= timestampLast)) {
+                boolean conflict = true;
+                if (oldNameFound || oldStateFound) {
+                    conflict = false;
+                    if ((oldStateFound && oldState != vendor.getState())
+                            || (oldNameFound && !oldName.contentEquals(vendor.getName())))
+                        conflict = true;
+                }
+
+                if (!conflict || (vendor.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
                     if (typeFound) vendor.setType(type);
@@ -848,12 +1155,18 @@ public class LJournal {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
             } else {
-                if ((oldStateFound && oldState == tag.getState())
-                        || (oldNameFound && oldName.contentEquals(tag.getName()))
-                        || (tag.getTimeStampLast() <= timestampLast)) {
+                boolean conflict = true;
+                if (oldNameFound || oldStateFound) {
+                    conflict = false;
+                    if ((oldStateFound && oldState != tag.getState())
+                            || (oldNameFound && !oldName.contentEquals(tag.getName())))
+                        conflict = true;
+                }
+                if (!conflict || (tag.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
-                    if (tag.getTimeStampLast() < timestampLast) tag.setTimeStampLast(timestampLast);
+                    if (tag.getTimeStampLast() < timestampLast)
+                        tag.setTimeStampLast(timestampLast);
                     DBTag.update(tag);
                 }
             }

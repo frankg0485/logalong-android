@@ -124,7 +124,11 @@ public class ScheduleActivity extends LFragmentActivity implements
                     scheduledItem.setAlarm();
 
                     LJournal journal = new LJournal();
-                    journal.updateScheduledItem(scheduledItem);
+                    if (createNew) {
+                        journal.updateScheduledItem(scheduledItem);
+                    } else {
+                        journal.updateScheduledItem(scheduledItem, itemOrig);
+                    }
                 }
                 break;
 
@@ -137,7 +141,7 @@ public class ScheduleActivity extends LFragmentActivity implements
 
                 LJournal journal = new LJournal();
                 scheduledItem.getItem().setState(DBHelper.STATE_DELETED);
-                journal.updateScheduledItem(scheduledItem);
+                journal.updateScheduledItem(scheduledItem, DBHelper.STATE_ACTIVE);
                 break;
         }
 
@@ -147,7 +151,11 @@ public class ScheduleActivity extends LFragmentActivity implements
         oldCursor.close();
     }
 
+    private LScheduledTransaction itemOrig;
+
     private void openSchedule(LScheduledTransaction item, boolean create) {
+        itemOrig = new LScheduledTransaction(item);
+
         createNew = create;
         edit = new ScheduledTransactionEdit(this, rootView, item, create, this);
 

@@ -576,6 +576,7 @@ public class ViewTransactionFragment extends LFragment implements
 
     private class MyCursorAdapter extends CursorAdapter implements TransactionEdit.TransitionEditItf {
         private LTransaction item;
+        private LTransaction itemOrig;
         private LSectionSummary sectionSummary;
         private ClickListener clickListener;
 
@@ -746,6 +747,7 @@ public class ViewTransactionFragment extends LFragment implements
                 VTag tag = (VTag) v.getTag();
 
                 item = DBTransaction.getById(tag.id);
+                itemOrig = new LTransaction(item);
 
                 edit = new TransactionEdit(getActivity(), rootView, item, false, false, MyCursorAdapter.this);
 
@@ -765,7 +767,7 @@ public class ViewTransactionFragment extends LFragment implements
                         item.setTimeStampLast(System.currentTimeMillis());
                         DBTransaction.update(item);
                         LJournal journal = new LJournal();
-                        journal.updateItem(item);
+                        journal.updateItem(item, itemOrig);
 
                         onSelected(true);
                     }
@@ -779,7 +781,7 @@ public class ViewTransactionFragment extends LFragment implements
                     item.setState(DBHelper.STATE_DELETED);
                     DBTransaction.update(item);
                     LJournal journal = new LJournal();
-                    journal.updateItem(item);
+                    journal.updateItem(item, DBHelper.STATE_ACTIVE);
 
                     onSelected(true);
                     break;

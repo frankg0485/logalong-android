@@ -363,6 +363,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     }
                 }
                 break;
+
+            case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
+            case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                LProtocol.ui.pollAck(cacheId);
+                break;
         }
     }
 }

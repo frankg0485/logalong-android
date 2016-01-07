@@ -29,6 +29,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_USER_PROFILE_UPDATED = 84;
     public static final int ACTION_NETWORK_CONNECTED = 90;
     public static final int ACTION_SERVER_BROADCAST_MSG_RECEIVED = 1000;
+    public static final int ACTION_UNKNOWN_MSG = 9999;
 
     private static LBroadcastReceiver instance;
 

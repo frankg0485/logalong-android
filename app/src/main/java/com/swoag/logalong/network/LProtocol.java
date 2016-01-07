@@ -219,14 +219,19 @@ public class LProtocol {
         String msg = pkt.getStringAutoInc(bytes);
         String str = msg.replaceAll("\\\\n", "\\\n");
         LPreferences.setServerMsg(str);
-        LProtocol.ui.pollAck(cacheId);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra("cacheId", cacheId);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
-    ;
+    private void handlerUnknownMsg(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra("cacheId", cacheId);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
 
+    //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
     private int consumePacket(LBuffer pkt) {
         Intent rspsIntent;
         int origOffset = pkt.getBufOffset();
@@ -381,7 +386,7 @@ public class LProtocol {
 
                         default:
                             LLog.w(TAG, "ignore: unknown command: " + cmd + " cacheId: " + cacheId);
-                            LProtocol.ui.pollAck(cacheId);
+                            handlerUnknownMsg(pkt, status, LBroadcastReceiver.ACTION_UNKNOWN_MSG, cacheId);
                             break;
                     }
                 } else {
