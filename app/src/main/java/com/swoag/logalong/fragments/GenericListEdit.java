@@ -347,46 +347,62 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
-                        LAccount account = DBAccount.getById(tag.id);
-                        String oldName = account.getName();
-                        account.setName(newName);
-                        account.setTimeStampLast(LPreferences.getServerUtc());
-                        DBAccount.update(account);
+                        if (DBAccount.getByName(newName) != null) {
+                            //TODO: prompt user for name duplicate
+                        } else {
+                            LAccount account = DBAccount.getById(tag.id);
+                            String oldName = account.getName();
+                            account.setName(newName);
+                            account.setTimeStampLast(LPreferences.getServerUtc());
+                            DBAccount.update(account);
 
-                        LJournal journal = new LJournal();
-                        journal.updateAccount(account, oldName);
+                            LJournal journal = new LJournal();
+                            journal.updateAccount(account, oldName);
+                        }
                         break;
 
                     case R.id.categories:
-                        LCategory category = DBCategory.getById(tag.id);
-                        oldName = category.getName();
-                        category.setName(newName);
-                        category.setTimeStampLast(LPreferences.getServerUtc());
-                        DBCategory.update(category);
+                        if (DBCategory.getByName(newName) != null) {
+                            //TODO: prompt user for name duplicate
+                        } else {
+                            LCategory category = DBCategory.getById(tag.id);
+                            String oldName = category.getName();
+                            category.setName(newName);
+                            category.setTimeStampLast(LPreferences.getServerUtc());
+                            DBCategory.update(category);
 
-                        journal = new LJournal();
-                        journal.updateCategory(category, oldName);
+                            LJournal journal = new LJournal();
+                            journal.updateCategory(category, oldName);
+                        }
                         break;
 
                     case R.id.vendors:
-                        LVendor vendor = DBVendor.getById(tag.id);
-                        oldName = vendor.getName();
-                        vendor.setName(newName);
-                        vendor.setTimeStampLast(LPreferences.getServerUtc());
-                        DBVendor.update(vendor);
+                        if (DBVendor.getByName(newName) != null) {
+                            //TODO: prompt user for name duplicate
+                        } else {
+                            LVendor vendor = DBVendor.getById(tag.id);
+                            String oldName = vendor.getName();
+                            vendor.setName(newName);
+                            vendor.setTimeStampLast(LPreferences.getServerUtc());
+                            DBVendor.update(vendor);
 
-                        journal = new LJournal();
-                        journal.updateVendor(vendor, oldName);
+                            LJournal journal = new LJournal();
+                            journal.updateVendor(vendor, oldName);
+                        }
                         break;
                     case R.id.tags:
-                        LTag tag1 = DBTag.getById(tag.id);
-                        oldName = tag1.getName();
-                        tag1.setName(newName);
-                        tag1.setTimeStampLast(LPreferences.getServerUtc());
-                        DBTag.update(tag1);
+                        if (DBTag.getByName(newName) != null) {
+                            //TODO: prompt user for name duplicate
+                        } else {
+                            LTag tag1 = DBTag.getById(tag.id);
+                            String oldName = tag1.getName();
+                            tag1.setName(newName);
+                            tag1.setTimeStampLast(LPreferences.getServerUtc());
+                            DBTag.update(tag1);
 
-                        journal = new LJournal();
-                        journal.updateTag(tag1, oldName);
+                            LJournal journal = new LJournal();
+                            journal.updateTag(tag1, oldName);
+                        }
                         break;
 
                 }

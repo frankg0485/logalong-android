@@ -248,10 +248,10 @@ public class DBAccess {
     */
 
     private static long getIdByColumn(Context context, Uri uri, String column, String value, boolean caseSensitive) {
-        Cursor csr = null;
         long id = 0;
 
         try {
+            Cursor csr = null;
             if (caseSensitive) {
                 csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
                         + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
@@ -259,18 +259,21 @@ public class DBAccess {
                 csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
                         + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
             }
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
+                    csr.close();
+                    return 0;
+                }
+
+                csr.moveToFirst();
+                id = csr.getLong(0);
                 csr.close();
-                return 0;
             }
 
-            csr.moveToFirst();
-            id = csr.getLong(0);
         } catch (Exception e) {
             LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
         }
-        if (csr != null) csr.close();
         return id;
     }
 

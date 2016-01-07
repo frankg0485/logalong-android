@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
@@ -59,11 +60,11 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
     }
 
     private boolean isEntryNameAvailable(String name) {
-        return (name != null && !name.isEmpty());
+        return (name != null && (!TextUtils.isEmpty(name)));
     }
 
     private boolean onExit(int type, boolean created, String name, boolean attr1, boolean attr2) {
-        if (created && (!name.isEmpty())) {
+        if (created && (!TextUtils.isEmpty(name))) {
             LJournal journal;
             switch (type) {
                 case TYPE_ACCOUNT:
