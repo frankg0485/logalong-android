@@ -1038,7 +1038,20 @@ public class LJournal {
                         conflict = true;
                 }
 
-                if (!conflict || (account.getTimeStampLast() <= timestampLast)) {
+                if (!conflict) {
+                    if (oldStateFound) {
+                        account.setState(state);
+                        if (account.getState() == DBHelper.STATE_DELETED) {
+                            DBTransaction.deleteByAccount(account.getId());
+                            DBScheduledTransaction.deleteByAccount(account.getId());
+                        }
+                    }
+                    if (oldNameFound) account.setName(name);
+
+                    if (account.getTimeStampLast() < timestampLast)
+                        account.setTimeStampLast(timestampLast);
+                    DBAccount.update(account);
+                } else if (account.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) account.setName(name);
                     if (stateFound) account.setState(state);
 
@@ -1122,12 +1135,19 @@ public class LJournal {
                     conflict = false;
                 }
                 LLog.d(TAG, "updating category '" + name + "' with id: " + rid + " : " + conflict);
-                if (!conflict || (category.getTimeStampLast() <= timestampLast)) {
+                if (!conflict) {
+                    if (oldStateFound) category.setState(state);
+                    if (oldNameFound) category.setName(name);
+                    if (category.getTimeStampLast() < timestampLast)
+                        category.setTimeStampLast(timestampLast);
+                    LLog.d(TAG, "no conflict: updating category '" + name);
+                    DBCategory.update(category);
+                } else if (category.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
                     if (category.getTimeStampLast() < timestampLast)
                         category.setTimeStampLast(timestampLast);
-                    LLog.d(TAG, "updating category '" + name);
+                    LLog.d(TAG, "override: updating category '" + name);
                     DBCategory.update(category);
                 }
             }
@@ -1199,7 +1219,15 @@ public class LJournal {
                     conflict = false;
                 }
 
-                if (!conflict || (vendor.getTimeStampLast() <= timestampLast)) {
+                if (!conflict) {
+                    if (oldStateFound) vendor.setState(state);
+                    if (oldNameFound) vendor.setName(name);
+                    //TODO: fix 'oldTypeFound' support
+                    if (typeFound) vendor.setType(type);
+                    if (vendor.getTimeStampLast() < timestampLast)
+                        vendor.setTimeStampLast(timestampLast);
+                    DBVendor.update(vendor);
+                } else if (vendor.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) vendor.setName(name);
                     if (stateFound) vendor.setState(state);
                     if (typeFound) vendor.setType(type);
@@ -1271,7 +1299,13 @@ public class LJournal {
                     conflict = false;
                 }
 
-                if (!conflict || (tag.getTimeStampLast() <= timestampLast)) {
+                if (!conflict) {
+                    if (oldStateFound) tag.setState(state);
+                    if (oldNameFound) tag.setName(name);
+                    if (tag.getTimeStampLast() < timestampLast)
+                        tag.setTimeStampLast(timestampLast);
+                    DBTag.update(tag);
+                } else if (tag.getTimeStampLast() <= timestampLast) {
                     if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
                     if (tag.getTimeStampLast() < timestampLast)
