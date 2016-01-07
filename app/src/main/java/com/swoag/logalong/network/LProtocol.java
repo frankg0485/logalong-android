@@ -60,6 +60,7 @@ public class LProtocol {
     private static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     private static final short RQST_POLL = RQST_SYS | 0x777;
     private static final short RQST_POLL_ACK = RQST_SYS | 0x778;
+    private static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
     private static final short CMD_SHARE_ACCOUNT_REQUEST = 0x0004;
@@ -404,6 +405,23 @@ public class LProtocol {
                     LLog.w(TAG, "unable to acknowledge polling");
                 }
                 break;
+
+            case RSPS | RQST_UTC_SYNC:
+                if (status == RSPS_OK) {
+                    long myUtc = pkt.getLongAutoInc();
+                    long serverUtc = pkt.getLongAutoInc();
+                    long now = System.currentTimeMillis() / 1000;
+                    if (now < myUtc) {
+                        LLog.w(TAG, "ignored invalid UTC: " + myUtc);
+                    } else {
+                        long delta = serverUtc + (now - myUtc) / 2 - now;
+                        //LLog.d(TAG, "utc delta: " + delta + " " + serverUtc + " " + myUtc + " " + now);
+                        LPreferences.setUtcDelta(delta);
+                    }
+                } else {
+                    LLog.w(TAG, "unable to sync UTC");
+                }
+                break;
         }
 
         pkt.setBufOffset(origOffset);
@@ -545,6 +563,10 @@ public class LProtocol {
         public static boolean pollAck(int cacheId) {
             LLog.d(TAG, "acking: " + cacheId);
             return LTransport.send_rqst(server, RQST_POLL_ACK, cacheId, scrambler);
+        }
+
+        public static boolean utcSync() {
+            return LTransport.send_rqst(server, RQST_UTC_SYNC, System.currentTimeMillis() / 1000, scrambler);
         }
 
         public static boolean confirmAccountShare(int userId, String accountName, String uuid) {

@@ -170,6 +170,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_LOGIN:
                 if (ret == LProtocol.RSPS_OK) {
+                    LProtocol.ui.utcSync();
                     LProtocol.ui.updateUserProfile();
                     LLog.d(TAG, "user logged in");
                     pollHandler.post(journalPostRunnable);
@@ -186,7 +187,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (requestToStop || (!LFragmentActivity.upRunning)) {
                     LLog.d(TAG, "IDLE: stop self, requested: " + requestToStop + " active: " + LFragmentActivity.upRunning);
                     stopSelf();
-                }
+                } else LProtocol.ui.utcSync();
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_ACKED:

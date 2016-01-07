@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import com.swoag.logalong.utils.LPreferences;
+
 import java.util.UUID;
 
 public class LCategory {
@@ -17,7 +19,7 @@ public class LCategory {
 
     private void init() {
         this.state = CATEGORY_STATE_ACTIVE;
-        this.timeStampLast = System.currentTimeMillis();
+        this.timeStampLast = LPreferences.getServerUtc();
         this.rid = UUID.randomUUID().toString();
         this.name = "";
     }

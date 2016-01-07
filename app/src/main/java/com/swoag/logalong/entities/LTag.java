@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import com.swoag.logalong.utils.LPreferences;
+
 import java.util.UUID;
 
 public class LTag {
@@ -17,7 +19,7 @@ public class LTag {
 
     private void init() {
         this.state = TAG_STATE_ACTIVE;
-        this.timeStampLast = System.currentTimeMillis();
+        this.timeStampLast = LPreferences.getServerUtc();
         this.rid = UUID.randomUUID().toString();
         this.name = "";
     }

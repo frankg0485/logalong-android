@@ -350,7 +350,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         LAccount account = DBAccount.getById(tag.id);
                         String oldName = account.getName();
                         account.setName(newName);
-                        account.setTimeStampLast(System.currentTimeMillis());
+                        account.setTimeStampLast(LPreferences.getServerUtc());
                         DBAccount.update(account);
 
                         LJournal journal = new LJournal();
@@ -361,7 +361,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         LCategory category = DBCategory.getById(tag.id);
                         oldName = category.getName();
                         category.setName(newName);
-                        category.setTimeStampLast(System.currentTimeMillis());
+                        category.setTimeStampLast(LPreferences.getServerUtc());
                         DBCategory.update(category);
 
                         journal = new LJournal();
@@ -372,7 +372,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         LVendor vendor = DBVendor.getById(tag.id);
                         oldName = vendor.getName();
                         vendor.setName(newName);
-                        vendor.setTimeStampLast(System.currentTimeMillis());
+                        vendor.setTimeStampLast(LPreferences.getServerUtc());
                         DBVendor.update(vendor);
 
                         journal = new LJournal();
@@ -382,7 +382,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         LTag tag1 = DBTag.getById(tag.id);
                         oldName = tag1.getName();
                         tag1.setName(newName);
-                        tag1.setTimeStampLast(System.currentTimeMillis());
+                        tag1.setTimeStampLast(LPreferences.getServerUtc());
                         DBTag.update(tag1);
 
                         journal = new LJournal();
@@ -431,7 +431,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
 
                         LAccount account = DBAccount.getById(tag.id);
                         account.setState(DBHelper.STATE_DELETED);
-                        account.setTimeStampLast(System.currentTimeMillis());
+                        account.setTimeStampLast(LPreferences.getServerUtc());
                         DBAccount.update(account);
 
                         LJournal journal = new LJournal();
@@ -440,7 +440,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     case R.id.categories:
                         LCategory category = DBCategory.getById(tag.id);
                         category.setState(DBHelper.STATE_DELETED);
-                        category.setTimeStampLast(System.currentTimeMillis());
+                        category.setTimeStampLast(LPreferences.getServerUtc());
                         DBCategory.update(category);
 
                         journal = new LJournal();
@@ -449,7 +449,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     case R.id.vendors:
                         LVendor vendor = DBVendor.getById(tag.id);
                         vendor.setState(DBHelper.STATE_DELETED);
-                        vendor.setTimeStampLast(System.currentTimeMillis());
+                        vendor.setTimeStampLast(LPreferences.getServerUtc());
                         DBVendor.update(vendor);
 
                         journal = new LJournal();
@@ -458,7 +458,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     case R.id.tags:
                         LTag tag1 = DBTag.getById(tag.id);
                         tag1.setState(DBHelper.STATE_DELETED);
-                        tag1.setTimeStampLast(System.currentTimeMillis());
+                        tag1.setTimeStampLast(LPreferences.getServerUtc());
                         DBTag.update(tag1);
 
                         journal = new LJournal();

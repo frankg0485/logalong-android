@@ -6,6 +6,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -148,7 +149,7 @@ public class LScheduledTransaction {
             if (transaction == null) {
                 transaction = new LTransaction(item);
 
-                transaction.setTimeStampLast(System.currentTimeMillis());
+                transaction.setTimeStampLast(LPreferences.getServerUtc());
                 transaction.setRid(transaction.getRid() + ymd);
                 transaction.setTimeStamp(baseTimeMs);
 

@@ -205,7 +205,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 AppPersistency.transactionChanged = changed;
 
-                item.setTimeStampLast(System.currentTimeMillis());
+                item.setTimeStampLast(LPreferences.getServerUtc());
                 DBTransaction.add(getActivity(), item);
 
                 LJournal journal = new LJournal();

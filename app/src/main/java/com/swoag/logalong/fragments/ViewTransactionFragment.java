@@ -764,7 +764,7 @@ public class ViewTransactionFragment extends LFragment implements
                 case TransactionEdit.TransitionEditItf.EXIT_OK:
                     AppPersistency.transactionChanged = changed;
                     if (changed) {
-                        item.setTimeStampLast(System.currentTimeMillis());
+                        item.setTimeStampLast(LPreferences.getServerUtc());
                         DBTransaction.update(item);
                         LJournal journal = new LJournal();
                         journal.updateItem(item, itemOrig);
@@ -777,7 +777,7 @@ public class ViewTransactionFragment extends LFragment implements
                 case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                     AppPersistency.transactionChanged = true;
 
-                    item.setTimeStampLast(System.currentTimeMillis());
+                    item.setTimeStampLast(LPreferences.getServerUtc());
                     item.setState(DBHelper.STATE_DELETED);
                     DBTransaction.update(item);
                     LJournal journal = new LJournal();

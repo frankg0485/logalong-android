@@ -3,6 +3,7 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.UUID;
 
@@ -42,7 +43,8 @@ public class LTransaction {
     private String note;
 
     private void init() {
-        this.timeStampLast = this.timeStamp = System.currentTimeMillis();
+        this.timeStampLast = LPreferences.getServerUtc();
+        this.timeStamp = System.currentTimeMillis();
         this.value = 0;
         this.type = TRANSACTION_TYPE_EXPENSE;
         this.by = 0;

@@ -35,6 +35,7 @@ public class LPreferences {
     private static final String USER_PASS = "UserPass";
     private static final String USER_ID = "UserId";
     private static final String USER_FULL_NAME = "UserFullName";
+    private static final String UTC_DELTA = "UtcDelta";
 
     /*
     public static String getLastDbRestoreDate() {
@@ -338,6 +339,18 @@ public class LPreferences {
 
     public static void setSearchFilterByEditTime(boolean yes) {
         savePreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, yes);
+    }
+
+    public static long getUtcDelta() {
+        return getPreference(LApp.ctx, UTC_DELTA, 0L);
+    }
+
+    public static void setUtcDelta(long delta) {
+        savePreference(LApp.ctx, UTC_DELTA, delta);
+    }
+
+    public static long getServerUtc() {
+        return System.currentTimeMillis() + LPreferences.getUtcDelta() * 1000;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////

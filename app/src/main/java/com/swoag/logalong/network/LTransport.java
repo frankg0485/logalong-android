@@ -82,6 +82,23 @@ public class LTransport {
         return true;
     }
 
+    public static boolean send_rqst(LAppServer server, short rqst, long data, int scrambler) {
+        LBuffer buf = server.getNetBuffer();
+        if (buf == null) return false;
+
+        buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
+        buf.putShortAutoInc((short) 16);
+
+        buf.putShortAutoInc(rqst);
+        buf.putLongAutoInc(data);
+        buf.setLen(16);
+
+        buf.setBufOffset(0);
+        scramble(buf, scrambler);
+        server.putNetBuffer(buf);
+        return true;
+    }
+
     public static boolean send_rqst(LAppServer server, short rqst, int data, int scrambler) {
         LBuffer buf = server.getNetBuffer();
         if (buf == null) return false;

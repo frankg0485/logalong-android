@@ -29,6 +29,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.SimpleDateFormat;
@@ -117,7 +118,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     scheduledItem.getItem().setState(DBHelper.STATE_ACTIVE);
                     scheduledItem.initNextTimeMs();
 
-                    scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
+                    scheduledItem.getItem().setTimeStampLast(LPreferences.getServerUtc());
                     if (createNew) DBScheduledTransaction.add(scheduledItem);
                     else DBScheduledTransaction.update(scheduledItem);
 

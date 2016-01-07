@@ -24,6 +24,7 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LDollarAmountPicker;
 import com.swoag.logalong.views.LSelectionDialog;
@@ -164,7 +165,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
 
     private void saveLog() {
         boolean changed = !scheduledItem.isEqual(savedScheduledItem);
-        if (changed) scheduledItem.getItem().setTimeStampLast(System.currentTimeMillis());
+        if (changed) scheduledItem.getItem().setTimeStampLast(LPreferences.getServerUtc());
         clickDisabled = true;
         callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_OK, changed);
         destroy();

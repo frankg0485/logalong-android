@@ -575,7 +575,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         boolean changed = !item.isEqual(savedItem);
         if (changed) {
-            item.setTimeStampLast(System.currentTimeMillis());
+            item.setTimeStampLast(LPreferences.getServerUtc());
             item.setBy(LPreferences.getUserId());
         }
         myClickListener.disableEnable(false);

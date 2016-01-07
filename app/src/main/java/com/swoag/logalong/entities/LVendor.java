@@ -2,6 +2,7 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class LVendor {
     private void init() {
         this.state = DBHelper.STATE_ACTIVE;
         this.type = TYPE_PAYEE;
-        this.timeStampLast = System.currentTimeMillis();
+        this.timeStampLast = LPreferences.getServerUtc();
         this.rid = UUID.randomUUID().toString();
         this.name = "";
     }

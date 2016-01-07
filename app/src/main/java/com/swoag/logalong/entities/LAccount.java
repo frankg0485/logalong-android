@@ -4,6 +4,7 @@ package com.swoag.logalong.entities;
 import android.text.TextUtils;
 
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,7 +32,7 @@ public class LAccount {
 
     private void init() {
         this.state = DBHelper.STATE_ACTIVE;
-        this.timeStampLast = System.currentTimeMillis();
+        this.timeStampLast = LPreferences.getServerUtc();
         this.rid = UUID.randomUUID().toString();
         this.name = "";
         this.shareIds = new ArrayList<Integer>();

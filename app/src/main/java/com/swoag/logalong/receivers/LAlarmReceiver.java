@@ -17,6 +17,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -58,7 +59,7 @@ public class LAlarmReceiver extends BroadcastReceiver {
                     if (item == null) {
                         item = new LTransaction(sch.getItem());
 
-                        item.setTimeStampLast(System.currentTimeMillis());
+                        item.setTimeStampLast(LPreferences.getServerUtc());
                         item.setRid(item.getRid() + ymd);
                         item.setTimeStamp(sch.getTimestamp());
 
@@ -72,7 +73,7 @@ public class LAlarmReceiver extends BroadcastReceiver {
 
                         //restore the following fields after the copy
                         item.setId(saveId);
-                        item.setTimeStampLast(System.currentTimeMillis());
+                        item.setTimeStampLast(LPreferences.getServerUtc());
                         item.setRid(item.getRid() + ymd);
                         item.setTimeStamp(sch.getTimestamp());
 
