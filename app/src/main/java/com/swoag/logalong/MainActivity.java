@@ -33,6 +33,7 @@ import com.swoag.logalong.views.LShareAccountConfirmDialog;
 import com.swoag.logalong.views.LViewPager;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class MainActivity extends LFragmentActivity
         implements LBroadcastReceiver.BroadcastReceiverListener,
@@ -268,6 +269,7 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < accounts.length; ii++) {
             account.setName(accounts[ii]);
             DBAccount.add(account);
+            account.setRid(UUID.randomUUID().toString());
         }
     }
 
@@ -276,6 +278,7 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < categories.length; ii++) {
             category.setName(categories[ii]);
             DBCategory.add(category);
+            category.setRid(UUID.randomUUID().toString());
         }
     }
 
@@ -284,6 +287,7 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < tags.length; ii++) {
             tag.setName(tags[ii]);
             DBAccess.addTag(tag);
+            tag.setRid(UUID.randomUUID().toString());
         }
     }*/
 
@@ -292,6 +296,7 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < vendors.length; ii++) {
             vendor.setName(vendors[ii]);
             DBVendor.add(vendor);
+            vendor.setRid(UUID.randomUUID().toString());
         }
     }
 

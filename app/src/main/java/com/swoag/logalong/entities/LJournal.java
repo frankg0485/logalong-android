@@ -111,7 +111,7 @@ public class LJournal {
     }
 
     public static void deleteById(long journalId) {
-        LLog.d(TAG, "release journal: " + journalId);
+        //LLog.d(TAG, "release journal: " + journalId);
         LStorage.getInstance().release(journalId);
     }
 
@@ -638,6 +638,7 @@ public class LJournal {
                     }
                     if (Long.parseLong(sss[2]) >= category1.getTimeStampLast()) {
                         category1.setTimeStampLast(Long.parseLong(sss[2]));
+                        update = true;
                     }
                     if (update) DBCategory.update(category1);
                     categoryId = category1.getId();
@@ -1032,6 +1033,7 @@ public class LJournal {
         if (!TextUtils.isEmpty(rid)) {
             LCategory category = DBCategory.getByRid(rid);
             if (category == null) {
+                LLog.d(TAG, "unable to find category '" + name + "' with id: " + rid);
                 category = new LCategory(name, rid, timestampLast);
                 DBCategory.add(category);
             } else {
@@ -1042,12 +1044,13 @@ public class LJournal {
                             || (oldNameFound && !oldName.contentEquals(category.getName())))
                         conflict = true;
                 }
-
+                LLog.d(TAG, "updating category '" + name + "' with id: " + rid + " : " + conflict);
                 if (!conflict || (category.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) category.setName(name);
                     if (stateFound) category.setState(state);
                     if (category.getTimeStampLast() < timestampLast)
                         category.setTimeStampLast(timestampLast);
+                    LLog.d(TAG, "updating category '" + name);
                     DBCategory.update(category);
                 }
             }

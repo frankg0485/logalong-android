@@ -350,7 +350,7 @@ public class LProtocol {
                     String[] ss = str.split(":");
                     long journalId = Long.parseLong(ss[0]);
                     rspsIntent.putExtra("journalId", journalId);
-                    LLog.d(TAG, "posted journal: " + journalId);
+                    //LLog.d(TAG, "posted journal: " + journalId);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
@@ -561,7 +561,7 @@ public class LProtocol {
         }
 
         public static boolean pollAck(int cacheId) {
-            LLog.d(TAG, "acking: " + cacheId);
+            //LLog.d(TAG, "acking: " + cacheId);
             return LTransport.send_rqst(server, RQST_POLL_ACK, cacheId, scrambler);
         }
 
