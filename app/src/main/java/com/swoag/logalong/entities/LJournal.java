@@ -971,6 +971,8 @@ public class LJournal {
         if (!TextUtils.isEmpty(rid)) {
             LAccount account = DBAccount.getByRid(rid);
             if (account == null) {
+                //account can only be update *after* it has been shared, and UUID can not change after
+                //share is settled
                 LLog.w(TAG, "account removed? " + name + " : " + rid);
             } else {
                 boolean conflict = true;
@@ -1032,6 +1034,20 @@ public class LJournal {
 
         if (!TextUtils.isEmpty(rid)) {
             LCategory category = DBCategory.getByRid(rid);
+            boolean resetRid = false;
+            if (category == null) {
+                //if category with given RID could not be found, it means,
+                //- this is a brand new category shared from peer, or
+                //- this is a rename to an existing category that has yet to be shared
+                //- shared category RID has been updated without our knowledge
+                //either way, before creating a new entry, let's query to make sure the name is unique.
+                LLog.d(TAG, "unable to find category with given ID, but named category exist: '" + name + "' with id: " + rid);
+                category = DBCategory.getByName(name);
+                if (category == null && oldNameFound) {
+                    category = DBCategory.getByName(oldName);
+                }
+                resetRid = true;
+            }
             if (category == null) {
                 LLog.d(TAG, "unable to find category '" + name + "' with id: " + rid);
                 category = new LCategory(name, rid, timestampLast);
@@ -1043,6 +1059,12 @@ public class LJournal {
                     if ((oldStateFound && oldState != category.getState())
                             || (oldNameFound && !oldName.contentEquals(category.getName())))
                         conflict = true;
+                }
+
+                if (resetRid && (rid.compareTo(category.getRid()) > 0)) {
+                    LLog.d(TAG, "updating category: " + name + " UUID to : " + rid + " from: " + category.getRid());
+                    category.setRid(rid);
+                    conflict = false;
                 }
                 LLog.d(TAG, "updating category '" + name + "' with id: " + rid + " : " + conflict);
                 if (!conflict || (category.getTimeStampLast() <= timestampLast)) {
@@ -1095,7 +1117,15 @@ public class LJournal {
         }
 
         if (!TextUtils.isEmpty(rid)) {
+            boolean resetRid = false;
             LVendor vendor = DBVendor.getByRid(rid);
+            if (vendor == null) {
+                vendor = DBVendor.getByName(name);
+                if (vendor == null && oldNameFound) {
+                    vendor = DBVendor.getByName(oldName);
+                }
+                resetRid = true;
+            }
             if (vendor == null) {
                 vendor = new LVendor(name, type, rid, timestampLast);
                 DBVendor.add(vendor);
@@ -1106,6 +1136,12 @@ public class LJournal {
                     if ((oldStateFound && oldState != vendor.getState())
                             || (oldNameFound && !oldName.contentEquals(vendor.getName())))
                         conflict = true;
+                }
+
+                if (resetRid && (rid.compareTo(vendor.getRid()) > 0)) {
+                    LLog.d(TAG, "updating vendor: " + name + " UUID to : " + rid + " from: " + vendor.getRid());
+                    vendor.setRid(rid);
+                    conflict = false;
                 }
 
                 if (!conflict || (vendor.getTimeStampLast() <= timestampLast)) {
@@ -1154,6 +1190,14 @@ public class LJournal {
 
         if (!TextUtils.isEmpty(rid)) {
             LTag tag = DBTag.getByRid(rid);
+            boolean resetRid = false;
+            if (tag == null) {
+                tag = DBTag.getByName(name);
+                if (tag == null && oldNameFound) {
+                    tag = DBTag.getByName(oldName);
+                }
+                resetRid = true;
+            }
             if (tag == null) {
                 tag = new LTag(name, rid, timestampLast);
                 DBTag.add(tag);
@@ -1165,6 +1209,13 @@ public class LJournal {
                             || (oldNameFound && !oldName.contentEquals(tag.getName())))
                         conflict = true;
                 }
+
+                if (resetRid && (rid.compareTo(tag.getRid()) > 0)) {
+                    LLog.d(TAG, "updating tag: " + name + " UUID to : " + rid + " from: " + tag.getRid());
+                    tag.setRid(rid);
+                    conflict = false;
+                }
+
                 if (!conflict || (tag.getTimeStampLast() <= timestampLast)) {
                     if (!TextUtils.isEmpty(name)) tag.setName(name);
                     if (stateFound) tag.setState(state);
