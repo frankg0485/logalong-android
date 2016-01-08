@@ -261,7 +261,7 @@ public class MainActivity extends LFragmentActivity
 
     private static String[] vendors = {
             "Amazon",
-            "Chiptole"
+            "Chipotle"
     };
 
     public static void addAccounts() {
