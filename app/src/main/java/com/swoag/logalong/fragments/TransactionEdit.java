@@ -280,6 +280,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             switch (v.getId()) {
                 case R.id.tvDate:
                     final Calendar c = Calendar.getInstance();
+                    c.setTimeInMillis(item.getTimeStamp());
                     DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
                             TransactionEdit.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
                     datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));

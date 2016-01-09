@@ -167,8 +167,10 @@ public class DBScheduledTransaction {
 
     public static Cursor getCursorByAccount(Context context, long accountId) {
         Cursor cur = context.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
-                DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId}, null);
+                "(" + DBHelper.TABLE_COLUMN_STATE + " =? OR "
+                        + DBHelper.TABLE_COLUMN_STATE + " =?) AND "
+                        + DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED, "" + accountId}, null);
         return cur;
     }
 

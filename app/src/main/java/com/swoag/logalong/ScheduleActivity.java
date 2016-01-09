@@ -1,11 +1,14 @@
 package com.swoag.logalong;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -15,16 +18,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
-import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.fragments.ScheduledTransactionEdit;
 import com.swoag.logalong.fragments.TransactionEdit;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
@@ -36,8 +38,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class ScheduleActivity extends LFragmentActivity implements
-        ScheduledTransactionEdit.ScheduledTransitionEditItf {
-
+        ScheduledTransactionEdit.ScheduledTransitionEditItf,
+        LoaderManager.LoaderCallbacks<Cursor> {
+    private static final int LOADER_SCHEDULES = 20;
     private View rootView, selectTypeV;
     private ViewFlipper viewFlipper;
 
@@ -47,6 +50,42 @@ public class ScheduleActivity extends LFragmentActivity implements
     private MyCursorAdapter adapter;
     private boolean createNew;
     private MyClickListener myClickListener;
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri uri;
+        switch (id) {
+            case LOADER_SCHEDULES:
+                uri = DBProvider.URI_SCHEDULED_TRANSACTIONS;
+                return new CursorLoader(this,
+                        uri,
+                        null,
+                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED},
+                        DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + " ASC");
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        switch (loader.getId()) {
+            case LOADER_SCHEDULES:
+                adapter.swapCursor(data);
+                adapter.notifyDataSetChanged();
+                break;
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        switch (loader.getId()) {
+            case LOADER_SCHEDULES:
+                adapter.swapCursor(null);
+                adapter.notifyDataSetChanged();
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +111,8 @@ public class ScheduleActivity extends LFragmentActivity implements
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
         viewFlipper.setDisplayedChild(0);
+
+        getSupportLoaderManager().restartLoader(LOADER_SCHEDULES, null, this);
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -128,6 +169,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     if (createNew) {
                         journal.updateScheduledItem(scheduledItem);
                     } else {
+
                         journal.updateScheduledItem(scheduledItem, itemOrig);
                     }
                 }
@@ -184,17 +226,8 @@ public class ScheduleActivity extends LFragmentActivity implements
     }
 
     private void initListView() {
-        Cursor cursor = DBScheduledTransaction.getCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
-        if (null == cursor) return;
-
-        adapter = new MyCursorAdapter(this, cursor);
+        adapter = new MyCursorAdapter(this, null);
         listView.setAdapter(adapter);
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(adapter.getCount() - 1);
-            }
-        });
     }
 
     private class MyCursorAdapter extends CursorAdapter {
@@ -309,5 +342,17 @@ public class ScheduleActivity extends LFragmentActivity implements
                 this.id = id;
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MainService.start(this);
+    }
+
+    @Override
+    protected void onPause() {
+        MainService.stop(this);
+        super.onPause();
     }
 }

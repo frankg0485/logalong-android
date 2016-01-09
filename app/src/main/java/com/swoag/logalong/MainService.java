@@ -33,8 +33,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private Handler pollHandler;
     private Runnable pollRunnable;
     private Runnable journalPostRunnable;
+    private Runnable serviceShutdownRunnable;
     static final int NETWORK_POLLING_MS = 5000;
     static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 30000;
+    static final int SERVICE_SHUTDOWN_MS = 15000;
     private boolean requestToStop;
     private int pollingCount;
     private BroadcastReceiver broadcastReceiver;
@@ -63,6 +65,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         pollHandler = new Handler() {
         };
+
         pollRunnable = new Runnable() {
             @Override
             public void run() {
@@ -76,11 +79,19 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 }
             }
         };
+
         journalPostRunnable = new Runnable() {
             @Override
             public void run() {
                 LJournal.flush();
                 pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
+            }
+        };
+
+        serviceShutdownRunnable = new Runnable() {
+            @Override
+            public void run() {
+                requestToStop = true;
             }
         };
 
@@ -122,7 +133,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             switch (cmd) {
                 case CMD_START:
                     pollingCount = 0;
+                    pollHandler.removeCallbacks(serviceShutdownRunnable);
                     requestToStop = false;
+
                     LLog.d(TAG, "starting service, already connected: " + LProtocol.ui.isConnected());
                     if (LProtocol.ui.isConnected()) {
                         LProtocol.ui.login();
@@ -134,7 +147,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case CMD_STOP:
                     LLog.d(TAG, "requested to stop service, connected: " + LProtocol.ui.isConnected());
                     if (LProtocol.ui.isConnected()) {
-                        requestToStop = true;
+                        pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
                         stopSelf();
                     }

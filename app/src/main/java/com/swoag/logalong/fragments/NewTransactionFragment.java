@@ -121,7 +121,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         balanceTV = (TextView) entryView.findViewById(R.id.balance);
 
         listView = (ListView) entryView.findViewById(R.id.listView);
-        adapter = new MyCursorAdapter(getActivity(), DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME));
+        adapter = new MyCursorAdapter(getActivity(), null);
         listView.setAdapter(adapter);
 
         viewFlipper = (ViewFlipper) rootView.findViewById(R.id.viewFlipper);
