@@ -55,11 +55,28 @@ public class LBufferPool {
                     currentPoolSize++;
                     return new LBuffer(bufferSize);
                 } else {
-                    //LLog.w(TAG, "buffer overflow, audio processing too slow?");
                     try {
                         lock.wait();
                     } catch (Exception e) {
                     }
+                }
+            }
+        }
+        return null;
+    }
+
+    public LBuffer getWriteBufferMayFail() {
+        synchronized (lock) {
+            while (poolAlive && poolEnabled) {
+                if (emptyBuffers.size() > 0) {
+                    LBuffer buf = emptyBuffers.remove(0);
+                    buf.setBufOffset(0);
+                    return buf;
+                } else if (currentPoolSize < maxPoolSize) {
+                    currentPoolSize++;
+                    return new LBuffer(bufferSize);
+                } else {
+                    break;
                 }
             }
         }

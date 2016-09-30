@@ -13,15 +13,19 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Random;
+import java.util.zip.CRC32;
 
 public class LProtocol {
     private static final String TAG = LProtocol.class.getSimpleName();
     private static int scrambler;
     private static boolean connected;
+    private static Object stateLock = new Object();;
+    private static short serverVersion = 0;
+    private static CRC32 crc32 = new CRC32();
 
     //////////////////////////////////////////////////////////////////////
     public static final int PACKET_MAX_PAYLOAD_LEN = 1456;
-    public static final int PACKET_MAX_LEN = (PACKET_MAX_PAYLOAD_LEN + 4);
+    public static final int PACKET_MAX_LEN = (PACKET_MAX_PAYLOAD_LEN + 8);
 
     public static final short PACKET_SIGNATURE1 = (short) 0xffaa;
 
@@ -34,6 +38,10 @@ public class LProtocol {
 
     public static final short PLAYLOAD_TYPE_SYS = (short) (2 << PAYLOAD_TYPE_SHIFT);
     public static final short PLAYLOAD_TYPE_USER = (short) (3 << PAYLOAD_TYPE_SHIFT);
+
+    public static final short RESPONSE_PARSE_RESULT_DONE = 10;
+    public static final short RESPONSE_PARSE_RESULT_MORE2COME = 20;
+    public static final short RESPONSE_PARSE_RESULT_ERROR = 99;
 
     public static int PACKET_PAYLOAD_LENGTH(int payloadLen) {
         return ((((payloadLen) + 3) / 4) * 4);
@@ -233,16 +241,33 @@ public class LProtocol {
     }
 
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
-    private int consumePacket(LBuffer pkt) {
+    private int consumePacket(LBuffer pkt, short requestCode) {
         Intent rspsIntent;
         int origOffset = pkt.getBufOffset();
-        short total = pkt.getShortAt(origOffset + 2);
+        short total = (short)((pkt.getShortAt(origOffset + 2) & 0xfff) + 4); //mask out sequence bits
         short rsps = pkt.getShortAt(origOffset + 4);
         int status;
+
+        //partial packet received, ignore and wait for more data to come
+        if (total > pkt.getLen()) return 0;
+
+        //verify CRC32
+        crc32.reset();
+        crc32.update(pkt.getBuf(), pkt.getBufOffset(), total - 4);
+
+        if ((int)crc32.getValue() != pkt.getIntAt(pkt.getBufOffset() + total - 4)) {
+            LLog.w(TAG, "drop corrupted packet: checksum mismatch");
+            return total; //discard packet
+        }
 
         LTransport.scramble(pkt, scrambler);
         pkt.skip(6);
         status = pkt.getShortAutoInc();
+
+        if ((RSPS | requestCode) != rsps) {
+            LLog.w(TAG, "protocol failed: unexpected response");
+            return -1;
+        }
 
         switch (rsps) {
             case RSPS | RQST_PING:
@@ -251,7 +276,10 @@ public class LProtocol {
 
             case RSPS | RQST_SCRAMBLER_SEED:
                 //LLog.d(TAG, "channel scrambler seed sent");
-                connected = true;
+                synchronized (stateLock) {
+                    connected = true;
+                }
+                serverVersion = pkt.getShort();
                 break;
 
             case RSPS | RQST_CREATE_USER:
@@ -429,24 +457,29 @@ public class LProtocol {
     }
 
     private boolean alignPacket(LBuffer pkt) {
-        while (pkt.getLen() >= 8) {
-            short sig = pkt.getShort();
-            if (sig != PACKET_SIGNATURE1) {
-                LLog.w(TAG, String.format("packet misaligned: %x", sig));
-                pkt.skip(1);
-                pkt.modLen(-1);
-            } else {
-                if (pkt.getLen() >= 8) return true;
-            }
+        if (pkt.getShort() == PACKET_SIGNATURE1) return true;
+        LLog.w(TAG, "packet misaligned");
+        return false;
+
+        /*
+        while (pkt.getLen() >= 12) { //minimum packet length 8 + CRC32
+            if (pkt.getShort() == PACKET_SIGNATURE1) return true;
+            LLog.w(TAG, "packet misaligned");
+            pkt.skip(1);
+            pkt.modLen(-1);
         }
         return false;
+        */
     }
 
     // parser runs in Network receiving thread, thus no GUI update here.
-    public void parse(LBuffer buf) {
+    public short parse(LBuffer buf, short requestCode) {
         if (null == buf) {
-            connected = false;
-            return;
+            LLog.d(TAG, "network thread is shutting down, socket is no longer connected");
+            synchronized (stateLock) {
+                connected = false;
+                return RESPONSE_PARSE_RESULT_ERROR;
+            }
         }
 
         if (pktBuf.getLen() > 0) {
@@ -458,28 +491,31 @@ public class LProtocol {
         }
 
         while (alignPacket(pkt)) {
-            int bytes = consumePacket(pkt);
+            int bytes = consumePacket(pkt, requestCode);
             if (bytes == -1) {
-                //TODO: packet or state error??
                 LLog.e(TAG, "packet parse error?");
+                break;
             } else if (bytes == 0) {
                 //packet not consumed
                 if (pkt != pktBuf) {
                     pktBuf.append(pkt);
-                    return;
                 } else {
                     //this must be the case where the data is only partially received.
                     //quit the loop
-                    return;
                 }
+                return RESPONSE_PARSE_RESULT_MORE2COME;
             } else {
                 //packet consumed
-                pkt.setBufOffset(pkt.getBufOffset() + bytes);
                 pkt.setLen(pkt.getLen() - bytes);
+                pkt.setBufOffset( (pkt.getLen() == 0)? 0 : pkt.getBufOffset() + bytes);
+
                 //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt.getBufOffset());
                 //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));
+                return RESPONSE_PARSE_RESULT_DONE;
             }
         }
+        //unexpected: unable to align packet
+        return RESPONSE_PARSE_RESULT_ERROR;
     }
 
     // all user interface calls
@@ -502,7 +538,13 @@ public class LProtocol {
         }
 
         public static void connect() {
-            if (!connected) {
+            boolean connectStatus;
+
+            synchronized (stateLock) {
+                connectStatus = connected;
+            }
+
+            if (!connectStatus) {
                 server = LAppServer.getInstance();
                 server.connect();
             }
@@ -515,7 +557,15 @@ public class LProtocol {
         }
 
         public static boolean isConnected() {
-            return connected;
+            synchronized (stateLock) {
+                return connected;
+            }
+        }
+
+        public static short getServerVersion() {
+            synchronized (stateLock) {
+                return connected ? serverVersion : 0;
+            }
         }
 
         public static void initScrambler() {

@@ -69,6 +69,11 @@ public class LBuffer {
         return (short) ((array[offset] & 0xff) | (0xff00 & (array[offset + 1] << 8)));
     }
 
+    public int getIntAt(int off) {
+        return (int) ((array[off] & 0xff) | (0xff00 & (array[off + 1] << 8)) |
+                (0xff0000 & (array[off + 2] << 16)) | (0xff000000 & (array[off + 3] << 24)));
+    }
+
     public byte getByteAutoInc() {
         offset++;
         return array[offset - 1];
@@ -162,6 +167,14 @@ public class LBuffer {
         array[offset + 2] = (byte) ((val >>> 16) & 0xff);
         array[offset + 3] = (byte) ((val >>> 24) & 0xff);
         offset += 4;
+        return 0;
+    }
+
+    public int putIntAt(int val, int index) {
+        array[index] = (byte) (val & 0xff);
+        array[index + 1] = (byte) ((val >>> 8) & 0xff);
+        array[index + 2] = (byte) ((val >>> 16) & 0xff);
+        array[index + 3] = (byte) ((val >>> 24) & 0xff);
         return 0;
     }
 

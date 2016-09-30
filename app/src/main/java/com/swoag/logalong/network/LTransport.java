@@ -3,8 +3,20 @@ package com.swoag.logalong.network;
 
 import com.swoag.logalong.utils.LBuffer;
 
+import java.util.zip.CRC32;
+
 public class LTransport {
     private static final String TAG = LTransport.class.getSimpleName();
+    private static CRC32 crc32 = new CRC32();
+
+    private static void crc32(LBuffer buf)
+    {
+        crc32.reset();
+        crc32.update(buf.getBuf(), 0, buf.getLen());
+
+        buf.putIntAt((int)crc32.getValue(), buf.getLen());
+        buf.setLen(buf.getLen() + 4);
+    }
 
     public static void scramble(byte[] buf, int off, int bytes, int scrambler) {
         byte[] ss = new byte[4];
@@ -52,6 +64,8 @@ public class LTransport {
 
         buf.setBufOffset(0);
         scramble(buf, scrambler);
+
+        crc32(buf);
         server.putNetBuffer(buf);
         return true;
     }
@@ -78,6 +92,8 @@ public class LTransport {
 
         buf.setBufOffset(0);
         scramble(buf, scrambler);
+
+        crc32(buf);
         server.putNetBuffer(buf);
         return true;
     }
@@ -95,6 +111,8 @@ public class LTransport {
 
         buf.setBufOffset(0);
         scramble(buf, scrambler);
+
+        crc32(buf);
         server.putNetBuffer(buf);
         return true;
     }
@@ -112,6 +130,8 @@ public class LTransport {
 
         buf.setBufOffset(0);
         scramble(buf, scrambler);
+
+        crc32(buf);
         server.putNetBuffer(buf);
         return true;
     }
@@ -128,6 +148,8 @@ public class LTransport {
 
         buf.setBufOffset(0);
         scramble(buf, scrambler);
+
+        crc32(buf);
         server.putNetBuffer(buf);
         return true;
     }

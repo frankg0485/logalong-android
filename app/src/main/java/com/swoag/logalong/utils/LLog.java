@@ -4,83 +4,105 @@ package com.swoag.logalong.utils;
 import android.content.Context;
 import android.util.Log;
 
+import com.swoag.logalong.network.LRemoteLogging;
+
 public class LLog {
     public static boolean debug = true;
-	public static boolean netDebug = false;
+    public static boolean netDebug = false;
 
-	private static boolean opened;
-	private static int STACK_INDEX;
-	private static String pkg="";
-	static {
-		try {
-			int ii = 0;
-			for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-				ii++;
-				if (ste.getClassName().equals(LLog.class.getName())) break;
-			}
-			STACK_INDEX = ii;
-		} catch (Exception e) {}
-	}
+    private static boolean opened;
+    private static int STACK_INDEX;
+    private static String pkg="";
+    static {
+        try {
+            int ii = 0;
+            for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+                ii++;
+                if (ste.getClassName().equals(LLog.class.getName())) break;
+            }
+            STACK_INDEX = ii;
+        } catch (Exception e) {}
+    }
 
-	private static String caller() {
-		try {
-			return pkg + "->" + Thread.currentThread().getStackTrace()[STACK_INDEX + 1].getMethodName();
-		} catch (Exception e) {
-			return "Unknown";
-		}
-	}
+    private static String caller() {
+        try {
+            return pkg + "->" + Thread.currentThread().getStackTrace()[STACK_INDEX + 1].getMethodName();
+        } catch (Exception e) {
+            return "Unknown";
+        }
+    }
 
-	public static void open(Context context) {
-		if (!opened) {
-			pkg = context.getPackageName().replaceAll("com.swoag.", "");
-		}
-		opened = true;
-	}
+    public static void open(Context context) {
+        if (!opened) {
+            pkg = context.getPackageName().replaceAll("com.swoag.", "");
+        }
+        opened = true;
+    }
 
-	public static void d(String tag, String message) {
-		if (!debug) return;
-		if (verifyTag(tag)) {
-			Log.d(tag, caller() + ":" + message);
-		}
-	}
+    public static void d(String tag, String message) {
+        if (!debug) return;
+        if (verifyTag(tag)) {
+            //Log.d(tag, caller() + ":" + message);
+            remoteLog("D: " + tag + caller() + ":" + message);
+        }
+    }
 
-	public static void e(String tag, String message) {
-		if (verifyTag(tag)) {
-			Log.e(tag, caller() + ":" + message);
-		}
-	}
+    public static void e(String tag, String message) {
+        if (verifyTag(tag)) {
+            //Log.e(tag, caller() + ":" + message);
+            remoteLog("E: " + tag + caller() + ":" + message);
+        }
+    }
 
-	public static void i(String tag, String message) {
-		if (verifyTag(tag)) {
-			Log.i(tag, caller() + ":" + message);
-		}
-	}
+    public static void i(String tag, String message) {
+        if (verifyTag(tag)) {
+            //Log.i(tag, caller() + ":" + message);
+            remoteLog("I: " + tag + caller() + ":" + message);
+        }
+    }
 
-	public static void v(String tag, String message) {
-		if (!debug) return;
-		if (verifyTag(tag)) {
-			Log.v(tag, caller() + ":" + message);
-		}
-	}
+    public static void v(String tag, String message) {
+        if (!debug) return;
+        if (verifyTag(tag)) {
+            //Log.v(tag, caller() + ":" + message);
+            remoteLog("V: " + tag + caller() + ":" + message);
+        }
+    }
 
-	public static void w(String tag, String message) {
-		if (verifyTag(tag)) {
-			Log.w(tag, caller() + ":" + message);
-		}
-	}
+    public static void w(String tag, String message) {
+        if (verifyTag(tag)) {
+            //Log.w(tag, caller() + ":" + message);
+            remoteLog("W: " + tag + caller() + ":" + message);
+        }
+    }
 
-	static boolean verifyTag(String tag) {
-		return true;
-	}
+    static boolean verifyTag(String tag) {
+        return true;
+    }
 
-	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
-	public static String bytesToHex(byte[] bytes) {
-		char[] hexChars = new char[bytes.length * 2];
-		for ( int j = 0; j < bytes.length; j++ ) {
-			int v = bytes[j] & 0xFF;
-			hexChars[j * 2] = hexArray[v >>> 4];
-			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-		}
-		return new String(hexChars);
-	}
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    private static void remoteLog(String msg) {
+        LRemoteLogging server = LRemoteLogging.getInstance();
+        server.connect();
+        LBuffer buffer = server.getNetBuffer();
+        if (null != buffer) {
+            buffer.putStringAutoInc(msg + "\n");
+            buffer.setLen(buffer.getBufOffset());
+            buffer.setBufOffset(0);
+            server.putNetBuffer(buffer);
+        } else {
+            Log.e("LLog", "remote logging buffer full");
+        }
+
+    }
 }

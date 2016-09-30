@@ -1,85 +1,87 @@
 package com.swoag.logalong.network;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2016 SWOAG Technology <www.swoag.com> */
+
 
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LBufferPool;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Calendar;
+import java.util.Random;
 
-public class LAppServer {
-    private static final String TAG = LAppServer.class.getSimpleName();
+public class LRemoteLogging {
+    private static final String TAG = LRemoteLogging.class.getSimpleName();
+    private static final String serverIp = LAppServer.serverIp;
+    private static final int serverPort = 5222;
 
-    public static final String serverIp = "192.168.1.149";
-    //public static final String serverIp = "auto";
-    private static final int serverPort = 8000;
+    private Handler timerHandler;
+    private Runnable timerRunnable;
 
     private Socket socket = null;
     private InputStream sockIn = null;
     private OutputStream sockOut = null;
+
+    private final int LOGGING_REQUEST_MAGIC = 0xa7cbe9fd;
 
     private final int STATE_INIT = 10;
     private final int STATE_READY = 30;
     private final int STATE_OFF = 40;
     private final int STATE_EXIT = 50;
 
+    private final int MAX_LOG_TX_PACKET_LEN = 2048;
+    private final int MAX_LOG_RX_PACKET_LEN = 16;
+
     private Object netLock;
     private int netThreadState;
     private LBufferPool netTxBufPool;
     private LBuffer netRxBuf;
 
-    private static LAppServer instance;
+    private static LRemoteLogging instance;
     private boolean connected;
-    private int tried;
-    private static final int AUTO_RECONNECT_DEFAULT_TIME_SECONDS = 3600;
-    private static final int AUTO_RECONNECT_RETRY_TIME_SECONDS = 30;
-
     private Context context;
-    private LProtocol lProtocol;
 
-    public static LAppServer getInstance() {
+    public static LRemoteLogging getInstance() {
         if (null == instance) {
-            instance = new LAppServer();
+            instance = new LRemoteLogging();
         }
         return instance;
     }
 
-    private LAppServer() {
+    private LRemoteLogging() {
         context = LApp.ctx;
-        lProtocol = new LProtocol();
+
         netLock = new Object();
         netThreadState = STATE_INIT;
-        netTxBufPool = new LBufferPool(LProtocol.PACKET_MAX_LEN, 16);
+        netTxBufPool = new LBufferPool(MAX_LOG_TX_PACKET_LEN, 32);
         netTxBufPool.enable(true);
 
-        netRxBuf = new LBuffer(LProtocol.PACKET_MAX_LEN);
+        netRxBuf = new LBuffer(MAX_LOG_RX_PACKET_LEN);
 
-        tried = 0;
-    }
-
-    private void autoReconnect(int timeS) {
-        if (tried++ >= 5) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(calendar.getTimeInMillis() + timeS * 1000);
-        LAlarm.cancelAutoReconnectAlarm();
-        LAlarm.setAutoReconnectAlarm(calendar.getTimeInMillis());
+        timerHandler = new Handler(){};
+        timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                closeSockets();
+            }
+        };
     }
 
     //caller must hold netLock
-    private void closeSockets(int timeMs) {
+    private void closeSockets() {
         try {
             if (null != sockOut) {
                 sockOut.close();
@@ -96,10 +98,12 @@ public class LAppServer {
         sockOut = null;
         sockIn = null;
         connected = false;
-        autoReconnect(timeMs);
     }
 
     public boolean connect() {
+        timerHandler.removeCallbacks(timerRunnable);
+        timerHandler.postDelayed(timerRunnable, 15000);
+
         synchronized (netLock) {
             if (!connected) {
                 connected = true;
@@ -120,9 +124,7 @@ public class LAppServer {
                             try {
                                 InetAddress serverAddr = (serverIp.contentEquals("auto")) ?
                                         InetAddress.getByName("swoag.com") : InetAddress.getByName(serverIp);
-                                LLog.d(TAG, "server addr:" + serverAddr);
                                 socket = new Socket(serverAddr, serverPort);
-                                LLog.d(TAG, "stream opened: " + socket);
                                 socket.setSoTimeout(0);
 
                                 sockIn = socket.getInputStream();
@@ -138,17 +140,9 @@ public class LAppServer {
 
                                 Thread netThread = new Thread(new NetThread());
                                 netThread.start();
-                                tried = 0;
-
-                                Intent intent;
-                                intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
-                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int) LProtocol.RSPS_OK);
-                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
                             } catch (Exception e) {
-                                LLog.e(TAG, "connection error: " + e.getMessage());
                                 synchronized (netLock) {
                                     connected = false;
-                                    autoReconnect(AUTO_RECONNECT_RETRY_TIME_SECONDS);
                                 }
                             }
                         }
@@ -156,8 +150,6 @@ public class LAppServer {
                     connectThread.start();
                 } else {
                     connected = false;
-                    autoReconnect(AUTO_RECONNECT_RETRY_TIME_SECONDS);
-                    LLog.e(TAG, "network not available?");
                 }
             }
             return connected;
@@ -178,7 +170,7 @@ public class LAppServer {
                     }
                 }
             }
-            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
+            closeSockets();
         }
     }
 
@@ -187,17 +179,21 @@ public class LAppServer {
         public void run() {
             LBuffer buf = null;
             boolean loop = true;
-            boolean hasBuf = false;
             boolean fail = false;
 
-            final int SEND_REQUEST = 10;
-            final int WAIT_FOR_RESPONSE = 20;
+            final int LOG_STATE_DSICONNECTED = 10;
+            final int LOG_STATE_CONNECTING = 20;
+            final int LOG_STATE_CONNECTED = 30;
+            int loggingState = LOG_STATE_DSICONNECTED;
+            int id = LPreferences.getUserId();
+            if (0 == id) {
+                Random rand = new Random(System.currentTimeMillis());
+                id = rand.nextInt(0xffff - 0x8000 + 1) + 0x8000;
+            }
 
-            int protocolState = SEND_REQUEST;
-            short requestCode = 0;
             // protocol behaviour:
             // client (App) sends request to server, then wait for response. If response does not
-            // come as expected, networks thread bails to restart.
+            // come as expected, networks thread bails. Otherwise, keep sending.
             while (loop) {
                 synchronized (netLock) {
                     fail = false;
@@ -205,7 +201,7 @@ public class LAppServer {
                         if (netThreadState == STATE_OFF) {
                             netThreadState = STATE_EXIT;
                             loop = false;
-                            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
+                            closeSockets();
                             break;
                         }
                         try {
@@ -215,31 +211,23 @@ public class LAppServer {
                     }
                 }
 
-                switch (protocolState) {
-                    case SEND_REQUEST:
-                        if (!hasBuf) {
-                            buf = netTxBufPool.getReadBuffer();
-                            if (buf == null) {
-                                LLog.w(TAG, "network thread: interrupted unable to get read buffer");
-                                continue;
-                            } else
-                                hasBuf = true;
-                        }
-
+                switch (loggingState) {
+                    case LOG_STATE_DSICONNECTED:
+                        netRxBuf.setBufOffset(0);
+                        netRxBuf.putIntAutoInc(LOGGING_REQUEST_MAGIC);
+                        netRxBuf.putIntAutoInc(id);
+                        netRxBuf.setLen(8);
+                        netRxBuf.setBufOffset(0);
                         try {
-                            sockOut.write(buf.getBuf(), 0, buf.getLen());
+                            sockOut.write(netRxBuf.getBuf(), 0, netRxBuf.getLen());
                             sockOut.flush();
-                            requestCode = buf.getShortAt(4);
+                            loggingState = LOG_STATE_CONNECTING;
                         } catch (Exception e) {
                             fail = true;
-                            LLog.e(TAG, "write error: " + e.getMessage());
-                            break;
                         }
+                        break;
 
-                        protocolState = WAIT_FOR_RESPONSE;
-                        //fall through
-
-                    case WAIT_FOR_RESPONSE:
+                    case LOG_STATE_CONNECTING:
                         try {
                             netRxBuf.setBufOffset(0);
                             netRxBuf.setLen(sockIn.read(netRxBuf.getBuf(), 0, netRxBuf.size()));
@@ -249,22 +237,29 @@ public class LAppServer {
 
                         if (fail || netRxBuf.getLen() <= 0) {
                             fail = true;
-                            LLog.w(TAG, "read error");
+                        } else if (netRxBuf.getIntAt(0) == id){
+                            loggingState = LOG_STATE_CONNECTED;
+                        } else
+                        {
+                            Log.e(TAG, "UNEXPECTED: close socket");
+                            fail = true;
+                        }
+                        break;
+
+                    case LOG_STATE_CONNECTED:
+                        buf = netTxBufPool.getReadBuffer();
+                        if (buf == null) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (Exception e) {
+                            }
                         } else {
-                            int parseResult = lProtocol.parse(netRxBuf, requestCode);
-                            switch (parseResult) {
-                                case LProtocol.RESPONSE_PARSE_RESULT_DONE :
-                                    netTxBufPool.putReadBuffer(buf);
-                                    hasBuf = false;
-                                    protocolState = SEND_REQUEST;
-                                    break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_MORE2COME :
-                                    //continue to read more
-                                    break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_ERROR :
-                                    LLog.e(TAG, "protocol broken, restart service");
-                                    fail = true;
-                                    break;
+                            try {
+                                sockOut.write(buf.getBuf(), 0, buf.getLen());
+                                sockOut.flush();
+                                netTxBufPool.putReadBuffer(buf);
+                            } catch (Exception e) {
+                                fail = true;
                             }
                         }
                         break;
@@ -272,16 +267,13 @@ public class LAppServer {
 
                 if (fail) {
                     synchronized (netLock) {
-                        closeSockets(AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                        closeSockets();
                         //network layer broken in the middle of transfer, teardown server and restart
                         break;
                     }
                 }
             }
 
-            // signal the end of connection.
-            LLog.d(TAG, "app server stopped");
-            lProtocol.parse(null, (short)0);
             synchronized (netLock) {
                 netThreadState = STATE_EXIT;
                 netLock.notifyAll();
@@ -293,7 +285,7 @@ public class LAppServer {
         synchronized (netLock) {
             if (!connected) return null;
             //netLock is held before calling to get buffer: getBuffer should NEVER block.
-            return netTxBufPool.getWriteBufferNeverFail();
+            return netTxBufPool.getWriteBufferMayFail();
         }
     }
 
