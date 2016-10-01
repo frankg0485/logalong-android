@@ -483,7 +483,7 @@ public class LProtocol {
         }
 
         if (pktBuf.getLen() > 0) {
-            LLog.d(TAG, "packet pipe fragmented");
+            //LLog.d(TAG, "packet pipe fragmented");
             pktBuf.append(buf);
             pkt = pktBuf;
         } else {

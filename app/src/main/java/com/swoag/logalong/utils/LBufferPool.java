@@ -10,7 +10,6 @@ public class LBufferPool {
     private final int bufferSize;
     private final int maxPoolSize;
     private int currentPoolSize;
-    private boolean poolAlive;
     private boolean poolEnabled;
     private final List<LBuffer> emptyBuffers;
     private final List<LBuffer> filledBuffers;
@@ -26,15 +25,8 @@ public class LBufferPool {
         for (int ii = 0; ii < currentPoolSize; ii++) {
             emptyBuffers.add(new LBuffer(bufferSize));
         }
-        poolAlive = true;
+        poolEnabled = false;
         lock = new Object();
-    }
-
-    public void stop() {
-        synchronized (lock) {
-            poolAlive = false;
-            lock.notifyAll();
-        }
     }
 
     public void enable(boolean yes) {
@@ -46,7 +38,7 @@ public class LBufferPool {
 
     public LBuffer getWriteBuffer() {
         synchronized (lock) {
-            while (poolAlive && poolEnabled) {
+            while (poolEnabled) {
                 if (emptyBuffers.size() > 0) {
                     LBuffer buf = emptyBuffers.remove(0);
                     buf.setBufOffset(0);
@@ -67,7 +59,7 @@ public class LBufferPool {
 
     public LBuffer getWriteBufferMayFail() {
         synchronized (lock) {
-            while (poolAlive && poolEnabled) {
+            while (poolEnabled) {
                 if (emptyBuffers.size() > 0) {
                     LBuffer buf = emptyBuffers.remove(0);
                     buf.setBufOffset(0);
@@ -115,7 +107,7 @@ public class LBufferPool {
 
     public LBuffer getReadBuffer() {
         synchronized (lock) {
-            while (poolAlive && poolEnabled) {
+            while (poolEnabled) {
                 if (filledBuffers.size() > 0) {
                     LBuffer buf = filledBuffers.remove(0);
                     buf.setBufOffset(0);
@@ -132,6 +124,18 @@ public class LBufferPool {
         return null;
     }
 
+    public LBuffer getReadBufferMayFail() {
+        synchronized (lock) {
+            if (poolEnabled && filledBuffers.size() > 0) {
+                LBuffer buf = filledBuffers.remove(0);
+                buf.setBufOffset(0);
+                return buf;
+
+            }
+            return null;
+        }
+    }
+
     public void putReadBuffer(LBuffer buffer) {
         if (buffer == null) return;
         synchronized (lock) {
@@ -143,7 +147,7 @@ public class LBufferPool {
     public void flush() {
         LBuffer buf = null;
         synchronized (lock) {
-            while (poolAlive && (filledBuffers.size() > 0)) {
+            while (filledBuffers.size() > 0) {
                 buf = filledBuffers.remove(0);
                 buf.setBufOffset(0);
                 emptyBuffers.add(buf);

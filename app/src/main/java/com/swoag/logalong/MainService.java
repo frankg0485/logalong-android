@@ -1,23 +1,19 @@
 package com.swoag.logalong;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Handler;
 import android.os.IBinder;
 import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.network.LProtocol;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBScheduledTransaction;
-import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -73,7 +69,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
                     stopSelf();
                 } else {
-                    LLog.d(TAG, "timed polling");
+                    LLog.d(TAG, "heart beat polling");
                     LProtocol.ui.poll();
                     pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 }
@@ -123,6 +119,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         }
         LProtocol.ui.disconnect();
         LLog.d(TAG, "service destroyed");
+
         super.onDestroy();
     }
 
@@ -147,6 +144,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case CMD_STOP:
                     LLog.d(TAG, "requested to stop service, connected: " + LProtocol.ui.isConnected());
                     if (LProtocol.ui.isConnected()) {
+                        LLog.d(TAG, "post service shutdown runnable");
                         pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
                         stopSelf();

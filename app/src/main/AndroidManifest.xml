@@ -39,6 +39,10 @@
         </receiver>
 
         <service
+            android:name="com.swoag.logalong.LoggingService"
+            android:exported="false" />
+
+        <service
             android:name="com.swoag.logalong.MainService"
             android:exported="false" />
 

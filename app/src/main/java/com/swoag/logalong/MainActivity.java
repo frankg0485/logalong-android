@@ -202,6 +202,7 @@ public class MainActivity extends LFragmentActivity
 
     @Override
     protected void onPause() {
+        //LLog.d(TAG, "onPause");
         MainService.stop(this);
         super.onPause();
     }

@@ -28,14 +28,12 @@ public class LRemoteLogging {
     private static final String serverIp = LAppServer.serverIp;
     private static final int serverPort = 5222;
 
-    private Handler timerHandler;
-    private Runnable timerRunnable;
-
     private Socket socket = null;
     private InputStream sockIn = null;
     private OutputStream sockOut = null;
 
     private final int LOGGING_REQUEST_MAGIC = 0xa7cbe9fd;
+    public static final short LOGGING_REQUEST_SYNC = (short)0xffaa;
 
     private final int STATE_INIT = 10;
     private final int STATE_READY = 30;
@@ -64,20 +62,14 @@ public class LRemoteLogging {
     private LRemoteLogging() {
         context = LApp.ctx;
 
+        connected = false;
+
         netLock = new Object();
         netThreadState = STATE_INIT;
-        netTxBufPool = new LBufferPool(MAX_LOG_TX_PACKET_LEN, 32);
+        netTxBufPool = new LBufferPool(MAX_LOG_TX_PACKET_LEN, 64);
         netTxBufPool.enable(true);
 
         netRxBuf = new LBuffer(MAX_LOG_RX_PACKET_LEN);
-
-        timerHandler = new Handler(){};
-        timerRunnable = new Runnable() {
-            @Override
-            public void run() {
-                closeSockets();
-            }
-        };
     }
 
     //caller must hold netLock
@@ -97,13 +89,9 @@ public class LRemoteLogging {
 
         sockOut = null;
         sockIn = null;
-        connected = false;
     }
 
     public boolean connect() {
-        timerHandler.removeCallbacks(timerRunnable);
-        timerHandler.postDelayed(timerRunnable, 15000);
-
         synchronized (netLock) {
             if (!connected) {
                 connected = true;
@@ -131,9 +119,6 @@ public class LRemoteLogging {
                                 sockOut = socket.getOutputStream();
 
                                 synchronized (netLock) {
-                                    netTxBufPool.enable(true);
-                                    netTxBufPool.flush();
-
                                     netThreadState = STATE_READY;
                                     netLock.notifyAll();
                                 }
@@ -161,7 +146,6 @@ public class LRemoteLogging {
             if (netThreadState == STATE_READY) {
                 while (netThreadState != STATE_EXIT) {
                     netThreadState = STATE_OFF;
-                    netTxBufPool.enable(false);
                     netLock.notifyAll();
 
                     try {
@@ -171,6 +155,13 @@ public class LRemoteLogging {
                 }
             }
             closeSockets();
+            connected = false;
+        }
+    }
+
+    public boolean isConnected() {
+        synchronized (netLock) {
+            return connected;
         }
     }
 
@@ -247,7 +238,7 @@ public class LRemoteLogging {
                         break;
 
                     case LOG_STATE_CONNECTED:
-                        buf = netTxBufPool.getReadBuffer();
+                        buf = netTxBufPool.getReadBufferMayFail();
                         if (buf == null) {
                             try {
                                 Thread.sleep(100);
@@ -268,7 +259,7 @@ public class LRemoteLogging {
                 if (fail) {
                     synchronized (netLock) {
                         closeSockets();
-                        //network layer broken in the middle of transfer, teardown server and restart
+                        Log.d(TAG, "network layer broken in the middle of transfer, teardown server and restart");
                         break;
                     }
                 }
@@ -276,6 +267,7 @@ public class LRemoteLogging {
 
             synchronized (netLock) {
                 netThreadState = STATE_EXIT;
+                Log.d(TAG, "remote logging thread exit");
                 netLock.notifyAll();
             }
         }
@@ -283,7 +275,6 @@ public class LRemoteLogging {
 
     public LBuffer getNetBuffer() {
         synchronized (netLock) {
-            if (!connected) return null;
             //netLock is held before calling to get buffer: getBuffer should NEVER block.
             return netTxBufPool.getWriteBufferMayFail();
         }
@@ -291,7 +282,6 @@ public class LRemoteLogging {
 
     public boolean putNetBuffer(LBuffer buf) {
         synchronized (netLock) {
-            if (!connected) return false;
             netTxBufPool.putWriteBuffer(buf);
             return true;
         }

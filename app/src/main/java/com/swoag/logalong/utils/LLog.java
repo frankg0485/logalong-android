@@ -1,18 +1,26 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.util.Log;
 
+import com.swoag.logalong.LApp;
+import com.swoag.logalong.LoggingService;
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.network.LRemoteLogging;
 
 public class LLog {
-    public static boolean debug = true;
-    public static boolean netDebug = false;
+    private static boolean debug = true;
+
+    private static boolean localLog = true;
+    private static boolean netLog = true;
+
+    private static String lastMsg = "";
+    private static int repeatCount = 0;
 
     private static boolean opened;
     private static int STACK_INDEX;
-    private static String pkg="";
+    private static String pkg = "";
     static {
         try {
             int ii = 0;
@@ -42,37 +50,37 @@ public class LLog {
     public static void d(String tag, String message) {
         if (!debug) return;
         if (verifyTag(tag)) {
-            //Log.d(tag, caller() + ":" + message);
-            remoteLog("D: " + tag + caller() + ":" + message);
+            if (localLog) Log.d(tag, caller() + ":" + message);
+            if (netLog) remoteLog("D: " + tag + caller() + ":" + message);
         }
     }
 
     public static void e(String tag, String message) {
         if (verifyTag(tag)) {
-            //Log.e(tag, caller() + ":" + message);
-            remoteLog("E: " + tag + caller() + ":" + message);
+            if (localLog) Log.e(tag, caller() + ":" + message);
+            if (netLog) remoteLog("E: " + tag + caller() + ":" + message);
         }
     }
 
     public static void i(String tag, String message) {
         if (verifyTag(tag)) {
-            //Log.i(tag, caller() + ":" + message);
-            remoteLog("I: " + tag + caller() + ":" + message);
+            if (localLog) Log.i(tag, caller() + ":" + message);
+            if (netLog) remoteLog("I: " + tag + caller() + ":" + message);
         }
     }
 
     public static void v(String tag, String message) {
         if (!debug) return;
         if (verifyTag(tag)) {
-            //Log.v(tag, caller() + ":" + message);
-            remoteLog("V: " + tag + caller() + ":" + message);
+            if (localLog) Log.v(tag, caller() + ":" + message);
+            if (netLog) remoteLog("V: " + tag + caller() + ":" + message);
         }
     }
 
     public static void w(String tag, String message) {
         if (verifyTag(tag)) {
-            //Log.w(tag, caller() + ":" + message);
-            remoteLog("W: " + tag + caller() + ":" + message);
+            if (localLog) Log.w(tag, caller() + ":" + message);
+            if (netLog) remoteLog("W: " + tag + caller() + ":" + message);
         }
     }
 
@@ -92,17 +100,27 @@ public class LLog {
     }
 
     private static void remoteLog(String msg) {
-        LRemoteLogging server = LRemoteLogging.getInstance();
-        server.connect();
-        LBuffer buffer = server.getNetBuffer();
-        if (null != buffer) {
-            buffer.putStringAutoInc(msg + "\n");
-            buffer.setLen(buffer.getBufOffset());
-            buffer.setBufOffset(0);
-            server.putNetBuffer(buffer);
-        } else {
-            Log.e("LLog", "remote logging buffer full");
-        }
+        if (!lastMsg.contentEquals(msg)) {
+            LRemoteLogging server = LRemoteLogging.getInstance();
+            LoggingService.start(LApp.ctx);
 
+            LBuffer buffer = server.getNetBuffer();
+            if (null != buffer) {
+                buffer.putShortAutoInc(LRemoteLogging.LOGGING_REQUEST_SYNC);
+                buffer.putShortAutoInc((short)0);
+                if (repeatCount > 0 ) buffer.putStringAutoInc("*** last msg repeated " + repeatCount + " times\n");
+                buffer.putStringAutoInc(msg + "\n");
+                buffer.setLen(buffer.getBufOffset());
+                buffer.putShortAt((short)(buffer.getLen() - 4), 2);
+                buffer.setBufOffset(0);
+                server.putNetBuffer(buffer);
+            } else {
+                Log.e("LLog", "remote logging buffer full");
+            }
+            lastMsg = msg;
+            repeatCount = 0;
+        } else {
+            repeatCount++;
+        }
     }
 }
