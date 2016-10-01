@@ -282,59 +282,71 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             }
         }
 
+        private void unshareMyselfFromAccount (long accountId) {
+            LAccount account = DBAccount.getById(accountId);
+
+            ArrayList<Integer> ids = account.getShareIds();
+            ArrayList<Integer> states = account.getShareStates();
+            for (int jj = 0; jj < ids.size(); jj++) {
+                if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                    LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(),
+                            false, account.getName(), account.getRid());
+                }
+                //else: if account share hasn't been confirmed, silently cleanup
+                //      without doing anything else.
+            }
+            account.removeAllShareUsers();
+            DBAccount.update(account);
+        }
 
         @Override
-        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
+        public void onShareAccountDialogExit(boolean ok, boolean applyToAllAccounts, long accountId,
                                              HashSet<Integer> selections, HashSet<Integer> origSelections) {
             if (!ok) return;
 
-            LAccount account = DBAccount.getById(accountId);
-            boolean unshare = false;
-
-            if (!shareEnabled) {
-                //unshare myself
-                unshare = true;
-            } else {
-                if (selections.isEmpty()) {
-                    //unshare myself, instead of removing everyone from shared group
-                    unshare = true;
-                }
+            HashSet<Long> set;
+            if (applyToAllAccounts) set = DBAccount.getAllActiveAccountIds();
+            else {
+                set = new HashSet<Long>();
+                set.add(accountId);
             }
 
-            if (unshare) {
-                ArrayList<Integer> ids = account.getShareIds();
-                ArrayList<Integer> states = account.getShareStates();
-                for (int jj = 0; jj < ids.size(); jj++) {
-                    if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                        LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(),
-                                false, account.getName(), account.getRid());
-                    }
-                }
-                account.removeAllShareUsers();
-                DBAccount.update(account);
+            boolean unshareMyself = false;
+            if (selections.isEmpty()) {
+                //unshare myself, instead of removing everyone from shared group
+                unshareMyself = true;
+            }
+
+            if (unshareMyself) {
+                for (long id : set) unshareMyselfFromAccount(id);
                 return;
             }
 
-            for (Integer ii : selections) {
-                if (!origSelections.contains(ii)) {
-                    // new share
-                    LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid(), true);
+            for (long id : set) {
+                LAccount account = DBAccount.getById(id);
+
+                for (Integer ii : selections) {
+                    if (!origSelections.contains(ii)) {
+                        // new share request
+                        LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid(), true);
+                    }
                 }
-            }
 
-            for (Integer ii : origSelections) {
-                if (!selections.contains(ii)) {
-                    account.removeShareUser(ii);
-                    DBAccount.update(account);
+                for (Integer ii : origSelections) {
+                    if (!selections.contains(ii)) {
+                        account.removeShareUser(ii);
+                        DBAccount.update(account);
 
-                    // notify the other party
-                    LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid());
+                        // notify the other party: user X, you've just been removed from group.
+                        LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid());
 
-                    ArrayList<Integer> ids = account.getShareIds();
-                    ArrayList<Integer> states = account.getShareStates();
-                    for (int jj = 0; jj < ids.size(); jj++) {
-                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid());
+                        ArrayList<Integer> ids = account.getShareIds();
+                        ArrayList<Integer> states = account.getShareStates();
+                        for (int jj = 0; jj < ids.size(); jj++) {
+                            if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                                //to all previously confirmed user: user X is removed from group
+                                LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid());
+                            }
                         }
                     }
                 }

@@ -627,6 +627,8 @@ public class LProtocol {
             return LTransport.send_rqst(server, RQST_POST_JOURNAL, userId, record, scrambler);
         }
 
+        //userId: user that this change is applying to
+        //changeUserId: which user is being added/removed
         public static boolean shareAccountUserChange(int userId, int changeUserId, boolean add, String accountName, String uuid) {
             if ((userId == changeUserId) && add) return false;
             return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_USER_CHANGE, userId, changeUserId + ","

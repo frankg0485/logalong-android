@@ -69,7 +69,7 @@ public class LShareAccountDialog extends Dialog
     private CountDownTimer countDownTimer;
     private MyArrayAdapter myArrayAdapter;
     private BroadcastReceiver broadcastReceiver;
-    private CheckBox checkBoxShare;
+    private CheckBox checkBoxAllAccounts;
     private View userCtrlView;
     private View selectAllView;
     private LAccount account;
@@ -88,7 +88,7 @@ public class LShareAccountDialog extends Dialog
     }
 
     public interface LShareAccountDialogItf {
-        public void onShareAccountDialogExit(boolean ok, boolean shareEnabled, long accountId,
+        public void onShareAccountDialogExit(boolean ok, boolean applyToAllAccounts, long accountId,
                                              HashSet<Integer> selections, HashSet<Integer> origSelections);
     }
 
@@ -109,11 +109,12 @@ public class LShareAccountDialog extends Dialog
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME}, this);
 
+        TextView tv = (TextView)findViewById(R.id.shareAccountName);
+        tv.setText(DBAccount.getNameById(accountId));
 
         findViewById(R.id.save).setOnClickListener(this);
         findViewById(R.id.cancel).setOnClickListener(this);
-        findViewById(R.id.share).setOnClickListener(this);
-        checkBoxShare = (CheckBox) findViewById(R.id.checkBoxShare);
+        checkBoxAllAccounts = (CheckBox) findViewById(R.id.checkBoxShareAllAccounts);
         userCtrlView = findViewById(R.id.userCtrlView);
 
         selectAllView = findViewById(R.id.selectall);
@@ -143,8 +144,8 @@ public class LShareAccountDialog extends Dialog
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
 
-        checkBoxShare.setChecked(!selectedIds.isEmpty());
-        enableShare(checkBoxShare.isChecked());
+        checkBoxAllAccounts.setChecked(false);
+        enableShare(true);
 
         this.setOnDismissListener(this);
     }
@@ -287,10 +288,6 @@ public class LShareAccountDialog extends Dialog
         int id = v.getId();
 
         switch (id) {
-            case R.id.share:
-                checkBoxShare.setChecked(!checkBoxShare.isChecked());
-                enableShare(checkBoxShare.isChecked());
-                break;
             case R.id.selectall:
                 try {
                     CheckBox cb = (CheckBox) v.findViewById(R.id.checkBox1);
@@ -351,7 +348,7 @@ public class LShareAccountDialog extends Dialog
 
     private void leave(boolean ok) {
         hideIME();
-        callback.onShareAccountDialogExit(ok, checkBoxShare.isChecked(), accountId, selectedIds, origSelectedIds);
+        callback.onShareAccountDialogExit(ok, checkBoxAllAccounts.isChecked(), accountId, selectedIds, origSelectedIds);
         dismiss();
     }
 

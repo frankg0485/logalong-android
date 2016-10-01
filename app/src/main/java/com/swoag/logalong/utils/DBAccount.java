@@ -231,4 +231,18 @@ public class DBAccount {
     public static int getDbIndexById(long id) {
         return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_ACCOUNTS, id);
     }
+
+    public static HashSet<Long> getAllActiveAccountIds() {
+        HashSet<Long> set = new HashSet<Long>();
+        Cursor cur = getCursorSortedBy(null);
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                set.add(cur.getLong(0));
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
+    }
 }
