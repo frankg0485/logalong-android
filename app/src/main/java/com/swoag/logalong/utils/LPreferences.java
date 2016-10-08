@@ -1,5 +1,5 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -63,11 +63,11 @@ public class LPreferences {
         savePreference(LApp.ctx, CACHE_WRITE_POINTER, ptr);
     }
 
-    public static long getCacheLength() {
-        return getPreference(LApp.ctx, CACHE_LENGTH, 0L);
+    public static int getCacheLength() {
+        return getPreference(LApp.ctx, CACHE_LENGTH, 0);
     }
 
-    public static void setCacheLength(long length) {
+    public static void setCacheLength(int length) {
         savePreference(LApp.ctx, CACHE_LENGTH, length);
     }
 

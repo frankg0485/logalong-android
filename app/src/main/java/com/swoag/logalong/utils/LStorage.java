@@ -1,5 +1,5 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.os.Environment;
 
@@ -14,7 +14,7 @@ public class LStorage {
     private static final int MAX_RECORD_LENGTH = 1024;
     private static final int MAX_CACHE_LENGTH = (16 * 1024 * 1024);
     private static LStorage instance = null;
-    private static long runningId = (new Random()).nextLong();
+    private static int runningId = (new Random()).nextInt();
     private static int SIGNATURE = 0xa55a55aa;
 
     private RandomAccessFile file;
@@ -33,15 +33,15 @@ public class LStorage {
     }
 
     public static class Entry {
-        public long id;
-        public String data;
+        public int id;
+        public byte[] data;
         public int userId;
 
         public Entry() {
         }
     }
 
-    public long getCacheLength() {
+    public int getCacheLength() {
         synchronized (lock) {
             if (file == null) {
                 return memory.getLength();
@@ -78,13 +78,15 @@ public class LStorage {
                 file.writeInt(SIGNATURE);
 
                 entry.id = runningId;
-                file.writeLong(entry.id);
+                file.writeInt(entry.id);
                 file.writeInt(entry.userId);
-                file.writeUTF(entry.data);
+                file.writeShort(entry.data.length);
+                file.write(entry.data);
 
                 long newOffset = file.getFilePointer();
                 LPreferences.setCacheWritePointer(newOffset);
-                LPreferences.setCacheLength(LPreferences.getCacheLength() + (newOffset - offset));
+
+                LPreferences.setCacheLength(LPreferences.getCacheLength() + (int)(newOffset - offset));
 
                 runningId++;
                 ret = true;
@@ -115,9 +117,11 @@ public class LStorage {
                     return null;
                 }
 
-                entry.id = file.readLong();
+                entry.id = file.readInt();
                 entry.userId = file.readInt();
-                entry.data = file.readUTF();
+                short bytes = file.readShort();
+                entry.data = new byte[bytes];
+                file.read(entry.data, 0, bytes);
             } catch (Exception e) {
                 LLog.e(TAG, "unable to read cache");
                 entry = null;
@@ -127,7 +131,7 @@ public class LStorage {
         return entry;
     }
 
-    public boolean release(long id) {
+    public boolean release(int id) {
         boolean ret = false;
         synchronized (lock) {
             if (file == null) {
@@ -137,7 +141,6 @@ public class LStorage {
             long offset = LPreferences.getCacheReadPointer();
 
             try {
-                Entry entry = new Entry();
                 file.seek(offset);
 
                 int signature = file.readInt();
@@ -146,14 +149,14 @@ public class LStorage {
                     reset();
                     return false;
                 }
-
-                entry.id = file.readLong();
-                if (id == entry.id) {
-                    entry.userId = file.readInt();
-                    entry.data = file.readUTF();
+                int entryId = file.readInt();
+                if (id == entryId) {
+                    file.skipBytes(4); //int userId
+                    short bytes = file.readShort();
+                    file.skipBytes(bytes);
 
                     long newOffset = file.getFilePointer();
-                    LPreferences.setCacheLength(LPreferences.getCacheLength() - (newOffset - offset));
+                    LPreferences.setCacheLength(LPreferences.getCacheLength() - (int)(newOffset - offset));
 
                     if (newOffset > MAX_CACHE_LENGTH - MAX_RECORD_LENGTH)
                         newOffset = 0;
@@ -161,7 +164,7 @@ public class LStorage {
                     LPreferences.setCacheReadPointer(newOffset);
                     ret = true;
                 } else {
-                    LLog.w(TAG, "invalid cache: " + id + " : " + entry.id);
+                    LLog.w(TAG, "invalid cache: " + id + " : " + entryId);
                 }
             } catch (Exception e) {
                 LLog.e(TAG, "unable to release cache");
@@ -245,7 +248,7 @@ public class LStorage {
             cache = null;
         }
 
-        long getLength() {
+        int getLength() {
             return cache.size();
         }
 
@@ -261,7 +264,7 @@ public class LStorage {
             return cache.get(0);
         }
 
-        boolean release(long id) {
+        boolean release(int id) {
             if (cache.size() <= 0) return false;
             Entry entry = cache.get(0);
 
