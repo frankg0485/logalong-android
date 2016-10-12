@@ -221,6 +221,20 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             return newView;
         }
 
+        private HashSet<Integer> getAccountCurrentShares(LAccount account) {
+            HashSet<Integer> selectedUsers = new HashSet<Integer>();
+            if (account.getShareIds() != null) {
+                for (int ii : account.getShareIds()) {
+                    if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
+                        selectedUsers.add(ii);
+                    } else {
+                        LLog.w(TAG, "unexpected: unknown shared user");
+                    }
+                }
+            }
+            return selectedUsers;
+        }
+
         private class ClickListener extends LOnClickListener {
             @Override
             public void onClicked(View v) {
@@ -258,21 +272,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             }
                         }
 
-                        boolean updateAccount = false;
                         LAccount account = DBAccount.getById(tag.id);
-                        HashSet<Integer> selectedUsers = new HashSet<Integer>();
-                        if (account.getShareIds() != null) {
-                            for (int ii : account.getShareIds()) {
-                                if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
-                                    selectedUsers.add(ii);
-                                } else updateAccount = true;
-                            }
-                        }
-
-                        if (updateAccount) {
-                            account.setShareIds(new ArrayList<Integer>(selectedUsers));
-                            DBAccount.update(account);
-                        }
+                        HashSet<Integer> selectedUsers = getAccountCurrentShares(account);
 
                         LShareAccountDialog shareAccountDialog = new LShareAccountDialog
                                 (activity, account.getId(), selectedUsers, MyCursorAdapter.this, users);
@@ -284,19 +285,15 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
 
         private void unshareMyselfFromAccount (long accountId) {
             LAccount account = DBAccount.getById(accountId);
-
-            ArrayList<Integer> ids = account.getShareIds();
-            ArrayList<Integer> states = account.getShareStates();
-            for (int jj = 0; jj < ids.size(); jj++) {
-                if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                    LProtocol.ui.shareAccountUserChange(ids.get(jj), LPreferences.getUserId(),
-                            false, account.getName(), account.getRid());
-                }
-                //else: if account share hasn't been confirmed, silently cleanup
-                //      without doing anything else.
-            }
             account.removeAllShareUsers();
             DBAccount.update(account);
+
+            //racing: before the following actually get posted and acked by server,
+            //        if this account is 'shared' by peer, the following would happen,
+            // - account is first backed to shared to state, then go to unshared state
+            //   when ack comes back.
+            LJournal journal = new LJournal();
+            journal.unshareAccount(LPreferences.getUserId(), (int)account.getId(), account.getGid(), account.getName());
         }
 
         @Override
@@ -311,45 +308,38 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 set.add(accountId);
             }
 
-            boolean unshareMyself = false;
             if (selections.isEmpty()) {
                 //unshare myself, instead of removing everyone from shared group
-                unshareMyself = true;
-            }
-
-            if (unshareMyself) {
                 for (long id : set) unshareMyselfFromAccount(id);
                 return;
             }
 
-            for (long id : set) {
-                LAccount account = DBAccount.getById(id);
+            for (long aid : set) {
+                LAccount account = DBAccount.getById(aid);
+                origSelections = getAccountCurrentShares(account);
 
-                for (Integer ii : selections) {
-                    if (!origSelections.contains(ii)) {
-                        // new share request
-                        LProtocol.ui.shareAccountWithUser(ii, account.getName(), account.getRid(), true);
-                    }
-                }
-
+                //first update all existing users if there's any removal
                 for (Integer ii : origSelections) {
                     if (!selections.contains(ii)) {
                         account.removeShareUser(ii);
-                        DBAccount.update(account);
-
-                        // notify the other party: user X, you've just been removed from group.
-                        LProtocol.ui.shareAccountUserChange(ii, ii, false, account.getName(), account.getRid());
-
-                        ArrayList<Integer> ids = account.getShareIds();
-                        ArrayList<Integer> states = account.getShareStates();
-                        for (int jj = 0; jj < ids.size(); jj++) {
-                            if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                                //to all previously confirmed user: user X is removed from group
-                                LProtocol.ui.shareAccountUserChange(ids.get(jj), ii, false, account.getName(), account.getRid());
-                            }
-                        }
+                        LJournal journal = new LJournal();
+                        journal.unshareAccount(ii, (int)account.getId(), account.getGid(), account.getName());
                     }
                 }
+
+                //now request for new share
+                for (Integer ii : selections) {
+                    boolean newShare = false;
+                    if (!origSelections.contains(ii)) newShare = true;
+                    else if (account.getShareUserState(ii) != LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) newShare = true;
+                    if (newShare) {
+                        // new share request: new memeber is added to group
+                        account.addShareUser(ii, LAccount.ACCOUNT_SHARE_INVITED);
+                        LJournal journal = new LJournal();
+                        journal.shareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
+                    }
+                }
+                DBAccount.update(account);
             }
         }
 
@@ -600,7 +590,5 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             }
         }
     }
-
-
 }
 

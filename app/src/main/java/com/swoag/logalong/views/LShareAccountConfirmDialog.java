@@ -120,6 +120,7 @@ public class LShareAccountConfirmDialog extends Dialog implements
         }
     }
 
+    /*
     private void do_add_share_user(String name) {
         hideErrorMsg();
         progressBar.setVisibility(View.VISIBLE);
@@ -138,6 +139,7 @@ public class LShareAccountConfirmDialog extends Dialog implements
         }.start();
         LProtocol.ui.getShareUserByName(name);
     }
+    */
 
     private void hideErrorMsg() {
         errorMsgV.setVisibility(View.GONE);

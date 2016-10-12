@@ -15,18 +15,23 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LStorage;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.UUID;
 
 public class LJournal {
     private static final String TAG = LJournal.class.getSimpleName();
+
+    private static final int MAX_JOURNAL_DATA_BYTES = 1024;
 
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
@@ -39,29 +44,25 @@ public class LJournal {
     private static final int ACTION_UPDATE_VENDOR = 40;
     private static final int ACTION_UPDATE_TAG = 50;
     private static final int ACTION_UPDATE_VENDOR_CATEGORY = 60;
+    private static final int ACTION_SHARE_ACCOUNT = 70;
+
+    private static final short JRQST_SHARE_ACCOUNT = 0x0100;
+    private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
+    private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
 
     private int state;
     private int userId;
     private String record;
+    private LBuffer data;
 
     private void init() {
         this.state = JOURNAL_STATE_ACTIVE;
         this.record = "";
+        this.data = new LBuffer(MAX_JOURNAL_DATA_BYTES);
     }
 
     public LJournal() {
         init();
-    }
-
-    public LJournal(String record) {
-        init();
-        this.record = record;
-    }
-
-    public LJournal(int state, String record) {
-        init();
-        this.state = state;
-        this.record = record;
     }
 
     /*
@@ -99,18 +100,19 @@ public class LJournal {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (entry != null) {
             if (lastFlushId == entry.id && (lastFlushMs - System.currentTimeMillis() < 15000)) {
+                //so not to keep flushing the same journal over and over
                 LLog.w(TAG, "journal flush request ignored: " + entry.id);
             } else {
                 lastFlushId = entry.id;
                 lastFlushMs = System.currentTimeMillis();
                 LLog.d(TAG, "post journal: " + entry.id);
-                LProtocol.ui.postJournal(entry.userId, entry.id + ":" + entry.data);
-                //LLog.d(TAG, "journal length: " + LStorage.getInstance().getCacheLength() + " posted: " + entry.data);
+
+                LProtocol.ui.postJournal(entry.userId, entry.id, entry.data);
             }
         }
     }
 
-    public static void deleteById(long journalId) {
+    public static void deleteById(int journalId) {
         //LLog.d(TAG, "release journal: " + journalId);
         LStorage.getInstance().release(journalId);
     }
@@ -118,7 +120,13 @@ public class LJournal {
     private void post(int userId) {
         LStorage.Entry entry = new LStorage.Entry();
         entry.userId = userId;
-        entry.data = this.record;
+        try {
+            //entry.data = Arrays.copyOf(this.data.getBuf(), this.data.getLen());
+            entry.data = new byte[this.data.getLen()];
+            System.arraycopy(this.data.getBuf(), 0, entry.data, 0, this.data.getLen());
+        } catch(Exception e) {
+            LLog.e(TAG, "unexpected record: " + e.getMessage());
+        }
 
         //automatically flush the very first journal, so we don't always wait for polling handler to time out.
         //this is not thread safe, unlikely but possible that the following may happen,
@@ -379,6 +387,64 @@ public class LJournal {
 
         record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_account_update(account);
+    }
+
+    public boolean unshareAccount(int userId, int accountId, int accountGid, String accountName) {
+        data.putShortAutoInc(JRQST_UNSHARE_ACCOUNT);
+        data.putIntAutoInc(accountId);
+        data.putIntAutoInc(accountGid);
+        try {
+            byte[] name = accountName.getBytes("UTF-8");
+            data.putByteAutoInc((byte) name.length);
+            data.appendAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
+        post(userId);
+        return true;
+    }
+
+    public boolean shareAccount(int userId, int accountId, int accountGid, String accountName) {
+        data.putShortAutoInc(JRQST_SHARE_ACCOUNT);
+        data.putIntAutoInc(accountId);
+        data.putIntAutoInc(accountGid);
+        try {
+            byte[] name = accountName.getBytes("UTF-8");
+            data.putByteAutoInc((byte) name.length);
+            data.appendAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
+        post(userId);
+        return true;
+    }
+
+    public boolean confirmAccountShare(boolean confirmed, int accountGid, int shareWithUserId, int shareWithAccountGid) {
+        data.putShortAutoInc(JRQST_CONFIRM_ACCOUNT_SHARE);
+        data.putByteAutoInc((byte) (confirmed ? 1 : 0));
+        data.putIntAutoInc(accountGid);
+        data.putIntAutoInc(shareWithUserId);
+        data.putIntAutoInc(shareWithAccountGid);
+        data.setLen(data.getBufOffset());
+        post(LPreferences.getUserId());
+        LLog.d(TAG, "confirm account: " + accountGid + " <--> " + shareWithAccountGid + " with user: "
+                + shareWithUserId + " confirmed: " + confirmed);
+        return true;
+    }
+
+    public boolean updateAccountShare(LAccount account, HashSet<Integer> userIds) {
+        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_SHARE + "=" + account.getShareIdsString() + ","
+                + DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
+                + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
+                + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
+                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=0";
+
+        for (int id : userIds) {
+            post(id);
+        }
+        return true;
     }
 
     private boolean post_category_update(LCategory category) {
@@ -1339,6 +1405,11 @@ public class LJournal {
         }
     }
 
+    private static void shareAccountFromReceivedRecord(String receivedRecord) {
+        LLog.d(TAG, receivedRecord);
+        //TODO:
+    }
+
     public static void receive(String recvRecord) {
         String[] ss = recvRecord.split(":", 3);
         int action = Integer.parseInt(ss[1]);
@@ -1370,6 +1441,10 @@ public class LJournal {
 
             case ACTION_UPDATE_VENDOR_CATEGORY:
                 updateVendorCategoryFromReceivedRecord(ss[2]);
+                break;
+
+            case ACTION_SHARE_ACCOUNT:
+                shareAccountFromReceivedRecord(ss[2]);
                 break;
         }
     }

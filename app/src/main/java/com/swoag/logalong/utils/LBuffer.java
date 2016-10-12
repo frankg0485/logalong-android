@@ -40,13 +40,13 @@ public class LBuffer {
         this.bytes = bytes;
     }
 
-    public int append(byte[] buf, int len) {
-        if (bytes + len > array.length) {
-            LLog.e(TAG, "buffer overlow: " + len + "@" + bytes);
+    public int append(byte[] buf) {
+        if (bytes + buf.length > array.length) {
+            LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes);
             return -1;
         }
-        System.arraycopy(buf, 0, array, offset + bytes, len);
-        bytes += len;
+        System.arraycopy(buf, 0, array, offset + bytes, buf.length);
+        bytes += buf.length;
         return 0;
     }
 
@@ -57,6 +57,29 @@ public class LBuffer {
             return -1;
         }
         System.arraycopy(buf.getBuf(), 0, array, offset + bytes, len);
+        bytes += len;
+        return 0;
+    }
+
+    public int appendAutoInc(byte[] buf) {
+        if (bytes + buf.length > array.length) {
+            LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes);
+            return -1;
+        }
+        System.arraycopy(buf, 0, array, offset + bytes, buf.length);
+        offset += buf.length;
+        bytes += buf.length;
+        return 0;
+    }
+
+    public int appendAutoInc(LBuffer buf) {
+        int len = buf.getLen();
+        if (bytes + len > array.length) {
+            LLog.e(TAG, "buffer overlow: " + len + "@" + bytes);
+            return -1;
+        }
+        System.arraycopy(buf.getBuf(), 0, array, offset + bytes, len);
+        offset += len;
         bytes += len;
         return 0;
     }

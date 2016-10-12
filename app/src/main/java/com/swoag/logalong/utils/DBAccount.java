@@ -33,6 +33,7 @@ public class DBAccount {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
+        cv.put(DBHelper.TABLE_COLUMN_NUMBER, account.getGid());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
         cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid());
@@ -42,6 +43,7 @@ public class DBAccount {
     private static void getValues(Cursor cur, LAccount account) {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        account.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NUMBER)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         account.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
@@ -66,11 +68,37 @@ public class DBAccount {
 
                 csr.moveToFirst();
                 getValues(csr, account);
-                account.setId(id);
                 csr.close();
             }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get account with id: " + id + ":" + e.getMessage());
+            account = null;
+        }
+        return account;
+    }
+
+    public static LAccount getByGid(int gid) {
+        return getByGid(LApp.ctx, gid);
+    }
+
+   public static LAccount getByGid(Context context, int gid) {
+        LAccount account = new LAccount();
+        try {
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+                    DBHelper.TABLE_COLUMN_NUMBER + "=?", new String[]{"" + gid}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find account with gid: " + gid);
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, account);
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with gid: " + gid + ":" + e.getMessage());
             account = null;
         }
         return account;

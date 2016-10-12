@@ -17,14 +17,18 @@ public class LAccount {
     public static final int ACCOUNT_SHARE_INVITED = 1;
     public static final int ACCOUNT_SHARE_CONFIRMED = 2;
     public static final int ACCOUNT_SHARE_DECLINED = 3;
+    public static final int ACCOUNT_SHARE_CONFIRMED_SYNCED = 4;
 
     //added to local database, but not yet invited, this is for GUI update only
-    public static final int ACCOUNT_SHARE_PREPARED = 4;
+    public static final int ACCOUNT_SHARE_PREPARED = 5;
 
     private int state;
     private String name;
     private String rid;
+    private int gid;
+
     private long timeStampLast;
+    private long shareTimeStampLast;
 
     private ArrayList<Integer> shareIds;
     private ArrayList<Integer> shareStates;
@@ -33,6 +37,7 @@ public class LAccount {
     private void init() {
         this.state = DBHelper.STATE_ACTIVE;
         this.timeStampLast = LPreferences.getServerUtc();
+        this.shareTimeStampLast = 0;
         this.rid = UUID.randomUUID().toString();
         this.name = "";
         this.shareIds = new ArrayList<Integer>();
@@ -72,7 +77,7 @@ public class LAccount {
         if (shareIds == null || shareStates == null || shareIds.size() < 1 || shareStates.size() < 1)
             return false;
         for (int ii = 0; ii < shareStates.size(); ii++) {
-            if (shareStates.get(ii) == ACCOUNT_SHARE_CONFIRMED) {
+            if (shareStates.get(ii) == ACCOUNT_SHARE_CONFIRMED_SYNCED) {
                 return true;
             }
         }
@@ -123,12 +128,11 @@ public class LAccount {
         if (shareIds == null || shareStates == null || shareIds.size() < 1 || shareStates.size() < 1)
             return "";
         String str = "";
-        for (int ii = 0; ii < shareIds.size() - 1; ii++) {
+        for (int ii = 0; ii < shareIds.size(); ii++) {
             str += String.valueOf(shareStates.get(ii)) + ",";
             str += String.valueOf(shareIds.get(ii)) + ",";
         }
-        str += String.valueOf(shareStates.get(shareIds.size() - 1)) + ",";
-        str += String.valueOf(shareIds.get(shareIds.size() - 1));
+        str += String.valueOf(shareTimeStampLast);
         return str;
     }
 
@@ -140,6 +144,11 @@ public class LAccount {
             for (int ii = 0; ii < sb.length / 2; ii++) {
                 shareStates.add(Integer.parseInt(sb[2 * ii]));
                 shareIds.add(Integer.parseInt(sb[2 * ii + 1]));
+            }
+            if ((sb.length % 2) == 0) {
+                shareTimeStampLast = 0;
+            } else {
+                shareTimeStampLast = Long.parseLong(sb[sb.length - 1]);
             }
         }
     }
@@ -205,5 +214,21 @@ public class LAccount {
 
     public void setTimeStampLast(long timeStampLast) {
         this.timeStampLast = timeStampLast;
+    }
+
+    public long getShareTimeStampLast() {
+        return shareTimeStampLast;
+    }
+
+    public void setShareTimeStampLast(long shareTimeStampLast) {
+        this.shareTimeStampLast = shareTimeStampLast;
+    }
+
+    public int getGid() {
+        return gid;
+    }
+
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 }

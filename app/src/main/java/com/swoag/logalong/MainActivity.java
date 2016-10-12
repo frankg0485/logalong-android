@@ -1,5 +1,5 @@
 package com.swoag.logalong;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -341,44 +341,51 @@ public class MainActivity extends LFragmentActivity
 
     @Override
     public void onShareAccountConfirmDialogExit(boolean ok, LAccountShareRequest request) {
-        if (ok) {
-            int userId = request.getUserId();
-            String userName = request.getUserName();
-            String userFullName = request.getUserFullName();
-            String accountName = request.getAccountName();
-            String uuid = request.getAccountUuid();
+        LJournal journal = new LJournal();
+        int userId = request.getUserId();
+        String userName = request.getUserName();
+        String userFullName = request.getUserFullName();
+        String accountName = request.getAccountName();
+        int accountGid = request.getAccountGid();
+        int shareAccountGid = request.getShareAccountGid();
 
+        if (ok) {
             LPreferences.setShareUserName(userId, userName);
             LPreferences.setShareUserFullName(userId, userFullName);
             LAccount account = DBAccount.getByName(accountName);
             if (account == null) {
                 account = new LAccount();
                 account.setName(accountName);
-                account.setRid(uuid);
+                account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.add(account);
             } else {
-                account.setState(DBHelper.STATE_ACTIVE);
-                if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
+                if ((account.getGid() != 0) && account.getGid() != shareAccountGid) {
+                    LLog.w(TAG, "unexpected: account " + account.getName() + " GID changed? " + shareAccountGid + " -> " + account.getGid());
+                }
+                account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.update(account);
             }
-
-            // inform all existing peers about this new user
-            LProtocol.ui.confirmAccountShare(userId, accountName, account.getRid());
-
-            ArrayList<Integer> ids = account.getShareIds();
-            ArrayList<Integer> states = account.getShareStates();
-            for (int jj = 0; jj < ids.size(); jj++) {
-                if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED && ids.get(jj) != userId) {
-                    LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid());
+            journal.confirmAccountShare(true, shareAccountGid, userId, accountGid);
+        } else {
+            LAccount account = DBAccount.getByName(accountName);
+            if (account == null) {
+                //do nothing if account does not yet exist
+                LLog.w(TAG, "cancelled share request for non-existing account: " + accountName);
+            } else {
+                //otherwise try to set GID
+                if (account.getGid() != 0) {
+                    if (account.getGid() != shareAccountGid) {
+                        LLog.w(TAG, "ignored GID change: account " + account.getName() + " GID: " + shareAccountGid + " -> " + account.getGid());
+                    }
+                } else {
+                    account.setGid(shareAccountGid);
+                    DBAccount.update(account);
                 }
             }
 
-            // now push all existing records
-            LJournal.pushAllAccountRecords(userId, account);
-        } else {
-
+            journal.confirmAccountShare(false, shareAccountGid, userId, accountGid);
         }
         shareAccountConfirmDialogOpened = false;
         LPreferences.deleteAccountShareRequest(request);

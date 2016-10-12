@@ -19,6 +19,8 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = MainService.class.getSimpleName();
@@ -97,6 +99,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_LOGIN,
                 LBroadcastReceiver.ACTION_POLL_ACKED,
                 LBroadcastReceiver.ACTION_POLL_IDLE,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE,
+
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
                 LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID,
@@ -210,37 +216,96 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
                 int cacheId = intent.getIntExtra("cacheId", 0);
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                String userFullName = intent.getStringExtra("userFullName");
-                String accountName = intent.getStringExtra("accountName");
-                String uuid = intent.getStringExtra("UUID");
-                byte requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
+                LProtocol.ui.pollAck(cacheId);
+                break;
 
-                LLog.d(TAG, "requested to share with: " + userFullName + " : " + userName);
-                LPreferences.setShareUserName(userId, userName);
-                LPreferences.setShareUserFullName(userId, userFullName);
-                LAccount account = DBAccount.getByName(accountName);
-                if (requireConfirmation == 0) {
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                userId = intent.getIntExtra("id", 0);
+                int accountId = intent.getIntExtra("accountId", 0);
+                int accountGid = intent.getIntExtra("accountGid", 0);
+                String accountName = intent.getStringExtra("accountName");
+
+                if (userId != LPreferences.getUserId()) {
+                    LLog.e(TAG, "unexpected user id: " + userId + " myId: " + LPreferences.getUserId());
+                } else {
+                    LAccount account = DBAccount.getById(accountId);
                     if (account == null) {
-                        account = new LAccount();
-                        account.setName(accountName);
-                        account.setRid(uuid);
-                        account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                        DBAccount.add(account);
+                        LLog.w(TAG, "requested account no longer exist? id: " + accountId + " name: " + accountName);
                     } else {
-                        if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
-                        account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                        DBAccount.update(account);
+                        if (!accountName.contentEquals(account.getName())) {
+                            LLog.w(TAG, "account: " + accountId + " renamed before getting its GID: " + accountName + " -> " + account.getName());
+                        }
+                        if (account.getGid() != 0 && accountGid != account.getGid()) {
+                            LLog.e(TAG, "account GID already set: " + account.getGid() + " and mismatches new request: " + accountGid);
+                        } else if (accountGid != account.getGid()) {
+                            account.setGid(accountGid);
+                            DBAccount.update(account);
+                        }
                     }
                 }
                 LProtocol.ui.pollAck(cacheId);
-
-                // now push all existing records
-                if (requireConfirmation == 0)
-                    LJournal.pushAllAccountRecords(userId, account);
                 break;
 
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                userName = intent.getStringExtra("userName");
+                userId = intent.getIntExtra("userId", 0);
+                String userFullName = intent.getStringExtra("userFullName");
+                LPreferences.setShareUserName(userId, userName);
+                LPreferences.setShareUserFullName(userId, userFullName);
+                LProtocol.ui.pollAck(cacheId);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                accountGid = intent.getIntExtra("accountGid", 0);
+                short numShareUsers = intent.getShortExtra("numShareUsers", (short)0);
+                int[] shareUSers = intent.getIntArrayExtra("shareUsers");
+
+                LLog.d(TAG, "requested to update account share for: " + accountGid);
+                LAccount account = DBAccount.getByGid(accountGid);
+                if (account == null) {
+                    LLog.w(TAG, "requested account no longer exist? GID: " + accountGid);
+                } else {
+                    LLog.d(TAG, "requested to update account share for: " + account.getName());
+                    HashSet<Integer> newShareUsers = new HashSet<Integer>();
+                    ArrayList<Integer> origIds = account.getShareIds();
+                    ArrayList<Integer> origStates = account.getShareStates();
+
+                    account.removeAllShareUsers();
+                    int  myUserId = LPreferences.getUserId();
+                    boolean isShared = false;
+                    for (int user: shareUSers) if (user == myUserId) {isShared = true; break;}
+                    LLog.d(TAG, "account: " + account.getName() + " shared? " + isShared);
+                    if (isShared) {
+                        for (int user : shareUSers) {
+                            if (user == myUserId) continue;
+
+                            boolean newShare = true;
+                            for (int ii = 0; ii < origIds.size(); ii++) {
+                                if (user == origIds.get(ii) && origStates.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
+                                    newShare = false;
+                                    break;
+                                }
+                            }
+                            if (newShare) {
+                                LLog.d(TAG, "new share from user: " + user);
+                                newShareUsers.add(user);
+                            }
+                            account.addShareUser(user, LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED);
+                        }
+                    }
+                    DBAccount.update(account);
+
+                    //sync records to newly added share user
+                    for (int user: newShareUsers) {
+
+                    }
+                }
+                LProtocol.ui.pollAck(cacheId);
+                break;
+/*
             case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
                 if (ret == LProtocol.RSPS_OK) {
                     int id = intent.getIntExtra("id", 0);
@@ -255,6 +320,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.w(TAG, "unable to complete share request");
                     //displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
                 }
+
                 break;
 
             case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID:
@@ -293,7 +359,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 // now push all existing records
                 LJournal.pushAllAccountRecords(userId, account);
                 break;
-
+*/
             case LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 String record = intent.getStringExtra("record");
@@ -307,7 +373,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
 
                 if (ret == LProtocol.RSPS_OK) {
-                    long journalId = intent.getLongExtra("journalId", 0);
+                    int journalId = intent.getIntExtra("journalId", 0);
                     LJournal.deleteById(journalId);
                     LJournal.flush();
                 } else {
@@ -326,7 +392,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 //LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
                 LJournal.receive(intent.getStringExtra("record"));
                 break;
-
+/*
             case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE:
                 // this is from our shared peer, informing status change for one of the existng shared user
                 // or newly added user
@@ -375,8 +441,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     }
                 }
                 break;
-
+*/
             case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
+                LLog.w(TAG, "unknown message received");
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 LProtocol.ui.pollAck(cacheId);

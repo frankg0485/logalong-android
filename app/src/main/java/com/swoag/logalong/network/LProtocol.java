@@ -71,13 +71,17 @@ public class LProtocol {
     private static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
     private static final short RQST_PING = RQST_SYS | 0x7ff;
 
-    private static final short CMD_SHARE_ACCOUNT_REQUEST = 0x0004;
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008; /* obsolete */
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID = 0x0009;
     private static final short CMD_SHARED_TRANSITION_RECORD = 0x000c;
     private static final short CMD_RECEIVED_JOURNAL = 0x0010;
     private static final short CMD_SHARE_ACCOUNT_USER_CHANGE = 0x0014;
     private static final short CMD_SYSTEM_MSG_BROADCAST = 0x7373;
+
+    private static final short CMD_SET_ACCOUNT_GID = 0x0104;
+    private static final short CMD_REQUEST_ACCOUNT_SHARE = 0x0105;
+    private static final short CMD_UPDATE_ACCOUNT_SHARE = 0x0106;
+    private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -109,35 +113,77 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
+    private void handleAccountSetGid(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int userId = pkt.getIntAutoInc();
+        int accountId = pkt.getIntAutoInc();
+        int accountGid = pkt.getIntAutoInc();
+        byte bytes = pkt.getByteAutoInc();
+        String accountName = pkt.getStringAutoInc(bytes);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("id", userId);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("accountId", accountId);
+        rspsIntent.putExtra("accountGid", accountGid);
+        rspsIntent.putExtra("accountName", accountName);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
     private void handleAccountShareRequest(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
         int userId = pkt.getIntAutoInc();
-        short bytes = pkt.getShortAutoInc();
+        byte bytes = pkt.getByteAutoInc();
         String userName = pkt.getStringAutoInc(bytes);
-        bytes = pkt.getShortAutoInc();
+        bytes = pkt.getByteAutoInc();
         String userFullName = pkt.getStringAutoInc(bytes);
+        int accountGid = pkt.getIntAutoInc();
+        int shareAccountGid = pkt.getIntAutoInc();
+        bytes = pkt.getByteAutoInc();
+        String accountName = pkt.getStringAutoInc(bytes);
 
-        bytes = pkt.getShortAutoInc();
-        String str = pkt.getStringAutoInc(bytes);
-        String[] ss = str.split(",");
-        String accountName = ss[0];
-        String uuid = ss[1];
-        byte requireConfirmation = Byte.parseByte(ss[2]);
-        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " " + uuid);
-
-        if (requireConfirmation == 1) {
-            LPreferences.addAccountShareRequest(new LAccountShareRequest(userId, userName, userFullName, accountName, uuid));
-        }
+        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " GID: " + accountGid);
+        LPreferences.addAccountShareRequest(new LAccountShareRequest(userId, userName, userFullName, accountName, accountGid, shareAccountGid));
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
-        rspsIntent.putExtra("id", userId);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    private void handleAccountShareUpdate(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int accountGid = pkt.getIntAutoInc();
+        short numShareUsers = pkt.getShortAutoInc();
+        int[] shareUsers = new int[numShareUsers];
+        for (int ii = 0; ii < numShareUsers; ii++)
+            shareUsers[ii] = pkt.getIntAutoInc();
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("accountGid", accountGid);
+        rspsIntent.putExtra("numShareUsers", numShareUsers);
+        rspsIntent.putExtra("shareUsers", shareUsers);
+        LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " + shareUsers );
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    private void handleShareUserProfileUpdate(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int userId = pkt.getIntAutoInc();
+        byte bytes = pkt.getByteAutoInc();
+        String userName = pkt.getStringAutoInc(bytes);
+        bytes = pkt.getByteAutoInc();
+        String userFullName = pkt.getStringAutoInc(bytes);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("userId", userId);
         rspsIntent.putExtra("userName", userName);
         rspsIntent.putExtra("userFullName", userFullName);
-        rspsIntent.putExtra("accountName", accountName);
-        rspsIntent.putExtra("UUID", uuid);
-        rspsIntent.putExtra("requireConfirmation", requireConfirmation);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -373,10 +419,7 @@ public class LProtocol {
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
-                    short bytes = pkt.getShortAutoInc();
-                    String str = pkt.getStringAutoInc(bytes);
-                    String[] ss = str.split(":");
-                    long journalId = Long.parseLong(ss[0]);
+                    int journalId = pkt.getIntAutoInc();
                     rspsIntent.putExtra("journalId", journalId);
                     //LLog.d(TAG, "posted journal: " + journalId);
                 }
@@ -388,8 +431,17 @@ public class LProtocol {
                     int cacheId = pkt.getIntAutoInc();
                     short cmd = pkt.getShortAutoInc();
                     switch (cmd) {
-                        case CMD_SHARE_ACCOUNT_REQUEST:
+                        case CMD_SET_ACCOUNT_GID:
+                            handleAccountSetGid(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID, cacheId);
+                            break;
+                        case CMD_REQUEST_ACCOUNT_SHARE:
                             handleAccountShareRequest(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
+                            break;
+                        case CMD_UPDATE_ACCOUNT_SHARE:
+                            handleAccountShareUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE, cacheId);
+                            break;
+                        case CMD_UPDATE_SHARE_USER_PROFILE:
+                            handleShareUserProfileUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE, cacheId);
                             break;
 
                         case CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID:
@@ -623,8 +675,8 @@ public class LProtocol {
             return LTransport.send_rqst(server, RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID, userId, accountName + "," + uuid, scrambler);
         }
 
-        public static boolean postJournal(int userId, String record) {
-            return LTransport.send_rqst(server, RQST_POST_JOURNAL, userId, record, scrambler);
+        public static boolean postJournal(int userId, int journalId, byte[] data) {
+            return LTransport.send_rqst(server, RQST_POST_JOURNAL, userId, journalId, data, scrambler);
         }
 
         //userId: user that this change is applying to

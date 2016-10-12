@@ -28,6 +28,11 @@ public class LBroadcastReceiver {
     public static final int ACTION_SHARE_ACCOUNT_USER_CHANGE = 80;
     public static final int ACTION_USER_PROFILE_UPDATED = 84;
     public static final int ACTION_NETWORK_CONNECTED = 90;
+
+    public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
+    public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;
+    public static final int ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE = 102;
+
     public static final int ACTION_SERVER_BROADCAST_MSG_RECEIVED = 1000;
     public static final int ACTION_UNKNOWN_MSG = 9999;
 

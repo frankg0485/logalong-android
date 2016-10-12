@@ -69,7 +69,7 @@ public class DBAccess {
                     account.setSharedIdsString(str);
                     if (account.getShareIds() != null) {
                         for (int ii = 0; ii < account.getShareIds().size(); ii++) {
-                            if (account.getShareStates().get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+                            if (account.getShareStates().get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
                                 set.add(account.getShareIds().get(ii));
                             }
                         }
