@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.widget.CursorAdapter;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -311,7 +312,7 @@ public class LShareAccountDialog extends Dialog
                 if (editText.getText() != null) {
                     str = editText.getText().toString().trim();
                 }
-                if (!str.isEmpty()) do_add_share_user(editText.getText().toString().trim());
+                if (!TextUtils.isEmpty(str)) do_add_share_user(editText.getText().toString().trim());
                 else leave(true);
                 break;
             case R.id.cancel:

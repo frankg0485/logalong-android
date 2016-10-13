@@ -5,6 +5,7 @@ package com.swoag.logalong.views;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -76,7 +77,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
         valueTV = (TextView) findViewById(R.id.value);
         clearInputString();
         inputString = value2string(value);
-        if (inputString.isEmpty()) {
+        if (TextUtils.isEmpty(inputString)) {
             valueTV.setText("0.0");
         } else {
             valueTV.setText(inputString);
@@ -238,14 +239,14 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
 
     private void appendToString(int digit) {
         if (digit == -1) {
-            if (inputString.isEmpty()) {
+            if (TextUtils.isEmpty(inputString)) {
                 inputString = "0.";
             } else {
                 inputString += '.';
             }
             enableDot(false);
         } else {
-            if (inputString.isEmpty() && digit == 0) {
+            if (TextUtils.isEmpty(inputString) && digit == 0) {
                 inputString = "0.";
                 enableDot(false);
             } else {
@@ -258,7 +259,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
     }
 
     private void removeLastDigitFromString() {
-        if (inputString.isEmpty()) {
+        if (TextUtils.isEmpty(inputString)) {
             clearInputString();
         } else {
             char lastDigit = inputString.charAt(inputString.length() - 1);
@@ -293,7 +294,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
     }
 
     private String validateString(String str) {
-        if (str.isEmpty()) return str;
+        if (TextUtils.isEmpty(str)) return str;
         char ch0 = str.charAt(0);
         if (ch0 == '.') return "0.";
         if (str.length() == 1) {
@@ -361,7 +362,7 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
     }
 
     private double string2value(String str) {
-        if (str.isEmpty()) return 0f;
+        if (TextUtils.isEmpty(str)) return 0f;
 
         char lastDigit = str.charAt(str.length() - 1);
         if (lastDigit == '.'
