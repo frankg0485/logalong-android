@@ -73,7 +73,6 @@ public class LProtocol {
 
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008; /* obsolete */
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID = 0x0009;
-    private static final short CMD_SHARED_TRANSITION_RECORD = 0x000c;
     private static final short CMD_RECEIVED_JOURNAL = 0x0010;
     private static final short CMD_SHARE_ACCOUNT_USER_CHANGE = 0x0014;
     private static final short CMD_SYSTEM_MSG_BROADCAST = 0x7373;
@@ -82,6 +81,7 @@ public class LProtocol {
     private static final short CMD_REQUEST_ACCOUNT_SHARE = 0x0105;
     private static final short CMD_UPDATE_ACCOUNT_SHARE = 0x0106;
     private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
+    private static final short CMD_SHARE_TRANSITION_RECORD = 0x130;
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -216,22 +216,15 @@ public class LProtocol {
 
     private void handleRecordShare(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
-        int userId = pkt.getIntAutoInc();
+        int accountGid = pkt.getIntAutoInc();
         short bytes = pkt.getShortAutoInc();
-        String userName = pkt.getStringAutoInc(bytes);
-        bytes = pkt.getShortAutoInc();
-        String userFullName = pkt.getStringAutoInc(bytes);
-
-        bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
-        LLog.d(TAG, "record share request from: " + userId + ":" + userName + " record: " + record);
+        LLog.d(TAG, "record share request for account: " + accountGid + " record: " + record);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
-        rspsIntent.putExtra("id", userId);
-        rspsIntent.putExtra("userName", userName);
-        rspsIntent.putExtra("userFullName", userFullName);
+        rspsIntent.putExtra("accountGid", accountGid);
         rspsIntent.putExtra("record", record);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
@@ -448,9 +441,8 @@ public class LProtocol {
                             handleAccountShareConfirm(pkt, status, LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID, cacheId);
                             break;
 
-                        //TODO: remove me: obsolete
-                        case CMD_SHARED_TRANSITION_RECORD:
-                            handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD, cacheId);
+                        case CMD_SHARE_TRANSITION_RECORD:
+                            handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD, cacheId);
                             break;
 
                         case CMD_RECEIVED_JOURNAL:

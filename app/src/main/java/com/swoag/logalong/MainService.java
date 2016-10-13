@@ -102,11 +102,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD,
 
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
                 LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID,
-                LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD,
                 LBroadcastReceiver.ACTION_JOURNAL_POSTED,
                 LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE}, this);
@@ -300,7 +300,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                     //sync records to newly added share user
                     for (int user: newShareUsers) {
-
+                        LJournal.pushAllAccountRecords(user, account);
                     }
                 }
                 LProtocol.ui.pollAck(cacheId);
@@ -360,12 +360,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LJournal.pushAllAccountRecords(userId, account);
                 break;
 */
-            case LBroadcastReceiver.ACTION_SHARED_TRANSITION_RECORD:
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD:
                 cacheId = intent.getIntExtra("cacheId", 0);
+                accountGid = intent.getIntExtra("accountGid", 0);
                 String record = intent.getStringExtra("record");
                 LProtocol.ui.pollAck(cacheId);
 
-                LJournal.updateItemFromReceivedRecord(record);
+                LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:

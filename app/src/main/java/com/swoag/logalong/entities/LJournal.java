@@ -49,6 +49,7 @@ public class LJournal {
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
     private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
+    private static final short JRQST_SHARE_TRANSITION_RECORD = 0x0103;
 
     private int state;
     private int userId;
@@ -99,9 +100,10 @@ public class LJournal {
     public static void flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (entry != null) {
-            if (lastFlushId == entry.id && (lastFlushMs - System.currentTimeMillis() < 15000)) {
+            if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 15000)) {
                 //so not to keep flushing the same journal over and over
-                LLog.w(TAG, "journal flush request ignored: " + entry.id);
+                LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
+                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
             } else {
                 lastFlushId = entry.id;
                 lastFlushMs = System.currentTimeMillis();
@@ -141,16 +143,15 @@ public class LJournal {
     }
 
     public static String transactionItemString(LTransaction item) {
-        LAccount account = DBAccount.getById(item.getAccount());
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBTag.getById(item.getTag());
         String rid = item.getRid();
 
         int type = item.getType();
-        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
-            type = LTransaction.TRANSACTION_TYPE_TRANSFER;
-        }
+        //if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+        //    type = LTransaction.TRANSACTION_TYPE_TRANSFER;
+        //}
 
         String str = DBHelper.TABLE_COLUMN_STATE + "=" + item.getState() + ","
                 + DBHelper.TABLE_COLUMN_TYPE + "=" + type + ","
@@ -183,6 +184,7 @@ public class LJournal {
             str += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
         }
 
+        /*
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
             LAccount account2 = DBAccount.getById(item.getAccount2());
             str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName()
@@ -199,18 +201,28 @@ public class LJournal {
             account = account2;
             rid = item.getRid().substring(0, item.getRid().length() - 1);
         }
-
-        str += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
-        str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName()
-                + ";" + account.getRid()
-                + ";" + account.getTimeStampLast();
+        */
+        str += DBHelper.TABLE_COLUMN_RID + "=" + rid;
+        //str += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
+        //str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName()
+        //        + ";" + account.getRid()
+        //        + ";" + account.getTimeStampLast();
 
         return str;
     }
 
-    public boolean shareItem(int userId, LTransaction item) {
-        record = ACTION_SHARE_ITEM + ":" + transactionItemString(item);
-        //LLog.d(TAG, "share with user: " + userId + " item: " + record);
+    public boolean shareItem(int userId, int accountGid, LTransaction item) {
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORD);
+        data.putIntAutoInc(accountGid);
+
+        try {
+            byte[] rec = transactionItemString(item).getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
         post(userId);
         return true;
     }
@@ -634,7 +646,7 @@ public class LJournal {
         int type = LTransaction.TRANSACTION_TYPE_EXPENSE;
         int madeBy = 0;
         int state = DBHelper.STATE_ACTIVE;
-        long timestamp = 0, timestampLast = 0, accountId = 0, account2Id = 0, categoryId = 0, vendorId = 0, tagId = 0;
+        long timestamp = 0, timestampLast = 0, categoryId = 0, vendorId = 0, tagId = 0;
 
         for (String str : splitRecords) {
             String[] ss = str.split("=", -1);
@@ -650,44 +662,6 @@ public class LJournal {
                 timestamp = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
                 timestampLast = Long.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT)) {
-                String[] sss = ss[1].split(";");
-
-                LAccount account1 = DBAccount.getByName(sss[0]);
-                if (null == account1) {
-                    accountId = DBAccount.add(new LAccount(sss[0], sss[1]));
-                } else {
-                    boolean update = false;
-                    if (sss[1].compareTo(account1.getRid()) > 0) {
-                        account1.setRid(sss[1]);
-                        update = true;
-                    }
-                    if (Long.parseLong(sss[2]) >= account1.getTimeStampLast()) {
-                        account1.setTimeStampLast(Long.parseLong(sss[2]));
-                        update = true;
-                    }
-                    if (update) DBAccount.update(account1);
-                    accountId = account1.getId();
-                }
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2)) {
-                String[] sss = ss[1].split(";");
-
-                LAccount account2 = DBAccount.getByName(sss[0]);
-                if (null == account2) {
-                    account2Id = DBAccount.add(new LAccount(sss[0], sss[1]));
-                } else {
-                    boolean update = false;
-                    if (sss[1].compareTo(account2.getRid()) > 0) {
-                        account2.setRid(sss[1]);
-                        update = true;
-                    }
-                    if (Long.parseLong(sss[2]) >= account2.getTimeStampLast()) {
-                        account2.setTimeStampLast(Long.parseLong(sss[2]));
-                        update = true;
-                    }
-                    if (update) DBAccount.update(account2);
-                    account2Id = account2.getId();
-                }
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY)) {
                 String[] sss = ss[1].split(";");
 
@@ -767,20 +741,6 @@ public class LJournal {
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NOTE + "old")) {
                 oldRecord.oldNote = true;
                 oldRecord.note = ss[1];
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT + "old")) {
-                oldRecord.oldAccount = true;
-
-                String[] sss = ss[1].split(";");
-                oldRecord.accountName = sss[0];
-                oldRecord.accountRid = sss[1];
-                oldRecord.accountTimeStampLast = Long.parseLong(sss[2]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_ACCOUNT2 + "old")) {
-                oldRecord.oldAccount2 = true;
-
-                String[] sss = ss[1].split(";");
-                oldRecord.account2Name = sss[0];
-                oldRecord.account2Rid = sss[1];
-                oldRecord.account2TimeStampLast = Long.parseLong(sss[2]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY + "old")) {
                 oldRecord.oldCategory = true;
 
@@ -808,8 +768,6 @@ public class LJournal {
         item.setState(state);
         item.setValue(amount);
         item.setType(type);
-        item.setAccount(accountId);
-        item.setAccount2(account2Id);
         item.setCategory(categoryId);
         item.setVendor(vendorId);
         item.setTag(tagId);
@@ -884,6 +842,73 @@ public class LJournal {
                 && (!old.oldCategory)
                 && (!old.oldVendor)
                 && (!old.oldTag)) ? 2 : 0;
+    }
+
+    public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {
+        LAccount account = DBAccount.getByGid(accountGid);
+        if (account == null) {
+            LLog.w(TAG, "unexpected, account no longer available: " + account);
+            return;
+        }
+
+        OldRecord oldRecord = new OldRecord();
+        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord, oldRecord);
+        receivedItem.setAccount(account.getId());
+
+        LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
+        if (item != null) {
+            int conflict = itemHasConflict(item, oldRecord);
+            LLog.d(TAG, "update item conflict? " + conflict);
+            if (conflict == 0) {
+                if (oldRecord.oldState) item.setState(receivedItem.getState());
+                if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
+                if (oldRecord.oldType) item.setType(receivedItem.getType());
+                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
+                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
+                if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
+                if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
+                if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
+                if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
+                if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
+
+                item.setBy(receivedItem.getBy());
+                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
+
+                LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
+                DBTransaction.update(item);
+            } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+                item.setState(receivedItem.getState());
+                item.setValue(receivedItem.getValue());
+                item.setType(receivedItem.getType());
+                item.setAccount(receivedItem.getAccount());
+                item.setAccount2(receivedItem.getAccount2());
+                item.setCategory(receivedItem.getCategory());
+                item.setVendor(receivedItem.getVendor());
+                item.setTag(receivedItem.getTag());
+                item.setBy(receivedItem.getBy());
+                item.setTimeStamp(receivedItem.getTimeStamp());
+                item.setTimeStampLast(receivedItem.getTimeStampLast());
+                item.setNote(receivedItem.getNote());
+                LLog.d(TAG, "override: update item, amount: " + item.getValue());
+                DBTransaction.update(item);
+            } else {
+                LLog.w(TAG, "conflicts: " + conflict + " received journal ignored amount: " + item.getValue());
+            }
+        } else {
+            DBTransaction.add(new LTransaction(receivedItem.getRid(),
+                    receivedItem.getValue(),
+                    receivedItem.getType(),
+                    receivedItem.getCategory(),
+                    receivedItem.getVendor(),
+                    receivedItem.getTag(),
+                    receivedItem.getAccount(),
+                    receivedItem.getAccount2(),
+                    receivedItem.getBy(),
+                    receivedItem.getTimeStamp(),
+                    receivedItem.getTimeStampLast(),
+                    receivedItem.getNote()));
+        }
     }
 
     public static void updateItemFromReceivedRecord(String receivedRecord) {
@@ -1456,6 +1481,9 @@ public class LJournal {
 
     private static boolean do_pushAllAccountRecords(int userId, LAccount account) {
         if (null == account) return false;
+        if (account.getGid() == 0) {
+            LLog.w(TAG, "unexpected: account GID not set");
+        }
 
         Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
@@ -1466,7 +1494,7 @@ public class LJournal {
             do {
                 LTransaction item = new LTransaction();
                 DBTransaction.getValues(cursor, item);
-                journal.shareItem(userId, item);
+                journal.shareItem(userId, account.getGid(), item);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
