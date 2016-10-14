@@ -586,8 +586,6 @@ public class LJournal {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private static class OldRecord {
         boolean oldState;
-        boolean oldAccount;
-        boolean oldAccount2;
         boolean oldCategory;
         boolean oldVendor;
         boolean oldTag;
@@ -597,25 +595,9 @@ public class LJournal {
         boolean oldTimestamp;
 
         int state;
-        String accountName;
-        String accountRid;
-        long accountTimeStampLast;
-
-        String account2Name;
-        String account2Rid;
-        long account2TimeStampLast;
-
         String categoryName;
-        String categoryRid;
-        long categoryTimeStampLast;
-
         String vendorName;
-        String vendorRid;
-        long vendorTimeStampLast;
-
         String tagName;
-        String tagRid;
-        long tagTimeStampLast;
 
         int type;
         String note;
@@ -624,8 +606,6 @@ public class LJournal {
 
         public OldRecord() {
             oldState = false;
-            oldAccount = false;
-            oldAccount2 = false;
             oldAmount = false;
             oldCategory = false;
             oldVendor = false;
@@ -743,25 +723,16 @@ public class LJournal {
                 oldRecord.note = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_CATEGORY + "old")) {
                 oldRecord.oldCategory = true;
-
                 String[] sss = ss[1].split(";");
                 oldRecord.categoryName = sss[0];
-                oldRecord.categoryRid = sss[1];
-                oldRecord.categoryTimeStampLast = Long.parseLong(sss[2]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_VENDOR + "old")) {
                 oldRecord.oldVendor = true;
-
                 String[] sss = ss[1].split(";");
                 oldRecord.vendorName = sss[0];
-                oldRecord.vendorRid = sss[1];
-                oldRecord.vendorTimeStampLast = Long.parseLong(sss[2]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TAG + "old")) {
                 oldRecord.oldTag = true;
-
                 String[] sss = ss[1].split(";");
                 oldRecord.tagName = sss[0];
-                oldRecord.tagRid = sss[1];
-                oldRecord.tagTimeStampLast = Long.parseLong(sss[2]);
             }
         }
 
@@ -791,25 +762,9 @@ public class LJournal {
                 || (old.oldNote && (!old.note.contentEquals(item.getNote()))))
             return 1;
 
-        if (old.oldAccount) {
-            LAccount account = DBAccount.getById(item.getAccount());
-            if (!old.accountName.contentEquals(account.getName())) {
-                LLog.w(TAG, "account conflict: " + old.accountName + " : " + account.getName());
-                return 1;
-            }
-        }
-
-        if (old.oldAccount2) {
-            LAccount account = DBAccount.getById(item.getAccount2());
-            if (!old.account2Name.contentEquals(account.getName())) {
-                LLog.w(TAG, "account2 conflict: " + old.account2Name + " : " + account.getName());
-                return 1;
-            }
-        }
-
         if (old.oldCategory) {
             LCategory category = DBCategory.getById(item.getCategory());
-            if (!old.categoryName.contentEquals(category.getName())) {
+            if (!old.categoryName.equalsIgnoreCase(category.getName())) {
                 LLog.w(TAG, "category conflict: " + old.categoryName + " : " + category.getName());
                 return 1;
             }
@@ -817,7 +772,7 @@ public class LJournal {
 
         if (old.oldVendor) {
             LVendor vendor = DBVendor.getById(item.getVendor());
-            if (!old.vendorName.contentEquals(vendor.getName())) {
+            if (!old.vendorName.equalsIgnoreCase(vendor.getName())) {
                 LLog.w(TAG, "vendor conflict: " + old.vendorName + " : " + vendor.getName());
                 return 1;
             }
@@ -826,7 +781,7 @@ public class LJournal {
 
         if (old.oldTag) {
             LTag tag = DBTag.getById(item.getTag());
-            if (!old.tagName.contentEquals(tag.getName())) {
+            if (!old.tagName.equalsIgnoreCase(tag.getName())) {
                 LLog.w(TAG, "tag conflict: " + old.tagName + " : " + tag.getName());
                 return 1;
             }
@@ -837,12 +792,11 @@ public class LJournal {
                 && (!old.oldTimestamp)
                 && (!old.oldType)
                 && (!old.oldNote)
-                && (!old.oldAccount)
-                && (!old.oldAccount2)
                 && (!old.oldCategory)
                 && (!old.oldVendor)
                 && (!old.oldTag)) ? 2 : 0;
     }
+
 
     public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {
         LAccount account = DBAccount.getByGid(accountGid);
@@ -863,10 +817,8 @@ public class LJournal {
                 if (oldRecord.oldState) item.setState(receivedItem.getState());
                 if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
                 if (oldRecord.oldType) item.setType(receivedItem.getType());
-                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
-                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
                 if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
-                if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
+                if (oldRecord.oldVendor) item.setVendor(receivedItem.getVendor());
                 if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
                 if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
                 if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
@@ -881,19 +833,18 @@ public class LJournal {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
-                item.setAccount(receivedItem.getAccount());
-                item.setAccount2(receivedItem.getAccount2());
                 item.setCategory(receivedItem.getCategory());
                 item.setVendor(receivedItem.getVendor());
                 item.setTag(receivedItem.getTag());
-                item.setBy(receivedItem.getBy());
+                item.setNote(receivedItem.getNote());
                 item.setTimeStamp(receivedItem.getTimeStamp());
                 item.setTimeStampLast(receivedItem.getTimeStampLast());
-                item.setNote(receivedItem.getNote());
+                item.setBy(receivedItem.getBy());
+
                 LLog.d(TAG, "override: update item, amount: " + item.getValue());
                 DBTransaction.update(item);
             } else {
-                LLog.w(TAG, "conflicts: " + conflict + " received journal ignored amount: " + item.getValue());
+                LLog.w(TAG, "account: " + account.getName() + " received conflict record amount: " + item.getValue());
             }
         } else {
             DBTransaction.add(new LTransaction(receivedItem.getRid(),
@@ -903,7 +854,7 @@ public class LJournal {
                     receivedItem.getVendor(),
                     receivedItem.getTag(),
                     receivedItem.getAccount(),
-                    receivedItem.getAccount2(),
+                    0,
                     receivedItem.getBy(),
                     receivedItem.getTimeStamp(),
                     receivedItem.getTimeStampLast(),
@@ -923,8 +874,6 @@ public class LJournal {
                 if (oldRecord.oldState) item.setState(receivedItem.getState());
                 if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
                 if (oldRecord.oldType) item.setType(receivedItem.getType());
-                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
-                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
                 if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
                 if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
                 if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
@@ -1040,8 +989,6 @@ public class LJournal {
                 if (oldRecord.oldState) item.setState(receivedItem.getState());
                 if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
                 if (oldRecord.oldType) item.setType(receivedItem.getType());
-                if (oldRecord.oldAccount) item.setAccount(receivedItem.getAccount());
-                if (oldRecord.oldAccount2) item.setAccount2(receivedItem.getAccount2());
                 if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
                 if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
                 if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
