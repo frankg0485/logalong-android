@@ -98,8 +98,8 @@ public class ViewTransactionFragment extends LFragment implements
                 /*
                 + "a." + DBHelper.TABLE_COLUMN_STATE + ","
                 + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
-                + "a." + DBHelper.TABLE_COLUMN_RID + ","
                 */
+                + "a." + DBHelper.TABLE_COLUMN_RID + ","
                 + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
                 + "b." + DBHelper.TABLE_COLUMN_NAME;
 
@@ -580,6 +580,13 @@ public class ViewTransactionFragment extends LFragment implements
         private LTransaction itemOrig;
         private LSectionSummary sectionSummary;
         private ClickListener clickListener;
+        private String lastTransferAccountRid = "";
+
+        @Override
+        public Cursor swapCursor(Cursor newCursor) {
+            lastTransferAccountRid = "";
+            return super.swapCursor(newCursor);
+        }
 
         public MyCursorAdapter(Context context, Cursor cursor) {
             //TODO: deprecated API is used here for max OS compatibility, provide alternative
@@ -616,30 +623,36 @@ public class ViewTransactionFragment extends LFragment implements
             String category = DBCategory.getNameById(categoryId);
             String tag = DBTag.getNameById(tagId);
 
-            if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                String account = DBAccount.getNameById(accountId);
-                String account2 = DBAccount.getNameById(account2Id);
+            if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
+                String rid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                if ((lastTransferAccountRid.length() > 35) && rid.startsWith(lastTransferAccountRid.substring(0, 35))) {
+                    mainView.setVisibility(View.GONE);
+                } else{
+                    mainView.setVisibility(View.VISIBLE);
+                    lastTransferAccountRid = rid;
 
-                if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
-                    vTag.categoryTV.setText(account + " --> " + account2);
-                } else {
-                    vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
-                }
-
-                String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
-                vTag.noteTV.setText(note);
-            } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
-                if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == AppPersistency.viewTransactionFilter) {
+                    int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    String account = DBAccount.getNameById(accountId);
                     String account2 = DBAccount.getNameById(account2Id);
-                    vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
-
+                    if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
+                        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                            vTag.categoryTV.setText(account + " --> " + account2);
+                        } else {
+                            vTag.categoryTV.setText(account + " <-- " + account2);
+                        }
+                    } else {
+                        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
+                        } else {
+                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
+                        }
+                    }
                     String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
                     vTag.noteTV.setText(note);
                 }
-            } else {
+            }
+            else {
                 String str = "";
                 if (!TextUtils.isEmpty(tag)) str = tag + ":";
                 str += category;
@@ -674,13 +687,6 @@ public class ViewTransactionFragment extends LFragment implements
                     break;
             }
 
-            if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) &&
-                    (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter)) {
-                mainView.setVisibility(View.GONE);
-            } else {
-                mainView.setVisibility(View.VISIBLE);
-            }
-
             //String uuid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
             //Long modms = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE));
 
@@ -691,6 +697,7 @@ public class ViewTransactionFragment extends LFragment implements
             vTag.id = id;
 
             if (sectionSummary.hasId(id)) {
+                lastTransferAccountRid = "";
                 LAccountSummary summary = sectionSummary.getSummaryById(id);
                 vTag.sortNameTV.setText(summary.getName());
 
