@@ -103,6 +103,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY,
 
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
@@ -365,8 +369,35 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountGid = intent.getIntExtra("accountGid", 0);
                 String record = intent.getStringExtra("record");
                 LProtocol.ui.pollAck(cacheId);
-
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+                LJournal.updateCategoryFromReceivedRecord(record);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+                LJournal.updateVendorFromReceivedRecord(record);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+                LJournal.updateTagFromReceivedRecord(record);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+                LJournal.updateVendorCategoryFromReceivedRecord(record);
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:

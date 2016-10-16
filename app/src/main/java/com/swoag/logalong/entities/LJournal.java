@@ -49,7 +49,11 @@ public class LJournal {
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
     private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
-    private static final short JRQST_SHARE_TRANSITION_RECORD = 0x0103;
+    public static final short JRQST_SHARE_TRANSITION_RECORD = 0x0103;
+    public static final short JRQST_SHARE_TRANSITION_CATEGORY = 0x0104;
+    public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0105;
+    public static final short JRQST_SHARE_TRANSITION_TAG = 0x0106;
+    public static final short JRQST_SHARE_PAYER_CATEGORY = 0x0107;
 
     private int state;
     private int userId;
@@ -235,7 +239,7 @@ public class LJournal {
         data.putIntAutoInc(account.getGid());
 
         record += transactionItemString(item);
-         try {
+        try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
             data.appendAutoInc(rec);
@@ -459,28 +463,38 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_CATEGORY);
+
         LLog.d(TAG, "updating category: " + category.getName() + " UUID: " + category.getRid());
         record += DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + category.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + category.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
+        try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
         return true;
     }
 
     public boolean updateCategory(LCategory category, String oldName) {
-        record = ACTION_UPDATE_CATEGORY + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
         return post_category_update(category);
     }
 
     public boolean updateCategory(LCategory category, int oldState) {
-        record = ACTION_UPDATE_CATEGORY + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_category_update(category);
     }
 
     public boolean updateCategory(LCategory category) {
-        record = ACTION_UPDATE_CATEGORY + ":";
+        record = "";
         return post_category_update(category);
     }
 
@@ -488,11 +502,21 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_PAYER);
+
         record += DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
                 + DBHelper.TABLE_COLUMN_TYPE + "=" + vendor.getType() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + vendor.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + vendor.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
+        try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
         return true;
@@ -500,17 +524,17 @@ public class LJournal {
     }
 
     public boolean updateVendor(LVendor vendor, String oldName) {
-        record = ACTION_UPDATE_VENDOR + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
         return post_vendor_update(vendor);
     }
 
     public boolean updateVendor(LVendor vendor, int oldState) {
-        record = ACTION_UPDATE_VENDOR + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_vendor_update(vendor);
     }
 
     public boolean updateVendor(LVendor vendor) {
-        record = ACTION_UPDATE_VENDOR + ":";
+        record = "";
         return post_vendor_update(vendor);
     }
 
@@ -518,27 +542,37 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_TAG);
+
         record += DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
                 + DBHelper.TABLE_COLUMN_NAME + "=" + tag.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + tag.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
+        try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
         return true;
     }
 
     public boolean updateTag(LTag tag, String oldName) {
-        record = ACTION_UPDATE_TAG + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
         return post_tag_update(tag);
     }
 
     public boolean updateTag(LTag tag, int oldState) {
-        record = ACTION_UPDATE_TAG + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_tag_update(tag);
     }
 
     public boolean updateTag(LTag tag) {
-        record = ACTION_UPDATE_TAG + ":";
+        record = "";
         return post_tag_update(tag);
     }
 
@@ -546,10 +580,19 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
-        record = ACTION_UPDATE_VENDOR_CATEGORY + ":"
-                + DBHelper.TABLE_COLUMN_STATE + "=" + (add ? DBHelper.STATE_ACTIVE : DBHelper.STATE_DELETED) + ","
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_TAG);
+
+        record = DBHelper.TABLE_COLUMN_STATE + "=" + (add ? DBHelper.STATE_ACTIVE : DBHelper.STATE_DELETED) + ","
                 + DBHelper.TABLE_COLUMN_RID + ".vendor=" + vendorRid + ","
                 + DBHelper.TABLE_COLUMN_RID + ".category=" + category;
+        try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
         return true;
@@ -1349,7 +1392,7 @@ public class LJournal {
         }
     }
 
-    private static void updateVendorCategoryFromReceivedRecord(String receivedRecord) {
+    public static void updateVendorCategoryFromReceivedRecord(String receivedRecord) {
         String[] splitRecords = receivedRecord.split(",", -1);
         String vendorRid = "", categoryRid = "";
         int state = DBHelper.STATE_ACTIVE;
