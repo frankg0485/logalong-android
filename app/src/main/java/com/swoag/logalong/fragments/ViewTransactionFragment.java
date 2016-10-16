@@ -50,6 +50,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.UUID;
 
 public class ViewTransactionFragment extends LFragment implements
         LoaderManager.LoaderCallbacks<Cursor>, TransactionSearchDialog.TransactionSearchDialogItf {
@@ -764,11 +765,25 @@ public class ViewTransactionFragment extends LFragment implements
                 case TransactionEdit.TransitionEditItf.EXIT_OK:
                     AppPersistency.transactionChanged = changed;
                     if (changed) {
-                        item.setTimeStampLast(LPreferences.getServerUtc());
-                        DBTransaction.update(item);
                         LJournal journal = new LJournal();
-                        journal.updateItem(item, itemOrig);
+                        if (item.getAccount() != itemOrig.getAccount()) {
+                            LLog.d(TAG, "account changed, recreate record");
+                            LTransaction oldItem = new LTransaction(itemOrig);
+                            oldItem.setTimeStampLast(LPreferences.getServerUtc());
+                            oldItem.setState(DBHelper.STATE_DELETED);
+                            DBTransaction.add(oldItem);
+                            journal.updateItem(oldItem, DBHelper.STATE_ACTIVE);
 
+                            //reset UUID of existing record and treat it as new
+                            item.setRid(UUID.randomUUID().toString());
+                            item.setTimeStampLast(LPreferences.getServerUtc());
+                            DBTransaction.update(item);
+                            journal.updateItem(item);
+                        } else {
+                            item.setTimeStampLast(LPreferences.getServerUtc());
+                            DBTransaction.update(item);
+                            journal.updateItem(item, itemOrig);
+                        }
                         onSelected(true);
                     }
                     break;
@@ -777,11 +792,11 @@ public class ViewTransactionFragment extends LFragment implements
                 case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                     AppPersistency.transactionChanged = true;
 
-                    item.setTimeStampLast(LPreferences.getServerUtc());
-                    item.setState(DBHelper.STATE_DELETED);
-                    DBTransaction.update(item);
+                    itemOrig.setTimeStampLast(LPreferences.getServerUtc());
+                    itemOrig.setState(DBHelper.STATE_DELETED);
+                    DBTransaction.update(itemOrig);
                     LJournal journal = new LJournal();
-                    journal.updateItem(item, DBHelper.STATE_ACTIVE);
+                    journal.updateItem(itemOrig, DBHelper.STATE_ACTIVE);
 
                     onSelected(true);
                     break;

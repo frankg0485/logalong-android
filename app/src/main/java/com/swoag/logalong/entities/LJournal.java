@@ -231,12 +231,23 @@ public class LJournal {
         LAccount account = DBAccount.getById(item.getAccount());
         if (!account.isShareConfirmed()) return false;
 
+        data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORD);
+        data.putIntAutoInc(account.getGid());
+
         record += transactionItemString(item);
+         try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
         for (int ii = 0; ii < states.size(); ii++) {
-            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
+            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
                 post(ids.get(ii));
             }
         }
@@ -244,7 +255,7 @@ public class LJournal {
     }
 
     public boolean updateItem(LTransaction item, int oldState) {
-        record = ACTION_UPDATE_ITEM + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_item_update(item);
     }
 
@@ -252,22 +263,7 @@ public class LJournal {
         if (oldItem.getValue() != item.getValue()) {
             record += DBHelper.TABLE_COLUMN_AMOUNT + "old=" + oldItem.getValue() + ",";
         }
-        if (oldItem.getAccount() != item.getAccount()) {
-            LAccount oldAccount = DBAccount.getById(oldItem.getAccount());
-            record += DBHelper.TABLE_COLUMN_ACCOUNT + "old=" + oldAccount.getName()
-                    + ";" + oldAccount.getRid()
-                    + ";" + oldAccount.getTimeStampLast()
-                    + ",";
-        }
-        if (oldItem.getAccount2() != item.getAccount2()) {
-            LAccount oldAccount = DBAccount.getById(oldItem.getAccount2());
-            if (oldAccount != null && (!TextUtils.isEmpty(oldAccount.getName()))) {
-                record += DBHelper.TABLE_COLUMN_ACCOUNT2 + "old=" + oldAccount.getName()
-                        + ";" + oldAccount.getRid()
-                        + ";" + oldAccount.getTimeStampLast()
-                        + ",";
-            }
-        }
+
         if (oldItem.getType() != item.getType()) {
             record += DBHelper.TABLE_COLUMN_TYPE + "old=" + oldItem.getType() + ",";
         }
@@ -313,13 +309,13 @@ public class LJournal {
     }
 
     public boolean updateItem(LTransaction item, LTransaction oldItem) {
-        record = ACTION_UPDATE_ITEM + ":";
+        record = "";
         item_diff(item, oldItem);
         return post_item_update(item);
     }
 
     public boolean updateItem(LTransaction item) {
-        record = ACTION_UPDATE_ITEM + ":";
+        record = "";
         return post_item_update(item);
     }
 
@@ -796,7 +792,6 @@ public class LJournal {
                 && (!old.oldVendor)
                 && (!old.oldTag)) ? 2 : 0;
     }
-
 
     public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {
         LAccount account = DBAccount.getByGid(accountGid);
