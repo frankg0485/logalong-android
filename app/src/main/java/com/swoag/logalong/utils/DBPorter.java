@@ -381,9 +381,9 @@ public class DBPorter {
                         long tid = DBTransaction.getIdByRid(rid);
                         if (tid != 0) {
                             trans.setId(tid);
-                            DBTransaction.update(trans);
+                            DBTransaction.update(trans, false);
                         } else {
-                            DBTransaction.add(trans);
+                            DBTransaction.add(trans, true, false);
                         }
                     }
                 }

@@ -91,7 +91,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.savedScheduledItem = new LScheduledTransaction(item);
         this.bCreate = bCreate;
 
-        this.transactionEdit = new TransactionEdit(activity, rootView, item.getItem(), bCreate, true, this);
+        this.transactionEdit = new TransactionEdit(activity, rootView, item.getItem(), bCreate, true, true, this);
         create();
     }
 

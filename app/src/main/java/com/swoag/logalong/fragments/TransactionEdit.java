@@ -57,6 +57,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private TextView dateTV;
     private EditText noteET;
 
+    private boolean bAllowEdit = true;
     private LSelectionDialog mSelectionDialog;
     private boolean firstTimeAmountPicker = true;
     private MyClickListener myClickListener;
@@ -70,13 +71,14 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     public TransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate, boolean bScheduleMode,
-                           TransitionEditItf callback) {
+                           boolean allowEdit, TransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
         this.item = item;
         this.callback = callback;
 
         this.savedItem = new LTransaction(item);
+        this.bAllowEdit = allowEdit;
 
         this.bCreate = bCreate;
         this.bScheduleMode = bScheduleMode;
@@ -118,7 +120,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 && ((item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER
                 && item.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ||
                 (item.getAccount2() > 0 && item.getAccount2() != item.getAccount()))) {
-            enableOk(true);
+            enableOk(bAllowEdit);
         } else {
             enableOk(false);
         }
@@ -220,6 +222,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             viewDiscard = setViewListener(rootView, R.id.discard);
             viewDiscard.setVisibility(View.VISIBLE);
         }
+
+        ViewGroup vg = (ViewGroup)rootView.findViewById(R.id.allEditItems);
+        LViewUtils.disableEnableControls(bAllowEdit, vg);
 
         hideIME();
     }

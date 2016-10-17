@@ -883,6 +883,7 @@ public class LJournal {
                 DBTransaction.update(item);
             } else {
                 LLog.w(TAG, "account: " + account.getName() + " received conflict record amount: " + item.getValue());
+                return;
             }
         } else {
             DBTransaction.add(new LTransaction(receivedItem.getRid(),
@@ -897,71 +898,25 @@ public class LJournal {
                     receivedItem.getTimeStamp(),
                     receivedItem.getTimeStampLast(),
                     receivedItem.getNote()));
+
+            item = DBTransaction.getByRid(receivedItem.getRid());
         }
-    }
 
-    public static void updateItemFromReceivedRecord(String receivedRecord) {
-        OldRecord oldRecord = new OldRecord();
-        LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord, oldRecord);
-
-        LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
-        if (item != null) {
-            int conflict = itemHasConflict(item, oldRecord);
-            LLog.d(TAG, "update item conflict? " + conflict);
-            if (conflict == 0) {
-                if (oldRecord.oldState) item.setState(receivedItem.getState());
-                if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
-                if (oldRecord.oldType) item.setType(receivedItem.getType());
-                if (oldRecord.oldCategory) item.setCategory(receivedItem.getCategory());
-                if (oldRecord.oldCategory) item.setVendor(receivedItem.getVendor());
-                if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
-                if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
-                if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
-
-                item.setBy(receivedItem.getBy());
-                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
-                    item.setTimeStampLast(receivedItem.getTimeStampLast());
-
-                LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
+        //patch up transfer record
+        String rid = "";
+        if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            rid = item.getRid() + "2";
+        } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+            rid = item.getRid().substring(0, item.getRid().length() - 1);
+        }
+        if (rid.length() > 1) {
+            LTransaction item2 = DBTransaction.getByRid(rid);
+            if (item2 != null) {
+                item.setAccount2(item2.getAccount());
+                item2.setAccount2(item.getAccount());
                 DBTransaction.update(item);
-            } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
-                item.setState(receivedItem.getState());
-                item.setValue(receivedItem.getValue());
-                item.setType(receivedItem.getType());
-                item.setAccount(receivedItem.getAccount());
-                item.setAccount2(receivedItem.getAccount2());
-                item.setCategory(receivedItem.getCategory());
-                item.setVendor(receivedItem.getVendor());
-                item.setTag(receivedItem.getTag());
-                item.setBy(receivedItem.getBy());
-                item.setTimeStamp(receivedItem.getTimeStamp());
-                if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
-                    item.setTimeStampLast(receivedItem.getTimeStampLast());
-                item.setNote(receivedItem.getNote());
-                LLog.d(TAG, "override: update item, amount: " + item.getValue());
-                DBTransaction.update(item);
-            } else {
-                LLog.w(TAG, "conflicts: " + conflict + " received journal ignored amount: " + item.getValue());
-                /*LLog.w(TAG, "conflicts: received journal ignored due to local edit: "
-                        + (new Date(item.getTimeStampLast()) + ":"
-                        + (new Date(receivedItem.getTimeStampLast())))
-                        + " last: " + item.getTimeStampLast()
-                        + " new: " + receivedItem.getTimeStampLast());
-                        */
+                DBTransaction.update(item2);
             }
-        } else {
-            DBTransaction.add(new LTransaction(receivedItem.getRid(),
-                    receivedItem.getValue(),
-                    receivedItem.getType(),
-                    receivedItem.getCategory(),
-                    receivedItem.getVendor(),
-                    receivedItem.getTag(),
-                    receivedItem.getAccount(),
-                    receivedItem.getAccount2(),
-                    receivedItem.getBy(),
-                    receivedItem.getTimeStamp(),
-                    receivedItem.getTimeStampLast(),
-                    receivedItem.getNote()));
         }
     }
 
@@ -1426,7 +1381,6 @@ public class LJournal {
         switch (action) {
             case ACTION_SHARE_ITEM:
             case ACTION_UPDATE_ITEM:
-                updateItemFromReceivedRecord(ss[2]);
                 break;
 
             case ACTION_UPDATE_SCHEDULED_ITEM:

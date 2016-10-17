@@ -37,6 +37,7 @@ import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 
 import java.util.Calendar;
+import java.util.UUID;
 
 public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
         LoaderManager.LoaderCallbacks<Cursor> {
@@ -206,10 +207,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 AppPersistency.transactionChanged = changed;
 
                 item.setTimeStampLast(LPreferences.getServerUtc());
-                DBTransaction.add(getActivity(), item);
-
-                LJournal journal = new LJournal();
-                journal.updateItem(item);
+                DBTransaction.add(getActivity(), item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
@@ -239,7 +237,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         //item.setAccount(4);
         //item.setCategory(2);
 
-        edit = new TransactionEdit(getActivity(), rootView.findViewById(R.id.editView), item, true, false, this);
+        edit = new TransactionEdit(getActivity(), rootView.findViewById(R.id.editView), item, true, false, true, this);
 
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);

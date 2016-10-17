@@ -755,9 +755,24 @@ public class ViewTransactionFragment extends LFragment implements
                 VTag tag = (VTag) v.getTag();
 
                 item = DBTransaction.getById(tag.id);
+
+                //handle edit of transfer: require both records to be present, and only edit
+                //the original record (not the duplicate)
+                boolean allowEdit = true;
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    if (null == DBTransaction.getByRid(item.getRid() + "2")) allowEdit = false;
+                } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
+                    LTransaction item2 = DBTransaction.getByRid(item.getRid().substring(0, item.getRid().length() - 1));
+                    if (null == item2) {
+                        allowEdit = false;
+                    } else {
+                        item = item2;
+                    }
+                }
+
                 itemOrig = new LTransaction(item);
 
-                edit = new TransactionEdit(getActivity(), rootView, item, false, false, MyCursorAdapter.this);
+                edit = new TransactionEdit(getActivity(), rootView, item, false, false, allowEdit, MyCursorAdapter.this);
 
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -778,18 +793,41 @@ public class ViewTransactionFragment extends LFragment implements
                             LTransaction oldItem = new LTransaction(itemOrig);
                             oldItem.setTimeStampLast(LPreferences.getServerUtc());
                             oldItem.setState(DBHelper.STATE_DELETED);
-                            DBTransaction.add(oldItem);
+                            DBTransaction.update(oldItem, false);
                             journal.updateItem(oldItem, DBHelper.STATE_ACTIVE);
+
+                            //delete the duplicate record for transfer
+                            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                                LTransaction copy = DBTransaction.getByRid(oldItem.getRid() + "2");
+                                if (copy == null) {
+                                    LLog.w(TAG, "warn, unable to locate duplicate transfer record?");
+                                } else {
+                                    journal.updateItem(copy, DBHelper.STATE_ACTIVE);
+                                }
+                            }
 
                             //reset UUID of existing record and treat it as new
                             item.setRid(UUID.randomUUID().toString());
                             item.setTimeStampLast(LPreferences.getServerUtc());
-                            DBTransaction.update(item);
-                            journal.updateItem(item);
+                            DBTransaction.add(item, true, true);
                         } else {
                             item.setTimeStampLast(LPreferences.getServerUtc());
-                            DBTransaction.update(item);
+                            DBTransaction.update(item, false);
                             journal.updateItem(item, itemOrig);
+
+                            //update also transfer copy
+                            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                                LTransaction copy = DBTransaction.getByRid(item.getRid() + "2");
+                                LTransaction copyOrig = new LTransaction(itemOrig);
+                                copyOrig.setRid(copy.getRid() + "2");
+                                copyOrig.setAccount(itemOrig.getAccount2());
+                                copyOrig.setAccount2(itemOrig.getAccount());
+                                if (copy == null) {
+                                    LLog.w(TAG, "warn, unable to locate duplicate transfer record?");
+                                } else {
+                                    journal.updateItem(copy, copyOrig);
+                                }
+                            }
                         }
                         onSelected(true);
                     }
@@ -801,9 +839,19 @@ public class ViewTransactionFragment extends LFragment implements
 
                     itemOrig.setTimeStampLast(LPreferences.getServerUtc());
                     itemOrig.setState(DBHelper.STATE_DELETED);
-                    DBTransaction.update(itemOrig);
+                    DBTransaction.update(itemOrig, false);
+
                     LJournal journal = new LJournal();
                     journal.updateItem(itemOrig, DBHelper.STATE_ACTIVE);
+
+                    if (itemOrig.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                        LTransaction copy = DBTransaction.getByRid(itemOrig.getRid() + "2");
+                        if (copy == null) {
+                            LLog.w(TAG, "warn, unable to locate duplicate transfer record?");
+                        } else {
+                            journal.updateItem(copy, DBHelper.STATE_ACTIVE);
+                        }
+                    }
 
                     onSelected(true);
                     break;

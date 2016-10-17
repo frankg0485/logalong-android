@@ -63,7 +63,8 @@ public class LAlarmReceiver extends BroadcastReceiver {
                         item.setRid(item.getRid() + ymd);
                         item.setTimeStamp(sch.getTimestamp());
 
-                        DBTransaction.add(item);
+                        DBTransaction.add(item, true, true);
+
                     } else {
                         //this is the case where other party has already had alarm triggered and created the DB entry
                         long saveId = item.getId();
@@ -77,10 +78,8 @@ public class LAlarmReceiver extends BroadcastReceiver {
                         item.setRid(item.getRid() + ymd);
                         item.setTimeStamp(sch.getTimestamp());
 
-                        DBTransaction.update(item);
+                        DBTransaction.update(item, true);
                     }
-                    LJournal journal = new LJournal();
-                    journal.updateItem(item);
                 } else {
                     LLog.w(TAG, "schedule already happened? " + (new Date(sch.getTimestamp())) + " now: " + (new Date()));
                 }

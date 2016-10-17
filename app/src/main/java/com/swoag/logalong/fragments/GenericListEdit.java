@@ -452,6 +452,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         account.setTimeStampLast(LPreferences.getServerUtc());
                         DBAccount.update(account);
 
+                        //TODO: shared account deletion
                         LJournal journal = new LJournal();
                         journal.updateAccount(account, DBHelper.STATE_ACTIVE);
                         break;

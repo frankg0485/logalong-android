@@ -153,10 +153,7 @@ public class LScheduledTransaction {
                 transaction.setRid(transaction.getRid() + ymd);
                 transaction.setTimeStamp(baseTimeMs);
 
-                DBTransaction.add(transaction);
-
-                LJournal journal = new LJournal();
-                journal.updateItem(transaction);
+                DBTransaction.add(transaction, true, true);
             } else {
                 //entry already exits, do nothing
             }
