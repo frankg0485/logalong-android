@@ -216,6 +216,7 @@ public class LJournal {
     }
 
     public boolean shareItem(int userId, int accountGid, LTransaction item) {
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORD);
         data.putIntAutoInc(accountGid);
 
@@ -235,6 +236,7 @@ public class LJournal {
         LAccount account = DBAccount.getById(item.getAccount());
         if (!account.isShareConfirmed()) return false;
 
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORD);
         data.putIntAutoInc(account.getGid());
 
@@ -402,6 +404,7 @@ public class LJournal {
     }
 
     public boolean unshareAccount(int userId, int accountId, int accountGid, String accountName) {
+        data.clear();
         data.putShortAutoInc(JRQST_UNSHARE_ACCOUNT);
         data.putIntAutoInc(accountId);
         data.putIntAutoInc(accountGid);
@@ -418,6 +421,7 @@ public class LJournal {
     }
 
     public boolean shareAccount(int userId, int accountId, int accountGid, String accountName) {
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_ACCOUNT);
         data.putIntAutoInc(accountId);
         data.putIntAutoInc(accountGid);
@@ -434,6 +438,7 @@ public class LJournal {
     }
 
     public boolean confirmAccountShare(boolean confirmed, int accountGid, int shareWithUserId, int shareWithAccountGid) {
+        data.clear();
         data.putShortAutoInc(JRQST_CONFIRM_ACCOUNT_SHARE);
         data.putByteAutoInc((byte) (confirmed ? 1 : 0));
         data.putIntAutoInc(accountGid);
@@ -463,6 +468,7 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_CATEGORY);
 
         LLog.d(TAG, "updating category: " + category.getName() + " UUID: " + category.getRid());
@@ -502,6 +508,7 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_PAYER);
 
         record += DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
@@ -542,6 +549,7 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_TAG);
 
         record += DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
@@ -580,6 +588,7 @@ public class LJournal {
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
+        data.clear();
         data.putShortAutoInc(JRQST_SHARE_TRANSITION_TAG);
 
         record = DBHelper.TABLE_COLUMN_STATE + "=" + (add ? DBHelper.STATE_ACTIVE : DBHelper.STATE_DELETED) + ","

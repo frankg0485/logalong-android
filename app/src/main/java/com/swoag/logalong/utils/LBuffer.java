@@ -14,6 +14,7 @@ public class LBuffer {
     public LBuffer(int size) {
         array = new byte[size];
         offset = 0;
+        bytes = 0;
     }
 
     public byte[] getBuf() {
@@ -300,6 +301,11 @@ public class LBuffer {
 
     public void setOffset(int off) {
         offset = off;
+    }
+
+    public void clear() {
+        offset = 0;
+        bytes = 0;
     }
 
     public void reset() {

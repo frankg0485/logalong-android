@@ -496,10 +496,10 @@ public class DBProvider extends ContentProvider {
 
         switch (trans.getAsInteger(DBHelper.TABLE_COLUMN_TYPE)) {
             case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
+                updateAccountBalance(accountId, amount, timeStamp);
                 return;
             case LTransaction.TRANSACTION_TYPE_TRANSFER:
                 updateAccountBalance(accountId, -amount, timeStamp);
-                updateAccountBalance(account2Id, amount, timeStamp);
                 break;
             case LTransaction.TRANSACTION_TYPE_EXPENSE:
                 updateAccountBalance(accountId, -amount, timeStamp);
