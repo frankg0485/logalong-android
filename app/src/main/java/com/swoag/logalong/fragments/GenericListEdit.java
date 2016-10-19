@@ -349,10 +349,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
-                        if (DBAccount.getByName(newName) != null) {
+                        LAccount naccount = DBAccount.getByName(newName);
+                        LAccount account = DBAccount.getById(tag.id);
+                        if ((naccount != null) && (!account.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            LAccount account = DBAccount.getById(tag.id);
                             String oldName = account.getName();
                             account.setName(newName);
                             account.setTimeStampLast(LPreferences.getServerUtc());
@@ -364,10 +365,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.categories:
-                        if (DBCategory.getByName(newName) != null) {
+                        LCategory ncategory = DBCategory.getByName(newName);
+                        LCategory category = DBCategory.getById(tag.id);
+                        if ((ncategory != null) && (!category.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            LCategory category = DBCategory.getById(tag.id);
                             String oldName = category.getName();
                             category.setName(newName);
                             category.setTimeStampLast(LPreferences.getServerUtc());
@@ -379,10 +381,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.vendors:
-                        if (DBVendor.getByName(newName) != null) {
+                        LVendor nvendor = DBVendor.getByName(newName);
+                        LVendor vendor = DBVendor.getById(tag.id);
+                        if ((nvendor != null) && (!vendor.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            LVendor vendor = DBVendor.getById(tag.id);
                             String oldName = vendor.getName();
                             vendor.setName(newName);
                             vendor.setTimeStampLast(LPreferences.getServerUtc());
@@ -393,10 +396,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         }
                         break;
                     case R.id.tags:
-                        if (DBTag.getByName(newName) != null) {
+                        LTag ntag = DBTag.getByName(newName);
+                        LTag tag1 = DBTag.getById(tag.id);
+                        if ((ntag != null) && (!tag1.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            LTag tag1 = DBTag.getById(tag.id);
                             String oldName = tag1.getName();
                             tag1.setName(newName);
                             tag1.setTimeStampLast(LPreferences.getServerUtc());
@@ -406,7 +410,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             journal.updateTag(tag1, oldName);
                         }
                         break;
-
                 }
 
                 Cursor cursor = getMyCursor();

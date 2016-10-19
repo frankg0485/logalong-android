@@ -62,6 +62,8 @@ public class LBuffer {
         return 0;
     }
 
+    //FIXME: bytes does not get updated for all put*AutoInc APIs. Thus Append ONLY
+    // works ONCE when 'bytes' == 0
     public int appendAutoInc(byte[] buf) {
         if (bytes + buf.length > array.length) {
             LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes);

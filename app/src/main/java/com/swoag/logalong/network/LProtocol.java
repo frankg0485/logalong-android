@@ -81,6 +81,7 @@ public class LProtocol {
     private static final short CMD_SET_ACCOUNT_GID = 0x0104;
     private static final short CMD_REQUEST_ACCOUNT_SHARE = 0x0105;
     private static final short CMD_UPDATE_ACCOUNT_SHARE = 0x0106;
+    private static final short CMD_UPDATE_ACCOUNT_INFO = 0x0107;
     private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
 
     private static final short CMD_JRQST_MASK = (short)0x8000;
@@ -174,6 +175,25 @@ public class LProtocol {
         rspsIntent.putExtra("numShareUsers", numShareUsers);
         rspsIntent.putExtra("shareUsers", shareUsers);
         LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " + shareUsers);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    private void handleAccountInfoUpdate(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int accountGid = pkt.getIntAutoInc();
+
+        byte nameLen = pkt.getByteAutoInc();
+        String accountName = pkt.getStringAutoInc(nameLen);
+
+        short bytes = pkt.getShortAutoInc();
+        String record = pkt.getStringAutoInc(bytes);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("accountGid", accountGid);
+        rspsIntent.putExtra("accountName", accountName);
+        rspsIntent.putExtra("record", record);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -451,6 +471,9 @@ public class LProtocol {
                             break;
                         case CMD_UPDATE_ACCOUNT_SHARE:
                             handleAccountShareUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE, cacheId);
+                            break;
+                        case CMD_UPDATE_ACCOUNT_INFO:
+                            handleAccountInfoUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO, cacheId);
                             break;
                         case CMD_UPDATE_SHARE_USER_PROFILE:
                             handleShareUserProfileUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE, cacheId);

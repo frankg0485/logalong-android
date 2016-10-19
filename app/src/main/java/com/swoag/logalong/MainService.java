@@ -101,6 +101,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_POLL_IDLE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY,
@@ -309,6 +310,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 }
                 LProtocol.ui.pollAck(cacheId);
                 break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                accountGid = intent.getIntExtra("accountGid", 0);
+                accountName = intent.getStringExtra("accountName");
+                String record = intent.getStringExtra("record");
+                LProtocol.ui.pollAck(cacheId);
+                LJournal.updateAccountFromReceivedRecord(accountGid, accountName, record);
+                break;
+
 /*
             case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
                 if (ret == LProtocol.RSPS_OK) {
@@ -367,7 +378,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
-                String record = intent.getStringExtra("record");
+                record = intent.getStringExtra("record");
                 LProtocol.ui.pollAck(cacheId);
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;

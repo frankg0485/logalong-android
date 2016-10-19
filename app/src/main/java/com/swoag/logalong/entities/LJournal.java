@@ -49,11 +49,12 @@ public class LJournal {
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
     private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
-    public static final short JRQST_SHARE_TRANSITION_RECORD = 0x0103;
-    public static final short JRQST_SHARE_TRANSITION_CATEGORY = 0x0104;
-    public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0105;
-    public static final short JRQST_SHARE_TRANSITION_TAG = 0x0106;
-    public static final short JRQST_SHARE_PAYER_CATEGORY = 0x0107;
+    private static final short JRQST_UPDATE_ACCOUNT_INFO = 0x0103;
+    public static final short JRQST_SHARE_TRANSITION_RECORD = 0x0111;
+    public static final short JRQST_SHARE_TRANSITION_CATEGORY = 0x0113;
+    public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0115;
+    public static final short JRQST_SHARE_TRANSITION_TAG = 0x0117;
+    public static final short JRQST_SHARE_PAYER_CATEGORY = 0x0119;
 
     private int state;
     private int userId;
@@ -376,30 +377,40 @@ public class LJournal {
 
     private boolean post_account_update(LAccount account) {
         record += DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
-                + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
                 + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
                 + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + account.getTimeStampLast();
 
-        ArrayList<Integer> ids = account.getShareIds();
-        ArrayList<Integer> states = account.getShareStates();
-        for (int ii = 0; ii < states.size(); ii++) {
-            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                post(ids.get(ii));
-            }
+        data.clear();
+        data.putShortAutoInc(JRQST_UPDATE_ACCOUNT_INFO);
+        data.putIntAutoInc(account.getGid());
+
+        try {
+            byte[] name = account.getName().getBytes("UTF-8");
+            data.putByteAutoInc((byte)name.length);
+            data.appendAutoInc(name);
+
+            //UGLY!!!!! FIXME: see note in LBuffer: appendAutoInc design flaw
+            data.setLen(0);
+            ///////////////////////////////////////
+
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.appendAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
+        data.setLen(data.getBufOffset());
+        post(LPreferences.getUserId());
         return true;
     }
 
     public boolean updateAccount(LAccount account, String oldName) {
-        if (!account.isShareConfirmed()) return false;
-        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
+        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
         return post_account_update(account);
     }
 
     public boolean updateAccount(LAccount account, int oldState) {
-        if (!account.isShareConfirmed()) return false;
-
-        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_account_update(account);
     }
 
@@ -1031,12 +1042,11 @@ public class LJournal {
         }
     }
 
-    private static void updateAccountFromReceivedRecord(String receivedRecord) {
+    public static void updateAccountFromReceivedRecord(int accountGid, String name, String receivedRecord) {
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
         long timestampLast = 0;
-        String name = "";
         boolean oldNameFound = false;
         String oldName = "";
         boolean oldStateFound = false;
@@ -1055,54 +1065,77 @@ public class LJournal {
                 timestampLast = Long.valueOf(ss[1]);
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
                 rid = ss[1];
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME)) {
-                name = ss[1];
             } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
                 oldName = ss[1];
                 oldNameFound = true;
             }
         }
 
-        if (!TextUtils.isEmpty(rid)) {
-            LAccount account = DBAccount.getByRid(rid);
-            if (account == null) {
-                //account can only be update *after* it has been shared, and UUID can not change after
-                //share is settled
-                LLog.w(TAG, "account removed? " + name + " : " + rid);
-            } else {
-                boolean conflict = true;
-                if (oldNameFound || oldStateFound) {
-                    conflict = false;
-                    if ((oldStateFound && oldState != account.getState())
-                            || (oldNameFound && !oldName.contentEquals(account.getName())))
-                        conflict = true;
-                }
+        LAccount account = DBAccount.getByGid(accountGid);
+        if (account == null) {
+            LLog.w(TAG, "account no longer exists, GID: " + accountGid);
+        } else {
+            boolean conflict = true;
+            boolean update = false;
 
-                if (!conflict) {
-                    if (oldStateFound) {
-                        account.setState(state);
-                        if (account.getState() == DBHelper.STATE_DELETED) {
-                            DBTransaction.deleteByAccount(account.getId());
-                            DBScheduledTransaction.deleteByAccount(account.getId());
-                        }
-                    }
-                    if (oldNameFound) account.setName(name);
+            if (oldNameFound || oldStateFound) {
+                conflict = false;
+                if ((oldStateFound && oldState != account.getState())
+                        || (oldNameFound && !oldName.contentEquals(account.getName())))
+                    conflict = true;
+            }
 
-                    if (account.getTimeStampLast() < timestampLast)
-                        account.setTimeStampLast(timestampLast);
-                    DBAccount.update(account);
-                } else if (account.getTimeStampLast() <= timestampLast) {
-                    if (!TextUtils.isEmpty(name)) account.setName(name);
-                    if (stateFound) account.setState(state);
-
+            if (!conflict) {
+                if (oldStateFound) {
+                    account.setState(state);
                     if (account.getState() == DBHelper.STATE_DELETED) {
                         DBTransaction.deleteByAccount(account.getId());
                         DBScheduledTransaction.deleteByAccount(account.getId());
                     }
+                }
+                if (oldNameFound) account.setName(name);
 
-                    if (account.getTimeStampLast() < timestampLast)
-                        account.setTimeStampLast(timestampLast);
-                    DBAccount.update(account);
+                if (account.getTimeStampLast() < timestampLast)
+                    account.setTimeStampLast(timestampLast);
+                update = true;
+            } else if (account.getTimeStampLast() <= timestampLast) {
+                LLog.w(TAG, "conflict detected, force to update account: " + account.getName());
+                if (!TextUtils.isEmpty(name)) account.setName(name);
+                if (stateFound) account.setState(state);
+
+                if (account.getState() == DBHelper.STATE_DELETED) {
+                    DBTransaction.deleteByAccount(account.getId());
+                    DBScheduledTransaction.deleteByAccount(account.getId());
+                }
+                account.setTimeStampLast(timestampLast);
+                update = true;
+            }
+
+            if (update) {
+                //detect name conflict, before applying update
+                int ii = 0;
+                String nameOrig = name;
+                boolean dup = true;
+                while (ii++ < 9) {
+                    LAccount account1 = DBAccount.getByName(name);
+                    if ((account1 != null) && account1.getId() != account.getId()) {
+                        name = nameOrig + ii++;
+                    } else {
+                        dup = false;
+                        break;
+                    }
+                }
+                if (dup) {
+                    //if there's still dup after 10 tries, we bail and take the name as is.
+                    LLog.w(TAG, "FAIL: unresolvable account name duplication found");
+                }
+                account.setName(name);
+                DBAccount.update(account);
+
+                if (!name.contentEquals(nameOrig)) {
+                    LLog.d(TAG, "account name conflicts, renaming from: " + nameOrig + " to: " + name);
+                    LJournal journal = new LJournal();
+                    journal.updateAccount(account, nameOrig);
                 }
             }
         }
@@ -1390,14 +1423,11 @@ public class LJournal {
         switch (action) {
             case ACTION_SHARE_ITEM:
             case ACTION_UPDATE_ITEM:
+            case ACTION_UPDATE_ACCOUNT:
                 break;
 
             case ACTION_UPDATE_SCHEDULED_ITEM:
                 updateScheduledItemFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_UPDATE_ACCOUNT:
-                updateAccountFromReceivedRecord(ss[2]);
                 break;
 
             case ACTION_UPDATE_CATEGORY:
