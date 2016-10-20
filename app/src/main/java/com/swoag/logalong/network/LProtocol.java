@@ -561,17 +561,13 @@ public class LProtocol {
     private boolean alignPacket(LBuffer pkt) {
         if (pkt.getShort() == PACKET_SIGNATURE1) return true;
         LLog.w(TAG, "packet misaligned");
-        return false;
 
-        /*
         while (pkt.getLen() >= 12) { //minimum packet length 8 + CRC32
             if (pkt.getShort() == PACKET_SIGNATURE1) return true;
-            LLog.w(TAG, "packet misaligned");
             pkt.skip(1);
             pkt.modLen(-1);
         }
         return false;
-        */
     }
 
     // parser runs in Network receiving thread, thus no GUI update here.

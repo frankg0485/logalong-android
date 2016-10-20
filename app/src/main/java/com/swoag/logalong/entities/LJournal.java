@@ -1477,6 +1477,7 @@ public class LJournal {
         }
         if (cursor != null) cursor.close();
 
+        /*TODO: enable schedule sharing among users
         cursor = DBScheduledTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
@@ -1489,6 +1490,7 @@ public class LJournal {
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
+        */
         return true;
     }
 

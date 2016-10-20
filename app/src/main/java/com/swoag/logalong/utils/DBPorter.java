@@ -383,7 +383,7 @@ public class DBPorter {
                             trans.setId(tid);
                             DBTransaction.update(trans, false);
                         } else {
-                            DBTransaction.add(trans, true, false);
+                            DBTransaction.add(trans, false, false);
                         }
                     }
                 }
