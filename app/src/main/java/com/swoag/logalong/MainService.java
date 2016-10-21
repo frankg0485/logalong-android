@@ -238,15 +238,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (account == null) {
                         LLog.w(TAG, "requested account no longer exist? id: " + accountId + " name: " + accountName);
                     } else {
+                        boolean update = false;
                         if (!accountName.contentEquals(account.getName())) {
                             LLog.w(TAG, "account: " + accountId + " renamed before getting its GID: " + accountName + " -> " + account.getName());
+                            account.setName(accountName);
+                            update = true;
                         }
                         if (account.getGid() != 0 && accountGid != account.getGid()) {
-                            LLog.e(TAG, "account GID already set: " + account.getGid() + " and mismatches new request: " + accountGid);
-                        } else if (accountGid != account.getGid()) {
-                            account.setGid(accountGid);
-                            DBAccount.update(account);
+                            LLog.w(TAG, "account GID already set: " + account.getGid() + " and mismatches new request: " + accountGid);
                         }
+                        if (accountGid != account.getGid()) {
+                            account.setGid(accountGid);
+                            update = true;
+                        }
+                        if (update) DBAccount.update(account);
                     }
                 }
                 LProtocol.ui.pollAck(cacheId);
@@ -271,7 +276,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LLog.d(TAG, "requested to update account share for: " + accountGid);
                 LAccount account = DBAccount.getByGid(accountGid);
                 if (account == null) {
-                    LLog.w(TAG, "requested account no longer exist? GID: " + accountGid);
+                    LLog.w(TAG, "requested account no longer exist? account gid: " + accountGid);
                 } else {
                     LLog.d(TAG, "requested to update account share for: " + account.getName());
                     HashSet<Integer> newShareUsers = new HashSet<Integer>();
@@ -414,15 +419,28 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
                 pollHandler.removeCallbacks(journalPostRunnable);
                 pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
-
-                if (ret == LProtocol.RSPS_OK) {
-                    int journalId = intent.getIntExtra("journalId", 0);
-                    LJournal.deleteById(journalId);
-                    LJournal.flush();
-                } else {
-                    // upon post error, do not flush immediately, instead let it timeout and retry
-                    // this is to prevent flooding network layer when something goes wrong.
-                    LLog.w(TAG, "journal post error");
+                int journalId = intent.getIntExtra("journalId", 0);
+                userId = intent.getIntExtra("userId", 0);
+                switch (ret) {
+                    case LProtocol.RSPS_OK: {
+                        LJournal.deleteById(journalId);
+                        LJournal.flush();
+                        break;
+                    }
+                    case LProtocol.RSPS_USER_NOT_FOUND:
+                    {
+                        LLog.w(TAG, "journal post targeting user no longer available, id: " + userId);
+                        LJournal.deleteById(journalId);
+                        LJournal.flush();
+                        break;
+                    }
+                    default:
+                    {
+                        // upon post error, do not flush immediately, instead let it timeout and retry
+                        // this is to prevent flooding network layer when something goes wrong.
+                        LLog.w(TAG, "unexpected journal post error, to: " + userId + " reture code: " + ret);
+                        break;
+                    }
                 }
                 break;
 

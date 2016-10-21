@@ -53,6 +53,8 @@ public class LProtocol {
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
 
     public static final short RSPS_OK = (short) 0x0010;
+    public static final short RSPS_USER_NOT_FOUND = (short) 0xf000;
+    public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
 
     private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
@@ -449,12 +451,10 @@ public class LProtocol {
             case RSPS | RQST_POST_JOURNAL:
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_JOURNAL_POSTED));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                if (status == RSPS_OK) {
-                    int userId = pkt.getIntAutoInc();
-                    int journalId = pkt.getIntAutoInc();
-                    rspsIntent.putExtra("journalId", journalId);
-                    //LLog.d(TAG, "posted journal: " + journalId);
-                }
+                int userId = pkt.getIntAutoInc();
+                rspsIntent.putExtra("userId", userId);
+                int journalId = pkt.getIntAutoInc();
+                rspsIntent.putExtra("journalId", journalId);
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
