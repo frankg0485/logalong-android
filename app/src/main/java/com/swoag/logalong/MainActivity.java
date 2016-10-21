@@ -212,6 +212,11 @@ public class MainActivity extends LFragmentActivity
         LFragment yf = (LFragment) lPagerAdapter.getItem(mViewPager.getCurrentItem());
         if (yf != null)
             if (yf.onBackPressed()) return;
+
+        if (mViewPager.getCurrentItem() != 1) {
+            mViewPager.setCurrentItem(1);
+            return;
+        }
         super.onBackPressed();
     }
 
