@@ -248,7 +248,7 @@ public class LProtocol {
         int accountGid = pkt.getIntAutoInc();
         short bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
-        LLog.d(TAG, "record share request for account: " + accountGid + " record: " + record);
+        //LLog.d(TAG, "record share request for account: " + accountGid + " record: " + record);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
