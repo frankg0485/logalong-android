@@ -89,7 +89,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         serviceShutdownRunnable = new Runnable() {
             @Override
             public void run() {
-                requestToStop = true;
+                LLog.d(TAG, "shutdown timeout: shutting down service itself");
+                requestToStop = false;
+                stopSelf();
             }
         };
 
@@ -119,6 +121,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     @Override
     public void onDestroy() {
+        pollHandler.removeCallbacks(serviceShutdownRunnable);
         pollHandler.removeCallbacks(pollRunnable);
         pollHandler.removeCallbacks(journalPostRunnable);
         pollRunnable = null;
@@ -206,13 +209,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_IDLE:
-                if (requestToStop || (!LFragmentActivity.upRunning)) {
-                    LLog.d(TAG, "IDLE: stop self, requested: " + requestToStop + " active: " + LFragmentActivity.upRunning);
-                    stopSelf();
-                } else LProtocol.ui.utcSync();
+                if (LFragmentActivity.upRunning) {
+                    LProtocol.ui.utcSync();
+                } else if (!requestToStop){
+                    requestToStop = true;
+                    pollHandler.removeCallbacks(serviceShutdownRunnable);
+                    pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
+                }
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_ACKED:
+                requestToStop = false;
+                pollHandler.removeCallbacks(serviceShutdownRunnable);
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 LLog.d(TAG, "polling after being acked");
@@ -417,6 +425,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
+                requestToStop = false;
+                pollHandler.removeCallbacks(serviceShutdownRunnable);
                 pollHandler.removeCallbacks(journalPostRunnable);
                 pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
                 int journalId = intent.getIntExtra("journalId", 0);
