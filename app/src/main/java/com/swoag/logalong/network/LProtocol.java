@@ -1,5 +1,5 @@
 package com.swoag.logalong.network;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;

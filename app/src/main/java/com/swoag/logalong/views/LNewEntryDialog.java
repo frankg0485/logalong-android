@@ -39,6 +39,7 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
     public static final int TYPE_CATEGORY = 20;
     public static final int TYPE_VENDOR = 30;
     public static final int TYPE_TAG = 40;
+    public static final int MAX_ENTRY_NAME_LEN = 30;
 
     LNewEntryDialogItf callback;
     private String title;
@@ -196,7 +197,19 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        if (isEntryNameAvailable(text.getText().toString().trim())) {
+        String str = text.getText().toString().trim();
+        String str2 = str.replaceAll(",", "");
+
+        if (str2.length() > MAX_ENTRY_NAME_LEN) {
+            str2 = str2.substring(0, MAX_ENTRY_NAME_LEN);
+            text.setText(str2);
+            text.setSelection(str2.length());
+        } else if (!str.contentEquals(str2)) {
+            text.setText(str2);
+            text.setSelection(str2.length());
+        }
+
+        if (isEntryNameAvailable(str2)) {
             if (!isNameAvailable) {
                 isNameAvailable = true;
                 okView.setClickable(true);

@@ -197,6 +197,7 @@ public class DBPorter {
                 LPreferences.setUserId(Integer.valueOf(ss[0]));
                 LPreferences.setUserName(ss[1]);
                 LPreferences.setUserFullName(ss[2]);
+                LLog.i(TAG, "restored user id: " + ss[0] + " name: " + ss[1] + " " + ss[2]);
                 break;
             }
 

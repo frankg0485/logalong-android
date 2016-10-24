@@ -5,6 +5,8 @@ package com.swoag.logalong.views;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
@@ -19,7 +21,7 @@ import com.swoag.logalong.utils.LOnClickListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LRenameDialog extends Dialog {
+public class LRenameDialog extends Dialog implements TextWatcher {
     private static final String TAG = LRenameDialog.class.getSimpleName();
 
     private LRenameDialogItf callback;
@@ -63,6 +65,31 @@ public class LRenameDialog extends Dialog {
         from.setText(oldname);
         text = (EditText) findViewById(R.id.newname);
         text.setHint((hint != null) ? hint : "");
+        text.addTextChangedListener(this);
+    }
+
+
+    @Override
+    public void afterTextChanged(Editable s) {
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        String str = text.getText().toString().trim();
+        String str2 = str.replaceAll(",", "");
+
+        if (str2.length() > LNewEntryDialog.MAX_ENTRY_NAME_LEN) {
+            str2 = str2.substring(0, LNewEntryDialog.MAX_ENTRY_NAME_LEN);
+            text.setText(str2);
+            text.setSelection(str2.length());
+        } else if (!str.contentEquals(str2)) {
+            text.setText(str2);
+            text.setSelection(str2.length());
+        }
     }
 
     private class MyClickListener extends LOnClickListener {

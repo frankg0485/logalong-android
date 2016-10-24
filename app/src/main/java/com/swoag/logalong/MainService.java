@@ -37,6 +37,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     static final int SERVICE_SHUTDOWN_MS = 15000;
     private boolean requestToStop;
     private int pollingCount;
+    private int logInAttempts;
     private BroadcastReceiver broadcastReceiver;
 
     public static void start(Context context) {
@@ -146,6 +147,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollingCount = 0;
                     pollHandler.removeCallbacks(serviceShutdownRunnable);
                     requestToStop = false;
+                    logInAttempts = 0;
 
                     LLog.d(TAG, "starting service, already connected: " + LProtocol.ui.isConnected());
                     if (LProtocol.ui.isConnected()) {
@@ -195,16 +197,21 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_LOGIN:
                 if (ret == LProtocol.RSPS_OK) {
+                    logInAttempts = 0;
                     LProtocol.ui.utcSync();
                     LProtocol.ui.updateUserProfile();
                     LLog.d(TAG, "user logged in");
+                    //journal posting and polling start only upon successful login
                     pollHandler.post(journalPostRunnable);
                     pollHandler.postDelayed(pollRunnable, 1000);
                 } else {
-                    LLog.w(TAG, "unable to login");
-                    //the only reason that user is unable to login: user name no longer valid
-                    // thus to wipe it off and let user to reset
-                    LPreferences.setUserName("");
+                    LLog.e(TAG, "unable to login: " + LPreferences.getUserId() + " name: " + LPreferences.getUserName());
+                    if (logInAttempts++ > 5) {
+                        //the only reason that user is unable to login: user name no longer valid
+                        // thus to wipe it off and let user to reset
+                        //
+                        LPreferences.setUserName("");
+                    }
                 }
                 break;
 

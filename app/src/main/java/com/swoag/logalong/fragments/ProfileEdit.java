@@ -80,8 +80,6 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
 
             @Override
             public void afterTextChanged(Editable s) {
-                Object x = userNameTV.getText();
-
                 String txt = userNameTV.getText().toString();
                 //String str = txt.replaceAll("\\s+", "");
                 String str = txt.replaceAll("^\\s+", "");
@@ -290,6 +288,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     }
 
     public void dismiss() {
+        if (countDownTimer != null) countDownTimer.cancel();
         myClickListener.disableEnable(false);
         this.callback.onProfileEditExit();
         destroy();
