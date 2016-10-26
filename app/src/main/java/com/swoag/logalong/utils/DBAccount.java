@@ -55,6 +55,8 @@ public class DBAccount {
     }
 
     public static LAccount getById(Context context, long id) {
+        if (id <= 0) return null;
+
         LAccount account = new LAccount();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
@@ -81,7 +83,9 @@ public class DBAccount {
         return getByGid(LApp.ctx, gid);
     }
 
-   public static LAccount getByGid(Context context, int gid) {
+    public static LAccount getByGid(Context context, int gid) {
+        if (gid <= 0) return null;
+
         LAccount account = new LAccount();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,

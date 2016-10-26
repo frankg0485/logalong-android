@@ -97,6 +97,8 @@ public class DBCategory {
     }
 
     public static LCategory getById(Context context, long id) {
+        if (id <= 0) return null;
+
         LCategory category = new LCategory();
 
         try {

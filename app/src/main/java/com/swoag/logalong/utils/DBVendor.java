@@ -77,6 +77,8 @@ public class DBVendor {
     }
 
     public static LVendor getById(Context context, long id) {
+        if (id <= 0) return null;
+
         LVendor vendor = new LVendor();
 
         try {

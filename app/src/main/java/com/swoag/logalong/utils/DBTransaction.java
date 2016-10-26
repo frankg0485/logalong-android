@@ -139,6 +139,8 @@ public class DBTransaction {
     }
 
     public static LTransaction getById(Context context, long id) {
+        if (id <= 0) return null;
+
         Cursor csr = null;
         String str = "";
         LTransaction item = new LTransaction();

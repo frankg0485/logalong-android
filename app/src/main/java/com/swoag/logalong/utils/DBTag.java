@@ -72,6 +72,8 @@ public class DBTag {
     }
 
     public static LTag getById(Context context, long id) {
+        if (id <= 0) return null;
+
         LTag tag = new LTag();
 
         try {

@@ -97,6 +97,8 @@ public class DBScheduledTransaction {
     }
 
     public static LScheduledTransaction getById(Context context, long id) {
+        if (id <= 0) return null;
+
         LScheduledTransaction sch = null;
         Cursor cur = null;
 
