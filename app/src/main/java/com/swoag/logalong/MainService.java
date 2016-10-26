@@ -210,11 +210,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.postDelayed(pollRunnable, 1000);
                 } else {
                     LLog.e(TAG, "unable to login: " + LPreferences.getUserId() + " name: " + LPreferences.getUserName());
-                    if (logInAttempts++ > 5) {
+                    if (logInAttempts++ > 3) {
                         //the only reason that user is unable to login: user name no longer valid
                         // thus to wipe it off and let user to reset
                         //
                         LPreferences.setUserName("");
+                    } else {
+                        server.UiLogin();
                     }
                 }
                 break;

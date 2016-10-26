@@ -259,7 +259,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.share:
-                        if (TextUtils.isEmpty(LPreferences.getUserFullName())) {
+                        if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences.getUserName()))) {
                             new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
                             break;
                         }

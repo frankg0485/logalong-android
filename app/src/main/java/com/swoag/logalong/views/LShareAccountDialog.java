@@ -99,7 +99,7 @@ public class LShareAccountDialog extends Dialog
                                LShareAccountDialog.LShareAccountDialogItf callback,
                                ArrayList<LUser> users) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
-        if (!LAppServer.getInstance().UiIsConnected()) {
+        if (!LAppServer.getInstance().UiIsLoggedIn()) {
             MainService.start(context);
         }
         init(context, accountId, selectedIds, callback, users);

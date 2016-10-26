@@ -168,8 +168,6 @@ public class LAppServer {
     }
 
     public void disconnect() {
-        UiPing(); //flush socket
-
         synchronized (netLock) {
             if (netThreadState == STATE_READY) {
                 while (netThreadState != STATE_EXIT) {
@@ -215,6 +213,8 @@ public class LAppServer {
                             loop = false;
                             closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
                             break;
+                        } else {
+                            UiPing(); //flush socket
                         }
                         try {
                             netLock.wait();
@@ -336,6 +336,10 @@ public class LAppServer {
         return lProtocol.isConnected();
     }
 
+    public boolean UiIsLoggedIn() {
+        return lProtocol.isLoggedIn();
+    }
+
     public short UiGetServerVersion() {
         return lProtocol.getServerVersion();
     }
@@ -358,6 +362,7 @@ public class LAppServer {
     }
 
     public boolean UiLogin() {
+        if (TextUtils.isEmpty(LPreferences.getUserName())) return false;
         return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
     }
 

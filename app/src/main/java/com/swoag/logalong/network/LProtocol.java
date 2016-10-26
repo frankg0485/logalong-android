@@ -496,6 +496,12 @@ public class LProtocol {
         }
     }
 
+    public boolean isLoggedIn() {
+        synchronized (stateLock) {
+            return state == STATE_LOGGED_IN;
+        }
+    }
+
     public short getServerVersion() {
         synchronized (stateLock) {
             return state >= STATE_CONNECTED ? serverVersion : 0;

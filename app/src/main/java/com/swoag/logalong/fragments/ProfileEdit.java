@@ -163,6 +163,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         progressBar = (ProgressBar) parentView.findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.GONE);
         errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
         hideErrorMsg();
         hideIME();
@@ -250,11 +251,13 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                         @Override
                         public void onTick(long millisUntilFinished) {
                             if ((millisUntilFinished < 8000) && (millisUntilFinished > 6500)) {
-                                if (LAppServer.getInstance().UiIsConnected()) {
-                                    if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                                if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                                    if (LAppServer.getInstance().UiIsConnected()) {
                                         LAppServer.getInstance().UiRequestUserName();
                                         //profile is automatically updated when username is first-time generated.
-                                    } else {
+                                    }
+                                } else {
+                                    if (LAppServer.getInstance().UiIsLoggedIn()) {
                                         LAppServer.getInstance().UiUpdateUserProfile();
                                     }
                                 }
@@ -280,7 +283,11 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                             LAppServer.getInstance().UiRequestUserName();
                             //profile is automatically updated when username is first-time generated.
                         } else {
-                            LAppServer.getInstance().UiUpdateUserProfile();
+                            if (LAppServer.getInstance().UiIsLoggedIn()) {
+                                LAppServer.getInstance().UiUpdateUserProfile();
+                            } else {
+                                MainService.start(ProfileEdit.this.activity);
+                            }
                         }
                     } else {
                         MainService.start(ProfileEdit.this.activity);
