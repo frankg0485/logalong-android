@@ -37,15 +37,8 @@ public class LJournal {
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
 
-    private static final int ACTION_SHARE_ITEM = 9;
-    private static final int ACTION_UPDATE_ITEM = 10;
+    //TODO: revisit schedule sharing
     private static final int ACTION_UPDATE_SCHEDULED_ITEM = 15;
-    private static final int ACTION_UPDATE_ACCOUNT = 20;
-    private static final int ACTION_UPDATE_CATEGORY = 30;
-    private static final int ACTION_UPDATE_VENDOR = 40;
-    private static final int ACTION_UPDATE_TAG = 50;
-    private static final int ACTION_UPDATE_VENDOR_CATEGORY = 60;
-    private static final int ACTION_SHARE_ACCOUNT = 70;
 
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
@@ -460,19 +453,6 @@ public class LJournal {
         post(LPreferences.getUserId());
         LLog.d(TAG, "confirm account: " + accountGid + " <--> " + shareWithAccountGid + " with user: "
                 + shareWithUserId + " confirmed: " + confirmed);
-        return true;
-    }
-
-    public boolean updateAccountShare(LAccount account, HashSet<Integer> userIds) {
-        record = ACTION_UPDATE_ACCOUNT + ":" + DBHelper.TABLE_COLUMN_SHARE + "=" + account.getShareIdsString() + ","
-                + DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
-                + DBHelper.TABLE_COLUMN_NAME + "=" + account.getName() + ","
-                + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
-                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=0";
-
-        for (int id : userIds) {
-            post(id);
-        }
         return true;
     }
 
@@ -1422,33 +1402,8 @@ public class LJournal {
         String[] ss = recvRecord.split(":", 3);
         int action = Integer.parseInt(ss[1]);
         switch (action) {
-            case ACTION_SHARE_ITEM:
-            case ACTION_UPDATE_ITEM:
-            case ACTION_UPDATE_ACCOUNT:
-                break;
-
             case ACTION_UPDATE_SCHEDULED_ITEM:
                 updateScheduledItemFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_UPDATE_CATEGORY:
-                updateCategoryFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_UPDATE_VENDOR:
-                updateVendorFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_UPDATE_TAG:
-                updateTagFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_UPDATE_VENDOR_CATEGORY:
-                updateVendorCategoryFromReceivedRecord(ss[2]);
-                break;
-
-            case ACTION_SHARE_ACCOUNT:
-                shareAccountFromReceivedRecord(ss[2]);
                 break;
         }
     }

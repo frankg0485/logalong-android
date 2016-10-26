@@ -35,6 +35,7 @@ import android.widget.ProgressBar;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LUser;
@@ -98,6 +99,9 @@ public class LShareAccountDialog extends Dialog
                                LShareAccountDialog.LShareAccountDialogItf callback,
                                ArrayList<LUser> users) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
+        if (!LAppServer.getInstance().UiIsConnected()) {
+            MainService.start(context);
+        }
         init(context, accountId, selectedIds, callback, users);
     }
 

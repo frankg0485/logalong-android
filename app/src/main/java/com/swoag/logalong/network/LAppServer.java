@@ -248,7 +248,7 @@ public class LAppServer {
                         //fall through
 
                     case WAIT_FOR_RESPONSE:
-                        LLog.d(TAG, "waiting for response");
+                        //LLog.d(TAG, "waiting for response");
                         try {
                             netRxBuf.setBufOffset(0);
                             netRxBuf.setLen(sockIn.read(netRxBuf.getBuf(), 0, netRxBuf.size()));
@@ -260,7 +260,7 @@ public class LAppServer {
                             fail = true;
                             LLog.w(TAG, "read error");
                         } else {
-                            LLog.d(TAG, "waiting for response: returned");
+                            //LLog.d(TAG, "waiting for response: returned");
                             int parseResult = lProtocol.parse(netRxBuf, requestCode, scrambler);
                             switch (parseResult) {
                                 case LProtocol.RESPONSE_PARSE_RESULT_DONE :
@@ -365,21 +365,8 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, LPreferences.getUserId(), LPreferences.getUserFullName(), scrambler);
     }
 
-    public boolean UiGetShareUserById(int id) {
-        return LTransport.send_rqst(this, LProtocol.RQST_GET_SHARE_USER_BY_ID, id, scrambler);
-    }
-
     public boolean UiGetShareUserByName(String name) {
         return LTransport.send_rqst(this, LProtocol.RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
-    }
-
-    public boolean UiShareAccountWithUser(int userId, String accountName, String uuid, boolean requireConfirmation) {
-        return LTransport.send_rqst(this, LProtocol.RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName + "," + uuid + ","
-                + (requireConfirmation ? 1 : 0), scrambler);
-    }
-
-    public boolean UiShareTransitionRecord(int userId, String record) {
-        return LTransport.send_rqst(this, LProtocol.RQST_SHARE_TRANSITION_RECORD, userId, record, scrambler);
     }
 
     public boolean UiPoll() {
@@ -393,10 +380,6 @@ public class LAppServer {
 
     public boolean UiUtcSync() {
         return LTransport.send_rqst(this, LProtocol.RQST_UTC_SYNC, System.currentTimeMillis() / 1000, scrambler);
-    }
-
-    public boolean UiConfirmAccountShare(int userId, String accountName, String uuid) {
-        return LTransport.send_rqst(this, LProtocol.RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID, userId, accountName + "," + uuid, scrambler);
     }
 
     public boolean UiPostJournal(int userId, int journalId, byte[] data) {
