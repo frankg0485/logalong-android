@@ -38,6 +38,7 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LUser;
+import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.DBAccount;
@@ -213,7 +214,7 @@ public class LShareAccountDialog extends Dialog
                 editText.setEnabled(true);
             }
         }.start();
-        LProtocol.ui.getShareUserByName(name);
+        LAppServer.getInstance().UiGetShareUserByName(name);
     }
 
     private void hideErrorMsg() {

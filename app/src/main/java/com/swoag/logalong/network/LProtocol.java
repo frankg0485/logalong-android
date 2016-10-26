@@ -3,6 +3,7 @@ package com.swoag.logalong.network;
 
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
@@ -18,11 +19,16 @@ import java.util.zip.CRC32;
 
 public class LProtocol {
     private static final String TAG = LProtocol.class.getSimpleName();
-    private static int scrambler;
-    private static boolean connected;
-    private static Object stateLock = new Object();;
-    private static short serverVersion = 0;
-    private static CRC32 crc32 = new CRC32();
+
+    private Object stateLock = new Object();;
+    private final int STATE_DISCONNECTED = 10;
+    private final int STATE_CONNECTING = 20;
+    private final int STATE_CONNECTED = 30;
+    private final int STATE_LOGGED_IN = 40;
+    private int state;
+
+    private short serverVersion = 0;
+    private CRC32 crc32 = new CRC32();
 
     //////////////////////////////////////////////////////////////////////
     public static final int PACKET_MAX_PAYLOAD_LEN = 1456;
@@ -57,22 +63,22 @@ public class LProtocol {
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
 
-    private static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
-    private static final short RQST_CREATE_USER = RQST_SYS | 0x104;
-    private static final short RQST_LOGIN = RQST_SYS | 0x105;
-    private static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
-    private static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
-    private static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
-    private static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
-    private static final short RQST_CONFIRM_ACCOUNT_SHARE = RQST_SYS | 0x10d; /* obsolete */
-    private static final short RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID = RQST_SYS | 0x10e;
-    private static final short RQST_SHARE_TRANSITION_RECORD = RQST_SYS | 0x110;
-    private static final short RQST_SHARE_ACCOUNT_USER_CHANGE = RQST_SYS | 0x114;
-    private static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
-    private static final short RQST_POLL = RQST_SYS | 0x777;
-    private static final short RQST_POLL_ACK = RQST_SYS | 0x778;
-    private static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
-    private static final short RQST_PING = RQST_SYS | 0x7ff;
+    public static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
+    public static final short RQST_CREATE_USER = RQST_SYS | 0x104;
+    public static final short RQST_LOGIN = RQST_SYS | 0x105;
+    public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
+    public static final short RQST_GET_SHARE_USER_BY_ID = RQST_SYS | 0x108;
+    public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
+    public static final short RQST_SHARE_ACCOUNT_WITH_USER = RQST_SYS | 0x10c;
+    public static final short RQST_CONFIRM_ACCOUNT_SHARE = RQST_SYS | 0x10d; /* obsolete */
+    public static final short RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID = RQST_SYS | 0x10e;
+    public static final short RQST_SHARE_TRANSITION_RECORD = RQST_SYS | 0x110;
+    public static final short RQST_SHARE_ACCOUNT_USER_CHANGE = RQST_SYS | 0x114;
+    public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
+    public static final short RQST_POLL = RQST_SYS | 0x777;
+    public static final short RQST_POLL_ACK = RQST_SYS | 0x778;
+    public static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
+    public static final short RQST_PING = RQST_SYS | 0x7ff;
 
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE = 0x0008; /* obsolete */
     private static final short CMD_CONFIRMED_ACCOUNT_SHARE_WITH_UUID = 0x0009;
@@ -95,11 +101,19 @@ public class LProtocol {
 
     private LBuffer pktBuf;
     private LBuffer pkt;
-    private short[] shorts;
 
-    public LProtocol() {
+    private static LProtocol instance;
+
+    public static LProtocol getInstance() {
+        if (null == instance) {
+            instance = new LProtocol();
+        }
+        return instance;
+    }
+
+    private LProtocol() {
         pktBuf = new LBuffer(PACKET_MAX_LEN * 2);
-        shorts = new short[PACKET_MAX_LEN];
+        state = STATE_DISCONNECTED;
     }
 
     private void handleJournalReceive(LBuffer pkt, int status, int action, int cacheId) {
@@ -321,7 +335,7 @@ public class LProtocol {
     }
 
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
-    private int consumePacket(LBuffer pkt, short requestCode) {
+    private int consumePacket(LBuffer pkt, short requestCode, int scrambler) {
         Intent rspsIntent;
         int origOffset = pkt.getBufOffset();
         short total = (short)((pkt.getShortAt(origOffset + 2) & 0xfff) + 4); //mask out sequence bits
@@ -357,7 +371,7 @@ public class LProtocol {
             case RSPS | RQST_SCRAMBLER_SEED:
                 //LLog.d(TAG, "channel scrambler seed sent");
                 synchronized (stateLock) {
-                    connected = true;
+                    state = STATE_CONNECTED;
                 }
                 serverVersion = pkt.getShort();
                 break;
@@ -379,6 +393,9 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_LOGIN:
+                synchronized (stateLock) {
+                    state = (status == RSPS_OK) ? STATE_LOGGED_IN : state;
+                }
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOGIN));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
@@ -571,11 +588,11 @@ public class LProtocol {
     }
 
     // parser runs in Network receiving thread, thus no GUI update here.
-    public short parse(LBuffer buf, short requestCode) {
+    public short parse(LBuffer buf, short requestCode, int scrambler) {
         if (null == buf) {
             LLog.d(TAG, "network thread is shutting down, socket is no longer connected");
             synchronized (stateLock) {
-                connected = false;
+                state = STATE_DISCONNECTED;
                 return RESPONSE_PARSE_RESULT_ERROR;
             }
         }
@@ -589,7 +606,7 @@ public class LProtocol {
         }
 
         while (alignPacket(pkt)) {
-            int bytes = consumePacket(pkt, requestCode);
+            int bytes = consumePacket(pkt, requestCode, scrambler);
             if (bytes == -1) {
                 LLog.e(TAG, "packet parse error?");
                 break;
@@ -617,120 +634,15 @@ public class LProtocol {
     }
 
     // all user interface calls
-    public static class ui {
-        private static LAppServer server;
-
-        private static int genScrambler() {
-            Random rand = new Random(System.currentTimeMillis());
-            int ss = 0;
-            int ii = 0;
-            while (ii < 4) {
-                char ch = (char) (rand.nextInt(74) + 48);
-                if ((ch > 'Z' && ch < 'a') || (ch > '9' && ch < 'A')) continue;
-                ii++;
-                ss <<= 8;
-                ss += ch;
-            }
-
-            return ss;
+    public boolean isConnected() {
+        synchronized (stateLock) {
+            return state >= STATE_CONNECTED;
         }
+    }
 
-        public static void connect() {
-            boolean connectStatus;
-
-            synchronized (stateLock) {
-                connectStatus = connected;
-            }
-
-            if (!connectStatus) {
-                server = LAppServer.getInstance();
-                server.connect();
-            }
-        }
-
-        public static void disconnect() {
-            server.disconnect();
-            //disconnect eventually clears the 'connected' flag thru callback, when
-            //network thread exits
-        }
-
-        public static boolean isConnected() {
-            synchronized (stateLock) {
-                return connected;
-            }
-        }
-
-        public static short getServerVersion() {
-            synchronized (stateLock) {
-                return connected ? serverVersion : 0;
-            }
-        }
-
-        public static void initScrambler() {
-            scrambler = genScrambler();
-            LTransport.send_rqst(server, RQST_SCRAMBLER_SEED, scrambler, 0);
-        }
-
-        public static boolean ping() {
-            return LTransport.send_rqst(server, RQST_PING, 0);
-        }
-
-        public static boolean requestUserName() {
-            return LTransport.send_rqst(server, RQST_CREATE_USER, 0);
-        }
-
-        public static boolean login() {
-            return LTransport.send_rqst(server, RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
-        }
-
-        public static boolean updateUserProfile() {
-            return LTransport.send_rqst(server, RQST_UPDATE_USER_PROFILE, LPreferences.getUserId(), LPreferences.getUserFullName(), scrambler);
-        }
-
-        public static boolean getShareUserById(int id) {
-            return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_ID, id, scrambler);
-        }
-
-        public static boolean getShareUserByName(String name) {
-            return LTransport.send_rqst(server, RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
-        }
-
-        public static boolean shareAccountWithUser(int userId, String accountName, String uuid, boolean requireConfirmation) {
-            return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName + "," + uuid + ","
-                    + (requireConfirmation ? 1 : 0), scrambler);
-        }
-
-        public static boolean shareTransitionRecord(int userId, String record) {
-            return LTransport.send_rqst(server, RQST_SHARE_TRANSITION_RECORD, userId, record, scrambler);
-        }
-
-        public static boolean poll() {
-            return LTransport.send_rqst(server, RQST_POLL, scrambler);
-        }
-
-        public static boolean pollAck(int cacheId) {
-            //LLog.d(TAG, "acking: " + cacheId);
-            return LTransport.send_rqst(server, RQST_POLL_ACK, cacheId, scrambler);
-        }
-
-        public static boolean utcSync() {
-            return LTransport.send_rqst(server, RQST_UTC_SYNC, System.currentTimeMillis() / 1000, scrambler);
-        }
-
-        public static boolean confirmAccountShare(int userId, String accountName, String uuid) {
-            return LTransport.send_rqst(server, RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID, userId, accountName + "," + uuid, scrambler);
-        }
-
-        public static boolean postJournal(int userId, int journalId, byte[] data) {
-            return LTransport.send_rqst(server, RQST_POST_JOURNAL, userId, journalId, data, scrambler);
-        }
-
-        //userId: user that this change is applying to
-        //changeUserId: which user is being added/removed
-        public static boolean shareAccountUserChange(int userId, int changeUserId, boolean add, String accountName, String uuid) {
-            if ((userId == changeUserId) && add) return false;
-            return LTransport.send_rqst(server, RQST_SHARE_ACCOUNT_USER_CHANGE, userId, changeUserId + ","
-                    + (add ? 1 : 0) + ',' + accountName + "," + uuid, scrambler);
+    public short getServerVersion() {
+        synchronized (stateLock) {
+            return state >= STATE_CONNECTED ? serverVersion : 0;
         }
     }
 }

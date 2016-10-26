@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.utils.LAlarm;
@@ -13,12 +14,14 @@ import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LBufferPool;
 import com.swoag.logalong.utils.LLog;
+import com.swoag.logalong.utils.LPreferences;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Calendar;
+import java.util.Random;
 
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
@@ -59,7 +62,7 @@ public class LAppServer {
 
     private LAppServer() {
         context = LApp.ctx;
-        lProtocol = new LProtocol();
+        lProtocol = LProtocol.getInstance();
         netLock = new Object();
         netThreadState = STATE_INIT;
         netTxBufPool = new LBufferPool(LProtocol.PACKET_MAX_LEN, 16);
@@ -165,6 +168,8 @@ public class LAppServer {
     }
 
     public void disconnect() {
+        UiPing(); //flush socket
+
         synchronized (netLock) {
             if (netThreadState == STATE_READY) {
                 while (netThreadState != STATE_EXIT) {
@@ -177,6 +182,8 @@ public class LAppServer {
                     } catch (Exception e) {
                     }
                 }
+            } else {
+                netThreadState = STATE_OFF;
             }
             closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
         }
@@ -198,6 +205,7 @@ public class LAppServer {
             // protocol behaviour:
             // client (App) sends request to server, then wait for response. If response does not
             // come as expected, networks thread bails to restart.
+            LLog.d(TAG, "net thread running ...");
             while (loop) {
                 synchronized (netLock) {
                     fail = false;
@@ -240,6 +248,7 @@ public class LAppServer {
                         //fall through
 
                     case WAIT_FOR_RESPONSE:
+                        LLog.d(TAG, "waiting for response");
                         try {
                             netRxBuf.setBufOffset(0);
                             netRxBuf.setLen(sockIn.read(netRxBuf.getBuf(), 0, netRxBuf.size()));
@@ -251,7 +260,8 @@ public class LAppServer {
                             fail = true;
                             LLog.w(TAG, "read error");
                         } else {
-                            int parseResult = lProtocol.parse(netRxBuf, requestCode);
+                            LLog.d(TAG, "waiting for response: returned");
+                            int parseResult = lProtocol.parse(netRxBuf, requestCode, scrambler);
                             switch (parseResult) {
                                 case LProtocol.RESPONSE_PARSE_RESULT_DONE :
                                     netTxBufPool.putReadBuffer(buf);
@@ -280,8 +290,8 @@ public class LAppServer {
             }
 
             // signal the end of connection.
-            LLog.d(TAG, "app server stopped");
-            lProtocol.parse(null, (short)0);
+            LLog.d(TAG, "app server stopped: net thread done");
+            lProtocol.parse(null, (short)0, 0);
             synchronized (netLock) {
                 netThreadState = STATE_EXIT;
                 netLock.notifyAll();
@@ -303,5 +313,93 @@ public class LAppServer {
             netTxBufPool.putWriteBuffer(buf);
             return true;
         }
+    }
+
+    //all user interface calls
+    private int scrambler;
+    private int genScrambler() {
+        Random rand = new Random(System.currentTimeMillis());
+        int ss = 0;
+        int ii = 0;
+        while (ii < 4) {
+            char ch = (char) (rand.nextInt(74) + 48);
+            if ((ch > 'Z' && ch < 'a') || (ch > '9' && ch < 'A')) continue;
+            ii++;
+            ss <<= 8;
+            ss += ch;
+        }
+
+        return ss;
+    }
+
+    public boolean UiIsConnected() {
+        return lProtocol.isConnected();
+    }
+
+    public short UiGetServerVersion() {
+        return lProtocol.getServerVersion();
+    }
+
+    public void UiInitScrambler() {
+        scrambler = genScrambler();
+        LTransport.send_rqst(this, LProtocol.RQST_SCRAMBLER_SEED, scrambler, 0);
+    }
+
+    public boolean UiPing() {
+        return LTransport.send_rqst(this, LProtocol.RQST_PING, 0);
+    }
+
+    public boolean UiRequestUserName() {
+        if(!TextUtils.isEmpty(LPreferences.getUserName())) {
+            LLog.w(TAG, "user name request ignored, name already assigned: " + LPreferences.getUserName());
+            return true;
+        }
+        return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, 0);
+    }
+
+    public boolean UiLogin() {
+        return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
+    }
+
+    public boolean UiUpdateUserProfile() {
+        return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, LPreferences.getUserId(), LPreferences.getUserFullName(), scrambler);
+    }
+
+    public boolean UiGetShareUserById(int id) {
+        return LTransport.send_rqst(this, LProtocol.RQST_GET_SHARE_USER_BY_ID, id, scrambler);
+    }
+
+    public boolean UiGetShareUserByName(String name) {
+        return LTransport.send_rqst(this, LProtocol.RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
+    }
+
+    public boolean UiShareAccountWithUser(int userId, String accountName, String uuid, boolean requireConfirmation) {
+        return LTransport.send_rqst(this, LProtocol.RQST_SHARE_ACCOUNT_WITH_USER, userId, accountName + "," + uuid + ","
+                + (requireConfirmation ? 1 : 0), scrambler);
+    }
+
+    public boolean UiShareTransitionRecord(int userId, String record) {
+        return LTransport.send_rqst(this, LProtocol.RQST_SHARE_TRANSITION_RECORD, userId, record, scrambler);
+    }
+
+    public boolean UiPoll() {
+        return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
+    }
+
+    public boolean UiPollAck(int cacheId) {
+        //LLog.d(TAG, "acking: " + cacheId);
+        return LTransport.send_rqst(this, LProtocol.RQST_POLL_ACK, cacheId, scrambler);
+    }
+
+    public boolean UiUtcSync() {
+        return LTransport.send_rqst(this, LProtocol.RQST_UTC_SYNC, System.currentTimeMillis() / 1000, scrambler);
+    }
+
+    public boolean UiConfirmAccountShare(int userId, String accountName, String uuid) {
+        return LTransport.send_rqst(this, LProtocol.RQST_CONFIRM_ACCOUNT_SHARE_WITH_UUID, userId, accountName + "," + uuid, scrambler);
+    }
+
+    public boolean UiPostJournal(int userId, int journalId, byte[] data) {
+        return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, data, scrambler);
     }
 }

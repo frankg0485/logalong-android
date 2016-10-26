@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 
+import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
@@ -114,7 +115,7 @@ public class LJournal {
                 lastFlushMs = System.currentTimeMillis();
                 LLog.d(TAG, "post journal: " + entry.id);
 
-                LProtocol.ui.postJournal(entry.userId, entry.id, entry.data);
+                LAppServer.getInstance().UiPostJournal(entry.userId, entry.id, entry.data);
             }
         }
     }

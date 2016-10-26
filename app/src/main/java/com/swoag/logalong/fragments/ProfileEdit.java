@@ -19,7 +19,10 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.swoag.logalong.LApp;
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
+import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.DBPorter;
@@ -188,19 +191,21 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
-                if (countDownTimer != null) countDownTimer.cancel();
-                progressBar.setVisibility(View.GONE);
-                if (ret == LProtocol.RSPS_OK) {
-                    DBPorter.saveUserInfo();
-                    if (TextUtils.isEmpty(oldUserId)) {
-                        userIdTV.setText(LPreferences.getUserName());
-                    } else if (this.callback != null) {
-                        dismiss();
-                        break;
+                if (countDownTimer != null) {
+                    countDownTimer.cancel();
+                    progressBar.setVisibility(View.GONE);
+                    if (ret == LProtocol.RSPS_OK) {
+                        DBPorter.saveUserInfo();
+                        if (TextUtils.isEmpty(oldUserId)) {
+                            userIdTV.setText(LPreferences.getUserName());
+                        } else if (this.callback != null) {
+                            dismiss();
+                            break;
+                        }
+                    } else {
+                        displayErrorMsg(activity.getString(R.string.warning_unable_to_update_profile));
+                        restoreOldProfile();
                     }
-                } else {
-                    displayErrorMsg(activity.getString(R.string.warning_unable_to_update_profile));
-                    restoreOldProfile();
                 }
                 break;
         }
@@ -241,10 +246,19 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                 break;*/
 
                 case R.id.add:
-                    countDownTimer = new CountDownTimer(15000, 15000) {
+                    countDownTimer = new CountDownTimer(15000, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
-
+                            if ((millisUntilFinished < 8000) && (millisUntilFinished > 6500)) {
+                                if (LAppServer.getInstance().UiIsConnected()) {
+                                    if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                                        LAppServer.getInstance().UiRequestUserName();
+                                        //profile is automatically updated when username is first-time generated.
+                                    } else {
+                                        LAppServer.getInstance().UiUpdateUserProfile();
+                                    }
+                                }
+                            }
                         }
 
                         @Override
@@ -261,11 +275,15 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                     LPreferences.setUserFullName(userNameTV.getText().toString().trim());
                     //LPreferences.setUserPass(userPassTV.getText().toString().trim());
 
-                    if (TextUtils.isEmpty(LPreferences.getUserName())) {
-                        LProtocol.ui.requestUserName();
-                        //profile is automatically updated when username is first-time generated.
+                    if (LAppServer.getInstance().UiIsConnected()) {
+                        if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                            LAppServer.getInstance().UiRequestUserName();
+                            //profile is automatically updated when username is first-time generated.
+                        } else {
+                            LAppServer.getInstance().UiUpdateUserProfile();
+                        }
                     } else {
-                        LProtocol.ui.updateUserProfile();
+                        MainService.start(ProfileEdit.this.activity);
                     }
 
                     oldUserId = LPreferences.getUserName();

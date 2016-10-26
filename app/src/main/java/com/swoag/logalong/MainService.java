@@ -11,6 +11,7 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBScheduledTransaction;
@@ -39,6 +40,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private int pollingCount;
     private int logInAttempts;
     private BroadcastReceiver broadcastReceiver;
+    private LAppServer server;
 
     public static void start(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
@@ -60,6 +62,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     @Override
     public void onCreate() {
         super.onCreate();
+        server = LAppServer.getInstance();
+
         DBScheduledTransaction.scanAlarm();
 
         pollHandler = new Handler() {
@@ -68,12 +72,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         pollRunnable = new Runnable() {
             @Override
             public void run() {
-                if ((!LProtocol.ui.isConnected()) && (pollingCount++ > 3)) {
+                if ((!server.UiIsConnected()) && (pollingCount++ > 3)) {
                     LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
                     stopSelf();
                 } else {
                     LLog.d(TAG, "heart beat polling");
-                    LProtocol.ui.poll();
+                    server.UiPoll();
                     pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 }
             }
@@ -132,7 +136,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
         }
-        LProtocol.ui.disconnect();
+        server.disconnect();
         LLog.d(TAG, "service destroyed");
 
         super.onDestroy();
@@ -149,17 +153,17 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     requestToStop = false;
                     logInAttempts = 0;
 
-                    LLog.d(TAG, "starting service, already connected: " + LProtocol.ui.isConnected());
-                    if (LProtocol.ui.isConnected()) {
-                        LProtocol.ui.login();
+                    LLog.d(TAG, "starting service, already connected: " + server.UiIsConnected());
+                    if (server.UiIsConnected()) {
+                        server.UiLogin();
                     } else {
-                        LProtocol.ui.connect();
+                        server.connect();
                     }
                     break;
 
                 case CMD_STOP:
-                    LLog.d(TAG, "requested to stop service, connected: " + LProtocol.ui.isConnected());
-                    if (LProtocol.ui.isConnected()) {
+                    LLog.d(TAG, "requested to stop service, connected: " + server.UiIsConnected());
+                    if (server.UiIsConnected()) {
                         LLog.d(TAG, "post service shutdown runnable");
                         pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
@@ -176,12 +180,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         switch (action) {
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 LLog.d(TAG, "network connected");
-                LProtocol.ui.initScrambler();
+                server.UiInitScrambler();
                 if (TextUtils.isEmpty(LPreferences.getUserName())) {
                     if (!TextUtils.isEmpty(LPreferences.getUserFullName()))
-                        LProtocol.ui.requestUserName();
+                        server.UiRequestUserName();
                 } else {
-                    LProtocol.ui.login();
+                    server.UiLogin();
                 }
                 break;
 
@@ -191,15 +195,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LPreferences.setUserId(userId);
                 LPreferences.setUserName(userName);
 
-                LProtocol.ui.updateUserProfile();
-                LProtocol.ui.login();
+                server.UiUpdateUserProfile();
+                server.UiLogin();
                 break;
 
             case LBroadcastReceiver.ACTION_LOGIN:
                 if (ret == LProtocol.RSPS_OK) {
                     logInAttempts = 0;
-                    LProtocol.ui.utcSync();
-                    LProtocol.ui.updateUserProfile();
+                    server.UiUtcSync();
+                    server.UiUpdateUserProfile();
                     LLog.d(TAG, "user logged in");
                     //journal posting and polling start only upon successful login
                     pollHandler.post(journalPostRunnable);
@@ -217,7 +221,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_POLL_IDLE:
                 if (LFragmentActivity.upRunning) {
-                    LProtocol.ui.utcSync();
+                    server.UiUtcSync();
                 } else if (!requestToStop){
                     requestToStop = true;
                     pollHandler.removeCallbacks(serviceShutdownRunnable);
@@ -231,12 +235,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
                 LLog.d(TAG, "polling after being acked");
-                LProtocol.ui.poll();
+                server.UiPoll();
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
                 int cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID:
@@ -269,7 +273,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         if (update) DBAccount.update(account);
                     }
                 }
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
@@ -279,7 +283,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 String userFullName = intent.getStringExtra("userFullName");
                 LPreferences.setShareUserName(userId, userName);
                 LPreferences.setShareUserFullName(userId, userFullName);
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE:
@@ -328,7 +332,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         LJournal.pushAllAccountRecords(user, account);
                     }
                 }
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO:
@@ -336,7 +340,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountGid = intent.getIntExtra("accountGid", 0);
                 accountName = intent.getStringExtra("accountName");
                 String record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateAccountFromReceivedRecord(accountGid, accountName, record);
                 break;
 
@@ -399,35 +403,35 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
                 record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateCategoryFromReceivedRecord(record);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateVendorFromReceivedRecord(record);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateTagFromReceivedRecord(record);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 record = intent.getStringExtra("record");
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 LJournal.updateVendorCategoryFromReceivedRecord(record);
                 break;
 
@@ -463,7 +467,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
                 cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
 
                 userId = intent.getIntExtra("id", 0);
                 userName = intent.getStringExtra("userName");
@@ -524,7 +528,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LLog.w(TAG, "unknown message received");
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
                 cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
+                server.UiPollAck(cacheId);
                 break;
         }
     }
