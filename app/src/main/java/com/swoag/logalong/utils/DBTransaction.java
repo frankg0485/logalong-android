@@ -10,6 +10,7 @@ import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 
+import java.util.Calendar;
 import java.util.UUID;
 
 public class DBTransaction {
@@ -228,5 +229,27 @@ public class DBTransaction {
                 DBHelper.TABLE_COLUMN_STATE + " =?", new String[]{"" + DBHelper.STATE_ACTIVE},
                 DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
         return cur;
+    }
+
+    public static LTransaction getLastItemOfTheDay(int year, int month, int day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.set(year, month, day, 0, 0, 0);
+        long startMs = calendar.getTimeInMillis();
+        long endMs = startMs + 24 * 3600 * 1000;
+        LTransaction item = null;
+
+        Cursor cursor = LApp.ctx.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
+                DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_TIMESTAMP + ">? AND "
+                + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?", new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
+
+        if (cursor != null && cursor.getCount() > 0) {
+            item = new LTransaction();
+            cursor.moveToLast();
+            DBTransaction.getValues(cursor, item);
+        }
+        if (cursor != null) cursor.close();
+        return item;
     }
 }

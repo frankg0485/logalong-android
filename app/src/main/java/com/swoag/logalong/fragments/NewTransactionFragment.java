@@ -207,6 +207,30 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 AppPersistency.transactionChanged = changed;
 
                 item.setTimeStampLast(LPreferences.getServerUtc());
+
+                //patch up the actual timestamp to make sure this is the last entry for the day
+                Calendar calendar = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+                calendar.setTimeInMillis(item.getTimeStamp());
+                int year2 = calendar.get(Calendar.YEAR);
+                int month2 = calendar.get(Calendar.MONTH);
+                int day2 = calendar.get(Calendar.DAY_OF_MONTH);
+                if ((year != year2) || (month != month2) || (day != day2)) {
+                    LTransaction transaction = DBTransaction.getLastItemOfTheDay(year2, month2, day2);
+                    if (null == transaction) {
+                        calendar.set(year2, month2, day2, 0, 0, 1);
+                        item.setTimeStamp(calendar.getTimeInMillis());
+                    } else {
+                        long ms = transaction.getTimeStamp() + 1;
+                        calendar.setTimeInMillis(ms);
+                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2) ms = transaction.getTimeStamp();
+                        item.setTimeStamp(ms);
+                    }
+                }
+
                 DBTransaction.add(getActivity(), item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
