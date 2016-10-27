@@ -3,6 +3,7 @@ package com.swoag.logalong;
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
@@ -49,6 +50,28 @@ public class MainActivity extends LFragmentActivity
     private Runnable confirmAccountShare;
     private boolean shareAccountConfirmDialogOpened = false;
 
+    public String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.startsWith(manufacturer)) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +86,7 @@ public class MainActivity extends LFragmentActivity
             finish();
             return;
         }
-
+        LLog.i(TAG, "VERSION=" + BuildConfig.VERSION_NAME + " DEVICE=" + getDeviceName());
         LViewUtils.screenInit();
 
         handler = new Handler();
