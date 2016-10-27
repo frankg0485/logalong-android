@@ -129,9 +129,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         pollHandler.removeCallbacks(serviceShutdownRunnable);
         pollHandler.removeCallbacks(pollRunnable);
         pollHandler.removeCallbacks(journalPostRunnable);
-        pollRunnable = null;
-        journalPostRunnable = null;
-        pollHandler = null;
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
@@ -139,6 +136,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         server.disconnect();
         LLog.d(TAG, "service destroyed");
 
+        pollRunnable = null;
+        journalPostRunnable = null;
+        pollHandler = null;
         super.onDestroy();
     }
 
