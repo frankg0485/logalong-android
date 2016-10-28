@@ -346,61 +346,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LJournal.updateAccountFromReceivedRecord(accountGid, accountName, record);
                 break;
 
-/*
-            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER:
-                if (ret == LProtocol.RSPS_OK) {
-                    int id = intent.getIntExtra("id", 0);
-                    String name = LPreferences.getShareUserName(id);
-                    accountName = intent.getStringExtra("accountName");
-                    requireConfirmation = intent.getByteExtra("requireConfirmation", (byte) 0);
-
-                    account = DBAccount.getByName(accountName);
-                    account.addShareUser(id, requireConfirmation == 1 ? LAccount.ACCOUNT_SHARE_INVITED : LAccount.ACCOUNT_SHARE_CONFIRMED);
-                    DBAccount.update(account);
-                } else {
-                    LLog.w(TAG, "unable to complete share request");
-                    //displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_complete_share_request));
-                }
-
-                break;
-
-            case LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                accountName = intent.getStringExtra("accountName");
-                userFullName = intent.getStringExtra("userFullName");
-                uuid = intent.getStringExtra("UUID");
-                //TODO: notify user
-
-                LPreferences.setShareUserName(userId, userName);
-                LPreferences.setShareUserFullName(userId, userFullName);
-
-                account = DBAccount.getByName(accountName);
-                if (account == null) {
-                    //TODO: the account name has been changed??
-                    LLog.w(TAG, "warning: account renamed, account sharing ignored");
-                } else {
-                    if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
-
-                    ArrayList<Integer> ids = account.getShareIds();
-                    ArrayList<Integer> states = account.getShareStates();
-                    for (int jj = 0; jj < ids.size(); jj++) {
-                        if (states.get(jj) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                            LProtocol.ui.shareAccountUserChange(ids.get(jj), userId, true, account.getName(), account.getRid());
-                        }
-                    }
-
-                    account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                    DBAccount.update(account);
-                }
-
-                LProtocol.ui.pollAck(cacheId);
-
-                // now push all existing records
-                LJournal.pushAllAccountRecords(userId, account);
-                break;
-*/
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
@@ -476,56 +421,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 //LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
                 LJournal.receive(intent.getStringExtra("record"));
                 break;
-/*
-            case LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE:
-                // this is from our shared peer, informing status change for one of the existng shared user
-                // or newly added user
-                cacheId = intent.getIntExtra("cacheId", 0);
-                LProtocol.ui.pollAck(cacheId);
 
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                LLog.d(TAG, "received account share user change from: " + userId + "@" + userName);
-
-                int changeUserId = intent.getIntExtra("changeUserId", 0);
-                byte change = intent.getByteExtra("change", (byte) 0);
-                accountName = intent.getStringExtra("accountName");
-                uuid = intent.getStringExtra("UUID");
-
-                account = DBAccount.getByName(accountName);
-                if (account == null) {
-                    LLog.w(TAG, "warning: account removed?");
-                } else {
-                    if (uuid.compareTo(account.getRid()) > 0) account.setRid(uuid);
-
-                    if (change == 1) {
-                        LLog.d(TAG, "account: " + accountName + " add share user: " + changeUserId);
-                        //we receive this add request, *ONLY* because one of the shared peer accepted
-                        //this user to share this account, so we add silently.
-                        account.addShareUser(changeUserId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                        DBAccount.update(account);
-
-                        //this is to notify the counter part that we received the change request to add me
-                        //basically this also says: hey, I confirm you to share account with me, and you've
-                        //already got all my records (from one of my shared peer), now it is your turn to
-                        //push me all your current records, so we're in sync.
-                        LProtocol.ui.getShareUserById(changeUserId);
-                        LProtocol.ui.shareAccountWithUser(changeUserId, accountName, account.getRid(), false);
-                    } else {
-                        LLog.d(TAG, "account: " + accountName + " remove share user: " + changeUserId);
-                        if (changeUserId == LPreferences.getUserId()) {
-                            //sorry, I am removed from the share group by one of the peer.
-                            account.removeAllShareUsers();
-                            LLog.d(TAG, "remove myself from share list");
-                        } else {
-                            //this is to remove somebody who was removed from group by someone else.
-                            account.removeShareUser(changeUserId);
-                        }
-                        DBAccount.update(account);
-                    }
-                }
-                break;
-*/
             case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
                 LLog.w(TAG, "unknown message received");
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:

@@ -12,6 +12,7 @@ import com.swoag.logalong.LApp;
 import java.util.HashMap;
 
 public class LBroadcastReceiver {
+    private static final String TAG = LBroadcastReceiver.class.getSimpleName();
     public static final String EXTRA_RET_CODE = "ert";
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
     public static final int ACTION_POLL_ACKED = 1;
@@ -70,11 +71,15 @@ public class LBroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            String str = intent.getAction();
-            String ss[] = str.split("\\.");
-            int action = Integer.parseInt(ss[ss.length - 1]);
-            int ret = intent.getIntExtra(EXTRA_RET_CODE, (int) 0);
-            listener.onBroadcastReceiverReceive(action, ret, intent);
+            try {
+                String str = intent.getAction();
+                String ss[] = str.split("\\.");
+                int action = Integer.parseInt(ss[ss.length - 1]);
+                int ret = intent.getIntExtra(EXTRA_RET_CODE, (int) 0);
+                listener.onBroadcastReceiverReceive(action, ret, intent);
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected error, broadcast receiver failed: " + e.getMessage());
+            }
         }
     }
 
