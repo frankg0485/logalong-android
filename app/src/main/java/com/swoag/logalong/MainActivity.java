@@ -18,6 +18,7 @@ import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LProtocol;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
@@ -347,6 +348,7 @@ public class MainActivity extends LFragmentActivity
     }
 
     private void doOneTimeInit() {
+        AppPersistency.clearViewHistory();
         if (LPreferences.getOneTimeInit()) return;
 
         initDb();

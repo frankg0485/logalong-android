@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
@@ -266,7 +267,13 @@ public class ViewTransactionFragment extends LFragment implements
         listView.post(new Runnable() {
             @Override
             public void run() {
-                listView.setSelection(adapter.getCount() - 1);
+                //listView.setSelection(adapter.getCount() - 1);
+                Parcelable history = AppPersistency.getViewHistory(AppPersistency.getViewLevel());
+                if (history != null) {
+                    listView.onRestoreInstanceState(history);
+                } else {
+                    listView.setSelection(adapter.getCount() - 1);
+                }
             }
         });
     }
@@ -1107,15 +1114,19 @@ public class ViewTransactionFragment extends LFragment implements
     private void showPrevNext(boolean prev) {
         if (!prevNext(prev)) return;
 
+        AppPersistency.setViewHistory(AppPersistency.getViewLevel(), listView.onSaveInstanceState());
+
         isAltView = !isAltView;
         if (prev) {
             listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
             listViewFlipper.showPrevious();
+            AppPersistency.setViewLevel(AppPersistency.getViewLevel() - 1);
         } else {
             listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
             listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
             listViewFlipper.showNext();
+            AppPersistency.setViewLevel(AppPersistency.getViewLevel() + 1);
         }
         initDbLoader();
     }
@@ -1193,17 +1204,20 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     @Override
-    public void onTransactionSearchDialogDismiss() {
-        resetSelections();
-        showTime();
+    public void onTransactionSearchDialogDismiss(boolean changed) {
+        if (changed) {
+            resetSelections();
+            showTime();
 
-        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-            LViewUtils.setAlpha(searchView, 0.8f);
-        } else {
-            LViewUtils.setAlpha(searchView, 1.0f);
+            if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
+                LViewUtils.setAlpha(searchView, 0.8f);
+            } else {
+                LViewUtils.setAlpha(searchView, 1.0f);
+            }
+
+            AppPersistency.clearViewHistory();
+            getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
         }
-
-        getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
     }
 
     private void changeSearch() {
@@ -1215,6 +1229,8 @@ public class ViewTransactionFragment extends LFragment implements
         //getLoaderManager().destroyLoader(AppPersistency.viewTransactionFilter);
         nextFilter();
         showFilterView();
+
+        AppPersistency.clearViewHistory();
         initDbLoader();
     }
 
@@ -1317,6 +1333,8 @@ public class ViewTransactionFragment extends LFragment implements
 
     private void changeTime() {
         nextTime();
+
+        AppPersistency.clearViewHistory();
         initDbLoader();
     }
 }

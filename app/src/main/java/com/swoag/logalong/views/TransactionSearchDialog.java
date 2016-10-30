@@ -43,7 +43,7 @@ public class TransactionSearchDialog extends Dialog implements
     private TransactionSearchDialogItf callback;
     private MyClickListener myClickListener;
     private CheckBox checkBox, checkBoxTime;
-    private boolean showAll, allTime;
+    private boolean showAll, allTime, showAllOrig, allTimeOrig;
 
     private LMultiSelectionDialog.MultiSelectionDialogItf accountSelectionDlgItf;
     private LMultiSelectionDialog.MultiSelectionDialogItf categorySelectionDlgItf;
@@ -51,7 +51,7 @@ public class TransactionSearchDialog extends Dialog implements
     private LMultiSelectionDialog.MultiSelectionDialogItf tagSelectionDlgItf;
 
     public interface TransactionSearchDialogItf {
-        public void onTransactionSearchDialogDismiss();
+        public void onTransactionSearchDialogDismiss(boolean changed);
     }
 
     public TransactionSearchDialog(Context parent, TransactionSearchDialogItf callback) {
@@ -59,6 +59,9 @@ public class TransactionSearchDialog extends Dialog implements
         this.context = parent;
         this.callback = callback;
         myClickListener = new MyClickListener();
+
+        allTimeOrig = LPreferences.getSearchAllTime();
+        showAllOrig = LPreferences.getSearchAll();
 
         accountSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
@@ -160,7 +163,7 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeTo(0);
         }
 
-        callback.onTransactionSearchDialogDismiss();
+        callback.onTransactionSearchDialogDismiss(!(allTimeOrig && showAllOrig && allTime && showAll));
     }
 
     @Override
