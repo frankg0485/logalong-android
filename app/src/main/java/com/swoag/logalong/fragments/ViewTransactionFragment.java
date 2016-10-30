@@ -329,65 +329,99 @@ public class ViewTransactionFragment extends LFragment implements
         }
 
         sectionSummary.clear();
+
         // generate section summary
-        if (TextUtils.isEmpty(column)) return;
-        if (AppPersistency.TRANSACTION_FILTER_ALL == filterId) return;
+        boolean generateSummary = !TextUtils.isEmpty(column);
         if (data == null || data.getCount() <= 0) return;
 
         LAccountSummary summary;
         boolean hasLog = false;
         long lastId = 0;
         long lastIndex = 0;
-        long id;
-        double v, income = 0, expense = 0;
+        long id = 0;
+        long indexId;
+        long lastTransferId = 0;
+        String lastTransferRid = "";
+        double v = 0, income = 0, expense = 0;
         int type;
         data.moveToFirst();
         do {
-            v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+            indexId = data.getLong(0);
             type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-            id = data.getLong(data.getColumnIndexOrThrow(column));
-            if (id < 0) id = 0;
-
-            if (hasLog && id != lastId) {
-                summary = new LAccountSummary();
-                summary.setExpense(expense);
-                summary.setIncome(income);
-                summary.setBalance(income - expense);
-
-                switch (filterId) {
-                    case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                        summary.setName(DBAccount.getNameById(lastId));
-                        if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
-                        break;
-                    case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                        summary.setName(DBCategory.getNameById(lastId));
-                        break;
-                    case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                        summary.setName(DBTag.getNameById(lastId));
-                        break;
-                    case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                        summary.setName(DBVendor.getNameById(lastId));
-                        break;
+            if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
+                    (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ) {
+                if (0 == lastTransferId) {
+                    sectionSummary.addVisible(indexId, true);
+                    lastTransferId = indexId;
+                    lastTransferRid = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                } else {
+                    String rid = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                    if (rid.startsWith(lastTransferRid.substring(0, 35))) {
+                        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                            sectionSummary.addVisible(lastTransferId, false);
+                            sectionSummary.addVisible(indexId, true);
+                        } else {
+                            sectionSummary.addVisible(indexId, false);
+                        }
+                        lastTransferId = 0;
+                    } else {
+                        sectionSummary.addVisible(indexId, true);
+                        lastTransferId = indexId;
+                        lastTransferRid = rid;
+                    }
                 }
-                sectionSummary.addSummary(lastIndex, summary);
-                hasLog = false;
-                income = 0;
-                expense = 0;
-                lastId = id;
+            } else {
+                sectionSummary.addVisible(indexId, true);
+                lastTransferId = 0;
             }
 
-            lastIndex = data.getLong(0);
-            if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
-            else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
-            else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == filterId) {
-                if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) expense += v;
-                else income += v;
+            if (generateSummary) {
+                v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                id = data.getLong(data.getColumnIndexOrThrow(column));
+                if (id < 0) id = 0;
+
+                if (hasLog && id != lastId) {
+                    summary = new LAccountSummary();
+                    summary.setExpense(expense);
+                    summary.setIncome(income);
+                    summary.setBalance(income - expense);
+
+                    switch (filterId) {
+                        case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                            summary.setName(DBAccount.getNameById(lastId));
+                            if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
+                            break;
+                        case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                            summary.setName(DBCategory.getNameById(lastId));
+                            break;
+                        case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                            summary.setName(DBTag.getNameById(lastId));
+                            break;
+                        case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                            summary.setName(DBVendor.getNameById(lastId));
+                            break;
+                    }
+                    sectionSummary.addSummary(lastIndex, summary);
+                    hasLog = false;
+                    income = 0;
+                    expense = 0;
+                    lastId = id;
+                }
+
+                lastIndex = indexId;
+
+                if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
+                else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
+                else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == filterId) {
+                    if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) expense += v;
+                    else income += v;
+                }
+                if (!hasLog) lastId = id;
+                hasLog = true;
             }
-            if (!hasLog) lastId = id;
-            hasLog = true;
         } while (data.moveToNext());
 
-        if (hasLog) {
+        if (hasLog && generateSummary) {
             summary = new LAccountSummary();
             summary.setExpense(expense);
             summary.setIncome(income);
@@ -580,11 +614,9 @@ public class ViewTransactionFragment extends LFragment implements
         private LTransaction itemOrig;
         private LSectionSummary sectionSummary;
         private ClickListener clickListener;
-        private String lastTransferAccountRid = "";
 
         @Override
         public Cursor swapCursor(Cursor newCursor) {
-            lastTransferAccountRid = "";
             return super.swapCursor(newCursor);
         }
 
@@ -612,6 +644,8 @@ public class ViewTransactionFragment extends LFragment implements
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             VTag vTag = (VTag) view.getTag();
+            long id = cursor.getLong(0);
+            vTag.id = id;
 
             View mainView = vTag.mainView;
             View sectionView = vTag.sectionView;
@@ -624,12 +658,10 @@ public class ViewTransactionFragment extends LFragment implements
             String tag = DBTag.getNameById(tagId);
 
             if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
-                String rid = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
-                if ((lastTransferAccountRid.length() > 35) && rid.startsWith(lastTransferAccountRid.substring(0, 35))) {
+                if (!sectionSummary.isVisible(id)) {
                     mainView.setVisibility(View.GONE);
                 } else{
                     mainView.setVisibility(View.VISIBLE);
-                    lastTransferAccountRid = rid;
 
                     int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
@@ -653,6 +685,8 @@ public class ViewTransactionFragment extends LFragment implements
                 }
             }
             else {
+                mainView.setVisibility(View.VISIBLE);
+
                 String str = "";
                 if (!TextUtils.isEmpty(tag)) str = tag + ":";
                 str += category;
@@ -693,11 +727,7 @@ public class ViewTransactionFragment extends LFragment implements
             double dollar = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
             vTag.amountTV.setText(String.format("%.2f", dollar));
 
-            long id = cursor.getLong(0);
-            vTag.id = id;
-
             if (sectionSummary.hasId(id)) {
-                lastTransferAccountRid = "";
                 LAccountSummary summary = sectionSummary.getSummaryById(id);
                 vTag.sortNameTV.setText(summary.getName());
 
