@@ -33,10 +33,11 @@ public class DBAccess {
         return getStringFromDbById(LApp.ctx, uri, column, id);
     }
 
-    public static String getStringFromDbById(Context context, Uri uri, String column, long id) {
+    private static String getStringFromDbById(Context context, Uri uri, String column, long id) {
         String str = "";
         try {
-            Cursor csr = context.getContentResolver().query(uri, new String[]{column}, "_id=?", new String[]{"" + id}, null);
+            Cursor csr = context.getContentResolver().query(uri, new String[]{column}, "_id=? AND "
+                    + DBHelper.TABLE_COLUMN_STATE + " =?", new String[]{"" + id, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() > 0) {
                     csr.moveToFirst();
