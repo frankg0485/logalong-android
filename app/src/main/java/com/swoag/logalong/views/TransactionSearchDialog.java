@@ -17,7 +17,10 @@ import android.widget.DatePicker;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
-import com.swoag.logalong.fragments.TransactionEdit;
+import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LTag;
+import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
@@ -27,10 +30,7 @@ import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 
@@ -72,15 +72,20 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
                 if (selections != null) {
+                    boolean ok = false;
                     long[] accounts = null;
                     if (!allSelected && selections.size() > 0) {
                         accounts = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            accounts[ii++] = ll;
+                            LAccount account = DBAccount.getById(ll);
+                            if ((account != null) && (account.getState() == DBHelper.STATE_ACTIVE)) {
+                                accounts[ii++] = ll;
+                                ok = true;
+                            }
                         }
                     }
-                    LPreferences.setSearchAccounts(accounts);
+                    LPreferences.setSearchAccounts(ok? accounts : null);
                 }
                 displayAccounts();
             }
@@ -95,15 +100,20 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
                 if (selections != null) {
+                    boolean ok = false;
                     long[] categories = null;
                     if (!allSelected && selections.size() > 0) {
                         categories = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            categories[ii++] = ll;
+                            LCategory category = DBCategory.getById(ll);
+                            if ((category != null) && (category.getState() == DBHelper.STATE_ACTIVE)) {
+                                categories[ii++] = ll;
+                                ok = true;
+                            }
                         }
                     }
-                    LPreferences.setSearchCategories(categories);
+                    LPreferences.setSearchCategories(ok? categories : null);
                 }
                 displayCategories();
             }
@@ -118,15 +128,20 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
                 if (selections != null) {
+                    boolean ok = false;
                     long[] vendors = null;
                     if (!allSelected && selections.size() > 0) {
                         vendors = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            vendors[ii++] = ll;
+                            LVendor vendor = DBVendor.getById(ll);
+                            if ((vendor != null) && (vendor.getState() == DBHelper.STATE_ACTIVE)) {
+                                vendors[ii++] = ll;
+                                ok = true;
+                            }
                         }
                     }
-                    LPreferences.setSearchVendors(vendors);
+                    LPreferences.setSearchVendors(ok? vendors : null);
                 }
                 displayVendors();
             }
@@ -141,15 +156,20 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
                 if (selections != null) {
+                    boolean ok = false;
                     long[] tags = null;
                     if (!allSelected && selections.size() > 0) {
                         tags = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            tags[ii++] = ll;
+                            LTag tag = DBTag.getById(ll);
+                            if ((tag != null) && (tag.getState() == DBHelper.STATE_ACTIVE)) {
+                                tags[ii++] = ll;
+                                ok = true;
+                            }
                         }
                     }
-                    LPreferences.setSearchTags(tags);
+                    LPreferences.setSearchTags(ok? tags : null);
                 }
                 displayTags();
             }
@@ -218,57 +238,90 @@ public class TransactionSearchDialog extends Dialog implements
 
     private void displayAccounts() {
         long vals[] = LPreferences.getSearchAccounts();
-        if (null == vals) {
-            accountV.setText(context.getString(R.string.all));
-        } else {
-            String str = "";
-            for (int ii = 0; ii < vals.length - 1; ii++) {
-                str += DBAccount.getNameById(vals[ii]) + ", ";
+        String str = "";
+        boolean ok = false;
+        if (null != vals) {
+            for (int ii = 0; ii < vals.length; ii++) {
+                LAccount account = DBAccount.getById(vals[ii]);
+                if ((account != null) && (account.getState() == DBHelper.STATE_ACTIVE)) {
+                    str += DBAccount.getNameById(vals[ii]) + ", ";
+                    ok = true;
+                }
             }
-            str += DBAccount.getNameById(vals[vals.length - 1]);
+        }
+        if (ok) {
+            str = str.replaceAll(", $", "");
             accountV.setText(str);
+        } else {
+            LPreferences.setSearchAccounts(null);
+            accountV.setText(context.getString(R.string.all));
         }
     }
 
+
     private void displayCategories() {
         long vals[] = LPreferences.getSearchCategories();
-        if (null == vals) {
-            categoryV.setText(context.getString(R.string.all));
-        } else {
-            String str = "";
-            for (int ii = 0; ii < vals.length - 1; ii++) {
-                str += DBCategory.getNameById(vals[ii]) + ", ";
+        String str = "";
+        boolean ok = false;
+        if (null != vals) {
+            for (int ii = 0; ii < vals.length; ii++) {
+                LCategory category = DBCategory.getById(vals[ii]);
+                if ((category != null) && (category.getState() == DBHelper.STATE_ACTIVE)) {
+                    str += DBCategory.getNameById(vals[ii]) + ", ";
+                    ok = true;
+                }
             }
-            str += DBCategory.getNameById(vals[vals.length - 1]);
+        }
+        if (ok) {
+            str = str.replaceAll(", $", "");
             categoryV.setText(str);
+        } else {
+            LPreferences.setSearchCategories(null);
+            categoryV.setText(context.getString(R.string.all));
         }
     }
 
     private void displayVendors() {
         long vals[] = LPreferences.getSearchVendors();
-        if (null == vals) {
-            vendorV.setText(context.getString(R.string.all));
-        } else {
-            String str = "";
-            for (int ii = 0; ii < vals.length - 1; ii++) {
-                str += DBVendor.getNameById(vals[ii]) + ", ";
+        String str = "";
+        boolean ok = false;
+        if (null != vals) {
+            for (int ii = 0; ii < vals.length; ii++) {
+                LVendor vendor = DBVendor.getById(vals[ii]);
+                if ((vendor != null) && (vendor.getState() == DBHelper.STATE_ACTIVE)) {
+                    str += DBVendor.getNameById(vals[ii]) + ", ";
+                    ok = true;
+                }
             }
-            str += DBVendor.getNameById(vals[vals.length - 1]);
+        }
+        if (ok) {
+            str = str.replaceAll(", $", "");
             vendorV.setText(str);
+        } else {
+            LPreferences.setSearchVendors(null);
+            vendorV.setText(context.getString(R.string.all));
         }
     }
 
     private void displayTags() {
         long vals[] = LPreferences.getSearchTags();
-        if (null == vals) {
-            tagV.setText(context.getString(R.string.all));
-        } else {
-            String str = "";
-            for (int ii = 0; ii < vals.length - 1; ii++) {
-                str += DBTag.getNameById(vals[ii]) + ", ";
+        String str = "";
+        boolean ok = false;
+        if (null != vals) {
+            for (int ii = 0; ii < vals.length; ii++) {
+                LTag tag = DBTag.getById(vals[ii]);
+                if ((tag != null) && (tag.getState() == DBHelper.STATE_ACTIVE)) {
+                    str += DBTag.getNameById(vals[ii]) + ", ";
+                    ok = true;
+                }
             }
-            str += DBTag.getNameById(vals[vals.length - 1]);
+        }
+        if (ok) {
+            str = str.replaceAll(", $", "");
             tagV.setText(str);
+        } else {
+            LPreferences.setSearchTags(null);
+            tagV.setText(context.getString(R.string.all));
         }
     }
 
@@ -350,7 +403,9 @@ public class TransactionSearchDialog extends Dialog implements
                     long[] accounts = LPreferences.getSearchAccounts();
                     selectedIds.clear();
                     if (accounts != null) {
-                        for (long ll : accounts) selectedIds.add(ll);
+                        for (long ll : accounts) {
+                            selectedIds.add(ll);
+                        }
                     }
 
                     dialog = new LMultiSelectionDialog
