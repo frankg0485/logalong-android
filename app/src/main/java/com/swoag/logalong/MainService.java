@@ -138,6 +138,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         pollRunnable = null;
         journalPostRunnable = null;
+        serviceShutdownRunnable = null;
         pollHandler = null;
         super.onDestroy();
     }
@@ -177,6 +178,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
+        //on Samsung phone, receiver may still get called when service is destroyed!!
+        if (pollHandler == null) {
+            LLog.w(TAG, "unexpected, receiver called on destroyed service!");
+            return;
+        }
+
         switch (action) {
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 LLog.d(TAG, "network connected");
