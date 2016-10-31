@@ -4,6 +4,7 @@ package com.swoag.logalong.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -293,7 +294,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             // - account is first backed to shared to state, then go to unshared state
             //   when ack comes back.
             LJournal journal = new LJournal();
-            journal.unshareAccount(LPreferences.getUserId(), (int)account.getId(), account.getGid(), account.getName());
+            journal.unshareAccount(LPreferences.getUserId(), (int) account.getId(), account.getGid(), account.getName());
         }
 
         @Override
@@ -446,9 +447,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             if (confirm && ok) {
                 switch (listId) {
                     case R.id.accounts:
-                        //TODO: send this to background?
-                        DBTransaction.deleteByAccount(tag.id);
-                        DBScheduledTransaction.deleteByAccount(tag.id);
+                        new MyAccountDeleteTask().execute(tag.id);
 
                         LAccount account = DBAccount.getById(tag.id);
                         account.setState(DBHelper.STATE_DELETED);
@@ -459,6 +458,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         LJournal journal = new LJournal();
                         journal.updateAccount(account, DBHelper.STATE_ACTIVE);
                         break;
+
                     case R.id.categories:
                         LCategory category = DBCategory.getById(tag.id);
                         category.setState(DBHelper.STATE_DELETED);
@@ -468,6 +468,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         journal = new LJournal();
                         journal.updateCategory(category, DBHelper.STATE_ACTIVE);
                         break;
+
                     case R.id.vendors:
                         LVendor vendor = DBVendor.getById(tag.id);
                         vendor.setState(DBHelper.STATE_DELETED);
@@ -477,6 +478,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         journal = new LJournal();
                         journal.updateVendor(vendor, DBHelper.STATE_ACTIVE);
                         break;
+
                     case R.id.tags:
                         LTag tag1 = DBTag.getById(tag.id);
                         tag1.setState(DBHelper.STATE_DELETED);
@@ -592,6 +594,26 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 this.id = id;
                 this.name = name;
             }
+        }
+    }
+
+    private class MyAccountDeleteTask extends AsyncTask<Long, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            Long accountId = params[0];
+
+            DBTransaction.deleteByAccount(accountId);
+            DBScheduledTransaction.deleteByAccount(accountId);
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+        }
+
+        @Override
+        protected void onPreExecute() {
         }
     }
 }
