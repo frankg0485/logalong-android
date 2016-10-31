@@ -386,6 +386,7 @@ public class MainActivity extends LFragmentActivity
             if (account == null) {
                 account = new LAccount();
                 account.setName(accountName);
+                DBAccount.resetGidIfNotUnique(accountGid);
                 account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.add(account);
@@ -393,6 +394,8 @@ public class MainActivity extends LFragmentActivity
                 if ((account.getGid() != 0) && account.getGid() != shareAccountGid) {
                     LLog.w(TAG, "unexpected: account " + account.getName() + " GID changed? " + shareAccountGid + " -> " + account.getGid());
                 }
+
+                DBAccount.resetGidIfNotUnique(shareAccountGid);
                 account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 DBAccount.update(account);
@@ -410,6 +413,7 @@ public class MainActivity extends LFragmentActivity
                         LLog.w(TAG, "ignored GID change: account " + account.getName() + " GID: " + shareAccountGid + " -> " + account.getGid());
                     }
                 } else {
+                    DBAccount.resetGidIfNotUnique(shareAccountGid);
                     account.setGid(shareAccountGid);
                     DBAccount.update(account);
                 }

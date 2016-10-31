@@ -189,9 +189,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LLog.d(TAG, "network connected");
                 server.UiInitScrambler();
                 if (TextUtils.isEmpty(LPreferences.getUserName())) {
-                    if (!TextUtils.isEmpty(LPreferences.getUserFullName()))
+                    if (!TextUtils.isEmpty(LPreferences.getUserFullName())) {
                         LLog.d(TAG, "user name empty but full name specified, request user name automatically");
                         server.UiRequestUserName();
+                    }
                 } else {
                     server.UiLogin();
                 }
@@ -268,20 +269,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (account == null) {
                         LLog.w(TAG, "requested account no longer exist? id: " + accountId + " name: " + accountName);
                     } else {
-                        boolean update = false;
                         if (!accountName.contentEquals(account.getName())) {
                             LLog.w(TAG, "account: " + accountId + " renamed before getting its GID: " + accountName + " -> " + account.getName());
                             account.setName(accountName);
-                            update = true;
                         }
                         if (account.getGid() != 0 && accountGid != account.getGid()) {
                             LLog.w(TAG, "account GID already set: " + account.getGid() + " and mismatches new request: " + accountGid);
                         }
-                        if (accountGid != account.getGid()) {
-                            account.setGid(accountGid);
-                            update = true;
-                        }
-                        if (update) DBAccount.update(account);
+
+                        DBAccount.resetGidIfNotUnique(accountGid);
+
+                        account.setGid(accountGid);
+                        DBAccount.update(account);
                     }
                 }
                 server.UiPollAck(cacheId);

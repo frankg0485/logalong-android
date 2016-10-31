@@ -92,7 +92,7 @@ public class DBAccount {
                     DBHelper.TABLE_COLUMN_NUMBER + "=?", new String[]{"" + gid}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find account with gid: " + gid);
+                    LLog.w(TAG, "GID not unique: unable to find account with gid: " + gid);
                     csr.close();
                     return null;
                 }
@@ -106,6 +106,34 @@ public class DBAccount {
             account = null;
         }
         return account;
+    }
+
+    public static void resetGidIfNotUnique(int gid) {
+        if (gid <= 0) return;
+
+        LAccount account = new LAccount();
+        try {
+            Cursor csr = LApp.ctx.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+                    DBHelper.TABLE_COLUMN_NUMBER + "=?", new String[]{"" + gid}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "GID not unique: reset all to zero from: " + gid);
+                    int[] ids = new int[csr.getCount()];
+                    int ii = 0;
+                    csr.moveToFirst();
+                    do {
+                        ids[ii++] = csr.getInt(0);
+                    } while (csr.moveToNext());
+
+                    for (ii = 0; ii < ids.length; ii++) {
+                        updateColumnById(ids[ii], DBHelper.TABLE_COLUMN_NUMBER, 0);
+                    }
+                }
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get account with gid: " + gid + ":" + e.getMessage());
+        }
     }
 
     public static LAccount getByName(String name) {
