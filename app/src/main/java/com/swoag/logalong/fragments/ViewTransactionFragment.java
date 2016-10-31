@@ -388,6 +388,9 @@ public class ViewTransactionFragment extends LFragment implements
                 if (id < 0) id = 0;
 
                 if (hasLog && id != lastId) {
+                    //first transfer entry of new section is always visiable
+                    sectionSummary.addVisible(indexId, true);
+
                     summary = new LAccountSummary();
                     summary.setExpense(expense);
                     summary.setIncome(income);
@@ -429,6 +432,9 @@ public class ViewTransactionFragment extends LFragment implements
         } while (data.moveToNext());
 
         if (hasLog && generateSummary) {
+            //first transfer entry of new section is always visiable
+            sectionSummary.addVisible(indexId, true);
+
             summary = new LAccountSummary();
             summary.setExpense(expense);
             summary.setIncome(income);
@@ -825,7 +831,8 @@ public class ViewTransactionFragment extends LFragment implements
                     AppPersistency.transactionChanged = changed;
                     if (changed) {
                         LJournal journal = new LJournal();
-                        if (item.getAccount() != itemOrig.getAccount()) {
+                        if ((item.getAccount() != itemOrig.getAccount()) ||
+                                (item.getAccount2() != itemOrig.getAccount2())) {
                             LLog.d(TAG, "account changed, recreate record");
                             LTransaction oldItem = new LTransaction(itemOrig);
                             oldItem.setTimeStampLast(LPreferences.getServerUtc());
