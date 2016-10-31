@@ -27,6 +27,7 @@ import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.DBPorter;
 import com.swoag.logalong.utils.LBroadcastReceiver;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -253,6 +254,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                             if ((millisUntilFinished < 8000) && (millisUntilFinished > 6500)) {
                                 if (TextUtils.isEmpty(LPreferences.getUserName())) {
                                     if (LAppServer.getInstance().UiIsConnected()) {
+                                        LLog.d(TAG, "automaically request user name, full name: " + LPreferences.getUserFullName());
                                         LAppServer.getInstance().UiRequestUserName();
                                         //profile is automatically updated when username is first-time generated.
                                     }
@@ -280,6 +282,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
 
                     if (LAppServer.getInstance().UiIsConnected()) {
                         if (TextUtils.isEmpty(LPreferences.getUserName())) {
+                            LLog.d(TAG, "request user name, full name: " + LPreferences.getUserFullName());
                             LAppServer.getInstance().UiRequestUserName();
                             //profile is automatically updated when username is first-time generated.
                         } else {

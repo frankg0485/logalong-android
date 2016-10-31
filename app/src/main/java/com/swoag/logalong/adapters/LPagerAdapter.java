@@ -4,6 +4,7 @@ package com.swoag.logalong.adapters;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.view.ViewGroup;
 
 import com.swoag.logalong.LFragment;
 import com.swoag.logalong.fragments.SettingsFragment;
@@ -52,4 +53,16 @@ public class LPagerAdapter extends FragmentStatePagerAdapter {
 	public CharSequence getPageTitle(int position) {
 		return "OBJECT " + (position + 1);
 	}*/
+
+    //http://stackoverflow.com/questions/11937622/illegalstateexception-myfragment-is-not-currently-in-the-fragmentmanager
+    //The FragmentStatePagerAdapter is a horrible piece of code riddled with bugs acknowledge or not by Google and so I use this code to fix this particular crash:
+    @Override
+    public void destroyItem(ViewGroup container, int position, Object object) {
+        // Yet another bug in FragmentStatePagerAdapter that destroyItem is called on fragment that hasnt been added. Need to catch
+        try {
+            super.destroyItem(container, position, object);
+        } catch (IllegalStateException ex) {
+            ex.printStackTrace();
+        }
+    }
 }

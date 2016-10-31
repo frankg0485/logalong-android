@@ -190,6 +190,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 server.UiInitScrambler();
                 if (TextUtils.isEmpty(LPreferences.getUserName())) {
                     if (!TextUtils.isEmpty(LPreferences.getUserFullName()))
+                        LLog.d(TAG, "user name empty but full name specified, request user name automatically");
                         server.UiRequestUserName();
                 } else {
                     server.UiLogin();
@@ -199,6 +200,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_USER_CREATED:
                 int userId = intent.getIntExtra("id", 0);
                 String userName = intent.getStringExtra("name");
+                LLog.d(TAG, "user created, id: " + userId + " name: " + userName);
                 LPreferences.setUserId(userId);
                 LPreferences.setUserName(userName);
 
