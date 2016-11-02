@@ -30,6 +30,11 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden|adjustResize" />
 
+        <activity
+            android:name="com.swoag.logalong.ChartActivity"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+
         <receiver android:name="com.swoag.logalong.receivers.LAlarmReceiver" />
 
         <receiver android:name="com.swoag.logalong.receivers.BootIntentReceiver">

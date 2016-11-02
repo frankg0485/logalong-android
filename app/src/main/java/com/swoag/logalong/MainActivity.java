@@ -120,26 +120,46 @@ public class MainActivity extends LFragmentActivity
         mViewPager = (LViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(lPagerAdapter);
 
-        mViewPager.addOnPageChangeListener(
-                new ViewPager.SimpleOnPageChangeListener() {
-                    @Override
-                    public void onPageScrollStateChanged(int state) {
-                        super.onPageScrollStateChanged(state);
-                        switch (state) {
-                            case ViewPager.SCROLL_STATE_IDLE:
-                                break;
-                            case ViewPager.SCROLL_STATE_DRAGGING:
-                            case ViewPager.SCROLL_STATE_SETTLING:
-                                break;
-                        }
-                    }
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            private int outOfBoundCount;
+            private int position;
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                //LLog.d(TAG, "position: " + position + " offset: " + positionOffset + " pixels: " + positionOffsetPixels);
+                if (positionOffset == 0 && positionOffsetPixels == 0) {
+                    outOfBoundCount++;
+                    this.position = position;
+                }
+            }
 
-                    @Override
-                    public void onPageSelected(int position) {
-                        //LLog.d(TAG, "page " + position + " selected");
-                        selectTab(position);
-                    }
-                });
+            @Override
+            public void onPageSelected(int position) {
+                //LLog.d(TAG, "selected position: " + position);
+                selectTab(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                switch (state) {
+                    case ViewPager.SCROLL_STATE_IDLE:
+                        if (outOfBoundCount > 5) {
+                            if (this.position == 0) {
+                                //LLog.d(TAG, "Out of boundary on: left");
+                                startActivity(new Intent(MainActivity.this, ChartActivity.class));
+                            } else if (this.position == 2) {
+                                //LLog.d(TAG, "Out of boundary on: right");
+                            }
+                        }
+                        break;
+                    case ViewPager.SCROLL_STATE_DRAGGING:
+                        outOfBoundCount = 0;
+                        break;
+                    case ViewPager.SCROLL_STATE_SETTLING:
+                        break;
+                }
+                //LLog.d(TAG, "state changed to: " + state);
+            }
+        });
 
         LViewUtils.setAlpha(findViewById(R.id.tab0), 0.4f);
         LViewUtils.setAlpha(findViewById(R.id.tab2), 0.4f);
