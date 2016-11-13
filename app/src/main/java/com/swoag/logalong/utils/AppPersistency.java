@@ -49,4 +49,6 @@ public class AppPersistency {
         viewHistory.clear();
         viewLevel = 1000;
     }
+
+    public static boolean showPieChart = true;
 }

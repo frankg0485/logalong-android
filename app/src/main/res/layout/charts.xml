@@ -20,8 +20,10 @@
                 android:id="@+id/pieChart"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginBottom="1dp"
                 android:layout_marginLeft="15dp"
-                android:layout_marginRight="15dp" />
+                android:layout_marginRight="15dp"
+                android:layout_marginTop="1dp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -38,8 +40,19 @@
                 android:layout_marginLeft="15dp"
                 android:layout_marginRight="15dp" />
         </RelativeLayout>
-
     </ViewFlipper>
+
+    <ImageView
+        android:id="@+id/closeChart"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:padding="5dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_action_cancel" />
 
     <LinearLayout
         android:id="@+id/mainBottomBar"

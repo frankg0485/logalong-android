@@ -29,25 +29,31 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.fragments.ScheduledTransactionEdit;
 import com.swoag.logalong.fragments.TransactionEdit;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBLoaderHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -55,11 +61,23 @@ import com.swoag.logalong.utils.LViewUtils;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class ChartActivity extends LFragmentActivity implements
-        LoaderManager.LoaderCallbacks<Cursor> {
-    private static final int LOADER_SUMMARY = 20;
+        DBLoaderHelper.DBLoaderHelperCallbacks {
+    private static final String TAG = ChartActivity.class.getSimpleName();
+
+    private static final int MAX_PIE_CHART_ITEMS = 12;
     private ViewFlipper viewFlipper;
     private static int[] colors = new int[] {
             0xffcc0000,
@@ -89,38 +107,82 @@ public class ChartActivity extends LFragmentActivity implements
 
     private MyClickListener myClickListener;
     private ImageView barPieIV;
-    private boolean barPie = false;
+    private ImageView prevIV, nextIV;
 
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Uri uri;
-        switch (id) {
-            case LOADER_SUMMARY:
-                uri = DBProvider.URI_SCHEDULED_TRANSACTIONS;
-                return new CursorLoader(this,
-                        uri,
-                        null,
-                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED},
-                        DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + " ASC");
-        }
-        return null;
-    }
+    private DBLoaderHelper dbLoaderHelper;
+
+    private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
-            case LOADER_SUMMARY:
+            case DBLoaderHelper.LOADER_ALL_SUMMARY:
+                if (data == null) break;
+
+                //prepare chart data
+                Set<Integer> accountIds = new HashSet<Integer>();
+                int accountId, accountId2;
+                data.moveToFirst();
+                do {
+                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    if (accountId != 0) accountIds.add(accountId);
+
+                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    if (accountId2 != 0) accountIds.add(accountId2);
+                } while (data.moveToNext());
+
+                int categoryId;
+                double v = 0, income = 0, expense = 0;
+                data.moveToFirst();
+                do {
+                    v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
+                    int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                    switch (type) {
+                        case LTransaction.TRANSACTION_TYPE_TRANSFER:
+                        case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
+                            if (accountIds.contains(accountId) && accountIds.contains(accountId2)) {
+                                v = 0;
+                            } else {
+                                if (LTransaction.TRANSACTION_TYPE_TRANSFER == type) {
+                                    v = -v;
+                                }
+                            }
+                            break;
+                        case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                            v = -v;
+                            break;
+                        case LTransaction.TRANSACTION_TYPE_INCOME:
+                            break;
+                    }
+
+                    if (v < 0) {
+                        String category = DBCategory.getNameById(categoryId);
+                        if (category == null || TextUtils.isEmpty(category)) {
+                            category = "Unspecified";
+                        } else {
+                            category = category.split(":", -1)[0];
+                        }
+
+                        Double sum = expenseCatetories.get(category);
+                        if (sum == null) {
+                            expenseCatetories.put(category, -v);
+                        } else {
+                            sum += -v;
+                            expenseCatetories.put(category, sum);
+                        }
+                    }
+                } while (data.moveToNext());
+
+                displayPieChart();
                 break;
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        switch (loader.getId()) {
-            case LOADER_SUMMARY:
-                break;
-        }
     }
 
     @Override
@@ -129,6 +191,7 @@ public class ChartActivity extends LFragmentActivity implements
         setContentView(R.layout.charts);
 
         myClickListener = new MyClickListener();
+        findViewById(R.id.closeChart).setOnClickListener(myClickListener);
 
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
         viewFlipper.setAnimateFirstView(false);
@@ -137,9 +200,23 @@ public class ChartActivity extends LFragmentActivity implements
         barPieIV = (ImageView)findViewById(R.id.barPieChart);
         barPieIV.setOnClickListener(myClickListener);
 
-        displayPieChart();
+        prevIV = (ImageView)findViewById(R.id.prev);
+        nextIV = (ImageView)findViewById(R.id.next);
 
-        getSupportLoaderManager().restartLoader(LOADER_SUMMARY, null, this);
+        if (LPreferences.getSearchAllTime()) {
+
+        }
+
+        /*
+        if (AppPersistency.showPieChart) {
+            displayPieChart();
+        } else {
+            displayBarChart();
+        }
+        */
+
+        dbLoaderHelper = new DBLoaderHelper(this, this);
+        getSupportLoaderManager().restartLoader(DBLoaderHelper.LOADER_ALL_SUMMARY, null, dbLoaderHelper);
     }
 
     private void displayBarChart() {
@@ -235,6 +312,19 @@ public class ChartActivity extends LFragmentActivity implements
         barChart.invalidate();
     }
 
+    static <K,V extends Comparable<? super V>> SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+        SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+                new Comparator<Map.Entry<K,V>>() {
+                    @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+                        int res = -e1.getValue().compareTo(e2.getValue());
+                        return res != 0 ? res : 1; // Special fix to preserve items with equal values
+                    }
+                }
+        );
+        sortedEntries.addAll(map.entrySet());
+        return sortedEntries;
+    }
+
     private void displayPieChart() {
         PieChart pieChart = (PieChart)findViewById(R.id.pieChart);
 
@@ -243,30 +333,53 @@ public class ChartActivity extends LFragmentActivity implements
         pieChart.setUsePercentValues(true);
 
         List<PieEntry> entries = new ArrayList<>();
-        entries.add(new PieEntry(34.5f, "Fuel"));
-        entries.add(new PieEntry(123.0f, "Food"));
-        entries.add(new PieEntry(223.0f, "Kids"));
-        entries.add(new PieEntry(23.0f, "Other"));
-        entries.add(new PieEntry(29.0f, "Travel"));
-        entries.add(new PieEntry(59.0f, "Entertainment"));
 
-        entries.add(new PieEntry(34.5f, "Fuel"));
-        entries.add(new PieEntry(123.0f, "Food"));
-        entries.add(new PieEntry(223.0f, "Kids"));
-        entries.add(new PieEntry(23.0f, "Other"));
-        entries.add(new PieEntry(29.0f, "Travel"));
-        entries.add(new PieEntry(59.0f, "Entertainment"));
+        if (expenseCatetories.size() <= MAX_PIE_CHART_ITEMS) {
+            for (String key : expenseCatetories.keySet()) {
+                entries.add(new PieEntry(expenseCatetories.get(key).floatValue(), key));
+            }
+        } else {
+            int count = 0;
+            String lastGroup = null;
+            double lastGroupValue = 0;
+
+            List list = new ArrayList<String>();
+            List groupList = new ArrayList<String>();
+            for (Map.Entry<String, Double> entry : entriesSortedByValues(expenseCatetories)) {
+                if (count < MAX_PIE_CHART_ITEMS - 1) {
+                    list.add(entry.getKey());
+                } else {
+                    groupList.add(entry.getKey());
+                    if (null == lastGroup) lastGroup = entry.getKey() + " ...";
+                    lastGroupValue += entry.getValue();
+                }
+                count++;
+            }
+
+            count = 0;
+            for (String key : expenseCatetories.keySet()) {
+                if (count < MAX_PIE_CHART_ITEMS - 1) {
+                    if (list.contains(key)) {
+                        entries.add(new PieEntry(expenseCatetories.get(key).floatValue(), key));
+                        count++;
+                    }
+                } else break;
+            }
+            entries.add(new PieEntry((float) lastGroupValue, lastGroup));
+        }
 
         PieDataSet set = new PieDataSet(entries, "");
         set.setSliceSpace(2.0f);
         set.setSelectionShift(5.0f);
-
-        //set.setColors(ColorTemplate.COLORFUL_COLORS);
-        //set.setColors(ColorTemplate.JOYFUL_COLORS);
-        //set.setColors(ColorTemplate.LIBERTY_COLORS);
-        //set.setColors(ColorTemplate.VORDIPLOM_COLORS);
-        //set.setColors(ColorTemplate.MATERIAL_COLORS);
         set.setColors(colors);
+
+        /*
+        set.setValueLinePart1OffsetPercentage(80.f);
+        set.setValueLinePart1Length(0.2f);
+        set.setValueLinePart2Length(0.4f);
+        //dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+        set.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+        */
 
         PieData pieData = new PieData(set);
         pieData.setValueFormatter(new PercentFormatter());
@@ -275,18 +388,37 @@ public class ChartActivity extends LFragmentActivity implements
         pieChart.setData(pieData);
 
         Legend legend = pieChart.getLegend();
-        legend.setPosition(Legend.LegendPosition.LEFT_OF_CHART);
+        //legend.setPosition(Legend.LegendPosition.LEFT_OF_CHART); //deprecated
+        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.LEFT);
+        legend.setOrientation(Legend.LegendOrientation.VERTICAL);
+        legend.setDrawInside(false);
+        legend.setEnabled(true);
 
         Description description = new Description();
         description.setText("");
         pieChart.setDescription(description);
+
+        pieChart.setOnChartValueSelectedListener(
+                new OnChartValueSelectedListener() {
+                    @Override
+                    public void onValueSelected(Entry e, Highlight h) {
+                    }
+
+                    @Override
+                    public void onNothingSelected() {
+                        LLog.d(TAG, "nothing");
+                    }
+                }
+
+        );
         pieChart.invalidate();
     }
 
     private void enableBarPieChart() {
-        barPie = !barPie;
+        AppPersistency.showPieChart = !AppPersistency.showPieChart;
 
-        if (barPie) {
+        if (!AppPersistency.showPieChart) {
             barPieIV.setImageResource(R.drawable.pie_chart_light);
             displayBarChart();
 
@@ -306,6 +438,9 @@ public class ChartActivity extends LFragmentActivity implements
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
+                case R.id.closeChart:
+                    finish();
+                    break;
                 case R.id.barPieChart:
                     enableBarPieChart();
                     break;
@@ -314,5 +449,4 @@ public class ChartActivity extends LFragmentActivity implements
             }
         }
     }
-
 }
