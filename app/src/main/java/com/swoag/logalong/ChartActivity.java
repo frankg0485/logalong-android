@@ -112,6 +112,8 @@ public class ChartActivity extends LFragmentActivity implements
     private DBLoaderHelper dbLoaderHelper;
 
     private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
+    private double[] expenses = new double[12];
+    private double[] incomes = new double[12];
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
@@ -132,13 +134,18 @@ public class ChartActivity extends LFragmentActivity implements
                 } while (data.moveToNext());
 
                 int categoryId;
-                double v = 0, income = 0, expense = 0;
+                double v = 0;
+                long timeMs = 0;
+                Calendar calendar = Calendar.getInstance();
                 data.moveToFirst();
                 do {
                     v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
                     accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                     accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
                     categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
+                    timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    calendar.setTimeInMillis(timeMs);
+
                     int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     switch (type) {
                         case LTransaction.TRANSACTION_TYPE_TRANSFER:
@@ -173,6 +180,10 @@ public class ChartActivity extends LFragmentActivity implements
                             sum += -v;
                             expenseCatetories.put(category, sum);
                         }
+
+                        expenses[calendar.get(Calendar.MONTH)] += -v;
+                    } else {
+                        incomes[calendar.get(Calendar.MONTH)] += v;
                     }
                 } while (data.moveToNext());
 
@@ -221,7 +232,6 @@ public class ChartActivity extends LFragmentActivity implements
 
     private void displayBarChart() {
         BarChart barChart = (BarChart)findViewById(R.id.barChart);
-
         barChart.getDescription().setEnabled(false);
 
         // scaling can now only be done on x- and y-axis separately
@@ -241,11 +251,13 @@ public class ChartActivity extends LFragmentActivity implements
         xAxis.setLabelCount(13, true);
         xAxis.setValueFormatter(new IAxisValueFormatter() {
             private String[] months = new String[]{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 float percent = value / axis.mAxisRange;
                 if (percent < 0f || value < 0f) return "";
-                if (((int) (months.length * percent) < 0) || (((int) (months.length * percent)) > 11)) return "";
+                if (((int) (months.length * percent) < 0) || (((int) (months.length * percent)) > 11))
+                    return "";
                 return months[(int) (months.length * percent)];
             }
 
@@ -267,21 +279,14 @@ public class ChartActivity extends LFragmentActivity implements
         l.setDrawInside(true);
 
         ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
-        for (int i = 0; i < 12; i++) {
-            float mult = i + 100;
-            float val = (float) (Math.random() * mult) + mult / 3;
-            yVals1.add(new BarEntry(i, val));
-        }
         ArrayList<BarEntry> yVals2 = new ArrayList<BarEntry>();
-        for (int i = 0; i < 12; i++) {
-            float mult = i + 100;
-            float val = (float) (Math.random() * mult) + mult / 3;
-            yVals2.add(new BarEntry(i, val));
+        for (int ii = 0; ii < 12; ii++) {
+            yVals1.add(new BarEntry(ii, (float)expenses[ii]));
+            yVals2.add(new BarEntry(ii, (float)incomes[ii]));
         }
-
 
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
-        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income");
+        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - 2016");
 
         //dataSet1.setColors(colors);
         dataSet1.setColor(0xffcc0000);
@@ -290,7 +295,6 @@ public class ChartActivity extends LFragmentActivity implements
         //dataSet2.setColors(colors);
         dataSet2.setColor(0xff669900);
         dataSet2.setDrawValues(false);
-
 
         ArrayList<IBarDataSet> dataSets = new ArrayList<IBarDataSet>();
         dataSets.add(dataSet1);

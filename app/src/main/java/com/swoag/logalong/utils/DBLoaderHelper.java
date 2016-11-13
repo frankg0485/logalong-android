@@ -52,14 +52,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         }
     }
 
-    public long getStartMs() {
-        return startMs;
-    }
-
-    public long getEndMs() {
-        return endMs;
-    }
-
     private void setSelections(long[] ids, String column) {
         selections += "(";
         for (int ii = 0; ii < ids.length - 1; ii++) {
