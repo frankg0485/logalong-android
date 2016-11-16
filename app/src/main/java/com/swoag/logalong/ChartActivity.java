@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
@@ -108,8 +110,15 @@ public class ChartActivity extends LFragmentActivity implements
     private MyClickListener myClickListener;
     private ImageView barPieIV;
     private ImageView prevIV, nextIV;
+    private ProgressBar progressBar;
+    private BarChart barChart;
+    private PieChart pieChart;
 
     private DBLoaderHelper dbLoaderHelper;
+    private boolean barChartDisplayed = false;
+    private boolean pieChartDisplayed = false;
+    private boolean loaderFinished = false;
+    private int year;
 
     private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
     private double[] expenses = new double[12];
@@ -119,75 +128,7 @@ public class ChartActivity extends LFragmentActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case DBLoaderHelper.LOADER_ALL_SUMMARY:
-                if (data == null) break;
-
-                //prepare chart data
-                Set<Integer> accountIds = new HashSet<Integer>();
-                int accountId, accountId2;
-                data.moveToFirst();
-                do {
-                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                    if (accountId != 0) accountIds.add(accountId);
-
-                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    if (accountId2 != 0) accountIds.add(accountId2);
-                } while (data.moveToNext());
-
-                int categoryId;
-                double v = 0;
-                long timeMs = 0;
-                Calendar calendar = Calendar.getInstance();
-                data.moveToFirst();
-                do {
-                    v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
-                    timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
-                    calendar.setTimeInMillis(timeMs);
-
-                    int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-                    switch (type) {
-                        case LTransaction.TRANSACTION_TYPE_TRANSFER:
-                        case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
-                            if (accountIds.contains(accountId) && accountIds.contains(accountId2)) {
-                                v = 0;
-                            } else {
-                                if (LTransaction.TRANSACTION_TYPE_TRANSFER == type) {
-                                    v = -v;
-                                }
-                            }
-                            break;
-                        case LTransaction.TRANSACTION_TYPE_EXPENSE:
-                            v = -v;
-                            break;
-                        case LTransaction.TRANSACTION_TYPE_INCOME:
-                            break;
-                    }
-
-                    if (v < 0) {
-                        String category = DBCategory.getNameById(categoryId);
-                        if (category == null || TextUtils.isEmpty(category)) {
-                            category = "Unspecified";
-                        } else {
-                            category = category.split(":", -1)[0];
-                        }
-
-                        Double sum = expenseCatetories.get(category);
-                        if (sum == null) {
-                            expenseCatetories.put(category, -v);
-                        } else {
-                            sum += -v;
-                            expenseCatetories.put(category, sum);
-                        }
-
-                        expenses[calendar.get(Calendar.MONTH)] += -v;
-                    } else {
-                        incomes[calendar.get(Calendar.MONTH)] += v;
-                    }
-                } while (data.moveToNext());
-
-                displayPieChart();
+                new MyAsyncTask().execute(data);
                 break;
         }
     }
@@ -205,33 +146,65 @@ public class ChartActivity extends LFragmentActivity implements
         findViewById(R.id.closeChart).setOnClickListener(myClickListener);
 
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
-        viewFlipper.setAnimateFirstView(false);
-        viewFlipper.setDisplayedChild(0);
 
+        barChart = (BarChart)findViewById(R.id.barChart);
+        barChart.setNoDataText("");
+        pieChart = (PieChart)findViewById(R.id.pieChart);
+        pieChart.setNoDataText("");
+
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         barPieIV = (ImageView)findViewById(R.id.barPieChart);
         barPieIV.setOnClickListener(myClickListener);
 
         prevIV = (ImageView)findViewById(R.id.prev);
         nextIV = (ImageView)findViewById(R.id.next);
-
-        if (LPreferences.getSearchAllTime()) {
-
-        }
-
-        /*
-        if (AppPersistency.showPieChart) {
-            displayPieChart();
-        } else {
-            displayBarChart();
-        }
-        */
+        //prevIV.setVisibility(View.INVISIBLE);
+        //nextIV.setVisibility(View.INVISIBLE);
+        prevIV.setOnClickListener(myClickListener);
+        nextIV.setOnClickListener(myClickListener);
 
         dbLoaderHelper = new DBLoaderHelper(this, this);
+        restartDbLoader();
+    }
+
+    private void restartDbLoader() {
+        expenseCatetories.clear();
+        for (int ii = 0; ii < expenses.length; ii++) {
+            expenses[ii] = incomes[ii] = 0;
+        }
+
+        loaderFinished = false;
+        progressBar.setVisibility(View.VISIBLE);
         getSupportLoaderManager().restartLoader(DBLoaderHelper.LOADER_ALL_SUMMARY, null, dbLoaderHelper);
     }
 
+    private  void showPrevNext() {
+        //nextIV.setVisibility((AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear())? View.VISIBLE : View.INVISIBLE);
+        //prevIV.setVisibility((AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear())? View.VISIBLE : View.INVISIBLE);
+    }
+
+    private void showChart() {
+        //viewFlipper.setAnimateFirstView(false);
+        viewFlipper.setInAnimation(null);
+        viewFlipper.setOutAnimation(null);
+        //viewFlipper.setFlipInterval(0);
+        if (AppPersistency.showPieChart) {
+            barPieIV.setImageResource(R.drawable.chart_light);
+            viewFlipper.setDisplayedChild(0);
+            displayPieChart();
+        } else {
+            barPieIV.setImageResource(R.drawable.pie_chart_light);
+            viewFlipper.setDisplayedChild(1);
+            displayBarChart();
+        }
+        showPrevNext();
+    }
+
     private void displayBarChart() {
-        BarChart barChart = (BarChart)findViewById(R.id.barChart);
+        if (barChartDisplayed) return;
+        barChartDisplayed = true;
+
+        barChart.clear();
         barChart.getDescription().setEnabled(false);
 
         // scaling can now only be done on x- and y-axis separately
@@ -286,7 +259,7 @@ public class ChartActivity extends LFragmentActivity implements
         }
 
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
-        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - 2016");
+        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - " + year);
 
         //dataSet1.setColors(colors);
         dataSet1.setColor(0xffcc0000);
@@ -330,9 +303,12 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private void displayPieChart() {
-        PieChart pieChart = (PieChart)findViewById(R.id.pieChart);
+        if (pieChartDisplayed) return;
+        pieChartDisplayed = true;
 
-        pieChart.setCenterText("Category - 2016");
+        pieChart.clear();
+
+        pieChart.setCenterText("Category - " + year);
         pieChart.setDrawSlicesUnderHole(true);
         pieChart.setUsePercentValues(true);
 
@@ -431,6 +407,7 @@ public class ChartActivity extends LFragmentActivity implements
             viewFlipper.showPrevious();
         } else {
             barPieIV.setImageResource(R.drawable.chart_light);
+            displayPieChart();
 
             viewFlipper.setInAnimation(this, R.anim.slide_in_right);
             viewFlipper.setOutAnimation(this, R.anim.slide_out_left);
@@ -448,9 +425,115 @@ public class ChartActivity extends LFragmentActivity implements
                 case R.id.barPieChart:
                     enableBarPieChart();
                     break;
+
+                case R.id.prev:
+                    if (loaderFinished && AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear()) {
+                        AppPersistency.viewTransactionYear--;
+                        restartDbLoader();
+                    }
+                    break;
+                case R.id.next:
+                    if (loaderFinished && AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear()) {
+                        AppPersistency.viewTransactionYear++;
+                        restartDbLoader();
+                    }
+                    break;
+
                 default:
                     break;
             }
+        }
+    }
+
+    private class MyAsyncTask extends AsyncTask<Cursor, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Cursor... params) {
+            Cursor data = params[0];
+            if (data == null) return false;
+
+            //prepare chart data
+            Set<Integer> accountIds = new HashSet<Integer>();
+            int accountId, accountId2;
+            data.moveToFirst();
+            do {
+                accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                if (accountId != 0) accountIds.add(accountId);
+
+                accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                if (accountId2 != 0) accountIds.add(accountId2);
+            } while (data.moveToNext());
+
+            int categoryId;
+            double v = 0;
+            long timeMs = 0;
+            Calendar calendar = Calendar.getInstance();
+            data.moveToFirst();
+            do {
+                v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
+                timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                calendar.setTimeInMillis(timeMs);
+
+                int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                switch (type) {
+                    case LTransaction.TRANSACTION_TYPE_TRANSFER:
+                    case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
+                        if (accountIds.contains(accountId) && accountIds.contains(accountId2)) {
+                            v = 0;
+                        } else {
+                            if (LTransaction.TRANSACTION_TYPE_TRANSFER == type) {
+                                v = -v;
+                            }
+                        }
+                        break;
+                    case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                        v = -v;
+                        break;
+                    case LTransaction.TRANSACTION_TYPE_INCOME:
+                        break;
+                }
+
+                if (v < 0) {
+                    String category = DBCategory.getNameById(categoryId);
+                    if (category == null || TextUtils.isEmpty(category)) {
+                        category = "Unspecified";
+                    } else {
+                        category = category.split(":", -1)[0];
+                    }
+
+                    Double sum = expenseCatetories.get(category);
+                    if (sum == null) {
+                        expenseCatetories.put(category, -v);
+                    } else {
+                        sum += -v;
+                        expenseCatetories.put(category, sum);
+                    }
+
+                    expenses[calendar.get(Calendar.MONTH)] += -v;
+                } else {
+                    incomes[calendar.get(Calendar.MONTH)] += v;
+                }
+            } while (data.moveToNext());
+
+            year = calendar.get(Calendar.YEAR);
+
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            loaderFinished = true;
+            progressBar.setVisibility(View.GONE);
+
+            pieChartDisplayed = barChartDisplayed = false;
+            showChart();
+        }
+
+        @Override
+        protected void onPreExecute() {
         }
     }
 }

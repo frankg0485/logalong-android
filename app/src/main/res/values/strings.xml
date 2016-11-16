@@ -40,6 +40,7 @@
     <string name="hint_user_name">Your Name</string>
     <string name="ignore">Ignore</string>
     <string name="income">Income</string>
+    <string name="loading">Loading ...</string>
     <string name="login">Log In</string>
     <string name="month">month</string>
     <string name="months">months</string>

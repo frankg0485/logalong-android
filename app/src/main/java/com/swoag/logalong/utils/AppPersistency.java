@@ -50,5 +50,5 @@ public class AppPersistency {
         viewLevel = 1000;
     }
 
-    public static boolean showPieChart = true;
+    public static boolean showPieChart = false;
 }

@@ -35,6 +35,14 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         this.callbacks = callbacks;
     }
 
+    public int getStartYear() {
+        return 2015;
+    }
+
+    public int getEndYear() {
+        return 2016;
+    }
+
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
         now.clear();
