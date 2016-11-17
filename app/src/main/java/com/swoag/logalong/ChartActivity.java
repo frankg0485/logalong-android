@@ -114,6 +114,7 @@ public class ChartActivity extends LFragmentActivity implements
     private ProgressBar progressBar;
     private BarChart barChart;
     private PieChart pieChart;
+    private TextView entryDetailsTV;
 
     private DBLoaderHelper dbLoaderHelper;
     private boolean barChartDisplayed = false;
@@ -170,6 +171,7 @@ public class ChartActivity extends LFragmentActivity implements
         barChart.setNoDataText("");
         pieChart = (PieChart)findViewById(R.id.pieChart);
         pieChart.setNoDataText("");
+        entryDetailsTV = (TextView) findViewById(R.id.entryDetails);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         barPieIV = (ImageView)findViewById(R.id.barPieChart);
@@ -327,21 +329,27 @@ public class ChartActivity extends LFragmentActivity implements
         return sortedEntries;
     }
 
+    private List<PieEntry> pieEntries;
+    private List<PieEntry> extraPieEntries;
+    private int lastPieEntry;
+
     private void displayPieChart(int year, ChartData chartData) {
         if (pieChartDisplayed) return;
         pieChartDisplayed = true;
 
         pieChart.clear();
+        entryDetailsTV.setVisibility(View.GONE);
 
-        pieChart.setCenterText("Category - " + year);
+        pieChart.setCenterText("Expense - " + year);
         pieChart.setDrawSlicesUnderHole(true);
         pieChart.setUsePercentValues(true);
 
-        List<PieEntry> entries = new ArrayList<>();
-
+        pieEntries = new ArrayList<>();
+        extraPieEntries = new ArrayList<>();
+        lastPieEntry = chartData.expenseCatetories.size() - 1;
         if (chartData.expenseCatetories.size() <= MAX_PIE_CHART_ITEMS) {
             for (String key : chartData.expenseCatetories.keySet()) {
-                entries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
+                pieEntries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
             }
         } else {
             int count = 0;
@@ -354,8 +362,13 @@ public class ChartActivity extends LFragmentActivity implements
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     list.add(entry.getKey());
                 } else {
+                    extraPieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
+
                     groupList.add(entry.getKey());
-                    if (null == lastGroup) lastGroup = entry.getKey() + " ...";
+                    if (null == lastGroup) {
+                        lastGroup = entry.getKey() + " ...";
+                        lastPieEntry = count;
+                    }
                     lastGroupValue += entry.getValue();
                 }
                 count++;
@@ -365,15 +378,15 @@ public class ChartActivity extends LFragmentActivity implements
             for (String key : chartData.expenseCatetories.keySet()) {
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     if (list.contains(key)) {
-                        entries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
+                        pieEntries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
                         count++;
                     }
                 } else break;
             }
-            entries.add(new PieEntry((float) lastGroupValue, lastGroup));
+            pieEntries.add(new PieEntry((float) lastGroupValue, lastGroup));
         }
 
-        PieDataSet set = new PieDataSet(entries, "");
+        PieDataSet set = new PieDataSet(pieEntries, "");
         set.setSliceSpace(2.0f);
         set.setSelectionShift(5.0f);
         set.setColors(colors);
@@ -408,11 +421,27 @@ public class ChartActivity extends LFragmentActivity implements
                 new OnChartValueSelectedListener() {
                     @Override
                     public void onValueSelected(Entry e, Highlight h) {
+                        PieEntry pe = (PieEntry)e;
+
+                        int index = pieEntries.indexOf(pe);
+                        entryDetailsTV.setTextColor(Color.WHITE);
+                        entryDetailsTV.setBackgroundColor(colors[index]);
+
+                        if (index == lastPieEntry && extraPieEntries.size() > 0) {
+                            String str = "";
+                            for (PieEntry entry : extraPieEntries) {
+                                str += entry.getLabel() + " : $" + entry.getValue() + "\n";
+                            }
+                            entryDetailsTV.setText(str.trim());
+                        } else {
+                            entryDetailsTV.setText(pe.getLabel() + " : $" + pe.getValue());
+                        }
+                        entryDetailsTV.setVisibility(View.VISIBLE);
                     }
 
                     @Override
                     public void onNothingSelected() {
-                        LLog.d(TAG, "nothing");
+                        entryDetailsTV.setVisibility(View.GONE);
                     }
                 }
 
