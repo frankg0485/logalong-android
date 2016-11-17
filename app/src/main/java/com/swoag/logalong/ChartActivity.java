@@ -59,6 +59,7 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.TransactionSearchDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -76,7 +77,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ChartActivity extends LFragmentActivity implements
-        DBLoaderHelper.DBLoaderHelperCallbacks {
+        DBLoaderHelper.DBLoaderHelperCallbacks, TransactionSearchDialog.TransactionSearchDialogItf {
     private static final String TAG = ChartActivity.class.getSimpleName();
 
     private static final int MAX_PIE_CHART_ITEMS = 12;
@@ -108,7 +109,7 @@ public class ChartActivity extends LFragmentActivity implements
     };
 
     private MyClickListener myClickListener;
-    private ImageView barPieIV;
+    private ImageView barPieIV, searchIV;
     private ImageView prevIV, nextIV;
     private ProgressBar progressBar;
     private BarChart barChart;
@@ -118,11 +119,14 @@ public class ChartActivity extends LFragmentActivity implements
     private boolean barChartDisplayed = false;
     private boolean pieChartDisplayed = false;
     private boolean loaderFinished = false;
-    private int year;
 
-    private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
-    private double[] expenses = new double[12];
-    private double[] incomes = new double[12];
+    private class ChartData {
+        private TreeMap<String, Double> expenseCatetories;
+        private double[] expenses;
+        private double[] incomes;
+    }
+    private HashMap<Integer, ChartData> chartDataHashMap;
+
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
@@ -135,6 +139,21 @@ public class ChartActivity extends LFragmentActivity implements
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+    }
+
+    @Override
+    public void onTransactionSearchDialogDismiss(boolean changed) {
+        if (changed) {
+            /*if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
+                LViewUtils.setAlpha(searchIV, 0.8f);
+            } else {
+                LViewUtils.setAlpha(searchIV, 1.0f);
+            }*/
+
+            AppPersistency.clearViewHistory();
+            chartDataHashMap.clear();
+            restartDbLoader();
+        }
     }
 
     @Override
@@ -156,6 +175,9 @@ public class ChartActivity extends LFragmentActivity implements
         barPieIV = (ImageView)findViewById(R.id.barPieChart);
         barPieIV.setOnClickListener(myClickListener);
 
+        searchIV = (ImageView) findViewById(R.id.search);
+        searchIV.setOnClickListener(myClickListener);
+
         prevIV = (ImageView)findViewById(R.id.prev);
         nextIV = (ImageView)findViewById(R.id.next);
         //prevIV.setVisibility(View.INVISIBLE);
@@ -164,18 +186,21 @@ public class ChartActivity extends LFragmentActivity implements
         nextIV.setOnClickListener(myClickListener);
 
         dbLoaderHelper = new DBLoaderHelper(this, this);
+
+        chartDataHashMap = new HashMap<Integer, ChartData>();
         restartDbLoader();
     }
 
     private void restartDbLoader() {
-        expenseCatetories.clear();
-        for (int ii = 0; ii < expenses.length; ii++) {
-            expenses[ii] = incomes[ii] = 0;
+        ChartData chartData = chartDataHashMap.get(AppPersistency.viewTransactionYear);
+        if (null == chartData) {
+            loaderFinished = false;
+            progressBar.setVisibility(View.VISIBLE);
+            getSupportLoaderManager().restartLoader(DBLoaderHelper.LOADER_ALL_SUMMARY, null, dbLoaderHelper);
+        } else {
+            pieChartDisplayed = barChartDisplayed = false;
+            showChart(AppPersistency.viewTransactionYear, chartData);
         }
-
-        loaderFinished = false;
-        progressBar.setVisibility(View.VISIBLE);
-        getSupportLoaderManager().restartLoader(DBLoaderHelper.LOADER_ALL_SUMMARY, null, dbLoaderHelper);
     }
 
     private  void showPrevNext() {
@@ -183,7 +208,7 @@ public class ChartActivity extends LFragmentActivity implements
         //prevIV.setVisibility((AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear())? View.VISIBLE : View.INVISIBLE);
     }
 
-    private void showChart() {
+    private void showChart(int year, ChartData chartData) {
         //viewFlipper.setAnimateFirstView(false);
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
@@ -191,16 +216,16 @@ public class ChartActivity extends LFragmentActivity implements
         if (AppPersistency.showPieChart) {
             barPieIV.setImageResource(R.drawable.chart_light);
             viewFlipper.setDisplayedChild(0);
-            displayPieChart();
+            displayPieChart(year, chartData);
         } else {
             barPieIV.setImageResource(R.drawable.pie_chart_light);
             viewFlipper.setDisplayedChild(1);
-            displayBarChart();
+            displayBarChart(year, chartData);
         }
         showPrevNext();
     }
 
-    private void displayBarChart() {
+    private void displayBarChart(int year, ChartData chartData) {
         if (barChartDisplayed) return;
         barChartDisplayed = true;
 
@@ -254,8 +279,8 @@ public class ChartActivity extends LFragmentActivity implements
         ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
         ArrayList<BarEntry> yVals2 = new ArrayList<BarEntry>();
         for (int ii = 0; ii < 12; ii++) {
-            yVals1.add(new BarEntry(ii, (float)expenses[ii]));
-            yVals2.add(new BarEntry(ii, (float)incomes[ii]));
+            yVals1.add(new BarEntry(ii, (float)chartData.expenses[ii]));
+            yVals2.add(new BarEntry(ii, (float)chartData.incomes[ii]));
         }
 
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
@@ -302,7 +327,7 @@ public class ChartActivity extends LFragmentActivity implements
         return sortedEntries;
     }
 
-    private void displayPieChart() {
+    private void displayPieChart(int year, ChartData chartData) {
         if (pieChartDisplayed) return;
         pieChartDisplayed = true;
 
@@ -314,9 +339,9 @@ public class ChartActivity extends LFragmentActivity implements
 
         List<PieEntry> entries = new ArrayList<>();
 
-        if (expenseCatetories.size() <= MAX_PIE_CHART_ITEMS) {
-            for (String key : expenseCatetories.keySet()) {
-                entries.add(new PieEntry(expenseCatetories.get(key).floatValue(), key));
+        if (chartData.expenseCatetories.size() <= MAX_PIE_CHART_ITEMS) {
+            for (String key : chartData.expenseCatetories.keySet()) {
+                entries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
             }
         } else {
             int count = 0;
@@ -325,7 +350,7 @@ public class ChartActivity extends LFragmentActivity implements
 
             List list = new ArrayList<String>();
             List groupList = new ArrayList<String>();
-            for (Map.Entry<String, Double> entry : entriesSortedByValues(expenseCatetories)) {
+            for (Map.Entry<String, Double> entry : entriesSortedByValues(chartData.expenseCatetories)) {
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     list.add(entry.getKey());
                 } else {
@@ -337,10 +362,10 @@ public class ChartActivity extends LFragmentActivity implements
             }
 
             count = 0;
-            for (String key : expenseCatetories.keySet()) {
+            for (String key : chartData.expenseCatetories.keySet()) {
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     if (list.contains(key)) {
-                        entries.add(new PieEntry(expenseCatetories.get(key).floatValue(), key));
+                        entries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
                         count++;
                     }
                 } else break;
@@ -397,17 +422,17 @@ public class ChartActivity extends LFragmentActivity implements
 
     private void enableBarPieChart() {
         AppPersistency.showPieChart = !AppPersistency.showPieChart;
-
+        int year = AppPersistency.viewTransactionYear;
         if (!AppPersistency.showPieChart) {
             barPieIV.setImageResource(R.drawable.pie_chart_light);
-            displayBarChart();
+            displayBarChart(year, chartDataHashMap.get(year));
 
             viewFlipper.setInAnimation(this, R.anim.slide_in_left);
             viewFlipper.setOutAnimation(this, R.anim.slide_out_right);
             viewFlipper.showPrevious();
         } else {
             barPieIV.setImageResource(R.drawable.chart_light);
-            displayPieChart();
+            displayPieChart(year, chartDataHashMap.get(year));
 
             viewFlipper.setInAnimation(this, R.anim.slide_in_right);
             viewFlipper.setOutAnimation(this, R.anim.slide_out_left);
@@ -422,8 +447,16 @@ public class ChartActivity extends LFragmentActivity implements
                 case R.id.closeChart:
                     finish();
                     break;
+
                 case R.id.barPieChart:
-                    enableBarPieChart();
+                    if (loaderFinished) enableBarPieChart();
+                    break;
+
+                case R.id.search:
+                    if (loaderFinished) {
+                        TransactionSearchDialog dialog = new TransactionSearchDialog(ChartActivity.this, ChartActivity.this);
+                        dialog.show();
+                    }
                     break;
 
                 case R.id.prev:
@@ -446,6 +479,10 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private class MyAsyncTask extends AsyncTask<Cursor, Void, Boolean> {
+        private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
+        private double[] expenses = new double[12];
+        private double[] incomes = new double[12];
+        private int year = AppPersistency.viewTransactionYear;
 
         @Override
         protected Boolean doInBackground(Cursor... params) {
@@ -518,18 +555,27 @@ public class ChartActivity extends LFragmentActivity implements
                 }
             } while (data.moveToNext());
 
-            year = calendar.get(Calendar.YEAR);
+            if (year != calendar.get(Calendar.YEAR)) {
+                LLog.w(TAG, "unexpected year code mismatch: " + year + " DB: " + calendar.get(Calendar.YEAR));
+                AppPersistency.viewTransactionYear = year = calendar.get(Calendar.YEAR);
+            };
 
             return true;
         }
 
         @Override
         protected void onPostExecute(Boolean result) {
+            ChartData chartData = new ChartData();
+            chartData.expenseCatetories = expenseCatetories;
+            chartData.expenses = expenses;
+            chartData.incomes = incomes;
+            chartDataHashMap.put(year, chartData);
+
             loaderFinished = true;
             progressBar.setVisibility(View.GONE);
 
             pieChartDisplayed = barChartDisplayed = false;
-            showChart();
+            showChart(year, chartData);
         }
 
         @Override
