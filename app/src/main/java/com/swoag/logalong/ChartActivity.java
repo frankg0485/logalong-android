@@ -8,10 +8,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -122,9 +119,10 @@ public class ChartActivity extends LFragmentActivity implements
     private boolean loaderFinished = false;
 
     private class ChartData {
-        private TreeMap<String, Double> expenseCatetories;
-        private double[] expenses;
-        private double[] incomes;
+        int year;
+        TreeMap<String, Double> expenseCatetories;
+        double[] expenses;
+        double[] incomes;
     }
     private HashMap<Integer, ChartData> chartDataHashMap;
 
@@ -198,19 +196,24 @@ public class ChartActivity extends LFragmentActivity implements
         if (null == chartData) {
             loaderFinished = false;
             progressBar.setVisibility(View.VISIBLE);
-            getSupportLoaderManager().restartLoader(DBLoaderHelper.LOADER_ALL_SUMMARY, null, dbLoaderHelper);
+            dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_ALL_SUMMARY);
         } else {
             pieChartDisplayed = barChartDisplayed = false;
-            showChart(AppPersistency.viewTransactionYear, chartData);
+            showChart(chartData);
         }
     }
 
     private  void showPrevNext() {
         //nextIV.setVisibility((AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear())? View.VISIBLE : View.INVISIBLE);
         //prevIV.setVisibility((AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear())? View.VISIBLE : View.INVISIBLE);
+        if (AppPersistency.viewTransactionYear < dbLoaderHelper.getStartYear() || AppPersistency.viewTransactionYear > dbLoaderHelper.getEndYear()) {
+            AppPersistency.viewTransactionYear = dbLoaderHelper.getEndYear();
+        }
+        prevIV.setClickable(AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear());
+        nextIV.setClickable(AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear());
     }
 
-    private void showChart(int year, ChartData chartData) {
+    private void showChart(ChartData chartData) {
         //viewFlipper.setAnimateFirstView(false);
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
@@ -218,16 +221,16 @@ public class ChartActivity extends LFragmentActivity implements
         if (AppPersistency.showPieChart) {
             barPieIV.setImageResource(R.drawable.chart_light);
             viewFlipper.setDisplayedChild(0);
-            displayPieChart(year, chartData);
+            displayPieChart(chartData);
         } else {
             barPieIV.setImageResource(R.drawable.pie_chart_light);
             viewFlipper.setDisplayedChild(1);
-            displayBarChart(year, chartData);
+            displayBarChart(chartData);
         }
         showPrevNext();
     }
 
-    private void displayBarChart(int year, ChartData chartData) {
+    private void displayBarChart(ChartData chartData) {
         if (barChartDisplayed) return;
         barChartDisplayed = true;
 
@@ -286,7 +289,7 @@ public class ChartActivity extends LFragmentActivity implements
         }
 
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
-        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - " + year);
+        BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - " + chartData.year);
 
         //dataSet1.setColors(colors);
         dataSet1.setColor(0xffcc0000);
@@ -333,14 +336,14 @@ public class ChartActivity extends LFragmentActivity implements
     private List<PieEntry> extraPieEntries;
     private int lastPieEntry;
 
-    private void displayPieChart(int year, ChartData chartData) {
+    private void displayPieChart(ChartData chartData) {
         if (pieChartDisplayed) return;
         pieChartDisplayed = true;
 
         pieChart.clear();
         entryDetailsTV.setVisibility(View.GONE);
 
-        pieChart.setCenterText("Expense - " + year);
+        pieChart.setCenterText("Expense - " + chartData.year);
         pieChart.setDrawSlicesUnderHole(true);
         pieChart.setUsePercentValues(true);
 
@@ -451,17 +454,16 @@ public class ChartActivity extends LFragmentActivity implements
 
     private void enableBarPieChart() {
         AppPersistency.showPieChart = !AppPersistency.showPieChart;
-        int year = AppPersistency.viewTransactionYear;
         if (!AppPersistency.showPieChart) {
             barPieIV.setImageResource(R.drawable.pie_chart_light);
-            displayBarChart(year, chartDataHashMap.get(year));
+            displayBarChart(chartDataHashMap.get(AppPersistency.viewTransactionYear));
 
             viewFlipper.setInAnimation(this, R.anim.slide_in_left);
             viewFlipper.setOutAnimation(this, R.anim.slide_out_right);
             viewFlipper.showPrevious();
         } else {
             barPieIV.setImageResource(R.drawable.chart_light);
-            displayPieChart(year, chartDataHashMap.get(year));
+            displayPieChart(chartDataHashMap.get(AppPersistency.viewTransactionYear));
 
             viewFlipper.setInAnimation(this, R.anim.slide_in_right);
             viewFlipper.setOutAnimation(this, R.anim.slide_out_left);
@@ -595,6 +597,7 @@ public class ChartActivity extends LFragmentActivity implements
         @Override
         protected void onPostExecute(Boolean result) {
             ChartData chartData = new ChartData();
+            chartData.year = year;
             chartData.expenseCatetories = expenseCatetories;
             chartData.expenses = expenses;
             chartData.incomes = incomes;
@@ -604,7 +607,7 @@ public class ChartActivity extends LFragmentActivity implements
             progressBar.setVisibility(View.GONE);
 
             pieChartDisplayed = barChartDisplayed = false;
-            showChart(year, chartData);
+            showChart(chartData);
         }
 
         @Override
