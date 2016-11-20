@@ -73,6 +73,8 @@ public class MainActivity extends LFragmentActivity
         }
     }
 
+    private boolean userClick = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,6 +125,7 @@ public class MainActivity extends LFragmentActivity
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             private int outOfBoundCount;
             private int position;
+
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 //LLog.d(TAG, "position: " + position + " offset: " + positionOffset + " pixels: " + positionOffsetPixels);
@@ -142,7 +145,7 @@ public class MainActivity extends LFragmentActivity
             public void onPageScrollStateChanged(int state) {
                 switch (state) {
                     case ViewPager.SCROLL_STATE_IDLE:
-                        if (outOfBoundCount > 5) {
+                        if (outOfBoundCount > 5 && !userClick) {
                             if (this.position == 0) {
                                 //LLog.d(TAG, "Out of boundary on: left");
                                 startActivity(new Intent(MainActivity.this, ChartActivity.class));
@@ -150,6 +153,7 @@ public class MainActivity extends LFragmentActivity
                                 //LLog.d(TAG, "Out of boundary on: right");
                             }
                         }
+                        userClick = false;
                         break;
                     case ViewPager.SCROLL_STATE_DRAGGING:
                         outOfBoundCount = 0;
@@ -224,18 +228,28 @@ public class MainActivity extends LFragmentActivity
     }
 
     public void onReports(View v) {
-        if (mViewPager.isPagingEnabled())
+        if (mViewPager.isPagingEnabled()) {
             mViewPager.setCurrentItem(0);
+            userClick = true;
+        }
     }
 
     public void onNewLog(View v) {
-        if (mViewPager.isPagingEnabled())
+        if (mViewPager.isPagingEnabled()) {
             mViewPager.setCurrentItem(1);
+            userClick = true;
+        }
     }
 
     public void onAccounts(View v) {
-        if (mViewPager.isPagingEnabled())
+        if (mViewPager.isPagingEnabled()) {
             mViewPager.setCurrentItem(2);
+            userClick = true;
+        }
+    }
+
+    public void onCharts(View v) {
+        startActivity(new Intent(MainActivity.this, ChartActivity.class));
     }
 
     @Override

@@ -126,6 +126,7 @@ public class ChartActivity extends LFragmentActivity implements
     private boolean barChartDisplayed = false;
     private boolean pieChartDisplayed = false;
     private boolean loaderFinished = false;
+    private MyAsyncTask myAsyncTask;
 
     private class ChartData {
         int year;
@@ -141,7 +142,8 @@ public class ChartActivity extends LFragmentActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case DBLoaderHelper.LOADER_ALL_SUMMARY:
-                new MyAsyncTask().execute(data);
+                myAsyncTask = new MyAsyncTask();
+                myAsyncTask.execute(data);
                 break;
         }
     }
@@ -203,6 +205,14 @@ public class ChartActivity extends LFragmentActivity implements
 
         chartDataHashMap = new HashMap<Integer, ChartData>();
         restartDbLoader();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (null != myAsyncTask) {
+            myAsyncTask.cancel(true);
+        }
+        super.onDestroy();
     }
 
     private void restartDbLoader() {
@@ -647,7 +657,7 @@ public class ChartActivity extends LFragmentActivity implements
 
                 accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
                 if (accountId2 != 0) accountIds.add(accountId2);
-            } while (data.moveToNext());
+            } while (!isCancelled() && data.moveToNext());
 
             int categoryId;
             double v = 0;
@@ -701,7 +711,7 @@ public class ChartActivity extends LFragmentActivity implements
                 } else {
                     incomes[calendar.get(Calendar.MONTH)] += v;
                 }
-            } while (data.moveToNext());
+            } while (!isCancelled() && data.moveToNext());
 
             if (year != calendar.get(Calendar.YEAR)) {
                 LLog.w(TAG, "unexpected year code mismatch: " + year + " DB: " + calendar.get(Calendar.YEAR));
@@ -710,6 +720,14 @@ public class ChartActivity extends LFragmentActivity implements
             ;
 
             return true;
+        }
+
+        @Override
+        protected void onCancelled(Boolean result) {
+            loaderFinished = true;
+            progressBar.setVisibility(View.GONE);
+
+            pieChartDisplayed = barChartDisplayed = false;
         }
 
         @Override
