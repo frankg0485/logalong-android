@@ -26,7 +26,7 @@ import java.util.Random;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    public static final String serverIp = "192.168.1.149";
+    public static final String serverIp = "192.168.1.107";
     //public static final String serverIp = "auto";
     private static final int serverPort = 8000;
 
@@ -187,6 +187,21 @@ public class LAppServer {
         }
     }
 
+    private boolean netThreadEnabled = true;
+    public void enable() {
+        synchronized (netLock) {
+            netThreadEnabled = true;
+            netLock.notifyAll();
+        }
+    }
+
+    public void disable() {
+        synchronized (netLock) {
+            netThreadEnabled = false;
+            netLock.notifyAll();
+        }
+    }
+
     private class NetThread implements Runnable {
 
         public void run() {
@@ -216,6 +231,13 @@ public class LAppServer {
                         } else {
                             UiPing(); //flush socket
                         }
+                        try {
+                            netLock.wait();
+                        } catch (Exception e) {
+                        }
+                    }
+
+                    while (!netThreadEnabled) {
                         try {
                             netLock.wait();
                         } catch (Exception e) {

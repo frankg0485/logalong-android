@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -137,13 +138,36 @@ public class ChartActivity extends LFragmentActivity implements
 
     private HashMap<Integer, ChartData> chartDataHashMap;
 
+    private boolean dbBackgroundActivities = false;
+    private Cursor lastLoadedData = null;
+    private Handler handler = new Handler();
+    private Runnable dataRunnable = new Runnable() {
+        @Override
+        public void run() {
+            loaderFinished = false;
+            progressBar.setVisibility(View.VISIBLE);
+            myAsyncTask = new MyAsyncTask();
+            myAsyncTask.execute(lastLoadedData);
+        }
+    };
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case DBLoaderHelper.LOADER_ALL_SUMMARY:
-                myAsyncTask = new MyAsyncTask();
-                myAsyncTask.execute(data);
+                handler.removeCallbacks(dataRunnable);
+                if (!dbBackgroundActivities && (null == myAsyncTask || myAsyncTask.getStatus() == AsyncTask.Status.FINISHED)) {
+                    myAsyncTask = new MyAsyncTask();
+                    myAsyncTask.execute(data);
+                } else {
+                    myAsyncTask.cancel(true);
+                    dbBackgroundActivities = true;
+                    if (lastLoadedData != null) lastLoadedData.close();
+
+                    progressBar.setVisibility(View.VISIBLE);
+                    lastLoadedData = data;
+                    handler.postDelayed(dataRunnable, 3000);
+                }
                 break;
         }
     }
@@ -171,6 +195,8 @@ public class ChartActivity extends LFragmentActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.charts);
+
+        //MainService.disable(this);
 
         myClickListener = new MyClickListener();
         findViewById(R.id.closeChart).setOnClickListener(myClickListener);
@@ -208,7 +234,19 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //MainService.enable(this);
+    }
+
+    @Override
     protected void onDestroy() {
+        handler.removeCallbacks(dataRunnable);
         if (null != myAsyncTask) {
             myAsyncTask.cancel(true);
         }
@@ -255,7 +293,7 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private void displayBarChart(ChartData chartData) {
-        if (barChartDisplayed) return;
+        if (barChartDisplayed || chartData == null) return;
         barChartDisplayed = true;
 
         barChart.clear();
@@ -390,7 +428,7 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private void displayPieChart(ChartData chartData) {
-        if (pieChartDisplayed) return;
+        if (pieChartDisplayed || chartData == null) return;
         pieChartDisplayed = true;
 
         pieChart.clear();
@@ -647,79 +685,88 @@ public class ChartActivity extends LFragmentActivity implements
             Cursor data = params[0];
             if (data == null) return false;
 
-            //prepare chart data
-            Set<Integer> accountIds = new HashSet<Integer>();
-            int accountId, accountId2;
-            data.moveToFirst();
-            do {
-                accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                if (accountId != 0) accountIds.add(accountId);
+            try {
+                //prepare chart data
+                Set<Integer> accountIds = new HashSet<Integer>();
+                int accountId, accountId2;
 
-                accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                if (accountId2 != 0) accountIds.add(accountId2);
-            } while (!isCancelled() && data.moveToNext());
+                if (isCancelled()) return false;
+                else data.moveToFirst();
+                do {
+                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    if (accountId != 0) accountIds.add(accountId);
 
-            int categoryId;
-            double v = 0;
-            long timeMs = 0;
-            Calendar calendar = Calendar.getInstance();
-            data.moveToFirst();
-            do {
-                v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-                accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
-                timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
-                calendar.setTimeInMillis(timeMs);
+                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    if (accountId2 != 0) accountIds.add(accountId2);
+                } while (!isCancelled() && data.moveToNext());
 
-                int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-                switch (type) {
-                    case LTransaction.TRANSACTION_TYPE_TRANSFER:
-                    case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
-                        if (accountIds.contains(accountId) && accountIds.contains(accountId2)) {
-                            v = 0;
-                        } else {
-                            if (LTransaction.TRANSACTION_TYPE_TRANSFER == type) {
-                                v = -v;
+
+                int categoryId;
+                double v = 0;
+                long timeMs = 0;
+                Calendar calendar = Calendar.getInstance();
+
+                if (isCancelled()) return false;
+                data.moveToFirst();
+                do {
+                    v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
+                    timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    calendar.setTimeInMillis(timeMs);
+
+                    int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                    switch (type) {
+                        case LTransaction.TRANSACTION_TYPE_TRANSFER:
+                        case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
+                            if (accountIds.contains(accountId) && accountIds.contains(accountId2)) {
+                                v = 0;
+                            } else {
+                                if (LTransaction.TRANSACTION_TYPE_TRANSFER == type) {
+                                    v = -v;
+                                }
                             }
+                            break;
+                        case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                            v = -v;
+                            break;
+                        case LTransaction.TRANSACTION_TYPE_INCOME:
+                            break;
+                    }
+
+                    if (v < 0) {
+                        String category = DBCategory.getNameById(categoryId);
+                        if (category == null || TextUtils.isEmpty(category)) {
+                            category = "Unspecified";
+                        } else {
+                            //category = category.split(":", -1)[0];
                         }
-                        break;
-                    case LTransaction.TRANSACTION_TYPE_EXPENSE:
-                        v = -v;
-                        break;
-                    case LTransaction.TRANSACTION_TYPE_INCOME:
-                        break;
+
+                        Double sum = expenseCats.get(category);
+                        if (sum == null) {
+                            expenseCats.put(category, -v);
+                        } else {
+                            sum += -v;
+                            expenseCats.put(category, sum);
+                        }
+
+                        expenses[calendar.get(Calendar.MONTH)] += -v;
+                    } else {
+                        incomes[calendar.get(Calendar.MONTH)] += v;
+                    }
+                } while (!isCancelled() && data.moveToNext());
+
+                if (year != calendar.get(Calendar.YEAR)) {
+                    LLog.w(TAG, "unexpected year code mismatch: " + year + " DB: " + calendar.get(Calendar.YEAR));
+                    AppPersistency.viewTransactionYear = year = calendar.get(Calendar.YEAR);
                 }
 
-                if (v < 0) {
-                    String category = DBCategory.getNameById(categoryId);
-                    if (category == null || TextUtils.isEmpty(category)) {
-                        category = "Unspecified";
-                    } else {
-                        //category = category.split(":", -1)[0];
-                    }
-
-                    Double sum = expenseCats.get(category);
-                    if (sum == null) {
-                        expenseCats.put(category, -v);
-                    } else {
-                        sum += -v;
-                        expenseCats.put(category, sum);
-                    }
-
-                    expenses[calendar.get(Calendar.MONTH)] += -v;
-                } else {
-                    incomes[calendar.get(Calendar.MONTH)] += v;
-                }
-            } while (!isCancelled() && data.moveToNext());
-
-            if (year != calendar.get(Calendar.YEAR)) {
-                LLog.w(TAG, "unexpected year code mismatch: " + year + " DB: " + calendar.get(Calendar.YEAR));
-                AppPersistency.viewTransactionYear = year = calendar.get(Calendar.YEAR);
+                data.close();
+                return true;
+            } catch (Exception e) {
+                return false;
             }
-            ;
-
-            return true;
         }
 
         @Override
@@ -732,18 +779,23 @@ public class ChartActivity extends LFragmentActivity implements
 
         @Override
         protected void onPostExecute(Boolean result) {
-            ChartData chartData = new ChartData();
-            chartData.year = year;
-            chartData.expenseCategories = expenseCats;
-            chartData.expenses = expenses;
-            chartData.incomes = incomes;
-            chartDataHashMap.put(year, chartData);
+            ChartData chartData = null;
+            if (result) {
+                chartData = new ChartData();
+                chartData.year = year;
+                chartData.expenseCategories = expenseCats;
+                chartData.expenses = expenses;
+                chartData.incomes = incomes;
+                chartDataHashMap.put(year, chartData);
+            }
 
             loaderFinished = true;
             progressBar.setVisibility(View.GONE);
 
-            pieChartDisplayed = barChartDisplayed = false;
-            showChart(chartData);
+            if (result) {
+                pieChartDisplayed = barChartDisplayed = false;
+                showChart(chartData);
+            }
         }
 
         @Override

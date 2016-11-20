@@ -28,6 +28,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     public static final int CMD_START = 10;
     public static final int CMD_STOP = 20;
+    public static final int CMD_ENABLE = 30;
+    public static final int CMD_DISABLE = 40;
 
     private Handler pollHandler;
     private Runnable pollRunnable;
@@ -51,6 +53,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     public static void stop(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
         serviceIntent.putExtra("cmd", MainService.CMD_STOP);
+        context.startService(serviceIntent);
+    }
+
+    public static void enable(Context context) {
+        Intent serviceIntent = new Intent(context, MainService.class);
+        serviceIntent.putExtra("cmd", MainService.CMD_ENABLE);
+        context.startService(serviceIntent);
+    }
+
+    public static void disable(Context context) {
+        Intent serviceIntent = new Intent(context, MainService.class);
+        serviceIntent.putExtra("cmd", MainService.CMD_DISABLE);
         context.startService(serviceIntent);
     }
 
@@ -170,6 +184,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     } else {
                         stopSelf();
                     }
+                    break;
+                case CMD_ENABLE:
+                    server.enable();
+                    break;
+
+                case CMD_DISABLE:
+                    server.disable();
                     break;
             }
         }

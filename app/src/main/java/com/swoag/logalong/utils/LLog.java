@@ -100,6 +100,7 @@ public class LLog {
     }
 
     private static void remoteLog(String msg) {
+        //DISABLE: if (msg != null) return;
         if (!lastMsg.contentEquals(msg)) {
             LRemoteLogging server = LRemoteLogging.getInstance();
             LoggingService.start(LApp.ctx);
