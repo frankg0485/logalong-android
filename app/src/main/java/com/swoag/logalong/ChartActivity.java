@@ -81,27 +81,27 @@ public class ChartActivity extends LFragmentActivity implements
     private ViewFlipper viewFlipper;
     private static int[] colors = new int[] {
             0xffcc0000,
+            0xff9933cc,
             0xffff8a00,
             0xff669900,
-            0xff9933cc,
             0xff0099cc,
 
             0xffe21d1d,
+            0xffac59d6,
             0xffffa00e,
             0xff7caf00,
-            0xffac59d6,
             0xff16a5d7,
 
             0xfff83a3a,
+            0xffc182e0,
             0xffffb61c,
             0xff92c500,
-            0xffc182e0,
             0xff2cb1e1,
 
             0xffff7979,
+            0xffcf9fe7,
             0xffffd060,
             0xffb6db49,
-            0xffcf9fe7,
             0xff6dcaec
     };
 
@@ -120,7 +120,7 @@ public class ChartActivity extends LFragmentActivity implements
 
     private class ChartData {
         int year;
-        TreeMap<String, Double> expenseCatetories;
+        TreeMap<String, Double> expenseCategories;
         double[] expenses;
         double[] incomes;
     }
@@ -332,9 +332,22 @@ public class ChartActivity extends LFragmentActivity implements
         return sortedEntries;
     }
 
+    private TreeMap<String, Double> currentExpenseCats = new TreeMap<>();
+    private ChartData currentCharData;
     private List<PieEntry> pieEntries;
     private List<PieEntry> extraPieEntries;
     private int lastPieEntry;
+
+    TreeMap<String, Double> getExpenseSubCats (String mainCat) {
+        TreeMap<String, Double> map = new TreeMap<>();
+        for (String key : currentCharData.expenseCategories.keySet()) {
+            String cat = key.split(":", -1)[0];
+            if (cat.contentEquals(mainCat)) {
+                map.put(key, currentCharData.expenseCategories.get(key));
+            }
+        }
+        return map;
+    }
 
     private void displayPieChart(ChartData chartData) {
         if (pieChartDisplayed) return;
@@ -347,12 +360,25 @@ public class ChartActivity extends LFragmentActivity implements
         pieChart.setDrawSlicesUnderHole(true);
         pieChart.setUsePercentValues(true);
 
+        currentExpenseCats.clear();
+        currentCharData = chartData;
+        for (String key : chartData.expenseCategories.keySet()) {
+            String mainCat = key.split(":", -1)[0];
+            Double v = currentExpenseCats.get(mainCat);
+            if (v == null) {
+                currentExpenseCats.put(mainCat, chartData.expenseCategories.get(key));
+            } else {
+                v += chartData.expenseCategories.get(key);
+                currentExpenseCats.put(mainCat, v);
+            }
+        }
+
         pieEntries = new ArrayList<>();
         extraPieEntries = new ArrayList<>();
-        lastPieEntry = chartData.expenseCatetories.size() - 1;
-        if (chartData.expenseCatetories.size() <= MAX_PIE_CHART_ITEMS) {
-            for (String key : chartData.expenseCatetories.keySet()) {
-                pieEntries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
+        lastPieEntry = currentExpenseCats.size() - 1;
+        if (currentExpenseCats.size() <= MAX_PIE_CHART_ITEMS) {
+            for (String key : currentExpenseCats.keySet()) {
+                pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
             }
         } else {
             int count = 0;
@@ -361,7 +387,7 @@ public class ChartActivity extends LFragmentActivity implements
 
             List list = new ArrayList<String>();
             List groupList = new ArrayList<String>();
-            for (Map.Entry<String, Double> entry : entriesSortedByValues(chartData.expenseCatetories)) {
+            for (Map.Entry<String, Double> entry : entriesSortedByValues(currentExpenseCats)) {
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     list.add(entry.getKey());
                 } else {
@@ -378,10 +404,10 @@ public class ChartActivity extends LFragmentActivity implements
             }
 
             count = 0;
-            for (String key : chartData.expenseCatetories.keySet()) {
+            for (String key : currentExpenseCats.keySet()) {
                 if (count < MAX_PIE_CHART_ITEMS - 1) {
                     if (list.contains(key)) {
-                        pieEntries.add(new PieEntry(chartData.expenseCatetories.get(key).floatValue(), key));
+                        pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
                         count++;
                     }
                 } else break;
@@ -438,6 +464,10 @@ public class ChartActivity extends LFragmentActivity implements
                             entryDetailsTV.setText(str.trim());
                         } else {
                             entryDetailsTV.setText(pe.getLabel() + " : $" + pe.getValue());
+                            TreeMap<String, Double> subs = getExpenseSubCats(pe.getLabel());
+                            if (subs.size() > 1) {
+
+                            }
                         }
                         entryDetailsTV.setVisibility(View.VISIBLE);
                     }
@@ -510,7 +540,7 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private class MyAsyncTask extends AsyncTask<Cursor, Void, Boolean> {
-        private TreeMap<String, Double> expenseCatetories = new TreeMap<String, Double>();
+        private TreeMap<String, Double> expenseCats = new TreeMap<String, Double>();
         private double[] expenses = new double[12];
         private double[] incomes = new double[12];
         private int year = AppPersistency.viewTransactionYear;
@@ -569,15 +599,15 @@ public class ChartActivity extends LFragmentActivity implements
                     if (category == null || TextUtils.isEmpty(category)) {
                         category = "Unspecified";
                     } else {
-                        category = category.split(":", -1)[0];
+                        //category = category.split(":", -1)[0];
                     }
 
-                    Double sum = expenseCatetories.get(category);
+                    Double sum = expenseCats.get(category);
                     if (sum == null) {
-                        expenseCatetories.put(category, -v);
+                        expenseCats.put(category, -v);
                     } else {
                         sum += -v;
-                        expenseCatetories.put(category, sum);
+                        expenseCats.put(category, sum);
                     }
 
                     expenses[calendar.get(Calendar.MONTH)] += -v;
@@ -598,7 +628,7 @@ public class ChartActivity extends LFragmentActivity implements
         protected void onPostExecute(Boolean result) {
             ChartData chartData = new ChartData();
             chartData.year = year;
-            chartData.expenseCatetories = expenseCatetories;
+            chartData.expenseCategories = expenseCats;
             chartData.expenses = expenses;
             chartData.incomes = incomes;
             chartDataHashMap.put(year, chartData);
