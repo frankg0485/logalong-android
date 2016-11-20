@@ -147,9 +147,30 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
         switch (id) {
             case LOADER_INIT_RANGE:
+                long start, end;
+                if (LPreferences.getSearchAllTime()) {
+                    start = 0;
+                    end = Long.MAX_VALUE;
+                } else {
+                    start = LPreferences.getSearchAllTimeFrom();
+                    end = LPreferences.getSearchAllTimeTo();
+                }
+
                 uri = DBProvider.URI_TRANSACTIONS;
-                s = ds = DBHelper.TABLE_COLUMN_STATE + "=?";
-                sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE};
+                if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
+                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end};
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
+                } else {
+                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
+                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
+                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + start, "" + end};
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
+                }
+
 
                 if (!TextUtils.isEmpty(selections)) {
                     s = selections + " AND " + ds;
@@ -165,7 +186,7 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                         null,
                         s,
                         sa,
-                        DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
+                        sort
                 );
 
             case LOADER_ALL_SUMMARY:
