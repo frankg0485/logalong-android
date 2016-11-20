@@ -25,17 +25,74 @@
                 android:layout_marginRight="15dp"
                 android:layout_marginTop="1dp" />
 
-            <TextView
-                android:id="@+id/entryDetails"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_marginRight="10dp"
+                android:layout_marginBottom="50dp"
+                android:layout_marginRight="5dp"
                 android:layout_marginTop="50dp"
                 android:gravity="right"
-                android:padding="5dp"
-                android:singleLine="false"
-                android:textSize="12dp" />
+                android:weightSum="100">
+
+                <LinearLayout
+                    android:id="@+id/entryDetails"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="24"
+                    android:background="@drawable/button_bgd"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/entryDetailsHeader"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp">
+
+                        <TextView
+                            android:id="@+id/name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="4"
+                            android:ellipsize="marquee"
+                            android:gravity="center_vertical"
+                            android:marqueeRepeatLimit="3"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingLeft="5dp"
+                            android:text="$"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/value"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="3"
+                            android:ellipsize="marquee"
+                            android:gravity="center_vertical"
+                            android:singleLine="true"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <ListView
+                        android:id="@+id/entryDetailsList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:divider="#ffe4e4e4"
+                        android:dividerHeight="1dp" />
+                </LinearLayout>
+            </LinearLayout>
         </RelativeLayout>
 
         <RelativeLayout
@@ -98,7 +155,7 @@
                 android:clickable="true"
                 android:paddingBottom="10dp"
                 android:paddingTop="10dp"
-                android:src="@drawable/chart_light" />
+                android:src="@drawable/pie_chart_light" />
 
             <ImageView
                 android:id="@+id/search"

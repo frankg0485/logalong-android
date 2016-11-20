@@ -5,14 +5,20 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -79,7 +85,7 @@ public class ChartActivity extends LFragmentActivity implements
 
     private static final int MAX_PIE_CHART_ITEMS = 12;
     private ViewFlipper viewFlipper;
-    private static int[] colors = new int[] {
+    private static int[] colors = new int[]{
             0xffcc0000,
             0xff9933cc,
             0xffff8a00,
@@ -111,7 +117,10 @@ public class ChartActivity extends LFragmentActivity implements
     private ProgressBar progressBar;
     private BarChart barChart;
     private PieChart pieChart;
-    private TextView entryDetailsTV;
+    private View entryDetailsV, entryDetailsHV;
+    private TextView entryDetailsHeaderNameTV;
+    private TextView entryDetailsHeaderValueTV;
+    private ListView entryDetailsLV;
 
     private DBLoaderHelper dbLoaderHelper;
     private boolean barChartDisplayed = false;
@@ -124,6 +133,7 @@ public class ChartActivity extends LFragmentActivity implements
         double[] expenses;
         double[] incomes;
     }
+
     private HashMap<Integer, ChartData> chartDataHashMap;
 
 
@@ -165,21 +175,25 @@ public class ChartActivity extends LFragmentActivity implements
 
         viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
 
-        barChart = (BarChart)findViewById(R.id.barChart);
+        barChart = (BarChart) findViewById(R.id.barChart);
         barChart.setNoDataText("");
-        pieChart = (PieChart)findViewById(R.id.pieChart);
+        pieChart = (PieChart) findViewById(R.id.pieChart);
         pieChart.setNoDataText("");
-        entryDetailsTV = (TextView) findViewById(R.id.entryDetails);
+        entryDetailsV = findViewById(R.id.entryDetails);
+        entryDetailsLV = (ListView) entryDetailsV.findViewById(R.id.entryDetailsList);
+        entryDetailsHV = entryDetailsV.findViewById(R.id.entryDetailsHeader);
+        entryDetailsHeaderNameTV = (TextView) entryDetailsHV.findViewById(R.id.name);
+        entryDetailsHeaderValueTV = (TextView) entryDetailsHV.findViewById(R.id.value);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        barPieIV = (ImageView)findViewById(R.id.barPieChart);
+        barPieIV = (ImageView) findViewById(R.id.barPieChart);
         barPieIV.setOnClickListener(myClickListener);
 
         searchIV = (ImageView) findViewById(R.id.search);
         searchIV.setOnClickListener(myClickListener);
 
-        prevIV = (ImageView)findViewById(R.id.prev);
-        nextIV = (ImageView)findViewById(R.id.next);
+        prevIV = (ImageView) findViewById(R.id.prev);
+        nextIV = (ImageView) findViewById(R.id.next);
         //prevIV.setVisibility(View.INVISIBLE);
         //nextIV.setVisibility(View.INVISIBLE);
         prevIV.setOnClickListener(myClickListener);
@@ -203,7 +217,7 @@ public class ChartActivity extends LFragmentActivity implements
         }
     }
 
-    private  void showPrevNext() {
+    private void showPrevNext() {
         //nextIV.setVisibility((AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear())? View.VISIBLE : View.INVISIBLE);
         //prevIV.setVisibility((AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear())? View.VISIBLE : View.INVISIBLE);
         if (AppPersistency.viewTransactionYear < dbLoaderHelper.getStartYear() || AppPersistency.viewTransactionYear > dbLoaderHelper.getEndYear()) {
@@ -284,8 +298,8 @@ public class ChartActivity extends LFragmentActivity implements
         ArrayList<BarEntry> yVals1 = new ArrayList<BarEntry>();
         ArrayList<BarEntry> yVals2 = new ArrayList<BarEntry>();
         for (int ii = 0; ii < 12; ii++) {
-            yVals1.add(new BarEntry(ii, (float)chartData.expenses[ii]));
-            yVals2.add(new BarEntry(ii, (float)chartData.incomes[ii]));
+            yVals1.add(new BarEntry(ii, (float) chartData.expenses[ii]));
+            yVals2.add(new BarEntry(ii, (float) chartData.incomes[ii]));
         }
 
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
@@ -319,10 +333,11 @@ public class ChartActivity extends LFragmentActivity implements
         barChart.invalidate();
     }
 
-    static <K,V extends Comparable<? super V>> SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
-        SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
-                new Comparator<Map.Entry<K,V>>() {
-                    @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+    static <K, V extends Comparable<? super V>> SortedSet<Map.Entry<K, V>> entriesSortedByValues(Map<K, V> map) {
+        SortedSet<Map.Entry<K, V>> sortedEntries = new TreeSet<Map.Entry<K, V>>(
+                new Comparator<Map.Entry<K, V>>() {
+                    @Override
+                    public int compare(Map.Entry<K, V> e1, Map.Entry<K, V> e2) {
                         int res = -e1.getValue().compareTo(e2.getValue());
                         return res != 0 ? res : 1; // Special fix to preserve items with equal values
                     }
@@ -338,14 +353,29 @@ public class ChartActivity extends LFragmentActivity implements
     private List<PieEntry> extraPieEntries;
     private int lastPieEntry;
 
-    TreeMap<String, Double> getExpenseSubCats (String mainCat) {
+    TreeMap<String, Double> getExpenseSubCats(String mainCat) {
         TreeMap<String, Double> map = new TreeMap<>();
         for (String key : currentCharData.expenseCategories.keySet()) {
-            String cat = key.split(":", -1)[0];
-            if (cat.contentEquals(mainCat)) {
-                map.put(key, currentCharData.expenseCategories.get(key));
+            String[] cats = key.split(":", -1);
+            if (cats[0].contentEquals(mainCat)) {
+                map.put((cats.length > 1)? cats[1] : key, currentCharData.expenseCategories.get(key));
             }
         }
+        return map;
+    }
+
+    TreeMap<String, Double> getExpenseSubCatsAt(String mainCat, int index) {
+        TreeMap<String, Double> map;
+
+        if (index == lastPieEntry && extraPieEntries.size() > 0) {
+            map = new TreeMap<>();
+            for (PieEntry entry : extraPieEntries) {
+                map.put(entry.getLabel(), (double)entry.getValue());
+            }
+        } else {
+            map = getExpenseSubCats(mainCat);
+        }
+
         return map;
     }
 
@@ -354,7 +384,7 @@ public class ChartActivity extends LFragmentActivity implements
         pieChartDisplayed = true;
 
         pieChart.clear();
-        entryDetailsTV.setVisibility(View.GONE);
+        entryDetailsV.setVisibility(View.GONE);
 
         pieChart.setCenterText("Expense - " + chartData.year);
         pieChart.setDrawSlicesUnderHole(true);
@@ -441,6 +471,7 @@ public class ChartActivity extends LFragmentActivity implements
         legend.setOrientation(Legend.LegendOrientation.VERTICAL);
         legend.setDrawInside(false);
         legend.setEnabled(true);
+        legend.setTextSize(11.0f);
 
         Description description = new Description();
         description.setText("");
@@ -450,36 +481,92 @@ public class ChartActivity extends LFragmentActivity implements
                 new OnChartValueSelectedListener() {
                     @Override
                     public void onValueSelected(Entry e, Highlight h) {
-                        PieEntry pe = (PieEntry)e;
+                        PieEntry pe = (PieEntry) e;
 
                         int index = pieEntries.indexOf(pe);
-                        entryDetailsTV.setTextColor(Color.WHITE);
-                        entryDetailsTV.setBackgroundColor(colors[index]);
 
-                        if (index == lastPieEntry && extraPieEntries.size() > 0) {
-                            String str = "";
-                            for (PieEntry entry : extraPieEntries) {
-                                str += entry.getLabel() + " : $" + entry.getValue() + "\n";
-                            }
-                            entryDetailsTV.setText(str.trim());
+                        setBackgroundColor(entryDetailsV, colors[index]);
+                        setBackgroundColor(entryDetailsHV, colors[index]);
+
+                        entryDetailsHeaderNameTV.setText(pe.getLabel());
+                        entryDetailsHeaderValueTV.setText(String.format("%.2f", pe.getValue()));
+
+                        TreeMap<String, Double> items = getExpenseSubCatsAt(pe.getLabel(), index);
+                        if (items.size() > 1) {
+                            entryDetailsLV.setAdapter(new MyListAdapter(ChartActivity.this,
+                                    items.keySet().toArray(new String[items.size()]), items));
+                            entryDetailsLV.setVisibility(View.VISIBLE);
                         } else {
-                            entryDetailsTV.setText(pe.getLabel() + " : $" + pe.getValue());
-                            TreeMap<String, Double> subs = getExpenseSubCats(pe.getLabel());
-                            if (subs.size() > 1) {
-
-                            }
+                            entryDetailsLV.setVisibility(View.GONE);
                         }
-                        entryDetailsTV.setVisibility(View.VISIBLE);
+
+                        entryDetailsV.setVisibility(View.VISIBLE);
                     }
 
                     @Override
                     public void onNothingSelected() {
-                        entryDetailsTV.setVisibility(View.GONE);
+                        entryDetailsV.setVisibility(View.GONE);
                     }
                 }
 
         );
         pieChart.invalidate();
+    }
+
+    private void setBackgroundColor(View view, int color) {
+        Drawable background = view.getBackground();
+        if (background instanceof ShapeDrawable) {
+            ShapeDrawable shapeDrawable = (ShapeDrawable) background;
+            shapeDrawable.getPaint().setColor(color);
+        } else if (background instanceof GradientDrawable) {
+            GradientDrawable gradientDrawable = (GradientDrawable) background;
+            gradientDrawable.setColor(color);
+        } else if (background instanceof ColorDrawable) {
+            int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+            if (currentapiVersion >= Build.VERSION_CODES.HONEYCOMB) {
+                ColorDrawable colorDrawable = (ColorDrawable) background;
+                colorDrawable.setColor(color);
+            }
+        }
+    }
+
+    private class MyListAdapter extends ArrayAdapter<String> {
+        TreeMap<String, Double> mData;
+        String[] mKeys;
+        Context context;
+
+        public MyListAdapter(Context context, String[] keys, TreeMap<String, Double> items) {
+            super(context, R.layout.piechart_list_item, keys);
+            this.context = context;
+            mData = items;
+            mKeys = keys;
+        }
+
+        public int getCount() {
+            return mData.size();
+        }
+
+        public String getItem(int position) {
+            return mKeys[position];
+        }
+
+        public long getItemId(int arg0) {
+            return arg0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.piechart_list_item, parent, false);
+            }
+
+            TextView tv = (TextView) convertView.findViewById(R.id.name);
+            tv.setText(mKeys[position]);
+            tv = (TextView) convertView.findViewById(R.id.value);
+            tv.setText(String.format("%.2f", mData.get(mKeys[position])));
+            return convertView;
+        }
     }
 
     private void enableBarPieChart() {
@@ -619,7 +706,8 @@ public class ChartActivity extends LFragmentActivity implements
             if (year != calendar.get(Calendar.YEAR)) {
                 LLog.w(TAG, "unexpected year code mismatch: " + year + " DB: " + calendar.get(Calendar.YEAR));
                 AppPersistency.viewTransactionYear = year = calendar.get(Calendar.YEAR);
-            };
+            }
+            ;
 
             return true;
         }
