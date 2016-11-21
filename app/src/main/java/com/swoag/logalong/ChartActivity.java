@@ -65,6 +65,8 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.TransactionSearchDialog;
 
+import org.w3c.dom.Text;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -119,6 +121,7 @@ public class ChartActivity extends LFragmentActivity implements
     private BarChart barChart;
     private PieChart pieChart;
     private View entryDetailsV, entryDetailsHV;
+    private TextView piechartExpenseSumTV;
     private TextView entryDetailsHeaderNameTV;
     private TextView entryDetailsHeaderValueTV;
     private ListView entryDetailsLV;
@@ -207,6 +210,8 @@ public class ChartActivity extends LFragmentActivity implements
         barChart.setNoDataText("");
         pieChart = (PieChart) findViewById(R.id.pieChart);
         pieChart.setNoDataText("");
+        piechartExpenseSumTV = (TextView) findViewById(R.id.pieChartExpenseSum);
+
         entryDetailsV = findViewById(R.id.entryDetails);
         entryDetailsLV = (ListView) entryDetailsV.findViewById(R.id.entryDetailsList);
         entryDetailsHV = entryDetailsV.findViewById(R.id.entryDetailsHeader);
@@ -353,11 +358,9 @@ public class ChartActivity extends LFragmentActivity implements
         BarDataSet dataSet1 = new BarDataSet(yVals1, "Expense");
         BarDataSet dataSet2 = new BarDataSet(yVals2, "Income - " + chartData.year);
 
-        //dataSet1.setColors(colors);
         dataSet1.setColor(0xffcc0000);
         dataSet1.setDrawValues(false);
 
-        //dataSet2.setColors(colors);
         dataSet2.setColor(0xff669900);
         dataSet2.setDrawValues(false);
 
@@ -406,7 +409,7 @@ public class ChartActivity extends LFragmentActivity implements
         for (String key : currentCharData.expenseCategories.keySet()) {
             String[] cats = key.split(":", -1);
             if (cats[0].contentEquals(mainCat)) {
-                map.put((cats.length > 1)? cats[1] : key, currentCharData.expenseCategories.get(key));
+                map.put((cats.length > 1) ? cats[1] : key, currentCharData.expenseCategories.get(key));
             }
         }
         return map;
@@ -418,7 +421,7 @@ public class ChartActivity extends LFragmentActivity implements
         if (index == lastPieEntry && extraPieEntries.size() > 0) {
             map = new TreeMap<>();
             for (PieEntry entry : extraPieEntries) {
-                map.put(entry.getLabel(), (double)entry.getValue());
+                map.put(entry.getLabel(), (double) entry.getValue());
             }
         } else {
             map = getExpenseSubCats(mainCat);
@@ -440,7 +443,10 @@ public class ChartActivity extends LFragmentActivity implements
 
         currentExpenseCats.clear();
         currentCharData = chartData;
+        // group all sub-categories
+        double sum = 0;
         for (String key : chartData.expenseCategories.keySet()) {
+            sum += chartData.expenseCategories.get(key);
             String mainCat = key.split(":", -1)[0];
             Double v = currentExpenseCats.get(mainCat);
             if (v == null) {
@@ -450,51 +456,63 @@ public class ChartActivity extends LFragmentActivity implements
                 currentExpenseCats.put(mainCat, v);
             }
         }
+        piechartExpenseSumTV.setText(String.format("$%.2f", sum));
 
+        // group tiny entries
         pieEntries = new ArrayList<>();
         extraPieEntries = new ArrayList<>();
         lastPieEntry = currentExpenseCats.size() - 1;
-        if (currentExpenseCats.size() <= MAX_PIE_CHART_ITEMS) {
+
+        int count = 0;
+        String lastGroup = null;
+        double lastGroupValue = 0;
+
+        List list = new ArrayList<String>();
+        double threshold = sum * 0.005;
+        String lastKey = "";
+        Double lastValue = 0.0;
+
+        for (Map.Entry<String, Double> entry : entriesSortedByValues(currentExpenseCats)) {
+            if (count < MAX_PIE_CHART_ITEMS && entry.getValue() > threshold) {
+                list.add(entry.getKey());
+            } else {
+                if (null == lastGroup) {
+                    list.remove(lastKey);
+                    extraPieEntries.add(new PieEntry(lastValue.floatValue(), lastKey));
+
+                    lastGroup = lastKey + " ...";
+                    lastGroupValue = lastValue;
+                    lastPieEntry = count - 1;
+                }
+
+                extraPieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
+                lastGroupValue += entry.getValue();
+            }
+
+            lastKey = entry.getKey();
+            lastValue = entry.getValue();
+            count++;
+        }
+
+        if (currentExpenseCats.size() <= list.size()) {
             for (String key : currentExpenseCats.keySet()) {
                 pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
             }
         } else {
-            int count = 0;
-            String lastGroup = null;
-            double lastGroupValue = 0;
-
-            List list = new ArrayList<String>();
-            List groupList = new ArrayList<String>();
-            for (Map.Entry<String, Double> entry : entriesSortedByValues(currentExpenseCats)) {
-                if (count < MAX_PIE_CHART_ITEMS - 1) {
-                    list.add(entry.getKey());
-                } else {
-                    extraPieEntries.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
-
-                    groupList.add(entry.getKey());
-                    if (null == lastGroup) {
-                        lastGroup = entry.getKey() + " ...";
-                        lastPieEntry = count;
-                    }
-                    lastGroupValue += entry.getValue();
-                }
-                count++;
-            }
-
             count = 0;
             for (String key : currentExpenseCats.keySet()) {
-                if (count < MAX_PIE_CHART_ITEMS - 1) {
-                    if (list.contains(key)) {
-                        pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
-                        count++;
-                    }
-                } else break;
+                if (list.contains(key)) {
+                    pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
+                    count++;
+                    if (count >= list.size()) break;
+                }
             }
             pieEntries.add(new PieEntry((float) lastGroupValue, lastGroup));
         }
 
         PieDataSet set = new PieDataSet(pieEntries, "");
-        set.setSliceSpace(2.0f);
+        ////set.setSliceSpace(2.0f);
+        set.setSliceSpace(1.0f);
         set.setSelectionShift(5.0f);
         set.setColors(colors);
 

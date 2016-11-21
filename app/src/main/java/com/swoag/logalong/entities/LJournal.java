@@ -1424,9 +1424,8 @@ public class LJournal {
             cursor.moveToFirst();
 
             LJournal journal = new LJournal();
-
+            LTransaction item = new LTransaction();
             do {
-                LTransaction item = new LTransaction();
                 DBTransaction.getValues(cursor, item);
                 journal.shareItem(userId, account.getGid(), item);
             } while (cursor.moveToNext());
