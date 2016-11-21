@@ -15,6 +15,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAllBalances;
@@ -183,7 +184,8 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
         ((TextView) findViewById(R.id.title)).setText(title);
         text = (EditText) findViewById(R.id.newname);
-        text.setHint((hint != null) ? hint : "");
+        text.setHint((hint != null) ? hint : (type == TYPE_CATEGORY) ?
+                LApp.ctx.getResources().getString(R.string.hint_primary_category_sub_category) : "");
         text.addTextChangedListener(this);
     }
 

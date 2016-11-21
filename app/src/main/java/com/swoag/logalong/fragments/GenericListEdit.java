@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
@@ -284,7 +285,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             }
         }
 
-        private void unshareMyselfFromAccount (long accountId) {
+        private void unshareMyselfFromAccount(long accountId) {
             LAccount account = DBAccount.getById(accountId);
             account.removeAllShareUsers();
             DBAccount.update(account);
@@ -324,7 +325,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     if (!selections.contains(ii)) {
                         account.removeShareUser(ii);
                         LJournal journal = new LJournal();
-                        journal.unshareAccount(ii, (int)account.getId(), account.getGid(), account.getName());
+                        journal.unshareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
                     }
                 }
 
@@ -332,7 +333,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 for (Integer ii : selections) {
                     boolean newShare = false;
                     if (!origSelections.contains(ii)) newShare = true;
-                    else if (account.getShareUserState(ii) != LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) newShare = true;
+                    else if (account.getShareUserState(ii) != LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED)
+                        newShare = true;
                     if (newShare) {
                         // new share request: new memeber is added to group
                         account.addShareUser(ii, LAccount.ACCOUNT_SHARE_INVITED);
@@ -529,12 +531,14 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                     return true;
                 case R.id.rename:
                     String title = "";
+                    String hint = "";
                     switch (listId) {
                         case R.id.accounts:
                             title = activity.getString(R.string.rename_account);
                             break;
                         case R.id.categories:
                             title = activity.getString(R.string.rename_category);
+                            hint = LApp.ctx.getResources().getString(R.string.hint_primary_category_sub_category);
                             break;
                         case R.id.vendors:
                             title = activity.getString(R.string.rename_vendor);
@@ -544,7 +548,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             break;
                     }
                     LRenameDialog renameDialog = new LRenameDialog(activity, context, this,
-                            title, tag.name, null);
+                            title, tag.name, hint);
                     renameDialog.show();
                     return true;
                 case R.id.associated_categories:

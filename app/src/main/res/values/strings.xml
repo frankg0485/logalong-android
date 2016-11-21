@@ -34,6 +34,7 @@
     <string name="hint_choose_account">Choose account</string>
     <string name="hint_payee_not_specified">Payee not specified</string>
     <string name="hint_payer_not_specified">Payer not specified</string>
+    <string name="hint_primary_category_sub_category">Category : Sub-category</string>
     <string name="hint_tag_not_specified">Tag not specified</string>
     <string name="hint_type_user_id">User ID</string>
     <string name="hint_user_id">pending</string>
