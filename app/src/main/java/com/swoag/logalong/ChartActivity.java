@@ -714,8 +714,8 @@ public class ChartActivity extends LFragmentActivity implements
                     accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                     if (accountId != 0) accountIds.add(accountId);
 
-                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    if (accountId2 != 0) accountIds.add(accountId2);
+                    //accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
+                    //if (accountId2 != 0) accountIds.add(accountId2);
                 } while (!isCancelled() && data.moveToNext());
 
 
