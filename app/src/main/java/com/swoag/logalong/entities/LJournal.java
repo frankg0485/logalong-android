@@ -218,7 +218,7 @@ public class LJournal {
         try {
             byte[] rec = transactionItemString(item).getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -239,7 +239,7 @@ public class LJournal {
         try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -381,15 +381,11 @@ public class LJournal {
         try {
             byte[] name = account.getName().getBytes("UTF-8");
             data.putByteAutoInc((byte)name.length);
-            data.appendAutoInc(name);
-
-            //UGLY!!!!! FIXME: see note in LBuffer: appendAutoInc design flaw
-            data.setLen(0);
-            ///////////////////////////////////////
+            data.putBytesAutoInc(name);
 
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -416,7 +412,7 @@ public class LJournal {
         try {
             byte[] name = accountName.getBytes("UTF-8");
             data.putByteAutoInc((byte) name.length);
-            data.appendAutoInc(name);
+            data.putBytesAutoInc(name);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -433,7 +429,7 @@ public class LJournal {
         try {
             byte[] name = accountName.getBytes("UTF-8");
             data.putByteAutoInc((byte) name.length);
-            data.appendAutoInc(name);
+            data.putBytesAutoInc(name);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -471,7 +467,7 @@ public class LJournal {
         try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -511,7 +507,7 @@ public class LJournal {
         try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -551,7 +547,7 @@ public class LJournal {
         try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -589,7 +585,7 @@ public class LJournal {
         try {
             byte[] rec = record.getBytes("UTF-8");
             data.putShortAutoInc((short) rec.length);
-            data.appendAutoInc(rec);
+            data.putBytesAutoInc(rec);
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }

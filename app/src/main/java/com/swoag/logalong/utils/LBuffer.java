@@ -7,9 +7,9 @@ import java.util.List;
 public class LBuffer {
     private static final String TAG = LBuffer.class.getSimpleName();
 
-    private int bytes;
-    private int offset;
-    private byte[] array;
+    private int bytes; // current valid bytes in buffer: when reading, bytes tracks number of bytes left in buffer
+    private int offset; // current read/write position
+    private byte[] array; // the backing array
 
     public LBuffer(int size) {
         array = new byte[size];
@@ -42,8 +42,8 @@ public class LBuffer {
     }
 
     public int append(byte[] buf) {
-        if (bytes + buf.length > array.length) {
-            LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes);
+        if (offset + bytes + buf.length > array.length) {
+            LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes + " offset: " + offset);
             return -1;
         }
         System.arraycopy(buf, 0, array, offset + bytes, buf.length);
@@ -53,36 +53,11 @@ public class LBuffer {
 
     public int append(LBuffer buf) {
         int len = buf.getLen();
-        if (bytes + len > array.length) {
-            LLog.e(TAG, "buffer overlow: " + len + "@" + bytes);
+        if (offset + bytes + len > array.length) {
+            LLog.e(TAG, "buffer overlow: " + len + "@" + bytes + " offset: " + offset);
             return -1;
         }
         System.arraycopy(buf.getBuf(), 0, array, offset + bytes, len);
-        bytes += len;
-        return 0;
-    }
-
-    //FIXME: bytes does not get updated for all put*AutoInc APIs. Thus Append ONLY
-    // works ONCE when 'bytes' == 0
-    public int appendAutoInc(byte[] buf) {
-        if (bytes + buf.length > array.length) {
-            LLog.e(TAG, "buffer overlow: " + buf.length + "@" + bytes);
-            return -1;
-        }
-        System.arraycopy(buf, 0, array, offset + bytes, buf.length);
-        offset += buf.length;
-        bytes += buf.length;
-        return 0;
-    }
-
-    public int appendAutoInc(LBuffer buf) {
-        int len = buf.getLen();
-        if (bytes + len > array.length) {
-            LLog.e(TAG, "buffer overlow: " + len + "@" + bytes);
-            return -1;
-        }
-        System.arraycopy(buf.getBuf(), 0, array, offset + bytes, len);
-        offset += len;
         bytes += len;
         return 0;
     }
