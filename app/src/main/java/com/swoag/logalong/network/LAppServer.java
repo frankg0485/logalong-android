@@ -176,8 +176,12 @@ public class LAppServer {
                     netLock.notifyAll();
 
                     try {
-                        netLock.wait();
+                        netLock.wait(5000);
                     } catch (Exception e) {
+                    }
+
+                    if (netThreadState != STATE_EXIT) {
+                        closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
                     }
                 }
             } else {
@@ -410,6 +414,25 @@ public class LAppServer {
     }
 
     public boolean UiPostJournal(int userId, int journalId, byte[] data) {
-        return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, data, scrambler);
+        short maxPayloadLen = LProtocol.PACKET_MAX_PAYLOAD_LEN - 2 - 4 - 4 - 2;
+        //DATA_LENGTH = PAYLOAD_LENGTH - REQUEST_CODE - USER_ID - JOURNAL_ID - DATA_LENGTH_FIELD
+        if (data.length <= maxPayloadLen) {
+            return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, (short)data.length, data, 0, (short)data.length, scrambler);
+        } else {
+            //jumbbo journal, split the transmit
+            int offset = 0;
+            short bytes = maxPayloadLen;
+            short length = (short)data.length;
+            int totalBytes = data.length;
+
+            do {
+                if (!LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, length, data, offset, bytes, scrambler)) return false;
+
+                offset += bytes;
+                totalBytes -= bytes;
+                length = bytes = (totalBytes > maxPayloadLen) ? maxPayloadLen : (short) totalBytes;
+            } while (bytes > 0);
+            return true;
+        }
     }
 }

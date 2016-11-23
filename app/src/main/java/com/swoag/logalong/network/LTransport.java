@@ -70,7 +70,7 @@ public class LTransport {
         return true;
     }
 
-    public static boolean send_rqst(LAppServer server, short rqst, int datai,int datai2, byte[] datab, int scrambler) {
+    public static boolean send_rqst(LAppServer server, short rqst, int datai,int datai2, short length, byte[] datab, int offset, short bytes, int scrambler) {
         LBuffer buf = server.getNetBuffer();
         if (buf == null) return false;
         buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
@@ -79,8 +79,8 @@ public class LTransport {
         buf.putIntAutoInc(datai);
         buf.putIntAutoInc(datai2);
 
-        buf.putShortAutoInc((short) (datab.length));
-        buf.putBytesAutoInc(datab);
+        buf.putShortAutoInc(length);
+        buf.putBytesAutoInc(datab, offset, bytes);
 
         int len = LProtocol.PACKET_PAYLOAD_LENGTH(buf.getBufOffset());
         buf.putShortAt((short) len, 2);

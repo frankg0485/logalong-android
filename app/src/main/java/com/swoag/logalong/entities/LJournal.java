@@ -32,7 +32,7 @@ import java.util.UUID;
 public class LJournal {
     private static final String TAG = LJournal.class.getSimpleName();
 
-    private static final int MAX_JOURNAL_DATA_BYTES = 1024;
+    private static final int MAX_JOURNAL_DATA_BYTES = 1024 * 64;
 
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
@@ -45,6 +45,8 @@ public class LJournal {
     private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
     private static final short JRQST_UPDATE_ACCOUNT_INFO = 0x0103;
     public static final short JRQST_SHARE_TRANSITION_RECORD = 0x0111;
+    public static final short JRQST_SHARE_TRANSITION_RECORDS = 0x0112;
+    public static final short JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST = 1024;
     public static final short JRQST_SHARE_TRANSITION_CATEGORY = 0x0113;
     public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0115;
     public static final short JRQST_SHARE_TRANSITION_TAG = 0x0117;
@@ -224,6 +226,37 @@ public class LJournal {
         }
         data.setLen(data.getBufOffset());
         post(userId);
+        return true;
+    }
+
+    private boolean shareItems(int userId, int accountGid, LTransaction[] items, int entries) {
+        int ii = 0;
+        while(ii < entries) {
+            data.clear();
+            data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORDS);
+            data.putIntAutoInc(accountGid);
+            data.putShortAutoInc((short)0);
+
+            short shared = 0;
+            while (ii < entries) {
+                try {
+                    if (data.getBufOffset() > MAX_JOURNAL_DATA_BYTES - 1024) break;
+
+                    byte[] rec = transactionItemString(items[ii]).getBytes("UTF-8");
+                    data.putShortAutoInc((short) rec.length);
+                    data.putBytesAutoInc(rec);
+
+                    shared++;
+                    ii++;
+                } catch (Exception e) {
+                    LLog.e(TAG, "unexpected error: " + e.getMessage());
+                    return false;
+                }
+            }
+            data.setLen(data.getBufOffset());
+            data.putShortAt(shared, 6);
+            post(userId);
+        }
         return true;
     }
 
@@ -1420,11 +1453,21 @@ public class LJournal {
             cursor.moveToFirst();
 
             LJournal journal = new LJournal();
-            LTransaction item = new LTransaction();
+            LTransaction[] items = new LTransaction[JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST];
+            int ii = 0;
+            int jj = 0;
             do {
-                DBTransaction.getValues(cursor, item);
-                journal.shareItem(userId, account.getGid(), item);
+                if (jj < JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) items[jj++] = new LTransaction();
+                DBTransaction.getValues(cursor, items[ii++]);
+                if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
+                    journal.shareItems(userId, account.getGid(), items, ii);
+                    ii = 0;
+                }
             } while (cursor.moveToNext());
+
+            if (ii != 0) {
+                journal.shareItems(userId, account.getGid(), items, ii);
+            }
         }
         if (cursor != null) cursor.close();
 

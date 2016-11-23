@@ -287,10 +287,10 @@ public class LBuffer {
 
     public void reset() {
         if (offset != 0) {
-            byte[] a = new byte[array.length];
-            System.arraycopy(array, offset, a, 0, bytes);
+            //byte[] a = new byte[array.length];
+            System.arraycopy(array, offset, array, 0, bytes);
             offset = 0;
-            array = a;
+            //array = a;
         }
     }
 

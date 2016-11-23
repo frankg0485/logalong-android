@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class LStorage {
     private static final String TAG = LStorage.class.getSimpleName();
-    private static final int MAX_RECORD_LENGTH = 1024;
+    private static final int MAX_RECORD_LENGTH = 1024 * 64;
     private static final int MAX_CACHE_LENGTH = (16 * 1024 * 1024);
     private static LStorage instance = null;
     private static int runningId = (new Random()).nextInt();
@@ -119,7 +119,7 @@ public class LStorage {
 
                 entry.id = file.readInt();
                 entry.userId = file.readInt();
-                short bytes = file.readShort();
+                int bytes = 0xffff & file.readShort();
                 entry.data = new byte[bytes];
                 file.read(entry.data, 0, bytes);
             } catch (Exception e) {
@@ -152,7 +152,7 @@ public class LStorage {
                 int entryId = file.readInt();
                 if (id == entryId) {
                     file.skipBytes(4); //int userId
-                    short bytes = file.readShort();
+                    int bytes = 0xffff & file.readShort();
                     file.skipBytes(bytes);
 
                     long newOffset = file.getFilePointer();

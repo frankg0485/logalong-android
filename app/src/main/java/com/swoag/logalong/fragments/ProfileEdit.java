@@ -271,6 +271,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                             displayErrorMsg(activity.getString(R.string.warning_get_share_user_time_out));
                             restoreOldProfile();
                             progressBar.setVisibility(View.GONE);
+                            MainService.stop(ProfileEdit.this.activity);
                         }
                     }.start();
 

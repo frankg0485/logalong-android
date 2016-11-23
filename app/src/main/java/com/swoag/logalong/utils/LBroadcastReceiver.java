@@ -34,10 +34,11 @@ public class LBroadcastReceiver {
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO = 102;
     public static final int ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE = 103;
     public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD = 113;
-    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY = 114;
-    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER = 115;
-    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG = 116;
-    public static final int ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY = 117;
+    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS = 114;
+    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY = 115;
+    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER = 116;
+    public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG = 117;
+    public static final int ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY = 118;
 
     public static final int ACTION_SERVER_BROADCAST_MSG_RECEIVED = 1000;
     public static final int ACTION_UNKNOWN_MSG = 9999;

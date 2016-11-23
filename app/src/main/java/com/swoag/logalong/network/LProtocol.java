@@ -57,6 +57,7 @@ public class LProtocol {
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
 
     public static final short RSPS_OK = (short) 0x0010;
+    public static final short RSPS_ACK = (short) 0x005a;
     public static final short RSPS_USER_NOT_FOUND = (short) 0xf000;
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
@@ -81,6 +82,7 @@ public class LProtocol {
 
     private static final short CMD_JRQST_MASK = (short)0x8000;
     private static final short CMD_SHARE_TRANSITION_RECORD = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORD);
+    private static final short CMD_SHARE_TRANSITION_RECORDS = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORDS);
     private static final short CMD_SHARE_TRANSITION_CATEGORY = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_CATEGORY);
     private static final short CMD_SHARE_TRANSITION_PAYER = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_PAYER);
     private static final short CMD_SHARE_TRANSITION_TAG = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_TAG);
@@ -145,7 +147,7 @@ public class LProtocol {
     private void handleAccountShareUpdate(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
         int accountGid = pkt.getIntAutoInc();
-        short numShareUsers = pkt.getShortAutoInc();
+        int numShareUsers = pkt.getShortAutoInc();
         int[] shareUsers = new int[numShareUsers];
         for (int ii = 0; ii < numShareUsers; ii++)
             shareUsers[ii] = pkt.getIntAutoInc();
@@ -154,7 +156,7 @@ public class LProtocol {
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("accountGid", accountGid);
-        rspsIntent.putExtra("numShareUsers", numShareUsers);
+        rspsIntent.putExtra("numShareUsers", (short)numShareUsers);
         rspsIntent.putExtra("shareUsers", shareUsers);
         LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " + shareUsers);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
@@ -167,7 +169,7 @@ public class LProtocol {
         byte nameLen = pkt.getByteAutoInc();
         String accountName = pkt.getStringAutoInc(nameLen);
 
-        short bytes = pkt.getShortAutoInc();
+        int bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
@@ -199,7 +201,7 @@ public class LProtocol {
     private void handleRecordShare(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
         int accountGid = pkt.getIntAutoInc();
-        short bytes = pkt.getShortAutoInc();
+        int bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
         //LLog.d(TAG, "record share request for account: " + accountGid + " record: " + record);
 
@@ -211,9 +213,59 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
+    private static final int RECORDS_SHARE_STATE_IDLE = 10;
+    private static final int RECORDS_SHARE_STATE_RECEIVING = 20;
+    private int recordsShareState = RECORDS_SHARE_STATE_IDLE;
+    private int expectedRecordNum;
+    private int expectedAccountGid;
+    private int expectedCacheId;
+    private int receivedRecordNum;
+
+    private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int accountGid = pkt.getIntAutoInc();
+        int num = pkt.getShortAutoInc();
+        int bytes = pkt.getShortAutoInc();
+        String record = pkt.getStringAutoInc(bytes);
+        LLog.d(TAG, "records share request for account: " + accountGid + " record: " + record);
+
+        switch (recordsShareState) {
+            case RECORDS_SHARE_STATE_IDLE:
+                expectedCacheId = cacheId;
+                expectedAccountGid = accountGid;
+                expectedRecordNum = num;
+                receivedRecordNum = 1;
+
+                recordsShareState = RECORDS_SHARE_STATE_RECEIVING;
+                break;
+
+            case RECORDS_SHARE_STATE_RECEIVING:
+                if (expectedAccountGid != accountGid || expectedRecordNum != num || cacheId != expectedCacheId) {
+                    LLog.w(TAG, "share records request out of sync, reset");
+                    expectedAccountGid = accountGid;
+                    expectedRecordNum = num;
+                    receivedRecordNum = 1;
+                } else {
+                    receivedRecordNum++;
+                }
+                break;
+        }
+
+        boolean done = receivedRecordNum == expectedRecordNum;
+        if (done) recordsShareState = RECORDS_SHARE_STATE_IDLE;
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("accountGid", accountGid);
+        rspsIntent.putExtra("record", record);
+        rspsIntent.putExtra("done", done);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
     private void handleCategoryPayerTagShare(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
-        short bytes = pkt.getShortAutoInc();
+        int bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
@@ -227,7 +279,7 @@ public class LProtocol {
         Intent rspsIntent;
 
         int utc = pkt.getIntAutoInc();
-        short bytes = pkt.getShortAutoInc();
+        int bytes = pkt.getShortAutoInc();
         String msg = pkt.getStringAutoInc(bytes);
         String str = msg.replaceAll("\\\\n", "\\\n");
         LPreferences.setServerMsg(str);
@@ -243,16 +295,25 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
+    private class PacketConsumptionStatus {
+        int bytesConsumed;
+        boolean isResponseCompleted;
+    };
+
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
-    private int consumePacket(LBuffer pkt, short requestCode, int scrambler) {
+    private PacketConsumptionStatus consumePacket(LBuffer pkt, short requestCode, int scrambler) {
+        PacketConsumptionStatus packetConsumptionStatus = new PacketConsumptionStatus();
+        packetConsumptionStatus.bytesConsumed = 0;
+        packetConsumptionStatus.isResponseCompleted = true;
+
         Intent rspsIntent;
         int origOffset = pkt.getBufOffset();
-        short total = (short)((pkt.getShortAt(origOffset + 2) & 0xfff) + 4); //mask out sequence bits
+        int total = (pkt.getShortAt(origOffset + 2) & 0xfff) + 4; //mask out sequence bits
         short rsps = pkt.getShortAt(origOffset + 4);
         int status;
 
         //partial packet received, ignore and wait for more data to come
-        if (total > pkt.getLen()) return 0;
+        if (total > pkt.getLen()) return packetConsumptionStatus;
 
         //verify CRC32
         crc32.reset();
@@ -260,7 +321,8 @@ public class LProtocol {
 
         if ((int)crc32.getValue() != pkt.getIntAt(pkt.getBufOffset() + total - 4)) {
             LLog.w(TAG, "drop corrupted packet: checksum mismatch");
-            return total; //discard packet
+            packetConsumptionStatus.bytesConsumed = total; //discard packet
+            return packetConsumptionStatus;
         }
 
         LTransport.scramble(pkt, scrambler);
@@ -269,7 +331,8 @@ public class LProtocol {
 
         if ((RSPS | requestCode) != rsps) {
             LLog.w(TAG, "protocol failed: unexpected response");
-            return -1;
+            packetConsumptionStatus.bytesConsumed = -1;
+            return packetConsumptionStatus;
         }
 
         switch (rsps) {
@@ -288,7 +351,7 @@ public class LProtocol {
             case RSPS | RQST_CREATE_USER:
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
-                    short bytes = pkt.getShortAutoInc();
+                    int bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
 
                     rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_CREATED));
@@ -321,7 +384,7 @@ public class LProtocol {
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
-                    short bytes = pkt.getShortAutoInc();
+                    int bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
                     bytes = pkt.getShortAutoInc();
                     String userFullName = pkt.getStringAutoInc(bytes);
@@ -334,17 +397,23 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_POST_JOURNAL:
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_JOURNAL_POSTED));
-                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                int userId = pkt.getIntAutoInc();
-                rspsIntent.putExtra("userId", userId);
-                int journalId = pkt.getIntAutoInc();
-                rspsIntent.putExtra("journalId", journalId);
-                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                if (status == RSPS_ACK) {
+                    //Do nothing
+                    LLog.d(TAG, "jumbo journal posting ack");
+                } else {
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_JOURNAL_POSTED));
+                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                    int userId = pkt.getIntAutoInc();
+                    rspsIntent.putExtra("userId", userId);
+                    int journalId = pkt.getIntAutoInc();
+                    rspsIntent.putExtra("journalId", journalId);
+                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                }
                 break;
 
             case RSPS | RQST_POLL:
-                if (status == RSPS_OK) {
+                packetConsumptionStatus.isResponseCompleted = (status == RSPS_OK || status == RSPS_ERROR);
+                if (status == RSPS_OK || status == RSPS_ACK) {
                     int cacheId = pkt.getIntAutoInc();
                     short cmd = pkt.getShortAutoInc();
                     switch (cmd) {
@@ -366,6 +435,10 @@ public class LProtocol {
 
                         case CMD_SHARE_TRANSITION_RECORD:
                             handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD, cacheId);
+                            break;
+
+                        case CMD_SHARE_TRANSITION_RECORDS:
+                            handleRecordsShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS, cacheId);
                             break;
 
                         case CMD_SHARE_TRANSITION_CATEGORY:
@@ -428,7 +501,9 @@ public class LProtocol {
         }
 
         pkt.setBufOffset(origOffset);
-        return total;
+
+        packetConsumptionStatus.bytesConsumed = total;
+        return packetConsumptionStatus;
     }
 
     private boolean alignPacket(LBuffer pkt) {
@@ -455,6 +530,7 @@ public class LProtocol {
 
         if (pktBuf.getLen() > 0) {
             //LLog.d(TAG, "packet pipe fragmented");
+            pktBuf.reset();
             pktBuf.append(buf);
             pkt = pktBuf;
         } else {
@@ -462,17 +538,21 @@ public class LProtocol {
         }
 
         while (alignPacket(pkt)) {
-            int bytes = consumePacket(pkt, requestCode, scrambler);
+            PacketConsumptionStatus status = consumePacket(pkt, requestCode, scrambler);
+            int bytes = status.bytesConsumed;
             if (bytes == -1) {
                 LLog.e(TAG, "packet parse error?");
                 break;
             } else if (bytes == 0) {
                 //packet not consumed
                 if (pkt != pktBuf) {
+                    pkt.reset();
+                    pktBuf.reset();
                     pktBuf.append(pkt);
                 } else {
                     //this must be the case where the data is only partially received.
-                    //quit the loop
+                    //reset packet then quit the loop
+                    pkt.reset();
                 }
                 return RESPONSE_PARSE_RESULT_MORE2COME;
             } else {
@@ -482,7 +562,7 @@ public class LProtocol {
 
                 //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt.getBufOffset());
                 //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));
-                return RESPONSE_PARSE_RESULT_DONE;
+                if (status.isResponseCompleted) return RESPONSE_PARSE_RESULT_DONE;
             }
         }
         //unexpected: unable to align packet

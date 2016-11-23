@@ -125,6 +125,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD,
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG,
@@ -320,7 +321,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
-                short numShareUsers = intent.getShortExtra("numShareUsers", (short)0);
+                int numShareUsers = intent.getShortExtra("numShareUsers", (short)0);
                 int[] shareUSers = intent.getIntArrayExtra("shareUsers");
 
                 LLog.d(TAG, "requested to update account share for: " + accountGid);
@@ -380,6 +381,17 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountGid = intent.getIntExtra("accountGid", 0);
                 record = intent.getStringExtra("record");
                 server.UiPollAck(cacheId);
+                LJournal.updateItemFromReceivedRecord(accountGid, record);
+                break;
+
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                accountGid = intent.getIntExtra("accountGid", 0);
+                record = intent.getStringExtra("record");
+                boolean done = intent.getBooleanExtra("done", false);
+                if (done) {
+                    server.UiPollAck(cacheId);
+                }
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;
 
