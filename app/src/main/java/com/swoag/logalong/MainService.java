@@ -35,8 +35,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private Runnable pollRunnable;
     private Runnable journalPostRunnable;
     private Runnable serviceShutdownRunnable;
-    static final int NETWORK_POLLING_MS = 5000;
-    static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 30000;
+
+    //default to active polling, if polling returned IDLE, switch to IDLE_POLLING interval
+    //as soon as any valid command found, go back to active polling.
+    static final int NETWORK_IDLE_POLLING_MS = 5000;
+    static final int NETWORK_ACTIVE_POLLING_MS = 15 * 60000; //so each polled command has a 15-min window to respond
+    static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 15 * 60000;
+    static final int NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS = 30000;
     static final int SERVICE_SHUTDOWN_MS = 15000;
     private boolean requestToStop;
     private int pollingCount;
@@ -92,7 +97,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 } else {
                     LLog.d(TAG, "heart beat polling");
                     server.UiPoll();
-                    pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+                    //default to active polling
+                    pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 }
             }
         };
@@ -238,7 +244,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     server.UiUpdateUserProfile();
                     LLog.d(TAG, "user logged in");
                     //journal posting and polling start only upon successful login
+                    pollHandler.removeCallbacks(journalPostRunnable);
                     pollHandler.post(journalPostRunnable);
+                    pollHandler.removeCallbacks(pollRunnable);
                     pollHandler.postDelayed(pollRunnable, 1000);
                 } else {
                     LLog.e(TAG, "unable to login: " + LPreferences.getUserId() + " name: " + LPreferences.getUserName());
@@ -256,6 +264,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_POLL_IDLE:
                 if (LFragmentActivity.upRunning) {
                     server.UiUtcSync();
+                    pollHandler.removeCallbacks(pollRunnable);
+                    pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 } else if (!requestToStop){
                     requestToStop = true;
                     pollHandler.removeCallbacks(serviceShutdownRunnable);
@@ -267,7 +277,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 requestToStop = false;
                 pollHandler.removeCallbacks(serviceShutdownRunnable);
                 pollHandler.removeCallbacks(pollRunnable);
-                pollHandler.postDelayed(pollRunnable, NETWORK_POLLING_MS);
+                pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 LLog.d(TAG, "polling after being acked");
                 server.UiPoll();
                 break;
@@ -390,6 +400,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 record = intent.getStringExtra("record");
                 boolean done = intent.getBooleanExtra("done", false);
                 if (done) {
+                    LLog.d(TAG, "records receiving from " + accountGid + " DONE");
                     server.UiPollAck(cacheId);
                 }
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
@@ -447,6 +458,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     {
                         // upon post error, do not flush immediately, instead let it timeout and retry
                         // this is to prevent flooding network layer when something goes wrong.
+                        pollHandler.removeCallbacks(journalPostRunnable);
+                        pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS);
                         LLog.w(TAG, "unexpected journal post error, to: " + userId + " reture code: " + ret);
                         break;
                     }

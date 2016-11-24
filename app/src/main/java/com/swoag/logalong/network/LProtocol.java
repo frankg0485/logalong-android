@@ -227,7 +227,7 @@ public class LProtocol {
         int num = pkt.getShortAutoInc();
         int bytes = pkt.getShortAutoInc();
         String record = pkt.getStringAutoInc(bytes);
-        LLog.d(TAG, "records share request for account: " + accountGid + " record: " + record);
+        //LLog.d(TAG, "records share request for account: " + accountGid + " record: " + record);
 
         switch (recordsShareState) {
             case RECORDS_SHARE_STATE_IDLE:

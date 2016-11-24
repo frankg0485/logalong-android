@@ -120,6 +120,9 @@ public class LStorage {
                 entry.id = file.readInt();
                 entry.userId = file.readInt();
                 int bytes = 0xffff & file.readShort();
+                if (bytes <= 0) {
+                    LLog.e(TAG, "unexpected: negative bytes: " + bytes);
+                }
                 entry.data = new byte[bytes];
                 file.read(entry.data, 0, bytes);
             } catch (Exception e) {
@@ -153,6 +156,9 @@ public class LStorage {
                 if (id == entryId) {
                     file.skipBytes(4); //int userId
                     int bytes = 0xffff & file.readShort();
+                    if (bytes <= 0) {
+                        LLog.e(TAG, "unexpected: negative bytes: " + bytes);
+                    }
                     file.skipBytes(bytes);
 
                     long newOffset = file.getFilePointer();

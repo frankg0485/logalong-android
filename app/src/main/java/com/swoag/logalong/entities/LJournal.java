@@ -880,7 +880,7 @@ public class LJournal {
         LTransaction item = DBTransaction.getByRid(receivedItem.getRid());
         if (item != null) {
             int conflict = itemHasConflict(item, oldRecord);
-            LLog.d(TAG, "update item conflict? " + conflict);
+            //LLog.d(TAG, "update item conflict? " + conflict);
             if (conflict == 0) {
                 if (oldRecord.oldState) item.setState(receivedItem.getState());
                 if (oldRecord.oldAmount) item.setValue(receivedItem.getValue());
@@ -895,7 +895,7 @@ public class LJournal {
                 if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
                     item.setTimeStampLast(receivedItem.getTimeStampLast());
 
-                LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
+                //LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
                 DBTransaction.update(item);
             } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
