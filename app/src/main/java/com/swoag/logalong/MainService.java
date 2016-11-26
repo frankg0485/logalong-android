@@ -43,7 +43,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 15 * 60000;
     static final int NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS = 30000;
     static final int SERVICE_SHUTDOWN_MS = 15000;
-    private boolean requestToStop;
     private int pollingCount;
     private int logInAttempts;
     private BroadcastReceiver broadcastReceiver;
@@ -115,7 +114,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             @Override
             public void run() {
                 LLog.d(TAG, "shutdown timeout: shutting down service itself");
-                requestToStop = false;
                 stopSelf();
             }
         };
@@ -172,7 +170,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case CMD_START:
                     pollingCount = 0;
                     pollHandler.removeCallbacks(serviceShutdownRunnable);
-                    requestToStop = false;
                     logInAttempts = 0;
 
                     LLog.d(TAG, "starting service, already connected: " + server.UiIsConnected());
@@ -187,6 +184,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.d(TAG, "requested to stop service, connected: " + server.UiIsConnected());
                     if (server.UiIsConnected()) {
                         LLog.d(TAG, "post service shutdown runnable");
+                        pollHandler.removeCallbacks(serviceShutdownRunnable);
                         pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
                         stopSelf();
@@ -212,6 +210,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             return;
         }
 
+        pollHandler.removeCallbacks(serviceShutdownRunnable);
         //default polling policy: active, with longer period
         pollHandler.removeCallbacks(pollRunnable);
         pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
@@ -276,18 +275,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     server.UiUtcSync();
                     pollHandler.removeCallbacks(pollRunnable);
                     pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                } else if (!requestToStop){
+                } else {
                     pollHandler.removeCallbacks(pollRunnable); //disable polling
-
-                    requestToStop = true;
-                    pollHandler.removeCallbacks(serviceShutdownRunnable);
                     pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                 }
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_ACKED:
-                requestToStop = false;
-                pollHandler.removeCallbacks(serviceShutdownRunnable);
                 LLog.d(TAG, "polling after being acked");
                 server.UiPoll();
                 break;
@@ -453,8 +447,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
-                requestToStop = false;
-                pollHandler.removeCallbacks(serviceShutdownRunnable);
                 pollHandler.removeCallbacks(journalPostRunnable);
                 pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
                 int journalId = intent.getIntExtra("journalId", 0);
