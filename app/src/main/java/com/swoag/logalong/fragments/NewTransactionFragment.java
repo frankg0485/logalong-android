@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -31,6 +32,7 @@ import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTransaction;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -56,6 +58,19 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private MyCursorAdapter adapter;
     private LAllBalances allBalances;
     private MyClickListener myClickListener;
+
+    private Cursor lastLoadedData = null;
+    private Handler handler = new Handler();
+    private long dataRunnableDelay = 1;
+    private Runnable dataRunnable = new Runnable() {
+        @Override
+        public void run() {
+            allBalances = new LAllBalances(lastLoadedData);
+            lastLoadedData = null;
+            showBalance(balanceTV, 0);
+            adapter.notifyDataSetChanged();
+        }
+    };
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -86,9 +101,18 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case LOADER_BALANCES:
-                allBalances = new LAllBalances(data);
-                showBalance(balanceTV, 0);
-                adapter.notifyDataSetChanged();
+                if (dataRunnableDelay > 0) {
+                    handler.removeCallbacks(dataRunnable);
+                    lastLoadedData = data;
+                    handler.postDelayed(dataRunnable, dataRunnableDelay);
+                } else {
+                    lastLoadedData = null;
+                    allBalances = new LAllBalances(data);
+                    showBalance(balanceTV, 0);
+                    adapter.notifyDataSetChanged();
+
+                    dataRunnableDelay = 3000;
+                }
                 break;
             case LOADER_ACCOUNTS:
                 adapter.swapCursor(data);
@@ -113,6 +137,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
         entryView = rootView.findViewById(R.id.entryView);
+        dataRunnableDelay = 0;
 
         selectTypeV = entryView.findViewById(R.id.selectType);
         selectTypeV.setVisibility(View.GONE);
@@ -231,11 +256,13 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     }
                 }
 
+                dataRunnableDelay = 0;
                 DBTransaction.add(getActivity(), item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                LLog.w(TAG, "unexpected, should never come here");
                 AppPersistency.transactionChanged = changed;
                 break;
         }

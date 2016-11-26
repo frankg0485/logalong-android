@@ -165,7 +165,7 @@ public class ChartActivity extends LFragmentActivity implements
                 } else {
                     myAsyncTask.cancel(true);
                     dbBackgroundActivities = true;
-                    if (lastLoadedData != null) lastLoadedData.close();
+                    //if (lastLoadedData != null) lastLoadedData.close();
 
                     progressBar.setVisibility(View.VISIBLE);
                     lastLoadedData = data;
@@ -780,7 +780,7 @@ public class ChartActivity extends LFragmentActivity implements
                     AppPersistency.viewTransactionYear = year = calendar.get(Calendar.YEAR);
                 }
 
-                data.close();
+                //data.close();
                 return true;
             } catch (Exception e) {
                 return false;
