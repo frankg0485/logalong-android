@@ -220,8 +220,10 @@ public class LProtocol {
     private int expectedAccountGid;
     private int expectedCacheId;
     private int receivedRecordNum;
-
-    private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId) {
+    public static final int RECORDS_RECEIVED_FULL = 10;
+    public static final int RECORDS_RECEIVED_PART = 20;
+    public static final int RECORDS_RECEIVING = 30;
+    private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId, boolean lastPacket) {
         Intent rspsIntent;
         int accountGid = pkt.getIntAutoInc();
         int num = pkt.getShortAutoInc();
@@ -235,7 +237,7 @@ public class LProtocol {
                 expectedAccountGid = accountGid;
                 expectedRecordNum = num;
                 receivedRecordNum = 1;
-
+                LLog.d(TAG, "receiving cache: " + cacheId + " num: " + num);
                 recordsShareState = RECORDS_SHARE_STATE_RECEIVING;
                 break;
 
@@ -247,19 +249,29 @@ public class LProtocol {
                     receivedRecordNum = 1;
                 } else {
                     receivedRecordNum++;
+                    LLog.d(TAG, "received cache: " + cacheId + " num: " + receivedRecordNum + " of: " + expectedRecordNum);
                 }
                 break;
         }
 
         boolean done = receivedRecordNum == expectedRecordNum;
-        if (done) recordsShareState = RECORDS_SHARE_STATE_IDLE;
+        if (done || lastPacket) recordsShareState = RECORDS_SHARE_STATE_IDLE;
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("accountGid", accountGid);
         rspsIntent.putExtra("record", record);
-        rspsIntent.putExtra("done", done);
+        if (lastPacket) {
+            rspsIntent.putExtra("done", done ? RECORDS_RECEIVED_FULL : RECORDS_RECEIVED_PART);
+        } else
+        {
+            if (done)
+            {
+                LLog.e(TAG, "unexpected: records broken");
+            }
+            rspsIntent.putExtra("done", RECORDS_RECEIVING);
+        }
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -438,7 +450,7 @@ public class LProtocol {
                             break;
 
                         case CMD_SHARE_TRANSITION_RECORDS:
-                            handleRecordsShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS, cacheId);
+                            handleRecordsShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS, cacheId, status == RSPS_OK);
                             break;
 
                         case CMD_SHARE_TRANSITION_CATEGORY:

@@ -212,8 +212,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             return;
         }
 
+        //default polling policy: active, with longer period
+        pollHandler.removeCallbacks(pollRunnable);
+        pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
+
         switch (action) {
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
+                pollHandler.removeCallbacks(pollRunnable); //disable polling
+
                 LLog.d(TAG, "network connected");
                 server.UiInitScrambler();
                 if (TextUtils.isEmpty(LPreferences.getUserName())) {
@@ -227,6 +233,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_USER_CREATED:
+                pollHandler.removeCallbacks(pollRunnable); //disable polling
+
                 int userId = intent.getIntExtra("id", 0);
                 String userName = intent.getStringExtra("name");
                 LLog.d(TAG, "user created, id: " + userId + " name: " + userName);
@@ -238,6 +246,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_LOGIN:
+                pollHandler.removeCallbacks(pollRunnable); //disable polling
+
                 if (ret == LProtocol.RSPS_OK) {
                     logInAttempts = 0;
                     server.UiUtcSync();
@@ -247,7 +257,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.removeCallbacks(journalPostRunnable);
                     pollHandler.post(journalPostRunnable);
                     pollHandler.removeCallbacks(pollRunnable);
-                    pollHandler.postDelayed(pollRunnable, 1000);
+                    pollHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
                 } else {
                     LLog.e(TAG, "unable to login: " + LPreferences.getUserId() + " name: " + LPreferences.getUserName());
                     if (logInAttempts++ > 3) {
@@ -267,6 +277,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.removeCallbacks(pollRunnable);
                     pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 } else if (!requestToStop){
+                    pollHandler.removeCallbacks(pollRunnable); //disable polling
+
                     requestToStop = true;
                     pollHandler.removeCallbacks(serviceShutdownRunnable);
                     pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
@@ -276,8 +288,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             case LBroadcastReceiver.ACTION_POLL_ACKED:
                 requestToStop = false;
                 pollHandler.removeCallbacks(serviceShutdownRunnable);
-                pollHandler.removeCallbacks(pollRunnable);
-                pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 LLog.d(TAG, "polling after being acked");
                 server.UiPoll();
                 break;
@@ -398,10 +408,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
                 record = intent.getStringExtra("record");
-                boolean done = intent.getBooleanExtra("done", false);
-                if (done) {
-                    LLog.d(TAG, "records receiving from " + accountGid + " DONE");
-                    server.UiPollAck(cacheId);
+                int done = intent.getIntExtra("done", LProtocol.RECORDS_RECEIVING);
+                switch (done) {
+                    case LProtocol.RECORDS_RECEIVED_FULL:
+                        LLog.d(TAG, "records receiving from " + accountGid + " DONE");
+                        server.UiPollAck(cacheId);
+                        break;
+                    case LProtocol.RECORDS_RECEIVED_PART:
+                        //records not received properly, poll again
+                        server.UiPoll();
+                        break;
+                    default:
+                        break;
                 }
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;
@@ -464,6 +482,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         break;
                     }
                 }
+
+                pollHandler.removeCallbacks(pollRunnable);
+                pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 break;
 
             case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
