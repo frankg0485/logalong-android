@@ -108,7 +108,7 @@ public class LJournal {
             } else {
                 lastFlushId = entry.id;
                 lastFlushMs = System.currentTimeMillis();
-                LLog.d(TAG, "post journal: " + entry.id);
+                //LLog.d(TAG, "post journal: " + entry.id);
 
                 LAppServer.getInstance().UiPostJournal(entry.userId, entry.id, entry.data);
             }
@@ -914,7 +914,7 @@ public class LJournal {
             } else if (item.getTimeStampLast() == receivedItem.getTimeStampLast()) {
                 if (item.isPrimaryAccountEqual(receivedItem))
                 {
-                    LLog.d(TAG, "no diff detected on received item");
+                    //LLog.d(TAG, "no diff detected on received item");
                     return;
                 } else
                 {
@@ -1477,7 +1477,8 @@ public class LJournal {
 
         Cursor cursor = DBTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
+            //cursor.moveToFirst();
+            cursor.moveToLast();
 
             LJournal journal = new LJournal();
             LTransaction[] items = new LTransaction[JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST];
@@ -1486,11 +1487,17 @@ public class LJournal {
             do {
                 if (jj < JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) items[jj++] = new LTransaction();
                 DBTransaction.getValues(cursor, items[ii++]);
-                if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
-                    journal.shareItems(userId, account.getGid(), items, ii);
-                    ii = 0;
+
+                if (false) { //DISABLED: this does not seem to speed up significantly and does not show active progress
+                    if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
+                        journal.shareItems(userId, account.getGid(), items, ii);
+                        ii = 0;
+                    }
+                } else {
+                    journal.shareItem(userId, account.getGid(), items[--ii]);
                 }
-            } while (cursor.moveToNext());
+            } //while (cursor.moveToNext());
+            while (cursor.moveToPrevious());
 
             if (ii != 0) {
                 journal.shareItems(userId, account.getGid(), items, ii);

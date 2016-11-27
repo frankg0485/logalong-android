@@ -62,6 +62,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private Cursor lastLoadedData = null;
     private Handler handler = new Handler();
     private long dataRunnableDelay = 1;
+    private int dataRunnableDelayCount = 0;
     private Runnable dataRunnable = new Runnable() {
         @Override
         public void run() {
@@ -111,7 +112,10 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     showBalance(balanceTV, 0);
                     adapter.notifyDataSetChanged();
 
-                    dataRunnableDelay = 3000;
+                    if (dataRunnableDelayCount++ == 50) {
+                        dataRunnableDelayCount = 0;
+                    } else dataRunnableDelay = 3000;
+
                 }
                 break;
             case LOADER_ACCOUNTS:

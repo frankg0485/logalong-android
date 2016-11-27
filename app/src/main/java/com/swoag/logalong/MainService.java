@@ -282,7 +282,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_ACKED:
-                LLog.d(TAG, "polling after being acked");
+                //LLog.d(TAG, "polling after being acked");
                 server.UiPoll();
                 break;
 
