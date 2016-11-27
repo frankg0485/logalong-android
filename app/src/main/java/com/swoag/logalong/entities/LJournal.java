@@ -895,9 +895,9 @@ public class LJournal {
                 if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
                     item.setTimeStampLast(receivedItem.getTimeStampLast());
 
-                //LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
-                DBTransaction.update(item);
-            } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
+                LLog.d(TAG, "no conflict: update item, amount: " + item.getValue());
+                //DBTransaction.update(item);
+            } else if (item.getTimeStampLast() < receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
                 item.setValue(receivedItem.getValue());
                 item.setType(receivedItem.getType());
@@ -910,7 +910,28 @@ public class LJournal {
                 item.setBy(receivedItem.getBy());
 
                 LLog.d(TAG, "override: update item, amount: " + item.getValue());
-                DBTransaction.update(item);
+                //DBTransaction.update(item);
+            } else if (item.getTimeStampLast() == receivedItem.getTimeStampLast()) {
+                if (item.isPrimaryAccountEqual(receivedItem))
+                {
+                    LLog.d(TAG, "no diff detected on received item");
+                    return;
+                } else
+                {
+                    item.setState(receivedItem.getState());
+                    item.setValue(receivedItem.getValue());
+                    item.setType(receivedItem.getType());
+                    item.setCategory(receivedItem.getCategory());
+                    item.setVendor(receivedItem.getVendor());
+                    item.setTag(receivedItem.getTag());
+                    item.setNote(receivedItem.getNote());
+                    item.setTimeStamp(receivedItem.getTimeStamp());
+                    item.setTimeStampLast(receivedItem.getTimeStampLast());
+                    item.setBy(receivedItem.getBy());
+
+                    LLog.d(TAG, "override: update item with same timestamp, amount: " + item.getValue());
+                    //DBTransaction.update(item);
+                }
             } else {
                 LLog.w(TAG, "account: " + account.getName() + " received conflict record amount: " + item.getValue());
                 return;
@@ -932,6 +953,7 @@ public class LJournal {
             item = DBTransaction.getByRid(receivedItem.getRid());
         }
 
+        boolean updated = false;
         //patch up transfer record
         String rid = "";
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
@@ -946,7 +968,12 @@ public class LJournal {
                 item2.setAccount2(item.getAccount());
                 DBTransaction.update(item);
                 DBTransaction.update(item2);
+                updated = true;
             }
+        }
+
+        if (!updated) {
+            DBTransaction.update(item);
         }
     }
 

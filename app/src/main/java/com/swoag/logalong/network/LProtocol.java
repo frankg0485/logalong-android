@@ -237,7 +237,7 @@ public class LProtocol {
                 expectedAccountGid = accountGid;
                 expectedRecordNum = num;
                 receivedRecordNum = 1;
-                LLog.d(TAG, "receiving cache: " + cacheId + " num: " + num);
+                //LLog.d(TAG, "receiving cache: " + cacheId + " num: " + num);
                 recordsShareState = RECORDS_SHARE_STATE_RECEIVING;
                 break;
 
@@ -249,7 +249,7 @@ public class LProtocol {
                     receivedRecordNum = 1;
                 } else {
                     receivedRecordNum++;
-                    LLog.d(TAG, "received cache: " + cacheId + " num: " + receivedRecordNum + " of: " + expectedRecordNum);
+                    //LLog.d(TAG, "received cache: " + cacheId + " num: " + receivedRecordNum + " of: " + expectedRecordNum);
                 }
                 break;
         }

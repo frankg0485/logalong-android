@@ -98,6 +98,19 @@ public class LTransaction {
                 this.note.contentEquals(item.note));
     }
 
+    public boolean isPrimaryAccountEqual(LTransaction item) {
+        return (this.timeStamp == item.timeStamp &&
+                this.value == item.value &&
+                this.type == item.type &&
+                this.by == item.by &&
+                this.category == item.category &&
+                this.account == item.account &&
+                /*this.account2 == item.account2 &&*/
+                this.tag == item.tag &&
+                this.vendor == item.vendor &&
+                this.note.contentEquals(item.note));
+    }
+
     public LTransaction(double value, int type, long category, long vendor, long tag,
                         long account, long account2, long timeStamp, String note) {
         init();
