@@ -202,6 +202,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         return START_NOT_STICKY;
     }
 
+    private int journalPostErrorCount = 0;
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         //on Samsung phone, receiver may still get called when service is destroyed!!
@@ -466,11 +467,19 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     }
                     default:
                     {
-                        // upon post error, do not flush immediately, instead let it timeout and retry
-                        // this is to prevent flooding network layer when something goes wrong.
-                        pollHandler.removeCallbacks(journalPostRunnable);
-                        pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS);
-                        LLog.w(TAG, "unexpected journal post error, to: " + userId + " reture code: " + ret);
+                        // try a few more times, then bail, so not to lock out polling altogether
+                        if (journalPostErrorCount++ < 3) {
+                            // upon post error, do not flush immediately, instead let it timeout and retry
+                            // this is to prevent flooding network layer when something goes wrong.
+                            pollHandler.removeCallbacks(journalPostRunnable);
+                            pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS);
+                            LLog.w(TAG, "unexpected journal post error, to: " + userId + " reture code: " + ret);
+                        } else {
+                            LLog.e(TAG, "fatal journal post error, journal skipped, to user: " + userId);
+                            LJournal.deleteById(journalId);
+                            LJournal.flush();
+                            journalPostErrorCount = 0;
+                        }
                         break;
                     }
                 }

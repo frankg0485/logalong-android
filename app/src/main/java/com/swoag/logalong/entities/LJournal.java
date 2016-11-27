@@ -46,7 +46,7 @@ public class LJournal {
     private static final short JRQST_UPDATE_ACCOUNT_INFO = 0x0103;
     public static final short JRQST_SHARE_TRANSITION_RECORD = 0x0111;
     public static final short JRQST_SHARE_TRANSITION_RECORDS = 0x0112;
-    public static final short JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST = 1024;
+    public static final short JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST = 32 /*1024*/;
     public static final short JRQST_SHARE_TRANSITION_CATEGORY = 0x0113;
     public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0115;
     public static final short JRQST_SHARE_TRANSITION_TAG = 0x0117;
@@ -1488,14 +1488,14 @@ public class LJournal {
                 if (jj < JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) items[jj++] = new LTransaction();
                 DBTransaction.getValues(cursor, items[ii++]);
 
-                if (false) { //DISABLED: this does not seem to speed up significantly and does not show active progress
+                //if (true) { //DISABLED: this does not seem to speed up significantly and does not show active progress
                     if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
                         journal.shareItems(userId, account.getGid(), items, ii);
                         ii = 0;
                     }
-                } else {
-                    journal.shareItem(userId, account.getGid(), items[--ii]);
-                }
+                //} else {
+                //    journal.shareItem(userId, account.getGid(), items[--ii]);
+                //}
             } //while (cursor.moveToNext());
             while (cursor.moveToPrevious());
 
