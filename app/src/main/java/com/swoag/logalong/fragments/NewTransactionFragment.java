@@ -112,7 +112,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     showBalance(balanceTV, 0);
                     adapter.notifyDataSetChanged();
 
-                    if (dataRunnableDelayCount++ == LJournal.JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
+                    if (dataRunnableDelayCount++ >= LJournal.JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST / 2) {
                         dataRunnableDelayCount = 0;
                     } else dataRunnableDelay = 3000;
 

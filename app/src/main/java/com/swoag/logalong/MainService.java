@@ -346,8 +346,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 } else {
                     LLog.d(TAG, "requested to update account share for: " + account.getName());
                     HashSet<Integer> newShareUsers = new HashSet<Integer>();
-                    ArrayList<Integer> origIds = account.getShareIds();
-                    ArrayList<Integer> origStates = account.getShareStates();
+                    ArrayList<Integer> origIds = new ArrayList<Integer>(account.getShareIds());
+                    ArrayList<Integer> origStates = new ArrayList<Integer>(account.getShareStates());
 
                     account.removeAllShareUsers();
                     int  myUserId = LPreferences.getUserId();
