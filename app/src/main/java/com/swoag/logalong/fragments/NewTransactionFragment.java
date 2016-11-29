@@ -15,7 +15,6 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -28,21 +27,19 @@ import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
-import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBLoaderHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
-import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 
 import java.util.Calendar;
-import java.util.UUID;
 
 public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>, DBLoaderHelper.DBLoaderHelperCallbacks {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
     private static final int LOADER_BALANCES = 10;
     private static final int LOADER_ACCOUNTS = 20;
@@ -72,6 +69,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
             adapter.notifyDataSetChanged();
         }
     };
+
+    private DBLoaderHelper dbLoaderHelper;
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -166,6 +165,9 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
 
         getLoaderManager().restartLoader(LOADER_BALANCES, null, this);
         getLoaderManager().restartLoader(LOADER_ACCOUNTS, null, this);
+
+        dbLoaderHelper = new DBLoaderHelper(this.getActivity(), this);
+        dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_SCAN_ACCOUNT_BALANCES);
         return rootView;
     }
 

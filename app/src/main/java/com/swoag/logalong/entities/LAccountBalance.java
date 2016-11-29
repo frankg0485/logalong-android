@@ -1,19 +1,79 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.text.TextUtils;
-
-import com.swoag.logalong.utils.DBAccess;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.TreeMap;
 
 public class LAccountBalance {
     private TreeMap<Integer, double[]> balances;
     private long accountId;
     private double latestBalance;
+
+    private long id;
+    private int state;
+    private int year;
+    private String balance;
+    private long lastChangeTimestamp;
+
+    public LAccountBalance(long id, int year, String balance, long lastChangeTimestamp) {
+        this.accountId = id;
+        this.year = year;
+        this.balance = balance;
+        this.lastChangeTimestamp = lastChangeTimestamp;
+
+        balances = new TreeMap<Integer, double[]>();
+        setYearBalance(year, balance);
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public long getAccountId() {
+        return accountId;
+    }
+
+    public String getBalance() {
+        return balance;
+    }
+
+    public long getLastChangeTimestamp() {
+        return lastChangeTimestamp;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setAccountId(long accountId) {
+        this.accountId = accountId;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public void setBalance(String balance) {
+        this.balance = balance;
+    }
+
+    public void setLastChangeTimestamp(long lastChangeTimestamp) {
+        this.lastChangeTimestamp = lastChangeTimestamp;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public LAccountBalance() {
+    }
 
     public LAccountBalance(long id, int year, String balance) {
         this.accountId = id;

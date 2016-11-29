@@ -263,7 +263,7 @@ public class ChartActivity extends LFragmentActivity implements
         if (null == chartData) {
             loaderFinished = false;
             progressBar.setVisibility(View.VISIBLE);
-            dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_ALL_SUMMARY);
+            dbLoaderHelper.restartWithRangeAutoSet(getSupportLoaderManager(), DBLoaderHelper.LOADER_ALL_SUMMARY);
         } else {
             pieChartDisplayed = barChartDisplayed = false;
             showChart(chartData);

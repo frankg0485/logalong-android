@@ -6,21 +6,29 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
+import android.view.View;
+
+import com.swoag.logalong.entities.LTransaction;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeMap;
 
 public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = DBLoaderHelper.class.getSimpleName();
 
     private static final  int LOADER_INIT_RANGE = 1;
     public static final int LOADER_ALL_SUMMARY = 20;
+    public static final int LOADER_SCAN_ACCOUNT_BALANCES = 30;
 
     private Context context;
     private DBLoaderHelperCallbacks callbacks;
@@ -42,10 +50,16 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         this.callbacks = callbacks;
     }
 
-    public boolean restart(LoaderManager manager, int id) {
+    public boolean restartWithRangeAutoSet(LoaderManager manager, int id) {
         this.manager = manager;
         manager.restartLoader(LOADER_INIT_RANGE, null, this);
         loadId = id;
+        return true;
+    }
+
+    public boolean restart(LoaderManager manager, int id) {
+        this.manager = manager;
+        manager.restartLoader(id, null, this);
         return true;
     }
 
@@ -143,6 +157,19 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         String[] sa, dsa;
         Uri uri;
 
+        if (id == LOADER_SCAN_ACCOUNT_BALANCES) {
+            String projection = "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
+                    + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
+                    + "b." + DBHelper.TABLE_COLUMN_NAME;
+            return new CursorLoader(
+                    context,
+                    DBProvider.URI_TRANSACTIONS_ACCOUNT,
+                    new String[]{projection},
+                    "a." + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE},
+                    DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
+        }
+
         resetSelections();
 
         switch (id) {
@@ -233,6 +260,11 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (LOADER_SCAN_ACCOUNT_BALANCES == loader.getId()) {
+            new AsyncScanBalances().execute(data);
+            return;
+        }
+
         if (LOADER_INIT_RANGE == loader.getId()) {
             Calendar calendar = Calendar.getInstance();
 
@@ -264,5 +296,40 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         callbacks.onLoaderReset(loader);
+    }
+
+    private class AsyncScanBalances extends AsyncTask<Cursor, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Cursor... params) {
+            Cursor data = params[0];
+            if (data == null) return false;
+
+            try {
+                if (isCancelled()) return false;
+                else data.moveToFirst();
+
+                do {
+                    String accountName = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
+                    String y = accountName + "x";
+                } while (!isCancelled() && data.moveToNext());
+
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onCancelled(Boolean result) {
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+        }
+
+        @Override
+        protected void onPreExecute() {
+        }
     }
 }
