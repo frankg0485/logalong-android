@@ -5,25 +5,34 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBAccountBalance;
+import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashSet;
 
-public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener {
+public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener, Loader.OnLoadCompleteListener {
     private static final String TAG = MainService.class.getSimpleName();
 
     public static final int CMD_START = 10;
@@ -47,6 +56,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private int logInAttempts;
     private BroadcastReceiver broadcastReceiver;
     private LAppServer server;
+
+
+    static final int UPDATE_ACCOUNT_BALANCE_DELAY_MS = 3000;
+    private Runnable updateAccountBalanceRunnable;
+    private static final int LOADER_ID_UPDATE_BALANCE = 10;
+    private CursorLoader cursorLoader;
+    private Cursor lastLoadedData;
+    AsyncScanBalances asyncScanBalances;
+
 
     public static void start(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
@@ -141,6 +159,46 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_JOURNAL_POSTED,
                 LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
                 LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE}, this);
+
+
+        updateAccountBalanceRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (asyncScanBalances.getStatus() == AsyncTask.Status.FINISHED)
+                {
+                    asyncScanBalances = new AsyncScanBalances();
+                    asyncScanBalances.execute(lastLoadedData);
+                } else {
+                    pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+                }
+            }
+        };
+
+        asyncScanBalances = new AsyncScanBalances();
+        String projection = "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
+                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
+                + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
+                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT;
+        cursorLoader = new CursorLoader(
+                this,
+                DBProvider.URI_TRANSACTIONS_ACCOUNT,
+                new String[]{projection},
+                "a." + DBHelper.TABLE_COLUMN_STATE + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE},
+                "b._id ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " DESC");
+
+        cursorLoader.registerListener(LOADER_ID_UPDATE_BALANCE, this);
+        cursorLoader.startLoading();
+    }
+
+    @Override
+    public void onLoadComplete(Loader loader, Object data) {
+        if (loader.getId() == LOADER_ID_UPDATE_BALANCE) {
+            asyncScanBalances.cancel(true);
+            lastLoadedData = (Cursor)data;
+            pollHandler.removeCallbacks(updateAccountBalanceRunnable);
+            pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+        }
     }
 
     @Override
@@ -148,6 +206,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         pollHandler.removeCallbacks(serviceShutdownRunnable);
         pollHandler.removeCallbacks(pollRunnable);
         pollHandler.removeCallbacks(journalPostRunnable);
+        pollHandler.removeCallbacks(updateAccountBalanceRunnable);
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
@@ -155,10 +214,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         server.disconnect();
         LLog.d(TAG, "service destroyed");
 
+        asyncScanBalances.cancel(true);
+        asyncScanBalances = null;
+
         pollRunnable = null;
         journalPostRunnable = null;
         serviceShutdownRunnable = null;
+        updateAccountBalanceRunnable = null;
         pollHandler = null;
+
+        if (cursorLoader != null) {
+            cursorLoader.unregisterListener(this);
+            cursorLoader.cancelLoad();
+            cursorLoader.stopLoading();
+        }
         super.onDestroy();
     }
 
@@ -504,6 +573,82 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 cacheId = intent.getIntExtra("cacheId", 0);
                 server.UiPollAck(cacheId);
                 break;
+        }
+    }
+
+    private class AsyncScanBalances extends AsyncTask<Cursor, Void, Boolean> {
+
+        private void addUpdateAccountBalance(double[] doubles, long accountId, int year)
+        {
+            boolean newEntry = false;
+            LAccountBalance balance = DBAccountBalance.getByAccountId(accountId, year);
+            if (balance == null) {
+                balance = new LAccountBalance();
+                newEntry = true;
+            }
+            balance.setState(DBHelper.STATE_ACTIVE);
+            balance.setAccountId(accountId);
+            balance.setYear(year);
+            balance.setBalanceValues(doubles);
+            if (newEntry) {
+                DBAccountBalance.add(balance);
+            } else {
+                DBAccountBalance.update(balance);
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground(Cursor... params) {
+            Cursor data = params[0];
+            if (data == null) return false;
+
+            try {
+                if (isCancelled()) return false;
+                else data.moveToFirst();
+                Calendar calendar = Calendar.getInstance();
+                double[] doubles = new double[12];
+                long lastAccountId = 0;
+                int lastYear = 0;
+                do {
+                    long accountId = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    double amount = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                    int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                    //String name = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
+                    calendar.setTimeInMillis(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                    int year = calendar.get(Calendar.YEAR);
+                    int mon = calendar.get(Calendar.MONTH);
+                    if (lastAccountId == 0) {
+                        lastAccountId = accountId;
+                        lastYear = year;
+                    }
+                    else if (lastAccountId != accountId || lastYear != year) {
+                        addUpdateAccountBalance(doubles, lastAccountId, lastYear);
+
+                        lastAccountId = accountId;
+                        lastYear = year;
+                        for (int ii = 0; ii < 12; ii++) doubles[ii] = 0.0;
+                    }
+                    doubles[mon] += (type == LTransaction.TRANSACTION_TYPE_INCOME ||
+                            type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)? amount : -amount;
+                } while (!isCancelled() && data.moveToNext());
+                if (!isCancelled()) addUpdateAccountBalance(doubles, lastAccountId, lastYear);
+
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onCancelled(Boolean result) {
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+        }
+
+        @Override
+        protected void onPreExecute() {
         }
     }
 }

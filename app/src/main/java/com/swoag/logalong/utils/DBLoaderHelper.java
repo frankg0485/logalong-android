@@ -15,6 +15,8 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LTransaction;
 
 import java.util.ArrayList;
@@ -28,7 +30,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final  int LOADER_INIT_RANGE = 1;
     public static final int LOADER_ALL_SUMMARY = 20;
-    public static final int LOADER_SCAN_ACCOUNT_BALANCES = 30;
 
     private Context context;
     private DBLoaderHelperCallbacks callbacks;
@@ -157,19 +158,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         String[] sa, dsa;
         Uri uri;
 
-        if (id == LOADER_SCAN_ACCOUNT_BALANCES) {
-            String projection = "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
-                    + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
-                    + "b." + DBHelper.TABLE_COLUMN_NAME;
-            return new CursorLoader(
-                    context,
-                    DBProvider.URI_TRANSACTIONS_ACCOUNT,
-                    new String[]{projection},
-                    "a." + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE},
-                    DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
-        }
-
         resetSelections();
 
         switch (id) {
@@ -260,11 +248,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (LOADER_SCAN_ACCOUNT_BALANCES == loader.getId()) {
-            new AsyncScanBalances().execute(data);
-            return;
-        }
-
         if (LOADER_INIT_RANGE == loader.getId()) {
             Calendar calendar = Calendar.getInstance();
 
@@ -296,40 +279,5 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         callbacks.onLoaderReset(loader);
-    }
-
-    private class AsyncScanBalances extends AsyncTask<Cursor, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Cursor... params) {
-            Cursor data = params[0];
-            if (data == null) return false;
-
-            try {
-                if (isCancelled()) return false;
-                else data.moveToFirst();
-
-                do {
-                    String accountName = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
-                    String y = accountName + "x";
-                } while (!isCancelled() && data.moveToNext());
-
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-
-        @Override
-        protected void onCancelled(Boolean result) {
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-        }
-
-        @Override
-        protected void onPreExecute() {
-        }
     }
 }

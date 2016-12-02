@@ -35,17 +35,18 @@ public class DBAccountBalance {
         balance.setId(cur.getLong(0));
     }
 
-    public static LAccountBalance getByAccountId(long accountId) {
-        return getByAccountId(LApp.ctx, accountId);
+    public static LAccountBalance getByAccountId(long accountId, int year) {
+        return getByAccountId(LApp.ctx, accountId, year);
     }
 
-    public static LAccountBalance getByAccountId(Context context, long accountId) {
+    public static LAccountBalance getByAccountId(Context context, long accountId, int year) {
         if (accountId <= 0) return null;
 
         LAccountBalance balance = new LAccountBalance();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNT_BALANCES, null,
-                    DBHelper.TABLE_COLUMN_ACCOUNT + "=?", new String[]{"" + accountId}, null);
+                    DBHelper.TABLE_COLUMN_ACCOUNT + "=? && " + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + accountId, "" + year}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
                     LLog.w(TAG, "unable to find account with id: " + accountId);
@@ -100,5 +101,11 @@ public class DBAccountBalance {
 
     public static boolean updateColumnById(long id, String column, int value) {
         return DBAccess.updateColumnById(DBProvider.URI_ACCOUNT_BALANCES, id, column, value);
+    }
+
+    public static void setAutoBalanceUpdateEnabled(boolean enable) {
+        ContentValues cv = new ContentValues();
+        cv.put("enable", enable);
+        LApp.ctx.getContentResolver().insert(DBProvider.URI_META_ACCOUNT_BALANCE_UPDATE, cv);
     }
 }

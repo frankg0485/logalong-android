@@ -25,6 +25,7 @@ public class DBProvider extends ContentProvider {
     private SQLiteDatabase db;
 
     private static HashMap<String, String> PROJECTION_MAP;
+    private static boolean updatingAccountBalance = false;
 
     private static final String TRANSACTIONS = "trans";
     private static final String TRANSACTIONS_ACCOUNT = "trans/account";
@@ -39,6 +40,7 @@ public class DBProvider extends ContentProvider {
     private static final String SCHEDULED_TRANSACTIONS = "scheduledtrans";
     private static final String JOURNALS = "journals";
     private static final String ACCOUNT_BALANCES = "accntbalances";
+    private static final String META_ACCOUNT_BALANCE_UPDATE = "metabalanceupdt";
 
     private static final int TRANSACTIONS_ID = 1;
     private static final int TRANSACTIONS_ACCOUNT_ID = 2;
@@ -53,6 +55,7 @@ public class DBProvider extends ContentProvider {
     private static final int SCHEDULED_TRANSACTIONS_ID = 60;
     private static final int JOURNALS_ID = 70;
     private static final int ACCOUNT_BALANCES_ID = 80;
+    private static final int META_ACCOUNT_BALANCE_UPDATE_ID = 255;
 
     public static final Uri URI_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS);
     public static final Uri URI_TRANSACTIONS_ACCOUNT = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_ACCOUNT);
@@ -67,6 +70,7 @@ public class DBProvider extends ContentProvider {
     public static final Uri URI_SCHEDULED_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + SCHEDULED_TRANSACTIONS);
     public static final Uri URI_JOURNALS = Uri.parse("content://" + PROVIDER_NAME + "/" + JOURNALS);
     public static final Uri URI_ACCOUNT_BALANCES = Uri.parse("content://" + PROVIDER_NAME + "/" + ACCOUNT_BALANCES);
+    public static final Uri URI_META_ACCOUNT_BALANCE_UPDATE = Uri.parse("content://" + PROVIDER_NAME + "/" + META_ACCOUNT_BALANCE_UPDATE);
 
     static final UriMatcher uriMatcher;
 
@@ -85,6 +89,7 @@ public class DBProvider extends ContentProvider {
         uriMatcher.addURI(PROVIDER_NAME, SCHEDULED_TRANSACTIONS, SCHEDULED_TRANSACTIONS_ID);
         uriMatcher.addURI(PROVIDER_NAME, JOURNALS, JOURNALS_ID);
         uriMatcher.addURI(PROVIDER_NAME, ACCOUNT_BALANCES, ACCOUNT_BALANCES_ID);
+        uriMatcher.addURI(PROVIDER_NAME, META_ACCOUNT_BALANCE_UPDATE, META_ACCOUNT_BALANCE_UPDATE_ID);
     }
 
     @Override
@@ -145,7 +150,7 @@ public class DBProvider extends ContentProvider {
         if (table0 != null) {
             boolean updated = false;
 
-            if (uriMatcher.match(uri) == TRANSACTIONS_ID) {
+            if (updatingAccountBalance && uriMatcher.match(uri) == TRANSACTIONS_ID) {
                 SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
                 qb.setTables(DBHelper.TABLE_TRANSACTION_NAME);
                 Cursor cursor = qb.query(db, new String[]{DBHelper.TABLE_COLUMN_STATE,
@@ -271,6 +276,10 @@ public class DBProvider extends ContentProvider {
                 table0 = DBHelper.TABLE_ACCOUNT_BALANCE_NAME;
                 notify = false;
                 break;
+
+            case META_ACCOUNT_BALANCE_UPDATE_ID:
+                updatingAccountBalance = values.getAsBoolean("enable");
+                return null;
         }
 
         if (table0 != null) {
@@ -279,7 +288,7 @@ public class DBProvider extends ContentProvider {
                 Uri uri1 = ContentUris.withAppendedId(uri, row);
                 getContext().getContentResolver().notifyChange(uri1, null);
 
-                if (uriMatcher.match(uri) == TRANSACTIONS_ID) {
+                if (updatingAccountBalance && uriMatcher.match(uri) == TRANSACTIONS_ID) {
                     updateAccountBalance(values);
                 }
 

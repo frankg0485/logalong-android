@@ -59,7 +59,7 @@ public class DBTransaction {
         add(LApp.ctx, item);
     }
 
-    public static void add(Context context, LTransaction item) {
+    private static void add(Context context, LTransaction item) {
         ContentValues cv = setValues(item);
         context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
     }
@@ -70,6 +70,8 @@ public class DBTransaction {
 
     public static void add(Context context, LTransaction item, boolean duplicateTransfer, boolean postJournal) {
         ContentValues cv = setValues(item);
+        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
+
         context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
 
         LJournal journal = null;
@@ -92,13 +94,14 @@ public class DBTransaction {
                 }
             }
         }
+        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
     }
 
     public static void update(LTransaction item) {
         update(LApp.ctx, item);
     }
 
-    public static void update(Context context, LTransaction item) {
+    private static void update(Context context, LTransaction item) {
         ContentValues cv = setValues(item);
         context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv, "_id=?", new String[]{"" + item.getId()});
     }
@@ -108,6 +111,7 @@ public class DBTransaction {
     }
 
     public static void update(Context context, LTransaction item, boolean postJournal) {
+        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
         update(context, item);
 
         LJournal journal = null;
@@ -133,6 +137,7 @@ public class DBTransaction {
                 }
             }
         }
+        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
     }
 
     public static LTransaction getById(long id) {
@@ -241,7 +246,7 @@ public class DBTransaction {
 
         Cursor cursor = LApp.ctx.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_TIMESTAMP + ">? AND "
-                + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?", new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?", new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
                 DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
 
         if (cursor != null && cursor.getCount() > 0) {

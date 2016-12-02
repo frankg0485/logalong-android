@@ -167,7 +167,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         getLoaderManager().restartLoader(LOADER_ACCOUNTS, null, this);
 
         dbLoaderHelper = new DBLoaderHelper(this.getActivity(), this);
-        dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_SCAN_ACCOUNT_BALANCES);
+        //dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_SCAN_ACCOUNT_BALANCES);
         return rootView;
     }
 

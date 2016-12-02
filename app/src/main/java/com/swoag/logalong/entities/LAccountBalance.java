@@ -14,6 +14,9 @@ public class LAccountBalance {
     private String balance;
     private long lastChangeTimestamp;
 
+    public LAccountBalance() {
+    }
+
     public LAccountBalance(long id, int year, String balance, long lastChangeTimestamp) {
         this.accountId = id;
         this.year = year;
@@ -22,6 +25,14 @@ public class LAccountBalance {
 
         balances = new TreeMap<Integer, double[]>();
         setYearBalance(year, balance);
+    }
+
+    public void setBalanceValues(double[] balances) {
+        balance = "";
+        for (int ii = 0; ii < balances.length - 1; ii++) {
+            balance += String.valueOf(balances[ii]) + ",";
+        }
+        balance += String.valueOf(balances[balances.length - 1]);
     }
 
     public int getYear() {
@@ -72,8 +83,6 @@ public class LAccountBalance {
         this.id = id;
     }
 
-    public LAccountBalance() {
-    }
 
     public LAccountBalance(long id, int year, String balance) {
         this.accountId = id;
