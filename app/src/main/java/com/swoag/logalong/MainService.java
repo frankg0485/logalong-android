@@ -63,6 +63,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final int LOADER_ID_UPDATE_BALANCE = 10;
     private CursorLoader cursorLoader;
     private Cursor lastLoadedData;
+    private static boolean requestToRsetAccountBalance;
     AsyncScanBalances asyncScanBalances;
 
 
@@ -88,6 +89,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         Intent serviceIntent = new Intent(context, MainService.class);
         serviceIntent.putExtra("cmd", MainService.CMD_DISABLE);
         context.startService(serviceIntent);
+    }
+
+    public static void resetAccountBalance() {
+        requestToRsetAccountBalance = true;
     }
 
     @Override
@@ -599,7 +604,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected Boolean doInBackground(Cursor... params) {
-            DBAccountBalance.deleteAll();
+            if (requestToRsetAccountBalance) {
+                DBAccountBalance.deleteAll();
+                requestToRsetAccountBalance = false;
+            }
 
             Cursor data = params[0];
             if (data == null || data.getCount() == 0) return false;

@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LScheduledTransaction;
@@ -212,6 +213,8 @@ public class DBPorter {
     public static boolean importDb(int dbVersion) {
         boolean ret = false;
         try {
+            MainService.resetAccountBalance();
+
             File path = openDbDir();
             if (path == null) return false;
             File file = getOldFile(path);
