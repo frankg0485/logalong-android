@@ -24,6 +24,7 @@ import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -463,7 +464,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 accountName = intent.getStringExtra("accountName");
                 String record = intent.getStringExtra("record");
                 server.UiPollAck(cacheId);
-                LJournal.updateAccountFromReceivedRecord(accountGid, accountName, record);
+                updateAccountFromReceivedRecord(accountGid, accountName, record);
                 break;
 
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD:
@@ -647,6 +648,124 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected void onCancelled(Boolean result) {
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+        }
+
+        @Override
+        protected void onPreExecute() {
+        }
+    }
+
+    private void updateAccountFromReceivedRecord(int accountGid, String name, String receivedRecord) {
+        String[] splitRecords = receivedRecord.split(",", -1);
+        String rid = "";
+        int state = DBHelper.STATE_ACTIVE;
+        long timestampLast = 0;
+        boolean oldNameFound = false;
+        String oldName = "";
+        boolean oldStateFound = false;
+        int oldState = DBHelper.STATE_ACTIVE;
+        boolean stateFound = false;
+
+        for (String str : splitRecords) {
+            String[] ss = str.split("=", -1);
+            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
+                state = Integer.parseInt(ss[1]);
+                stateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
+                oldState = Integer.parseInt(ss[1]);
+                oldStateFound = true;
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
+                timestampLast = Long.valueOf(ss[1]);
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
+                rid = ss[1];
+            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
+                oldName = ss[1];
+                oldNameFound = true;
+            }
+        }
+
+        LAccount account = DBAccount.getByGid(accountGid);
+        if (account == null) {
+            LLog.w(TAG, "account no longer exists, GID: " + accountGid);
+        } else {
+            boolean conflict = true;
+            boolean update = false;
+
+            if (oldNameFound || oldStateFound) {
+                conflict = false;
+                if ((oldStateFound && oldState != account.getState())
+                        || (oldNameFound && !oldName.contentEquals(account.getName())))
+                    conflict = true;
+            }
+
+            if (!conflict) {
+                if (oldStateFound) {
+                    account.setState(state);
+                    if (account.getState() == DBHelper.STATE_DELETED) {
+                        LTask.start(new MyAccountDeleteTask(), account.getId());
+                    }
+                }
+                if (oldNameFound) account.setName(name);
+
+                if (account.getTimeStampLast() < timestampLast)
+                    account.setTimeStampLast(timestampLast);
+                update = true;
+            } else if (account.getTimeStampLast() <= timestampLast) {
+                LLog.w(TAG, "conflict detected, force to update account: " + account.getName());
+                if (!TextUtils.isEmpty(name)) account.setName(name);
+                if (stateFound) account.setState(state);
+
+                if (account.getState() == DBHelper.STATE_DELETED) {
+                    LTask.start(new MyAccountDeleteTask(), account.getId());
+                }
+                account.setTimeStampLast(timestampLast);
+                update = true;
+            }
+
+            if (update) {
+                //detect name conflict, before applying update
+                int ii = 0;
+                String nameOrig = name;
+                boolean dup = true;
+                while (ii++ < 9) {
+                    LAccount account1 = DBAccount.getByName(name);
+                    if ((account1 != null) && account1.getId() != account.getId()) {
+                        name = nameOrig + ii++;
+                    } else {
+                        dup = false;
+                        break;
+                    }
+                }
+                if (dup) {
+                    //if there's still dup after 10 tries, we bail and take the name as is.
+                    LLog.w(TAG, "FAIL: unresolvable account name duplication found");
+                }
+                account.setName(name);
+                DBAccount.update(account);
+
+                if (!name.contentEquals(nameOrig)) {
+                    LLog.d(TAG, "account name conflicts, renaming from: " + nameOrig + " to: " + name);
+                    LJournal journal = new LJournal();
+                    journal.updateAccount(account, nameOrig);
+                }
+            }
+        }
+    }
+
+    private class MyAccountDeleteTask extends AsyncTask<Long, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            Long accountId = params[0];
+
+            DBTransaction.deleteByAccount(accountId);
+            DBScheduledTransaction.deleteByAccount(accountId);
+
+            DBAccountBalance.deleteByAccountId(accountId);
+            return true;
         }
 
         @Override
