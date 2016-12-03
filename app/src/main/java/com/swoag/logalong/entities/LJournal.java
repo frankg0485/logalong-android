@@ -20,6 +20,7 @@ import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LStorage;
+import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.nio.ByteBuffer;

@@ -213,8 +213,6 @@ public class DBPorter {
     public static boolean importDb(int dbVersion) {
         boolean ret = false;
         try {
-            MainService.resetAccountBalance();
-
             File path = openDbDir();
             if (path == null) return false;
             File file = getOldFile(path);

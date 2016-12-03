@@ -56,20 +56,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private LAllBalances allBalances;
     private MyClickListener myClickListener;
 
-    private Cursor lastLoadedData = null;
-    private Handler handler = new Handler();
-    private long dataRunnableDelay = 1;
-    private int dataRunnableDelayCount = 0;
-    private Runnable dataRunnable = new Runnable() {
-        @Override
-        public void run() {
-            allBalances = new LAllBalances(lastLoadedData);
-            lastLoadedData = null;
-            showBalance(balanceTV, 0);
-            adapter.notifyDataSetChanged();
-        }
-    };
-
     private DBLoaderHelper dbLoaderHelper;
 
     @Override
@@ -101,21 +87,10 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case LOADER_BALANCES:
-                if (dataRunnableDelay > 0) {
-                    handler.removeCallbacks(dataRunnable);
-                    lastLoadedData = data;
-                    handler.postDelayed(dataRunnable, dataRunnableDelay);
-                } else {
-                    lastLoadedData = null;
-                    allBalances = new LAllBalances(data);
-                    showBalance(balanceTV, 0);
-                    adapter.notifyDataSetChanged();
+                allBalances = new LAllBalances(data);
+                showBalance(balanceTV, 0);
+                adapter.notifyDataSetChanged();
 
-                    if (dataRunnableDelayCount++ >= LJournal.JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST / 2) {
-                        dataRunnableDelayCount = 0;
-                    } else dataRunnableDelay = 3000;
-
-                }
                 break;
             case LOADER_ACCOUNTS:
                 adapter.swapCursor(data);
@@ -140,7 +115,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_new_transaction, container, false);
         entryView = rootView.findViewById(R.id.entryView);
-        dataRunnableDelay = 0;
 
         selectTypeV = entryView.findViewById(R.id.selectType);
         selectTypeV.setVisibility(View.GONE);
@@ -262,7 +236,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     }
                 }
 
-                dataRunnableDelay = 0;
                 DBTransaction.add(getActivity(), item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:

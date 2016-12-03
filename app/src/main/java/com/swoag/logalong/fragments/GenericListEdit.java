@@ -33,6 +33,7 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
@@ -450,7 +451,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             if (confirm && ok) {
                 switch (listId) {
                     case R.id.accounts:
-                        new MyAccountDeleteTask().execute(tag.id);
+                        LTask.start(new MyAccountDeleteTask(), tag.id);
 
                         LAccount account = DBAccount.getById(tag.id);
                         account.setState(DBHelper.STATE_DELETED);

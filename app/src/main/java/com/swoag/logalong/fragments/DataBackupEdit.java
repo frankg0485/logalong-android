@@ -24,6 +24,7 @@ import com.swoag.logalong.utils.DBPorter;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LWarnDialog;
 
@@ -92,7 +93,7 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
                     if (restoreProgressBar.getVisibility() != View.VISIBLE && backupProgressBar.getVisibility() != View.VISIBLE) {
                         hideErrorMsg();
                         backupProgressBar.setVisibility(View.VISIBLE);
-                        new MyTask().execute(BACKUP);
+                        LTask.start(new MyTask(), BACKUP);
                     }
                     break;
 
@@ -157,7 +158,7 @@ public class DataBackupEdit implements LWarnDialog.LWarnDialogItf {
     public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
         if (confirm && ok) {
             restoreProgressBar.setVisibility(View.VISIBLE);
-            new MyTask().execute(RESTORE);
+            LTask.start(new MyTask(), RESTORE);
         }
     }
 

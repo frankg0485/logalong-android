@@ -62,6 +62,7 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.TransactionSearchDialog;
 
@@ -149,8 +150,9 @@ public class ChartActivity extends LFragmentActivity implements
         public void run() {
             loaderFinished = false;
             progressBar.setVisibility(View.VISIBLE);
+
             myAsyncTask = new MyAsyncTask();
-            myAsyncTask.execute(lastLoadedData);
+            LTask.start(myAsyncTask, lastLoadedData);
         }
     };
 
@@ -161,7 +163,7 @@ public class ChartActivity extends LFragmentActivity implements
                 handler.removeCallbacks(dataRunnable);
                 if (!dbBackgroundActivities && (null == myAsyncTask || myAsyncTask.getStatus() == AsyncTask.Status.FINISHED)) {
                     myAsyncTask = new MyAsyncTask();
-                    myAsyncTask.execute(data);
+                    LTask.start(myAsyncTask, data);
                 } else {
                     myAsyncTask.cancel(true);
                     dbBackgroundActivities = true;

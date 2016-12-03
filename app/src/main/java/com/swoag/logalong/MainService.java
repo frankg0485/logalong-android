@@ -27,6 +27,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LTask;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,14 +59,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private LAppServer server;
 
 
-    static final int UPDATE_ACCOUNT_BALANCE_DELAY_MS = 1000;
+    static final int UPDATE_ACCOUNT_BALANCE_DELAY_MS = 3000;
     private Runnable updateAccountBalanceRunnable;
     private static final int LOADER_ID_UPDATE_BALANCE = 10;
     private CursorLoader cursorLoader;
     private Cursor lastLoadedData;
-    private static boolean requestToRsetAccountBalance;
     AsyncScanBalances asyncScanBalances;
-
 
     public static void start(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
@@ -91,10 +90,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         context.startService(serviceIntent);
     }
 
-    public static void resetAccountBalance() {
-        requestToRsetAccountBalance = true;
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -106,6 +101,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         server = LAppServer.getInstance();
 
         DBScheduledTransaction.scanAlarm();
+        DBAccountBalance.deleteAll();
 
         pollHandler = new Handler() {
         };
@@ -169,10 +165,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         updateAccountBalanceRunnable = new Runnable() {
             @Override
             public void run() {
-                if (asyncScanBalances.getStatus() == AsyncTask.Status.FINISHED)
+                if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING)
                 {
                     asyncScanBalances = new AsyncScanBalances();
-                    asyncScanBalances.execute(lastLoadedData);
+                    LTask.start(asyncScanBalances, lastLoadedData);
                 } else {
                     pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
                 }
@@ -199,10 +195,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     @Override
     public void onLoadComplete(Loader loader, Object data) {
         if (loader.getId() == LOADER_ID_UPDATE_BALANCE) {
-            asyncScanBalances.cancel(true);
-            lastLoadedData = (Cursor)data;
             pollHandler.removeCallbacks(updateAccountBalanceRunnable);
-            pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+            if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING)
+            {
+                asyncScanBalances = new AsyncScanBalances();
+                LTask.start(asyncScanBalances, (Cursor)data);
+            } else {
+                lastLoadedData = (Cursor)data;
+                pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+            }
         }
     }
 
@@ -604,11 +605,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected Boolean doInBackground(Cursor... params) {
-            if (requestToRsetAccountBalance) {
-                DBAccountBalance.deleteAll();
-                requestToRsetAccountBalance = false;
-            }
-
             Cursor data = params[0];
             if (data == null || data.getCount() == 0) return false;
 
