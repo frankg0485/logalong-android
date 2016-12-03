@@ -45,11 +45,12 @@ public class DBAccountBalance {
         LAccountBalance balance = new LAccountBalance();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNT_BALANCES, null,
-                    DBHelper.TABLE_COLUMN_ACCOUNT + "=? && " + DBHelper.TABLE_COLUMN_YEAR + "=?",
-                    new String[]{"" + accountId, "" + year}, null);
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND " +
+                            DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND " + DBHelper.TABLE_COLUMN_YEAR + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId, "" + year}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find account with id: " + accountId);
+                    LLog.w(TAG, "unable to find account balance with id: " + accountId + " @ year: " + year);
                     csr.close();
                     return null;
                 }
@@ -63,6 +64,18 @@ public class DBAccountBalance {
             balance = null;
         }
         return balance;
+    }
+
+    public static void deleteByAccountId(long accountId) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        LApp.ctx.getContentResolver().update(DBProvider.URI_ACCOUNT_BALANCES, cv, DBHelper.TABLE_COLUMN_ACCOUNT + "=?", new String[]{"" + accountId});
+    }
+
+    public static void deleteAll() {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        LApp.ctx.getContentResolver().update(DBProvider.URI_ACCOUNT_BALANCES, cv, DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE});
     }
 
     public static long add(LAccountBalance balance) {

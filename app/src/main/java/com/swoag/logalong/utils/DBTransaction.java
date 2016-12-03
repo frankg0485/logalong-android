@@ -140,6 +140,18 @@ public class DBTransaction {
         if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
     }
 
+    private static void updateWithoutDup(Context context, LTransaction item, boolean postJournal) {
+        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
+        update(context, item);
+
+        if (postJournal) {
+            LJournal journal = new LJournal();
+            journal.updateItem(item);
+
+            DBAccountBalance.setAutoBalanceUpdateEnabled(false);
+        }
+    }
+
     public static LTransaction getById(long id) {
         return getById(LApp.ctx, id);
     }
@@ -199,7 +211,7 @@ public class DBTransaction {
         deleteByAccount(LApp.ctx, accountId);
     }
 
-    public static void deleteByAccount(Context context, long accountId) {
+    private static void deleteByAccount(Context context, long accountId) {
         Cursor cursor = getCursorByAccount(context, accountId);
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
@@ -208,7 +220,7 @@ public class DBTransaction {
                 DBTransaction.getValues(cursor, item);
                 item.setTimeStampLast(System.currentTimeMillis());
                 item.setState(DBHelper.STATE_DELETED);
-                update(context, item, true);
+                updateWithoutDup(context, item, true);
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();

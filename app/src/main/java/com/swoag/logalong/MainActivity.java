@@ -307,14 +307,11 @@ public class MainActivity extends LFragmentActivity
     private static String[] categories = {
             "Clothes",
             "Eating Out",
-            "Entertainment",
             "Fuel",
-            "Gift",
             "Grocery",
             "Health",
-            "House",
-            "Kids",
-            "Sports",
+            "House:Mortgage",
+            "House:Maintenance",
             "Other",
             "Travel"
     };

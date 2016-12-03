@@ -58,7 +58,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private LAppServer server;
 
 
-    static final int UPDATE_ACCOUNT_BALANCE_DELAY_MS = 3000;
+    static final int UPDATE_ACCOUNT_BALANCE_DELAY_MS = 1000;
     private Runnable updateAccountBalanceRunnable;
     private static final int LOADER_ID_UPDATE_BALANCE = 10;
     private CursorLoader cursorLoader;
@@ -599,8 +599,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected Boolean doInBackground(Cursor... params) {
+            DBAccountBalance.deleteAll();
+
             Cursor data = params[0];
-            if (data == null) return false;
+            if (data == null || data.getCount() == 0) return false;
 
             try {
                 if (isCancelled()) return false;
