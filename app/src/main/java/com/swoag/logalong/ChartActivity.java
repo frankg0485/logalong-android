@@ -304,10 +304,15 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private void displayBarChart(ChartData chartData) {
-        if (barChartDisplayed || chartData == null) return;
+        if (barChartDisplayed) return;
         barChartDisplayed = true;
 
         barChart.clear();
+        if (chartData == null) {
+            barChart.invalidate();
+            return;
+        }
+
         barChart.getDescription().setEnabled(false);
 
         // scaling can now only be done on x- and y-axis separately
@@ -437,11 +442,16 @@ public class ChartActivity extends LFragmentActivity implements
     }
 
     private void displayPieChart(ChartData chartData) {
-        if (pieChartDisplayed || chartData == null) return;
+        if (pieChartDisplayed) return;
         pieChartDisplayed = true;
 
         pieChart.clear();
         entryDetailsV.setVisibility(View.GONE);
+
+        if (chartData == null) {
+            pieChart.invalidate();
+            return;
+        }
 
         pieChart.setCenterText("Expense - " + chartData.year);
         pieChart.setDrawSlicesUnderHole(true);
@@ -816,10 +826,10 @@ public class ChartActivity extends LFragmentActivity implements
             loaderFinished = true;
             progressBar.setVisibility(View.GONE);
 
-            if (result) {
-                pieChartDisplayed = barChartDisplayed = false;
-                showChart(chartData);
-            }
+            //if (result) {
+            pieChartDisplayed = barChartDisplayed = false;
+            showChart(chartData);
+            //}
         }
 
         @Override

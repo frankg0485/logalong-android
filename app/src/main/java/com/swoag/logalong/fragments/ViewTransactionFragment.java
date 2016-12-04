@@ -360,15 +360,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         if (AppPersistency.viewTransactionQuarter == -1) {
             AppPersistency.viewTransactionQuarter = AppPersistency.viewTransactionMonth / 3;
         }
-        showTime();
-        showFilterView();
-
-        //getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
-        //getLoaderManager().restartLoader(LOADER_INIT_BALANCE, null, this);
 
         dbLoaderHelper = new DBLoaderHelper(this.getActivity(), this);
-        dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
-
         return rootView;
     }
 
@@ -413,6 +406,16 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     @Override
     public void onResume() {
         super.onResume();
+
+        showTime();
+        showFilterView();
+
+        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
+            LViewUtils.setAlpha(searchView, 0.8f);
+        } else {
+            LViewUtils.setAlpha(searchView, 1.0f);
+        }
+        dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -762,13 +765,12 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             dispv = dispV;
         }
 
-        if (LPreferences.getSearchCategories() == null &&
+        if (LPreferences.getSearchAll() || (LPreferences.getSearchCategories() == null &&
                 LPreferences.getSearchTags() == null &&
-                LPreferences.getSearchVendors() == null) {
+                LPreferences.getSearchVendors() == null)) {
             dispv.setVisibility(View.VISIBLE);
         } else {
             dispv.setVisibility(View.INVISIBLE);
-            return;
         }
 
         LAccountSummary summary = new LAccountSummary();
@@ -852,42 +854,6 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private boolean isAltView = false;
-    private ListView lv;
-
-    private boolean validateYearMonth() {
-        /*
-        long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-
-        if (ym < allStartMs || ym >= allEndMs) {
-            //first remedy: honor user selected year, set to valid month of the year
-            if (AppPersistency.viewTransactionYear == allStartYear) {
-                AppPersistency.viewTransactionMonth = 11;
-            } else if (AppPersistency.viewTransactionYear == allEndYear) {
-                AppPersistency.viewTransactionMonth = 0;
-            }
-        }
-
-        ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        if (ym < allStartMs || ym >= allEndMs) {
-            //next try: current year month
-            Calendar calendar = Calendar.getInstance();
-            AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
-            AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
-        } else return true;
-
-        ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-        if (ym < allStartMs || ym >= allEndMs) {
-            //last resort: last valid year/month of current DB
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(allEndMs - 1);
-            AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
-            AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
-        }
-        return false;
-        */
-        return true;
-    }
-
     private boolean prevNext(boolean prev) {
         boolean ret = true;
         int year = AppPersistency.viewTransactionYear;
@@ -916,7 +882,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 if (ym < dbLoaderHelper.getAllStartMs() || ym >= dbLoaderHelper.getAllEndMs()) {
                     AppPersistency.viewTransactionYear = year;
                     AppPersistency.viewTransactionMonth = month;
-                    return validateYearMonth() ? false : true;
+                    return false;
                 }
                 return true;
 
