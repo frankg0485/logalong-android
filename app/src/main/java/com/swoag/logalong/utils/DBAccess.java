@@ -106,7 +106,7 @@ public class DBAccess {
         return ret;
     }
 
-    public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, Cursor cursor, boolean considerTransfer) {
+    public static void getAccountSummaryForCurrentCursor(LAccountSummary summary, Cursor cursor, long[] accountIds) {
         double income = 0;
         double expense = 0;
 
@@ -114,10 +114,21 @@ public class DBAccess {
             cursor.moveToFirst();
             do {
                 double value = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                long account1 = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                long account2 = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
                 int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                 if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += value;
                 else if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += value;
-                if (considerTransfer) {
+                int considerTransfer = 2;
+                if (null != accountIds) {
+                    for (int ii = 0; ii < accountIds.length; ii++) {
+                        if (accountIds[ii] == account1 || accountIds[ii] == account2) {
+                            considerTransfer++;
+                        }
+                    }
+                }
+
+                if (considerTransfer != 2) {
                     if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                         expense += value;
                     } else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {

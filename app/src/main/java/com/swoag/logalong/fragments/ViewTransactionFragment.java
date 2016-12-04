@@ -63,6 +63,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
+    private View dispV, altDispV;
     private LSectionSummary sectionSummary;
 
     private ViewFlipper viewFlipper, listViewFlipper;
@@ -338,16 +339,18 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         listView.setAdapter(adapter);
 
         View tmp = listViewFlipper.findViewById(R.id.logs);
+        dispV = tmp.findViewById(R.id.display);
         monthTV = (TextView) tmp.findViewById(R.id.month);
-        balanceTV = (TextView) tmp.findViewById(R.id.balance);
-        expenseTV = (TextView) tmp.findViewById(R.id.expense);
-        incomeTV = (TextView) tmp.findViewById(R.id.income);
+        balanceTV = (TextView) dispV.findViewById(R.id.balance);
+        expenseTV = (TextView) dispV.findViewById(R.id.expense);
+        incomeTV = (TextView) dispV.findViewById(R.id.income);
 
         tmp = listViewFlipper.findViewById(R.id.logsAlt);
+        altDispV = tmp.findViewById(R.id.display);
         altMonthTV = (TextView) tmp.findViewById(R.id.month);
-        altBalanceTV = (TextView) tmp.findViewById(R.id.balance);
-        altExpenseTV = (TextView) tmp.findViewById(R.id.expense);
-        altIncomeTV = (TextView) tmp.findViewById(R.id.income);
+        altBalanceTV = (TextView) altDispV.findViewById(R.id.balance);
+        altExpenseTV = (TextView) altDispV.findViewById(R.id.expense);
+        altIncomeTV = (TextView) altDispV.findViewById(R.id.income);
 
         if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
             Calendar now = Calendar.getInstance();
@@ -742,21 +745,34 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private void showBalance(boolean altView, Cursor data) {
-        LAccountSummary summary = new LAccountSummary();
-        getBalance(summary, data);
         TextView mtv, btv, itv, etv;
+        View dispv;
 
         if (altView) {
             mtv = altMonthTV;
             btv = altBalanceTV;
             itv = altIncomeTV;
             etv = altExpenseTV;
+            dispv = altDispV;
         } else {
             mtv = monthTV;
             btv = balanceTV;
             itv = incomeTV;
             etv = expenseTV;
+            dispv = dispV;
         }
+
+        if (LPreferences.getSearchCategories() == null &&
+                LPreferences.getSearchTags() == null &&
+                LPreferences.getSearchVendors() == null) {
+            dispv.setVisibility(View.VISIBLE);
+        } else {
+            dispv.setVisibility(View.INVISIBLE);
+            return;
+        }
+
+        LAccountSummary summary = new LAccountSummary();
+        getBalance(summary, data);
 
         if (summary.getBalance() < 0) {
             btv.setTextColor(getActivity().getResources().getColor(R.color.base_red));
@@ -789,10 +805,11 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         }
     }
 
+    // only valid for unfiltered all records for accounts,
     private void getBalance(LAccountSummary summary, Cursor data) {
         if (data == null || data.getCount() < 1) return;
 
-        DBAccess.getAccountSummaryForCurrentCursor(summary, data, !LPreferences.getSearchAllTime());
+        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAccounts());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
