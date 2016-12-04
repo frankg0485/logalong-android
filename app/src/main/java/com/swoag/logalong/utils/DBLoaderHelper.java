@@ -28,7 +28,7 @@ import java.util.TreeMap;
 public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = DBLoaderHelper.class.getSimpleName();
 
-    private static final  int LOADER_INIT_RANGE = 1;
+    public static final  int LOADER_INIT_RANGE = 10;
     public static final int LOADER_ALL_SUMMARY = 20;
     public static final int LOADER_ALL_ACCOUNTS = 30;
     public static final int LOADER_ALL_ACCOUNT_BALANCES = 40;
@@ -40,8 +40,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private String selections = "";
     private ArrayList<String> selectionArgs = new ArrayList<String>();
-    private LoaderManager manager;
-    private int loadId;
 
     public interface DBLoaderHelperCallbacks {
         public void onLoadFinished(Loader<Cursor> loader, Cursor data);
@@ -53,15 +51,7 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         this.callbacks = callbacks;
     }
 
-    public boolean restartWithRangeAutoSet(LoaderManager manager, int id) {
-        this.manager = manager;
-        manager.restartLoader(LOADER_INIT_RANGE, null, this);
-        loadId = id;
-        return true;
-    }
-
     public boolean restart(LoaderManager manager, int id) {
-        this.manager = manager;
         manager.restartLoader(id, null, this);
         return true;
     }
@@ -290,10 +280,8 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
             }
             //even if there's no data, we'll still start client loader anyway, so client gets its callback
             initStartEndMs();
-            manager.restartLoader(loadId, null, this);
-        } else {
-            callbacks.onLoadFinished(loader, data);
         }
+        callbacks.onLoadFinished(loader, data);
     }
 
     @Override

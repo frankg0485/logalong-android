@@ -159,6 +159,10 @@ public class ChartActivity extends LFragmentActivity implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
+            case  DBLoaderHelper.LOADER_INIT_RANGE:
+                dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_ALL_SUMMARY);
+                break;
+
             case DBLoaderHelper.LOADER_ALL_SUMMARY:
                 handler.removeCallbacks(dataRunnable);
                 if (!dbBackgroundActivities && (null == myAsyncTask || myAsyncTask.getStatus() == AsyncTask.Status.FINISHED)) {
@@ -265,7 +269,7 @@ public class ChartActivity extends LFragmentActivity implements
         if (null == chartData) {
             loaderFinished = false;
             progressBar.setVisibility(View.VISIBLE);
-            dbLoaderHelper.restartWithRangeAutoSet(getSupportLoaderManager(), DBLoaderHelper.LOADER_ALL_SUMMARY);
+            dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
         } else {
             pieChartDisplayed = barChartDisplayed = false;
             showChart(chartData);
