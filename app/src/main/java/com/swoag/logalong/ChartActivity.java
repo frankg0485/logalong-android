@@ -238,7 +238,7 @@ public class ChartActivity extends LFragmentActivity implements
         prevIV.setOnClickListener(myClickListener);
         nextIV.setOnClickListener(myClickListener);
 
-        dbLoaderHelper = new DBLoaderHelper(this, this);
+        dbLoaderHelper = new DBLoaderHelper(this, this, true);
 
         chartDataHashMap = new HashMap<Integer, ChartData>();
         restartDbLoader();
@@ -279,11 +279,11 @@ public class ChartActivity extends LFragmentActivity implements
     private void showPrevNext() {
         //nextIV.setVisibility((AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear())? View.VISIBLE : View.INVISIBLE);
         //prevIV.setVisibility((AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear())? View.VISIBLE : View.INVISIBLE);
-        if (AppPersistency.viewTransactionYear < dbLoaderHelper.getStartYear() || AppPersistency.viewTransactionYear > dbLoaderHelper.getEndYear()) {
-            AppPersistency.viewTransactionYear = dbLoaderHelper.getEndYear();
+        if (AppPersistency.viewTransactionYear < dbLoaderHelper.getAllStartYear() || AppPersistency.viewTransactionYear > dbLoaderHelper.getAllEndYear()) {
+            AppPersistency.viewTransactionYear = dbLoaderHelper.getAllEndYear();
         }
-        prevIV.setClickable(AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear());
-        nextIV.setClickable(AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear());
+        prevIV.setClickable(AppPersistency.viewTransactionYear > dbLoaderHelper.getAllStartYear());
+        nextIV.setClickable(AppPersistency.viewTransactionYear < dbLoaderHelper.getAllEndYear());
     }
 
     private void showChart(ChartData chartData) {
@@ -680,13 +680,13 @@ public class ChartActivity extends LFragmentActivity implements
                     break;
 
                 case R.id.prev:
-                    if (loaderFinished && AppPersistency.viewTransactionYear > dbLoaderHelper.getStartYear()) {
+                    if (loaderFinished && AppPersistency.viewTransactionYear > dbLoaderHelper.getAllStartYear()) {
                         AppPersistency.viewTransactionYear--;
                         restartDbLoader();
                     }
                     break;
                 case R.id.next:
-                    if (loaderFinished && AppPersistency.viewTransactionYear < dbLoaderHelper.getEndYear()) {
+                    if (loaderFinished && AppPersistency.viewTransactionYear < dbLoaderHelper.getAllEndYear()) {
                         AppPersistency.viewTransactionYear++;
                         restartDbLoader();
                     }

@@ -33,6 +33,7 @@ import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
+import com.swoag.logalong.utils.DBLoaderHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
@@ -53,17 +54,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
-public class ViewTransactionFragment extends LFragment implements
-        LoaderManager.LoaderCallbacks<Cursor>, TransactionSearchDialog.TransactionSearchDialogItf {
+public class ViewTransactionFragment extends LFragment implements DBLoaderHelper.DBLoaderHelperCallbacks,
+        TransactionSearchDialog.TransactionSearchDialogItf {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
-
-    private static final int LOADER_INIT_START_END_MS = -2;
-    private static final int LOADER_INIT_BALANCE = -1;
 
     private ListView listView;
     private ImageView filterView, searchView;
 
-    private long startMs, endMs, allStartMs, allEndMs, allStartYear, allEndYear, allStartMonth, allEndMonth;
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private LSectionSummary sectionSummary;
@@ -76,184 +73,19 @@ public class ViewTransactionFragment extends LFragment implements
     private LAllBalances allBalances;
     private MyClickListener myClickListener;
 
-    private String selections = "";
-    private ArrayList<String> selectionArgs = new ArrayList<String>();
-
-    @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String s, ds, sort;
-        String[] sa, dsa;
-        Uri uri;
-        String projection = "a._id,"
-                + "a." + DBHelper.TABLE_COLUMN_AMOUNT + ","
-                + "a." + DBHelper.TABLE_COLUMN_CATEGORY + ","
-                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT + ","
-                + "a." + DBHelper.TABLE_COLUMN_ACCOUNT2 + ","
-                + "a." + DBHelper.TABLE_COLUMN_TAG + ","
-                + "a." + DBHelper.TABLE_COLUMN_VENDOR + ","
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ","
-                /*
-                + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ","
-                */
-                + "a." + DBHelper.TABLE_COLUMN_TYPE + ","
-                /*
-                + "a." + DBHelper.TABLE_COLUMN_STATE + ","
-                + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
-                */
-                + "a." + DBHelper.TABLE_COLUMN_RID + ","
-                + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
-                + "b." + DBHelper.TABLE_COLUMN_NAME;
-
-        switch (id) {
-            case LOADER_INIT_BALANCE:
-                uri = DBProvider.URI_ACCOUNT_BALANCES;
-                return new CursorLoader(
-                        getActivity(),
-                        uri,
-                        null,
-                        DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE}, null);
-
-            case LOADER_INIT_START_END_MS:
-                uri = DBProvider.URI_TRANSACTIONS;
-                s = ds = DBHelper.TABLE_COLUMN_STATE + "=?";
-                sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE};
-
-                if (!TextUtils.isEmpty(selections)) {
-                    s = selections + " AND " + ds;
-                    ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
-                    for (int ii = 0; ii < dsa.length; ii++) {
-                        tmp.add(dsa[ii]);
-                    }
-                    sa = tmp.toArray(new String[tmp.size()]);
-                }
-                return new CursorLoader(
-                        getActivity(),
-                        uri,
-                        null,
-                        s,
-                        sa,
-                        DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC"
-                );
-
-            case AppPersistency.TRANSACTION_FILTER_ALL:
-                uri = DBProvider.URI_TRANSACTIONS;
-
-                if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
-                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
-                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
-                } else {
-                    s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                            + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
-                    sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
-                }
-
-                if (!TextUtils.isEmpty(selections)) {
-                    s = selections + " AND " + ds;
-                    ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
-                    for (int ii = 0; ii < dsa.length; ii++) {
-                        tmp.add(dsa[ii]);
-                    }
-                    sa = tmp.toArray(new String[tmp.size()]);
-                }
-                return new CursorLoader(
-                        getActivity(),
-                        uri,
-                        null,
-                        s,
-                        sa,
-                        sort
-                );
-
-            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
-                uri = DBProvider.URI_TRANSACTIONS_ACCOUNT;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
-                uri = DBProvider.URI_TRANSACTIONS_CATEGORY;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
-                uri = DBProvider.URI_TRANSACTIONS_TAG;
-                break;
-            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
-                uri = DBProvider.URI_TRANSACTIONS_VENDOR;
-                break;
-
-            default:
-                // An invalid id was passed in
-                return null;
-        }
-
-        if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
-            s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
-                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
-            sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
-        } else {
-            s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
-                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
-                    + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
-            sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
-        }
-
-        if (!TextUtils.isEmpty(selections)) {
-            s = selections + " AND " + ds;
-            ArrayList<String> tmp = new ArrayList<String>(selectionArgs);
-            for (int ii = 0; ii < dsa.length; ii++) {
-                tmp.add(dsa[ii]);
-            }
-            sa = tmp.toArray(new String[tmp.size()]);
-        }
-
-        return new CursorLoader(
-                getActivity(),
-                uri,
-                new String[]{projection},
-                s,
-                sa,
-                sort
-        );
-    }
-
-    boolean allBalancesReady = false;
-    boolean startEndMsReady = false;
+    private DBLoaderHelper dbLoaderHelper;
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        if (loader.getId() == LOADER_INIT_BALANCE) {
+
+        if (loader.getId() == DBLoaderHelper.LOADER_INIT_RANGE) {
+            dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_ALL_ACCOUNT_BALANCES);
+            return;
+        }
+
+        if (loader.getId() == DBLoaderHelper.LOADER_ALL_ACCOUNT_BALANCES) {
             allBalances = new LAllBalances(data);
-            allBalancesReady = true;
-            if (allBalancesReady && startEndMsReady) initDbLoader();
-            return;
-        }
-
-        if (loader.getId() == LOADER_INIT_START_END_MS) {
-            if (data != null && data.getCount() > 0) {
-                startEndMsReady = true;
-                data.moveToFirst();
-                allStartMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), false);
-                data.moveToLast();
-                allEndMs = resetMs(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)), true);
-
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(allStartMs);
-                allStartYear = calendar.get(Calendar.YEAR);
-                allStartMonth = calendar.get(Calendar.MONTH);
-                calendar.setTimeInMillis(allEndMs - 1);
-                allEndYear = calendar.get(Calendar.YEAR);
-                allEndMonth = calendar.get(Calendar.MONTH);
-            }
-            if (allBalancesReady && startEndMsReady) initDbLoader();
-            return;
-        }
-
-        if (loader.getId() != AppPersistency.viewTransactionFilter) {
+            initDbLoader();
             return;
         }
 
@@ -290,20 +122,6 @@ public class ViewTransactionFragment extends LFragment implements
         return now.getTimeInMillis();
     }
 
-    private long resetMs(long ms, boolean nextMonth) {
-        Calendar now = Calendar.getInstance();
-        now.setTimeInMillis(ms);
-        int year = now.get(Calendar.YEAR);
-        int month = now.get(Calendar.MONTH);
-        if (nextMonth) {
-            if (month == 11) {
-                month = 0;
-                year++;
-            } else month++;
-        }
-        return getMs(year, month);
-    }
-
     private void setAccountSummary(LAccountSummary summary, long id) {
         if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) return;
         if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ANNUALLY) {
@@ -319,18 +137,18 @@ public class ViewTransactionFragment extends LFragment implements
     private void setSectionSummary(int filterId, Cursor data) {
         String column = "";
         switch (filterId) {
-            case AppPersistency.TRANSACTION_FILTER_ALL:
+            case DBLoaderHelper.LOADER_TRANSACTION_FILTER_ALL:
                 break;
-            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+            case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
                 column = DBHelper.TABLE_COLUMN_ACCOUNT;
                 break;
-            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+            case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                 column = DBHelper.TABLE_COLUMN_CATEGORY;
                 break;
-            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+            case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
                 column = DBHelper.TABLE_COLUMN_TAG;
                 break;
-            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+            case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR:
                 column = DBHelper.TABLE_COLUMN_VENDOR;
                 break;
         }
@@ -397,17 +215,17 @@ public class ViewTransactionFragment extends LFragment implements
                     summary.setBalance(income - expense);
 
                     switch (filterId) {
-                        case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                        case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
                             summary.setName(DBAccount.getNameById(lastId));
                             if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
                             break;
-                        case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                        case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                             summary.setName(DBCategory.getNameById(lastId));
                             break;
-                        case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                        case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
                             summary.setName(DBTag.getNameById(lastId));
                             break;
-                        case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                        case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR:
                             summary.setName(DBVendor.getNameById(lastId));
                             break;
                     }
@@ -422,7 +240,7 @@ public class ViewTransactionFragment extends LFragment implements
 
                 if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
                 else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
-                else if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT == filterId) {
+                else if (DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT == filterId) {
                     if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) expense += v;
                     else income += v;
                 }
@@ -441,17 +259,17 @@ public class ViewTransactionFragment extends LFragment implements
             summary.setBalance(income - expense);
 
             switch (filterId) {
-                case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
                     summary.setName(DBAccount.getNameById(id));
                     if (LPreferences.getSearchAllTime()) setAccountSummary(summary, id);
                     break;
-                case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                     summary.setName(DBCategory.getNameById(id));
                     break;
-                case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
                     summary.setName(DBTag.getNameById(id));
                     break;
-                case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR:
                     summary.setName(DBVendor.getNameById(id));
                     break;
             }
@@ -460,35 +278,30 @@ public class ViewTransactionFragment extends LFragment implements
     }
 
     private void initDbLoader() {
-        validateYearMonth();
-
-        if (LPreferences.getSearchAllTime()) {
-            switch (AppPersistency.viewTransactionTime) {
-                case AppPersistency.TRANSACTION_TIME_ALL:
-                    startMs = 0;
-                    endMs = Long.MAX_VALUE;
-                    break;
-                case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                    startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-                    endMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth + 1);
-                    break;
-                case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                    startMs = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
-                    endMs = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
-                    break;
-
-                case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                    startMs = getMs(AppPersistency.viewTransactionYear, 0);
-                    endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
-                    break;
-            }
-        } else {
-            startMs = LPreferences.getSearchAllTimeFrom();
-            endMs = LPreferences.getSearchAllTimeTo();
-            //LLog.d(TAG, "start: " + startMs + "@" + (new Date(startMs) + " end: " + endMs + "@" + (new Date(endMs))));
+        int loaderCode;
+        switch (AppPersistency.viewTransactionFilter)
+        {
+            default:
+            case AppPersistency.TRANSACTION_FILTER_ALL:
+                loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_ALL;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_TAG:
+                loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT:
+                loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_CATEGORY:
+                loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY;
+                break;
+            case AppPersistency.TRANSACTION_FILTER_BY_VENDOR:
+                loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR;
+                break;
         }
 
-        getLoaderManager().restartLoader(AppPersistency.viewTransactionFilter, null, this);
+        //reiniitialize start/end time, so it tracks current user selection.
+        dbLoaderHelper.initStartEndMs();
+        dbLoaderHelper.restart(getLoaderManager(), loaderCode);
     }
 
     @Override
@@ -496,8 +309,6 @@ public class ViewTransactionFragment extends LFragment implements
         rootView = inflater.inflate(R.layout.fragment_view_transaction, container, false);
 
         myClickListener = new MyClickListener();
-
-        resetSelections();
 
         prevView = setViewListener(rootView, R.id.prev);
         nextView = setViewListener(rootView, R.id.next);
@@ -549,8 +360,12 @@ public class ViewTransactionFragment extends LFragment implements
         showTime();
         showFilterView();
 
-        getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
-        getLoaderManager().restartLoader(LOADER_INIT_BALANCE, null, this);
+        //getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
+        //getLoaderManager().restartLoader(LOADER_INIT_BALANCE, null, this);
+
+        dbLoaderHelper = new DBLoaderHelper(this.getActivity(), this);
+        dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
+
         return rootView;
     }
 
@@ -1023,6 +838,7 @@ public class ViewTransactionFragment extends LFragment implements
     private ListView lv;
 
     private boolean validateYearMonth() {
+        /*
         long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
 
         if (ym < allStartMs || ym >= allEndMs) {
@@ -1051,6 +867,8 @@ public class ViewTransactionFragment extends LFragment implements
             AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
         }
         return false;
+        */
+        return true;
     }
 
     private boolean prevNext(boolean prev) {
@@ -1078,7 +896,7 @@ public class ViewTransactionFragment extends LFragment implements
                 }
 
                 long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
-                if (ym < allStartMs || ym >= allEndMs) {
+                if (ym < dbLoaderHelper.getAllStartMs() || ym >= dbLoaderHelper.getAllEndMs()) {
                     AppPersistency.viewTransactionYear = year;
                     AppPersistency.viewTransactionMonth = month;
                     return validateYearMonth() ? false : true;
@@ -1098,7 +916,7 @@ public class ViewTransactionFragment extends LFragment implements
                 long ymS = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3);
                 long ymE = getMs(AppPersistency.viewTransactionYear, (AppPersistency.viewTransactionQuarter + 1) * 3);
 
-                if (allStartMs >= ymE || allEndMs <= ymS) {
+                if (dbLoaderHelper.getAllStartMs() >= ymE || dbLoaderHelper.getAllEndMs() <= ymS) {
                     AppPersistency.viewTransactionYear = year;
                     AppPersistency.viewTransactionQuarter = quarter;
                     return false;
@@ -1109,7 +927,7 @@ public class ViewTransactionFragment extends LFragment implements
                 AppPersistency.viewTransactionYear += (prev) ? -1 : 1;
                 ymS = getMs(AppPersistency.viewTransactionYear, 0);
                 ymE = getMs(AppPersistency.viewTransactionYear + 1, 0);
-                if (allStartMs >= ymE || allEndMs <= ymS) {
+                if (dbLoaderHelper.getAllStartMs() >= ymE || dbLoaderHelper.getAllEndMs() <= ymS) {
                     AppPersistency.viewTransactionYear = year;
                     return false;
                 }
@@ -1164,56 +982,9 @@ public class ViewTransactionFragment extends LFragment implements
         }
     }
 
-    private void setSelections(long[] ids, String column) {
-        selections += "(";
-        for (int ii = 0; ii < ids.length - 1; ii++) {
-            selections += column + "=? OR ";
-            selectionArgs.add("" + ids[ii]);
-        }
-        selections += column + "=?)";
-        selectionArgs.add("" + ids[ids.length - 1]);
-    }
-
-    private void resetSelections() {
-        if (LPreferences.getSearchAll()) {
-            selections = "";
-        } else {
-            selections = "";
-            selectionArgs.clear();
-
-            boolean and = false;
-            long[] ids = LPreferences.getSearchAccounts();
-            if (ids != null) {
-                setSelections(ids, DBHelper.TABLE_COLUMN_ACCOUNT);
-                and = true;
-            }
-
-            ids = LPreferences.getSearchCategories();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_CATEGORY);
-                and = true;
-            }
-
-            ids = LPreferences.getSearchVendors();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_VENDOR);
-                and = true;
-            }
-
-            ids = LPreferences.getSearchTags();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_TAG);
-            }
-        }
-    }
-
     @Override
     public void onTransactionSearchDialogDismiss(boolean changed) {
         if (changed) {
-            resetSelections();
             showTime();
 
             if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
@@ -1223,7 +994,7 @@ public class ViewTransactionFragment extends LFragment implements
             }
 
             AppPersistency.clearViewHistory();
-            getLoaderManager().restartLoader(LOADER_INIT_START_END_MS, null, this);
+            dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
         }
     }
 
@@ -1320,7 +1091,7 @@ public class ViewTransactionFragment extends LFragment implements
                 AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;
                 break;
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                if (allStartYear != allEndYear) {
+                if (dbLoaderHelper.getAllStartYear() != dbLoaderHelper.getAllEndYear()) {
                     AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_ALL;
                 } else {
                     AppPersistency.viewTransactionTime = AppPersistency.TRANSACTION_TIME_MONTHLY;

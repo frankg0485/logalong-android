@@ -41,8 +41,6 @@ import java.util.Calendar;
 public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
         DBLoaderHelper.DBLoaderHelperCallbacks {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
-    private static final int LOADER_BALANCES = 10;
-    private static final int LOADER_ACCOUNTS = 20;
 
     private View btnExpense, btnIncome, btnTransaction, selectTypeV;
     private ViewFlipper viewFlipper;
@@ -61,13 +59,13 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
-            case LOADER_BALANCES:
+            case DBLoaderHelper.LOADER_ALL_ACCOUNT_BALANCES:
                 allBalances = new LAllBalances(data);
                 showBalance(balanceTV, 0);
                 adapter.notifyDataSetChanged();
 
                 break;
-            case LOADER_ACCOUNTS:
+            case DBLoaderHelper.LOADER_ALL_ACCOUNTS:
                 adapter.swapCursor(data);
                 adapter.notifyDataSetChanged();
                 break;
@@ -77,9 +75,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         switch (loader.getId()) {
-            case LOADER_BALANCES:
-                break;
-            case LOADER_ACCOUNTS:
+            case DBLoaderHelper.LOADER_ALL_ACCOUNTS:
                 adapter.swapCursor(null);
                 adapter.notifyDataSetChanged();
                 break;
