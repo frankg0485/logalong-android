@@ -30,6 +30,8 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final  int LOADER_INIT_RANGE = 1;
     public static final int LOADER_ALL_SUMMARY = 20;
+    public static final int LOADER_ALL_ACCOUNTS = 30;
+    public static final int LOADER_ALL_ACCOUNT_BALANCES = 40;
 
     private Context context;
     private DBLoaderHelperCallbacks callbacks;
@@ -154,6 +156,24 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        if (id == LOADER_ALL_ACCOUNT_BALANCES) {
+            return new CursorLoader(
+                    context,
+                    DBProvider.URI_ACCOUNT_BALANCES,
+                    null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+        } else if (id == LOADER_ALL_ACCOUNTS) {
+            return new CursorLoader(
+                    context,
+                    DBProvider.URI_ACCOUNTS,
+                    null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE},
+                    DBHelper.TABLE_COLUMN_NAME + " ASC");
+        }
+
         String s, ds, sort;
         String[] sa, dsa;
         Uri uri;
