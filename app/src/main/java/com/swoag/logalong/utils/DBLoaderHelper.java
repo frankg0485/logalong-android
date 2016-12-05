@@ -312,13 +312,13 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
                     sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
                 } else {
                     s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
                     sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
                 }
 
                 if (!TextUtils.isEmpty(selections)) {
@@ -362,13 +362,13 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
             sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " ASC";
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
         } else {
             s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
             sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC";
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
         }
 
         if (!TextUtils.isEmpty(selections)) {

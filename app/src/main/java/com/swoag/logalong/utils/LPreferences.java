@@ -18,6 +18,7 @@ public class LPreferences {
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
     private static final String ONE_TIME_INIT = "OneTimeInit";
+    private static final String QUERY_ORDER = "QueryOrder";
     private static final String SEARCH_ALLTIME = "SearchAllTime";
     private static final String SEARCH_ALLTIME_FROM = "SearchAllTimeFrom";
     private static final String SEARCH_ALLTIME_TO = "SearchAllTimeTo";
@@ -286,6 +287,14 @@ public class LPreferences {
         }
         str += String.valueOf(vals[vals.length - 1]);
         savePreference(LApp.ctx, key, str);
+    }
+
+    public static boolean getQueryOrderAscend() {
+        return getPreference(LApp.ctx, QUERY_ORDER, true);
+    }
+
+    public static void setQueryOrderAscend(boolean order) {
+        savePreference(LApp.ctx, QUERY_ORDER, order);
     }
 
     public static boolean getSearchAll() {

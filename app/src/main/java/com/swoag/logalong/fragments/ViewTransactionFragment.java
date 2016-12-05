@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -64,6 +65,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
     private View dispV, altDispV;
+    private ImageView queryOrderIV, altQueryOrderIV;
     private LSectionSummary sectionSummary;
 
     private ViewFlipper viewFlipper, listViewFlipper;
@@ -339,6 +341,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         listView.setAdapter(adapter);
 
         View tmp = listViewFlipper.findViewById(R.id.logs);
+        tmp.setOnClickListener(myClickListener);
+        queryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
+        queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
         dispV = tmp.findViewById(R.id.display);
         monthTV = (TextView) tmp.findViewById(R.id.month);
         balanceTV = (TextView) dispV.findViewById(R.id.balance);
@@ -346,6 +351,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         incomeTV = (TextView) dispV.findViewById(R.id.income);
 
         tmp = listViewFlipper.findViewById(R.id.logsAlt);
+        tmp.setOnClickListener(myClickListener);
+        altQueryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
+        altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
         altDispV = tmp.findViewById(R.id.display);
         altMonthTV = (TextView) tmp.findViewById(R.id.month);
         altBalanceTV = (TextView) altDispV.findViewById(R.id.balance);
@@ -436,6 +444,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     break;
                 case R.id.monthly:
                     changeTime();
+                    break;
+                case R.id.logs:
+                case R.id.logsAlt:
+                    LPreferences.setQueryOrderAscend(!LPreferences.getQueryOrderAscend());
+                    queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+                    altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+                    initDbLoader();
                     break;
                 default:
                     break;
