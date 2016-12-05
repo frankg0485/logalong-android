@@ -83,13 +83,14 @@ public class DBAccount {
         return getByGid(LApp.ctx, gid);
     }
 
-    public static LAccount getByGid(Context context, int gid) {
+    private static LAccount getByGid(Context context, int gid) {
         if (gid <= 0) return null;
 
         LAccount account = new LAccount();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
-                    DBHelper.TABLE_COLUMN_NUMBER + "=?", new String[]{"" + gid}, null);
+                    DBHelper.TABLE_COLUMN_NUMBER + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + gid, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
                     LLog.w(TAG, "GID not unique: unable to find account with gid: " + gid);
@@ -114,7 +115,8 @@ public class DBAccount {
         LAccount account = new LAccount();
         try {
             Cursor csr = LApp.ctx.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
-                    DBHelper.TABLE_COLUMN_NUMBER + "=?", new String[]{"" + gid}, null);
+                    DBHelper.TABLE_COLUMN_NUMBER + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + gid, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
                     LLog.w(TAG, "GID not unique: reset all to zero from: " + gid);
@@ -223,9 +225,9 @@ public class DBAccount {
         return true;
     }
 
-    public static void deleteById(long id) {
-        updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-    }
+    //public static void deleteById(long id) {
+    //    updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+    //}
 
     public static boolean updateColumnById(long id, String column, int value) {
         return DBAccess.updateColumnById(DBProvider.URI_ACCOUNTS, id, column, value);
