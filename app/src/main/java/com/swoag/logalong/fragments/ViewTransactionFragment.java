@@ -768,28 +768,30 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private void showBalance(boolean altView, Cursor data) {
         TextView mtv, btv, itv, etv;
-        View dispv;
+        //View dispv;
 
         if (altView) {
             mtv = altMonthTV;
             btv = altBalanceTV;
             itv = altIncomeTV;
             etv = altExpenseTV;
-            dispv = altDispV;
+            //dispv = altDispV;
         } else {
             mtv = monthTV;
             btv = balanceTV;
             itv = incomeTV;
             etv = expenseTV;
-            dispv = dispV;
+            //dispv = dispV;
         }
 
         if (LPreferences.getSearchAll() || (LPreferences.getSearchCategories() == null &&
                 LPreferences.getSearchTags() == null &&
                 LPreferences.getSearchVendors() == null)) {
-            dispv.setVisibility(View.VISIBLE);
+            //dispv.setVisibility(View.VISIBLE);
+            btv.setVisibility(View.VISIBLE);
         } else {
-            dispv.setVisibility(View.INVISIBLE);
+            //dispv.setVisibility(View.INVISIBLE);
+            btv.setVisibility(View.INVISIBLE);
         }
 
         LAccountSummary summary = new LAccountSummary();
