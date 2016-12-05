@@ -107,7 +107,11 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 if (history != null) {
                     listView.onRestoreInstanceState(history);
                 } else {
-                    listView.setSelection(adapter.getCount() - 1);
+                    if (LPreferences.getQueryOrderAscend()) {
+                        listView.setSelection(adapter.getCount() - 1);
+                    } else {
+                        listView.setSelection(0);
+                    }
                 }
             }
         });
