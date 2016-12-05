@@ -200,18 +200,13 @@ public class DBTransaction {
     }
 
     private static void deleteByAccount(Context context, long accountId) {
-        Cursor cursor = getCursorByAccount(context, accountId);
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-            LTransaction item = new LTransaction();
-            do {
-                DBTransaction.getValues(cursor, item);
-                item.setTimeStampLast(System.currentTimeMillis());
-                item.setState(DBHelper.STATE_DELETED);
-                update(context, item);
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) cursor.close();
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        cv.put(DBHelper.TABLE_COLUMN_RID, "");
+        context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv,
+                DBHelper.TABLE_COLUMN_STATE + "=? AND " +
+                        DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
     }
 
     public static Cursor getCursorByAccount(long accountId) {

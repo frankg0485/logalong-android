@@ -150,9 +150,10 @@ public class DBScheduledTransaction {
         deleteByAccount(LApp.ctx, accountId);
     }
 
-    public static void deleteByAccount(Context context, long accountId) {
+    private static void deleteByAccount(Context context, long accountId) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+        cv.put(DBHelper.TABLE_COLUMN_RID, "");
         context.getContentResolver().update(DBProvider.URI_SCHEDULED_TRANSACTIONS, cv,
                 DBHelper.TABLE_COLUMN_STATE + "=? AND " +
                         DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
