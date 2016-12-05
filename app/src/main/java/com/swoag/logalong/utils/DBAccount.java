@@ -50,6 +50,12 @@ public class DBAccount {
         account.setId(cur.getLong(0));
     }
 
+    public static LAccount getByCursor(Cursor cursor) {
+        LAccount account = new LAccount();
+        getValues(cursor, account);
+        return account;
+    }
+
     public static LAccount getById(long id) {
         return getById(LApp.ctx, id);
     }
@@ -167,10 +173,11 @@ public class DBAccount {
         return account;
     }
 
-    public static LAccount getByRid(String rid) {
-        return getByRid(LApp.ctx, rid);
-    }
+    //public static LAccount getByRid(String rid) {
+    //    return getByRid(LApp.ctx, rid);
+    //}
 
+    /*
     public static LAccount getByRid(Context context, String rid) {
         LAccount account = null;
         try {
@@ -194,6 +201,7 @@ public class DBAccount {
         }
         return account;
     }
+    */
 
     public static long add(LAccount acccount) {
         return add(LApp.ctx, acccount);

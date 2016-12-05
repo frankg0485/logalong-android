@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -200,7 +201,14 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             TextView tv = (TextView) view.findViewById(R.id.name);
-            String name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
+            String name;
+            LAccount account = null;
+            if (listId == R.id.accounts) {
+                account = DBAccount.getByCursor(cursor);
+                name = account.getName();
+            } else {
+                name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
+            }
             tv.setText(name);
 
             View v = view.findViewById(R.id.option);
@@ -209,10 +217,17 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             v.setTag(tag);
 
             if (listId == R.id.accounts) {
-                v = view.findViewById(R.id.share);
-                v.setVisibility(View.VISIBLE);
-                v.setOnClickListener(clickListener);
-                v.setTag(tag);
+                ImageView iv = (ImageView)view.findViewById(R.id.share);
+                if (account.isAnySharePending()) {
+                    iv.setImageResource(R.drawable.ic_action_share_yellow);
+                } else if (account.isShareConfirmed()) {
+                    iv.setImageResource(R.drawable.ic_action_share_green);
+                } else {
+                    iv.setImageResource(R.drawable.ic_action_share);
+                }
+                iv.setVisibility(View.VISIBLE);
+                iv.setOnClickListener(clickListener);
+                iv.setTag(tag);
             }
         }
 
@@ -346,6 +361,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 }
                 DBAccount.update(account);
             }
+            adapter.swapCursor(getMyCursor());
+            adapter.notifyDataSetChanged();
         }
 
         @Override
