@@ -317,8 +317,14 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         myClickListener = new MyClickListener();
 
-        prevView = setViewListener(rootView, R.id.prev);
-        nextView = setViewListener(rootView, R.id.next);
+        //prevView = setViewListener(rootView, R.id.prev);
+        //nextView = setViewListener(rootView, R.id.next);
+        prevView = rootView.findViewById(R.id.prev);
+        nextView = rootView.findViewById(R.id.next);
+        LViewUtils.RepeatListener repeatListener = new LViewUtils.RepeatListener(1000, 300, myClickListener);
+        prevView.setOnTouchListener(repeatListener);
+        nextView.setOnTouchListener(repeatListener);
+
         filterView = (ImageView) setViewListener(rootView, R.id.filter);
         searchView = (ImageView) setViewListener(rootView, R.id.search);
 
@@ -807,7 +813,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        if (LPreferences.getSearchAllTime() && data != null && data.getCount() > 0) {
+        if (LPreferences.getSearchAllTime() /*&& data != null && data.getCount() > 0*/) {
             switch (AppPersistency.viewTransactionTime) {
                 case AppPersistency.TRANSACTION_TIME_ALL:
                     mtv.setText(getString(R.string.balance));
@@ -940,20 +946,35 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         return false;
     }
 
+    private long lastClickMs;
     private void showPrevNext(boolean prev) {
         if (!prevNext(prev)) return;
 
         AppPersistency.setViewHistory(AppPersistency.getViewLevel(), listView.onSaveInstanceState());
 
+        long now = System.currentTimeMillis();
+        boolean animate = (now -lastClickMs > 1000);
+        lastClickMs = now;
+
         isAltView = !isAltView;
         if (prev) {
-            listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
-            listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+            if (animate) {
+                listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+                listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+            } else {
+                listViewFlipper.setInAnimation(null);
+                listViewFlipper.setOutAnimation(null);
+            }
             listViewFlipper.showPrevious();
             AppPersistency.setViewLevel(AppPersistency.getViewLevel() - 1);
         } else {
-            listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
-            listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+            if (animate) {
+                listViewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+                listViewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+            } else {
+                listViewFlipper.setInAnimation(null);
+                listViewFlipper.setOutAnimation(null);
+            }
             listViewFlipper.showNext();
             AppPersistency.setViewLevel(AppPersistency.getViewLevel() + 1);
         }

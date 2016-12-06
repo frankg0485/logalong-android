@@ -329,12 +329,14 @@ public class LViewUtils {
                     handler.removeCallbacks(handlerRunnable);
                     handler.postDelayed(handlerRunnable, initialInterval);
                     downView = view;
+                    downView.setSelected(true);
                     mFastCount = 0;
                     break;
                 case MotionEvent.ACTION_CANCEL :
                 case MotionEvent.ACTION_UP:
                     handler.removeCallbacks(handlerRunnable);
                     if (singleClick) clickListener.onClick(view);
+                    downView.setSelected(false);
                     downView = null;
                     break;
             }
