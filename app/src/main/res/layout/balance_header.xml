@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_alignParentTop="true"
-    android:background="#e4e6e8">
+    android:background="@color/balance_header_bgd_color">
 
     <ImageView
         android:id="@+id/ascend"
@@ -24,8 +24,8 @@
         android:id="@+id/display"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:gravity="right"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:gravity="right">
 
         <TextView
             android:id="@+id/balance"

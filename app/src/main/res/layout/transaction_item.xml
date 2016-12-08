@@ -75,7 +75,7 @@
         android:id="@+id/sectionView"
         android:layout_width="match_parent"
         android:layout_height="20dp"
-        android:background="#e4e6e8"
+        android:background="@color/balance_header_bgd_color"
         android:orientation="horizontal"
         android:visibility="visible">
 

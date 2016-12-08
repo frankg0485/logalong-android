@@ -33,7 +33,7 @@
                         <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="25dp"
-                            android:background="#e4e6e8"
+                            android:background="@color/balance_header_bgd_color"
                             android:gravity="center_vertical">
 
                             <TextView
@@ -64,7 +64,8 @@
                             android:id="@+id/listView"
                             android:layout_width="match_parent"
                             android:layout_height="fill_parent"
-                            android:divider="@android:color/transparent" />
+                            android:divider="@android:color/transparent"
+                            android:listSelector="@android:color/transparent" />
                     </LinearLayout>
                 </LinearLayout>
 
