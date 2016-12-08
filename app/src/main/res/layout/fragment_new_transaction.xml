@@ -81,7 +81,7 @@
                         android:id="@+id/expense"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/expense_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -109,7 +109,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
                         android:layout_marginTop="1dp"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/income_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
@@ -136,7 +136,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
                         android:layout_marginTop="1dp"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/transfer_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
