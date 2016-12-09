@@ -108,6 +108,13 @@ public class LDollarAmountPicker extends Dialog implements View.OnClickListener 
         valueTV = null;
     }
 
+    @Override
+    public void onBackPressed() {
+        callback.onDollarAmountPickerExit(0, false);
+        destroy();
+        dismiss();
+    }
+
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
