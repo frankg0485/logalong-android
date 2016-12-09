@@ -63,14 +63,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom|right"
-                    android:background="@drawable/dialog_row_bgd"
+                    android:background="@drawable/new_log_bgd"
                     android:orientation="vertical">
 
                     <LinearLayout
                         android:id="@+id/expense"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/expense_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -83,9 +83,8 @@
                             android:gravity="right"
                             android:padding="10dp"
                             android:text="@string/expense"
-                            android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold" />
+                            android:textColor="@color/base_black_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <ImageView
                             android:layout_width="@dimen/settings_row_icon_w"
@@ -98,7 +97,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
                         android:layout_marginTop="1dp"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/income_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
@@ -110,9 +109,8 @@
                             android:gravity="right"
                             android:padding="10dp"
                             android:text="@string/income"
-                            android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold" />
+                            android:textColor="@color/base_black_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <ImageView
                             android:layout_width="@dimen/settings_row_icon_w"
@@ -125,7 +123,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/list_item_height"
                         android:layout_marginTop="1dp"
-                        android:background="@drawable/row_selector"
+                        android:background="@drawable/transfer_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
@@ -137,9 +135,8 @@
                             android:gravity="right"
                             android:padding="10dp"
                             android:text="@string/transfer"
-                            android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold" />
+                            android:textColor="@color/base_black_text_color"
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <ImageView
                             android:layout_width="@dimen/settings_row_icon_w"

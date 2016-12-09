@@ -7,6 +7,7 @@
     <color name="base_bgd_separator_color">#c4c6c8</color>
     <color name="base_text_color">#303030</color>
     <color name="base_white_text_color">#f0f0f0</color>
+    <color name="base_black_text_color">#202020</color>
     <color name="gray_text_color">#505050</color>
     <color name="light_gray_text_color">#606060</color>
     <color name="dark_gray_text_color">#808080</color>
