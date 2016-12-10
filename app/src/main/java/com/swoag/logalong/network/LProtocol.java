@@ -87,6 +87,7 @@ public class LProtocol {
     private static final short CMD_SHARE_TRANSITION_PAYER = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_PAYER);
     private static final short CMD_SHARE_TRANSITION_TAG = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_TAG);
     private static final short CMD_SHARE_PAYER_CATEGORY = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_PAYER_CATEGORY);
+    private static final short CMD_SHARE_SCHEDULE = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_SCHEDULE);
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -210,6 +211,23 @@ public class LProtocol {
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("accountGid", accountGid);
         rspsIntent.putExtra("record", record);
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+    }
+
+    private void handleScheduleShare(LBuffer pkt, int status, int action, int cacheId) {
+        Intent rspsIntent;
+        int accountGid = pkt.getIntAutoInc();
+        int accountGid2 = pkt.getIntAutoInc();
+        int bytes = pkt.getShortAutoInc();
+        String schedule = pkt.getStringAutoInc(bytes);
+        //LLog.d(TAG, "schedule share request for account: " + accountGid + " schedule: " + schedule);
+
+        rspsIntent = new Intent(LBroadcastReceiver.action(action));
+        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+        rspsIntent.putExtra("cacheId", cacheId);
+        rspsIntent.putExtra("accountGid", accountGid);
+        rspsIntent.putExtra("accountGid2", accountGid2);
+        rspsIntent.putExtra("schedule", schedule);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -467,6 +485,10 @@ public class LProtocol {
 
                         case CMD_SHARE_PAYER_CATEGORY:
                             handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY, cacheId);
+                            break;
+
+                        case CMD_SHARE_SCHEDULE:
+                            handleScheduleShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE, cacheId);
                             break;
 
                         case CMD_SYSTEM_MSG_BROADCAST:

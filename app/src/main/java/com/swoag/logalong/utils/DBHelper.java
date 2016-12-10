@@ -51,9 +51,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_VENDOR_CATEGORY_NAME = "LVendorCategory";
     public static final String TABLE_JOURNAL_NAME = "LJournal";
 
-    //transaction table: VENDOR carries to_account for transfer.
-    private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
-            "( _id integer primary key autoincrement," +
+    private static final String TABLE_TRANSACTION_ROWS =
             TABLE_COLUMN_AMOUNT + " REAL," +
             TABLE_COLUMN_CATEGORY + " INTEGER," +
             TABLE_COLUMN_ACCOUNT + " INTEGER," +
@@ -67,32 +65,21 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_MADEBY + " INTEGER," +
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_NOTE + " TEXT," +
-            TABLE_COLUMN_ICON + " BLOB" +
-            ");";
+            TABLE_COLUMN_ICON + " BLOB";
+
+    //transaction table: VENDOR carries to_account for transfer.
+    private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
+            "( _id integer primary key autoincrement," + TABLE_TRANSACTION_ROWS + ");";
 
     private static final String CREATE_TABLE_SCHEDULED_TRANSACTION = "CREATE TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
             TABLE_COLUMN_REPEAT_INTERVAL + " INTEGER," +
             TABLE_COLUMN_REPEAT_UNIT + " INTEGER," +
             TABLE_COLUMN_REPEAT_COUNT + " INTEGER," +
-            TABLE_COLUMN_SCHEDULE_TIMESTAMP + " INTEGER," +
-
+            TABLE_COLUMN_SCHEDULE_TIMESTAMP + " INTEGER,"
             // plus TABLE_TRANSACTION columns
-            TABLE_COLUMN_AMOUNT + " REAL," +
-            TABLE_COLUMN_CATEGORY + " INTEGER," +
-            TABLE_COLUMN_ACCOUNT + " INTEGER," +
-            TABLE_COLUMN_ACCOUNT2 + " INTEGER," +
-            TABLE_COLUMN_TAG + " INTEGER," +
-            TABLE_COLUMN_VENDOR + " INTEGER," +
-            TABLE_COLUMN_TIMESTAMP + " INTEGER," +
-            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_TYPE + " INTEGER," +
-            TABLE_COLUMN_STATE + " INTEGER," +
-            TABLE_COLUMN_MADEBY + " INTEGER," +
-            TABLE_COLUMN_RID + " TEXT," +
-            TABLE_COLUMN_NOTE + " TEXT," +
-            TABLE_COLUMN_ICON + " BLOB" +
-            ");";
+            + TABLE_TRANSACTION_ROWS + ");";
+
 
     private static final String CREATE_TABLE_ACCOUNT_BALANCE = "CREATE TABLE " + TABLE_ACCOUNT_BALANCE_NAME +
             "( _id integer primary key autoincrement," +

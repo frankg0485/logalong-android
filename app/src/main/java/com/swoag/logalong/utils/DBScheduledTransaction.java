@@ -155,9 +155,10 @@ public class DBScheduledTransaction {
         cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
         cv.put(DBHelper.TABLE_COLUMN_RID, "");
         context.getContentResolver().update(DBProvider.URI_SCHEDULED_TRANSACTIONS, cv,
-                DBHelper.TABLE_COLUMN_STATE + "=? AND " +
-                        DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
-                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId});
+                DBHelper.TABLE_COLUMN_STATE + "=? AND ( " +
+                        DBHelper.TABLE_COLUMN_ACCOUNT + "=? OR " +
+                        DBHelper.TABLE_COLUMN_ACCOUNT2 + "=? )",
+                new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId, "" + accountId});
     }
 
     public static long getIdByRid(String rid) {

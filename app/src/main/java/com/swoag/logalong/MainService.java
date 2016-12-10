@@ -154,13 +154,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY,
-
+                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
-                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_WITH_USER,
-                LBroadcastReceiver.ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID,
-                LBroadcastReceiver.ACTION_JOURNAL_POSTED,
-                LBroadcastReceiver.ACTION_JOURNAL_RECEIVED,
-                LBroadcastReceiver.ACTION_SHARE_ACCOUNT_USER_CHANGE}, this);
+                LBroadcastReceiver.ACTION_JOURNAL_POSTED}, this);
 
 
         updateAccountBalanceRunnable = new Runnable() {
@@ -475,6 +471,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LJournal.updateItemFromReceivedRecord(accountGid, record);
                 break;
 
+            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE:
+                cacheId = intent.getIntExtra("cacheId", 0);
+                accountGid = intent.getIntExtra("accountGid", 0);
+                int accountGid2 = intent.getIntExtra("accountGid2", 0);
+                String schedule = intent.getStringExtra("schedule");
+                server.UiPollAck(cacheId);
+                LJournal.updateScheduleFromReceivedRecord(accountGid, accountGid2, schedule);
+                break;
+
             case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 accountGid = intent.getIntExtra("accountGid", 0);
@@ -562,16 +567,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                break;
-
-            case LBroadcastReceiver.ACTION_JOURNAL_RECEIVED:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                server.UiPollAck(cacheId);
-
-                userId = intent.getIntExtra("id", 0);
-                userName = intent.getStringExtra("userName");
-                //LLog.d(TAG, "received journal from: " + userId + "@" + userName + " ID: " + cacheId);
-                LJournal.receive(intent.getStringExtra("record"));
                 break;
 
             case LBroadcastReceiver.ACTION_UNKNOWN_MSG:

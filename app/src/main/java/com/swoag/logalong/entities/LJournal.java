@@ -39,9 +39,6 @@ public class LJournal {
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
 
-    //TODO: revisit schedule sharing
-    private static final int ACTION_UPDATE_SCHEDULED_ITEM = 15;
-
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
     private static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x0102;
@@ -53,6 +50,7 @@ public class LJournal {
     public static final short JRQST_SHARE_TRANSITION_PAYER = 0x0115;
     public static final short JRQST_SHARE_TRANSITION_TAG = 0x0117;
     public static final short JRQST_SHARE_PAYER_CATEGORY = 0x0119;
+    public static final short JRQST_SHARE_SCHEDULE = 0x011b;
 
     private int state;
     private int userId;
@@ -360,29 +358,57 @@ public class LJournal {
         LAccount account = DBAccount.getById(item.getAccount());
         if ((null == account) || (!account.isShareConfirmed())) return false;
 
+        LAccount account2 = DBAccount.getById(item.getAccount2());
+        int type = item.getType();
+
+        data.clear();
+        data.putShortAutoInc(JRQST_SHARE_SCHEDULE);
+        data.putIntAutoInc(account.getGid());
+        if (account2 != null) {
+            data.putIntAutoInc(account2.getGid());
+        } else {
+            data.putIntAutoInc(0);
+        }
+
         record += transactionItemString(item) + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_COUNT + "=" + sch.getRepeatCount() + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_INTERVAL + "=" + sch.getRepeatInterval() + ","
                 + DBHelper.TABLE_COLUMN_REPEAT_UNIT + "=" + sch.getRepeatUnit() + ","
                 + DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + "=" + sch.getTimestamp();
+        try {
+            byte[] rec = record.getBytes("UTF-8");
+            data.putShortAutoInc((short) rec.length);
+            data.putBytesAutoInc(rec);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error: " + e.getMessage());
+        }
+        data.setLen(data.getBufOffset());
 
         ArrayList<Integer> ids = account.getShareIds();
         ArrayList<Integer> states = account.getShareStates();
         for (int ii = 0; ii < states.size(); ii++) {
-            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED) {
-                post(ids.get(ii));
+            if (states.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
+                if ((type != LTransaction.TRANSACTION_TYPE_EXPENSE) && type != LTransaction.TRANSACTION_TYPE_INCOME) {
+                    if (account2.getShareUserState(ids.get(ii)) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
+                        post(ids.get(ii));
+                    } else {
+                        LLog.d(TAG, "Only one account is shared, schedule sharing ignored");
+                    }
+                } else {
+                    post(ids.get(ii));
+                }
             }
         }
         return true;
     }
 
     public boolean updateScheduledItem(LScheduledTransaction sch, int oldState) {
-        record = ACTION_UPDATE_SCHEDULED_ITEM + ":" + DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
+        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
         return post_schedule_item_update(sch);
     }
 
     public boolean updateScheduledItem(LScheduledTransaction sch, LScheduledTransaction oldSch) {
-        record = ACTION_UPDATE_SCHEDULED_ITEM + ":";
+        record = "";
         if (oldSch.getRepeatCount() != sch.getRepeatCount()) {
             record += DBHelper.TABLE_COLUMN_REPEAT_COUNT + "old=" + oldSch.getRepeatCount() + ",";
         }
@@ -400,7 +426,7 @@ public class LJournal {
     }
 
     public boolean updateScheduledItem(LScheduledTransaction sch) {
-        record = ACTION_UPDATE_SCHEDULED_ITEM + ":";
+        record = "";
         return post_schedule_item_update(sch);
     }
 
@@ -871,7 +897,7 @@ public class LJournal {
     public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {
         LAccount account = DBAccount.getByGid(accountGid);
         if (account == null) {
-            LLog.w(TAG, "unexpected, account no longer available: " + account);
+            LLog.w(TAG, "unexpected, account no longer available: " + accountGid);
             return;
         }
 
@@ -979,9 +1005,28 @@ public class LJournal {
         }
     }
 
-    private static void updateScheduledItemFromReceivedRecord(String receivedRecord) {
+    public static void updateScheduleFromReceivedRecord(int accountGid, int accountGid2, String receivedRecord) {
+        LAccount account = DBAccount.getByGid(accountGid);
+        LAccount account2 = DBAccount.getByGid(accountGid2);
+        if (account == null) {
+            LLog.w(TAG, "unexpected, account no longer available: " + accountGid);
+            return;
+        }
+
         OldRecord oldRecord = new OldRecord();
         LTransaction receivedItem = parseItemFromReceivedRecord(receivedRecord, oldRecord);
+        receivedItem.setAccount(account.getId());
+
+        if ((receivedItem.getType() != LTransaction.TRANSACTION_TYPE_INCOME) &&
+                (receivedItem.getType() != LTransaction.TRANSACTION_TYPE_EXPENSE))
+        {
+            if (account2 == null) {
+                LLog.w(TAG, "unexpected, account no longer available: " + accountGid2);
+                return;
+            } else {
+                receivedItem.setAccount2(account2.getId());
+            }
+        }
 
         String[] splitRecords = receivedRecord.split(",", -1);
         long timestamp = 0;
@@ -1046,6 +1091,9 @@ public class LJournal {
                 if (oldRecord.oldTag) item.setTag(receivedItem.getTag());
                 if (oldRecord.oldNote) item.setNote(receivedItem.getNote());
                 if (oldRecord.oldTimestamp) item.setTimeStamp(receivedItem.getTimeStamp());
+
+                item.setAccount(receivedItem.getAccount());
+                item.setAccount2(receivedItem.getAccount2());
                 item.setBy(receivedItem.getBy());
                 if (item.getTimeStampLast() <= receivedItem.getTimeStampLast())
                     item.setTimeStampLast(receivedItem.getTimeStampLast());
@@ -1054,6 +1102,7 @@ public class LJournal {
                 if (oldIntervalFound) sch.setRepeatInterval(repeatInterval);
                 if (oldUnitFound) sch.setRepeatUnit(repeatUnit);
                 if (oldTimestampFound) sch.setTimestamp(timestamp);
+
                 DBScheduledTransaction.update(sch);
             } else if (item.getTimeStampLast() <= receivedItem.getTimeStampLast()) {
                 item.setState(receivedItem.getState());
@@ -1074,6 +1123,7 @@ public class LJournal {
                 sch.setRepeatUnit(repeatUnit);
                 sch.setRepeatInterval(repeatInterval);
                 sch.setRepeatCount(repeatCount);
+
                 DBScheduledTransaction.update(sch);
             }
         } else {
@@ -1352,21 +1402,6 @@ public class LJournal {
         }
     }
 
-    private static void shareAccountFromReceivedRecord(String receivedRecord) {
-        LLog.d(TAG, receivedRecord);
-        //TODO:
-    }
-
-    public static void receive(String recvRecord) {
-        String[] ss = recvRecord.split(":", 3);
-        int action = Integer.parseInt(ss[1]);
-        switch (action) {
-            case ACTION_UPDATE_SCHEDULED_ITEM:
-                updateScheduledItemFromReceivedRecord(ss[2]);
-                break;
-        }
-    }
-
     //////////////////////////////////////////////////////////////////////////
     public static void pushAllAccountRecords(int userId, LAccount account) {
         new MyTask().execute(new MyParams(userId, account));
@@ -1392,10 +1427,10 @@ public class LJournal {
                 DBTransaction.getValues(cursor, items[ii++]);
 
                 //if (true) { //DISABLED: this does not seem to speed up significantly and does not show active progress
-                    if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
-                        journal.shareItems(userId, account.getGid(), items, ii);
-                        ii = 0;
-                    }
+                if (ii == JRQST_SHARE_TRANSITION_RECORDS_MAX_PER_REQUEST) {
+                    journal.shareItems(userId, account.getGid(), items, ii);
+                    ii = 0;
+                }
                 //} else {
                 //    journal.shareItem(userId, account.getGid(), items[--ii]);
                 //}
@@ -1408,7 +1443,6 @@ public class LJournal {
         }
         if (cursor != null) cursor.close();
 
-        /*TODO: enable schedule sharing among users
         cursor = DBScheduledTransaction.getCursorByAccount(account.getId());
         if (cursor != null && cursor.getCount() > 0) {
             cursor.moveToFirst();
@@ -1421,7 +1455,6 @@ public class LJournal {
             } while (cursor.moveToNext());
         }
         if (cursor != null) cursor.close();
-        */
         return true;
     }
 

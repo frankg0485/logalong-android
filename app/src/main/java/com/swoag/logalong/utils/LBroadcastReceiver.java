@@ -20,12 +20,8 @@ public class LBroadcastReceiver {
     public static final int ACTION_USER_CREATED = 4;
     public static final int ACTION_LOGIN = 5;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
-    public static final int ACTION_SHARE_ACCOUNT_WITH_USER = 30;
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
-    public static final int ACTION_CONFIRMED_ACCOUNT_SHARE_WITH_UUID = 50;
     public static final int ACTION_JOURNAL_POSTED = 70;
-    public static final int ACTION_JOURNAL_RECEIVED = 71;
-    public static final int ACTION_SHARE_ACCOUNT_USER_CHANGE = 80;
     public static final int ACTION_USER_PROFILE_UPDATED = 84;
     public static final int ACTION_NETWORK_CONNECTED = 90;
 
@@ -39,6 +35,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER = 116;
     public static final int ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG = 117;
     public static final int ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY = 118;
+    public static final int ACTION_REQUESTED_TO_SHARE_SCHEDULE = 119;
 
     public static final int ACTION_SERVER_BROADCAST_MSG_RECEIVED = 1000;
     public static final int ACTION_UNKNOWN_MSG = 9999;
