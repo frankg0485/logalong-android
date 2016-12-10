@@ -36,6 +36,7 @@ import com.swoag.logalong.views.LWarnDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         LNewEntryDialog.LNewEntryDialogItf,
@@ -250,6 +251,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.set(year, monthOfYear, dayOfMonth);
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
         item.setTimeStamp(calendar.getTimeInMillis());
@@ -285,6 +287,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             switch (v.getId()) {
                 case R.id.tvDate:
                     final Calendar c = Calendar.getInstance();
+                    c.setTimeZone(TimeZone.getTimeZone("GMT"));
                     c.setTimeInMillis(item.getTimeStamp());
                     DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
                             TransactionEdit.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));

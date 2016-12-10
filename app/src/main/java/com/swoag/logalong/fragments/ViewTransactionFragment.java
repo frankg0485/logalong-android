@@ -53,6 +53,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class ViewTransactionFragment extends LFragment implements DBLoaderHelper.DBLoaderHelperCallbacks,
@@ -124,6 +125,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
+        now.setTimeZone(TimeZone.getTimeZone("GMT"));
         now.clear();
         now.set(year, month, 1);
         return now.getTimeInMillis();
@@ -372,6 +374,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         if (AppPersistency.viewTransactionYear == -1 || AppPersistency.viewTransactionMonth == -1) {
             Calendar now = Calendar.getInstance();
+            now.setTimeZone(TimeZone.getTimeZone("GMT"));
             AppPersistency.viewTransactionYear = now.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = now.get(Calendar.MONTH);
         }

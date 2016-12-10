@@ -33,6 +33,7 @@ import com.swoag.logalong.utils.LTask;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.TimeZone;
 
 public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener, Loader.OnLoadCompleteListener {
     private static final String TAG = MainService.class.getSimpleName();
@@ -608,6 +609,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (isCancelled()) return false;
                 else data.moveToFirst();
                 Calendar calendar = Calendar.getInstance();
+                calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
                 double[] doubles = new double[12];
                 long lastAccountId = 0;
                 int lastYear = 0;

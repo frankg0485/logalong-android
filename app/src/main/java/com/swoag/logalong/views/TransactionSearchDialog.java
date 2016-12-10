@@ -33,6 +33,7 @@ import com.swoag.logalong.utils.LViewUtils;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.TimeZone;
 
 public class TransactionSearchDialog extends Dialog implements
         DialogInterface.OnDismissListener, DatePickerDialog.OnDateSetListener {
@@ -482,6 +483,7 @@ public class TransactionSearchDialog extends Dialog implements
         setFromTime = from;
 
         final Calendar c = Calendar.getInstance();
+        c.setTimeZone(TimeZone.getTimeZone("GMT"));
         c.setTimeInMillis(from ? LPreferences.getSearchAllTimeFrom() : LPreferences.getSearchAllTimeTo());
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(context, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
@@ -493,6 +495,7 @@ public class TransactionSearchDialog extends Dialog implements
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.clear();
         calendar.set(year, monthOfYear, dayOfMonth);
         TextView tv = fromV;

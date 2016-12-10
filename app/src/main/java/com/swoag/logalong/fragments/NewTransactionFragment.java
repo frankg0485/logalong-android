@@ -37,6 +37,7 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
         DBLoaderHelper.DBLoaderHelperCallbacks {
@@ -185,6 +186,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
 
                 //patch up the actual timestamp to make sure this is the last entry for the day
                 Calendar calendar = Calendar.getInstance();
+                calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
+
                 int year = calendar.get(Calendar.YEAR);
                 int month = calendar.get(Calendar.MONTH);
                 int day = calendar.get(Calendar.DAY_OF_MONTH);
@@ -254,6 +257,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         if (null == allBalances) return;
 
         Calendar now = Calendar.getInstance();
+        now.setTimeZone(TimeZone.getTimeZone("GMT"));
+
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
         double balance;
@@ -292,6 +297,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 tv.setText(name);
 
                 Calendar now = Calendar.getInstance();
+                now.setTimeZone(TimeZone.getTimeZone("GMT"));
                 int year = now.get(Calendar.YEAR);
                 int month = now.get(Calendar.MONTH);
 

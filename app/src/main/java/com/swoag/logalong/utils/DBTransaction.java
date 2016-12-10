@@ -11,6 +11,7 @@ import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class DBTransaction {
@@ -233,6 +234,7 @@ public class DBTransaction {
 
     public static LTransaction getLastItemOfTheDay(int year, int month, int day) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.clear();
         calendar.set(year, month, day, 0, 0, 0);
         long startMs = calendar.getTimeInMillis();
