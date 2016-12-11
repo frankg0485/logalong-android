@@ -59,7 +59,7 @@
                     android:textColor="#fff"
                     android:textColorHint="@color/base_text_color"
                     android:textSize="16sp"
-                    android:visibility="invisible" />
+                    android:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/add"

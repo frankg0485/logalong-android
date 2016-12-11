@@ -54,6 +54,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     private View viewDiscard, viewSave, viewFrom, viewTo, viewAccount2, viewCategory, viewVendor, viewTag;
     private TextView amountTV, accountTV, account2TV, categoryTV, vendorTV, tagTV, lastChangeTV;
+    private View editHeaderV;
 
     private TextView dateTV;
     private EditText noteET;
@@ -143,10 +144,22 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         viewTag = setViewListener(rootView, R.id.tagRow);
         viewAccount2 = setViewListener(rootView, R.id.account2Row);
 
+        editHeaderV = rootView.findViewById(R.id.editHeader);
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
 
         TextView typeTV = (TextView) rootView.findViewById(R.id.type);
         typeTV.setText(activity.getString(LTransaction.getTypeStringId(item.getType())));
+        switch (item.getType()) {
+            case LTransaction.TRANSACTION_TYPE_INCOME:
+                LViewUtils.setBackgroundColor(editHeaderV, 0x6000ff00);
+                break;
+            case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                LViewUtils.setBackgroundColor(editHeaderV, 0x60ff0000);
+                break;
+            default:
+                LViewUtils.setBackgroundColor(editHeaderV, 0x600000ff);
+                break;
+        }
 
         amountTV = (TextView) rootView.findViewById(R.id.tvAmount);
         accountTV = (TextView) rootView.findViewById(R.id.tvAccount);

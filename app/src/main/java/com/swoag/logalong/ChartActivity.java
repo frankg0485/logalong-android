@@ -568,8 +568,8 @@ public class ChartActivity extends LFragmentActivity implements
 
                         int index = pieEntries.indexOf(pe);
 
-                        setBackgroundColor(entryDetailsV, colors[index]);
-                        setBackgroundColor(entryDetailsHV, colors[index]);
+                        LViewUtils.setBackgroundColor(entryDetailsV, colors[index]);
+                        LViewUtils.setBackgroundColor(entryDetailsHV, colors[index]);
 
                         entryDetailsHeaderNameTV.setText(pe.getLabel());
                         entryDetailsHeaderValueTV.setText(String.format("%.2f", pe.getValue()));
@@ -594,23 +594,6 @@ public class ChartActivity extends LFragmentActivity implements
 
         );
         pieChart.invalidate();
-    }
-
-    private void setBackgroundColor(View view, int color) {
-        Drawable background = view.getBackground();
-        if (background instanceof ShapeDrawable) {
-            ShapeDrawable shapeDrawable = (ShapeDrawable) background;
-            shapeDrawable.getPaint().setColor(color);
-        } else if (background instanceof GradientDrawable) {
-            GradientDrawable gradientDrawable = (GradientDrawable) background;
-            gradientDrawable.setColor(color);
-        } else if (background instanceof ColorDrawable) {
-            int currentapiVersion = android.os.Build.VERSION.SDK_INT;
-            if (currentapiVersion >= Build.VERSION_CODES.HONEYCOMB) {
-                ColorDrawable colorDrawable = (ColorDrawable) background;
-                colorDrawable.setColor(color);
-            }
-        }
     }
 
     private class MyListAdapter extends ArrayAdapter<String> {

@@ -158,6 +158,7 @@ public class LScheduledTransaction {
                 transaction.setTimeStamp(baseTimeMs);
 
                 DBTransaction.add(transaction, true, true);
+                LLog.d(TAG, "creating missed schedule entry: " + transaction.getRid() + ymd);
             } else {
                 //entry already exits, do nothing
             }

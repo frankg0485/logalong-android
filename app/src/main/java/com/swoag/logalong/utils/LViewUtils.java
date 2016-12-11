@@ -6,6 +6,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.view.Display;
@@ -60,6 +64,23 @@ public class LViewUtils {
         if (now - lastClickTime < 500) ret = true;
         lastClickTime = now;
         return ret;
+    }
+
+    public static void setBackgroundColor(View view, int color) {
+        Drawable background = view.getBackground();
+        if (background instanceof ShapeDrawable) {
+            ShapeDrawable shapeDrawable = (ShapeDrawable) background;
+            shapeDrawable.getPaint().setColor(color);
+        } else if (background instanceof GradientDrawable) {
+            GradientDrawable gradientDrawable = (GradientDrawable) background;
+            gradientDrawable.setColor(color);
+        } else if (background instanceof ColorDrawable) {
+            int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+            if (currentapiVersion >= Build.VERSION_CODES.HONEYCOMB) {
+                ColorDrawable colorDrawable = (ColorDrawable) background;
+                colorDrawable.setColor(color);
+            }
+        }
     }
 
     public static void recycleBitmap (ImageView v) {
