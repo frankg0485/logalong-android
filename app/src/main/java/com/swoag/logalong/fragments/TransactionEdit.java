@@ -227,13 +227,14 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             amountTV.setText(inputString);
         }
 
+        viewDiscard = setViewListener(rootView, R.id.discard);
         if (bCreate) {
             if (!bScheduleMode) {
                 LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
                 picker.show();
             }
+            viewDiscard.setVisibility(View.GONE);
         } else {
-            viewDiscard = setViewListener(rootView, R.id.discard);
             viewDiscard.setVisibility(View.VISIBLE);
         }
 
