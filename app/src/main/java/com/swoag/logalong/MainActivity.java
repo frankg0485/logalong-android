@@ -320,10 +320,10 @@ public class MainActivity extends LFragmentActivity
             "General"
     };*/
 
-    private static String[] vendors = {
+    /*private static String[] vendors = {
             "Amazon",
             "Chipotle"
-    };
+    };*/
 
     public static void addAccounts() {
         LAccount account = new LAccount();
@@ -352,14 +352,14 @@ public class MainActivity extends LFragmentActivity
         }
     }*/
 
-    public static void addVendors() {
+    /*public static void addVendors() {
         LVendor vendor = new LVendor();
         for (int ii = 0; ii < vendors.length; ii++) {
             vendor.setName(vendors[ii]);
             DBVendor.add(vendor);
             vendor.setRid(UUID.randomUUID().toString());
         }
-    }
+    }*/
 
     private void initDb() {
         if (TextUtils.isEmpty(DBAccount.getNameById(1))) {
@@ -369,9 +369,9 @@ public class MainActivity extends LFragmentActivity
         if (TextUtils.isEmpty(DBCategory.getNameById(1))) {
             addCategories();
         }
-        if (TextUtils.isEmpty(DBVendor.getNameById(1))) {
+        /*if (TextUtils.isEmpty(DBVendor.getNameById(1))) {
             addVendors();
-        }
+        }*/
 
         /*if (TextUtils.isEmpty(DBAccess.getTagById(1))) {
             addTags();
