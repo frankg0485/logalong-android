@@ -7,7 +7,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -43,6 +45,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf,
         LWarnDialog.LWarnDialogItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
+    private static final int MAX_NOTE_TEXT_LEN = 80;
 
     private Activity activity;
     private View rootView;
@@ -63,6 +66,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private LSelectionDialog mSelectionDialog;
     private boolean firstTimeAmountPicker = true;
     private MyClickListener myClickListener;
+    private TextWatcher editTextWatcher;
 
     public interface TransitionEditItf {
         public static final int EXIT_DELETE = 10;
@@ -179,7 +183,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 uname = "myself";
             } else {
                 String fname = LPreferences.getShareUserFullName(item.getBy());
-                String id =  LPreferences.getShareUserName(item.getBy());
+                String id = LPreferences.getShareUserName(item.getBy());
                 if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
                     uname = fname + " (" + id + ")";
                 }
@@ -190,6 +194,29 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         if (!bScheduleMode) {
             noteET = (EditText) setViewListener(rootView, R.id.noteEditText);
+            editTextWatcher =
+                    new TextWatcher() {
+                        @Override
+                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                        }
+
+                        @Override
+                        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                        }
+
+                        @Override
+                        public void afterTextChanged(Editable s) {
+                            String txt = noteET.getText().toString().trim();
+                            if (txt.length() > MAX_NOTE_TEXT_LEN) {
+                                txt = txt.substring(0, MAX_NOTE_TEXT_LEN);
+                                noteET.setText(txt);
+                                noteET.setSelection(txt.length());
+                            }
+                        }
+                    };
+            noteET.addTextChangedListener(editTextWatcher);
             noteET.setText(item.getNote());
             setViewListener(rootView, R.id.clearText);
         }
@@ -238,7 +265,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             viewDiscard.setVisibility(View.VISIBLE);
         }
 
-        ViewGroup vg = (ViewGroup)rootView.findViewById(R.id.allEditItems);
+        ViewGroup vg = (ViewGroup) rootView.findViewById(R.id.allEditItems);
         LViewUtils.disableEnableControls(bAllowEdit, vg);
 
         hideIME();
@@ -253,7 +280,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         viewTag = null;
         viewAccount2 = null;
 
-        if (!bScheduleMode) noteET = null;
+        if (!bScheduleMode) {
+            noteET.removeTextChangedListener(editTextWatcher);
+            editTextWatcher = null;
+            noteET = null;
+        }
         accountTV = null;
         categoryTV = null;
         vendorTV = null;
