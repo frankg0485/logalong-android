@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.TimeZone;
 
 public class DBPorter {
     private static final String TAG = DBPorter.class.getSimpleName();
@@ -426,7 +427,9 @@ public class DBPorter {
         String str[] = file.getName().split("\\.", -1);
         long ms = Long.valueOf(str[1]);
 
-        return "" + (new SimpleDateFormat("EEEE, MMM d yyyy")).format(new Date(ms));
+        SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
+        sd.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return "" + sd.format(new Date(ms));
     }
 
     /*

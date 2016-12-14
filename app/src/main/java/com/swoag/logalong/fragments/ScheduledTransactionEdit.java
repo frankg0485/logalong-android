@@ -2,35 +2,12 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
-import android.app.DatePickerDialog;
-import android.content.Context;
-import android.database.Cursor;
-import android.graphics.drawable.ColorDrawable;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LScheduledTransaction;
-import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.utils.DBAccess;
-import com.swoag.logalong.utils.DBAccount;
-import com.swoag.logalong.utils.DBCategory;
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBTag;
-import com.swoag.logalong.utils.DBVendor;
-import com.swoag.logalong.utils.LLog;
-import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
-import com.swoag.logalong.utils.LViewUtils;
-import com.swoag.logalong.views.LDollarAmountPicker;
-import com.swoag.logalong.views.LSelectionDialog;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditItf, View.OnClickListener {
     private static final String TAG = ScheduledTransactionEdit.class.getSimpleName();
