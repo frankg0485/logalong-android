@@ -20,6 +20,7 @@ import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class LAlarmReceiver extends BroadcastReceiver {
@@ -51,6 +52,8 @@ public class LAlarmReceiver extends BroadcastReceiver {
                 if (sch.getTimestamp() <= System.currentTimeMillis()) {
                     // only update DB record if this is *our* alarm: meaning it must have been scheduled in the past
                     Calendar calendar = Calendar.getInstance();
+                    // always use GMT timezone y/m/d to avoid duplicated schedule entry.
+                    calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
                     calendar.setTimeInMillis(sch.getTimestamp());
                     String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
 
