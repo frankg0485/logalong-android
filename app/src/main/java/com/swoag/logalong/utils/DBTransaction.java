@@ -4,14 +4,12 @@ package com.swoag.logalong.utils;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 
 import java.util.Calendar;
-import java.util.UUID;
 
 public class DBTransaction {
     private static final String TAG = DBTransaction.class.getSimpleName();

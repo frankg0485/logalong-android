@@ -22,7 +22,6 @@ import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
-import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;

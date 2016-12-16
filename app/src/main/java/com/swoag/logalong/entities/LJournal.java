@@ -7,10 +7,8 @@ import android.os.AsyncTask;
 import android.text.TextUtils;
 
 import com.swoag.logalong.network.LAppServer;
-import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
-import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
@@ -21,15 +19,9 @@ import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LStorage;
-import com.swoag.logalong.utils.LTask;
-import com.swoag.logalong.utils.LViewUtils;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.UUID;
 
 public class LJournal {
     private static final String TAG = LJournal.class.getSimpleName();

@@ -3,18 +3,13 @@ package com.swoag.logalong.network;
 
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LBufferPool;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.io.InputStream;

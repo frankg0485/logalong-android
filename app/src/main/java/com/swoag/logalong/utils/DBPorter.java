@@ -2,11 +2,8 @@ package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.database.Cursor;
-import android.os.Environment;
 import android.text.TextUtils;
 
-import com.swoag.logalong.LApp;
-import com.swoag.logalong.MainService;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LScheduledTransaction;

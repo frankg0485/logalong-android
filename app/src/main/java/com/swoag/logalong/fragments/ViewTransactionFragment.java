@@ -2,15 +2,10 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
-import android.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.media.Image;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -22,20 +17,18 @@ import android.widget.TextView;
 import android.widget.ViewFlipper;
 
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LSectionSummary;
+import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBLoaderHelper;
-import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -43,16 +36,11 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
-import com.swoag.logalong.views.LShareAccountDialog;
 import com.swoag.logalong.views.TransactionSearchDialog;
-
-import org.w3c.dom.Text;
 
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.UUID;
 
 public class ViewTransactionFragment extends LFragment implements DBLoaderHelper.DBLoaderHelperCallbacks,

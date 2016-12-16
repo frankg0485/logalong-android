@@ -7,8 +7,8 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.ViewGroup;
 
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.fragments.SettingsFragment;
 import com.swoag.logalong.fragments.NewTransactionFragment;
+import com.swoag.logalong.fragments.SettingsFragment;
 import com.swoag.logalong.fragments.ViewTransactionFragment;
 
 public class LPagerAdapter extends FragmentStatePagerAdapter {

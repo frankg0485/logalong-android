@@ -16,16 +16,10 @@ import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.entities.LVendor;
-import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
-import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBPorter;
-import com.swoag.logalong.utils.DBTransaction;
-import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -34,7 +28,6 @@ import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LShareAccountConfirmDialog;
 import com.swoag.logalong.views.LViewPager;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 public class MainActivity extends LFragmentActivity

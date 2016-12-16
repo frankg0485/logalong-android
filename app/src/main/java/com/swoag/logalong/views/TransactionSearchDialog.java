@@ -1,7 +1,6 @@
 package com.swoag.logalong.views;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;

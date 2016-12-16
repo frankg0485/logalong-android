@@ -4,8 +4,6 @@ package com.swoag.logalong;
 import android.app.Application;
 import android.content.Context;
 
-import com.swoag.logalong.utils.AppPersistency;
-
 public class LApp extends Application {
     public static Context ctx;
 

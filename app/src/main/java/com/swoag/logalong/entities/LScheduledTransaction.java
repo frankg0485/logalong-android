@@ -10,7 +10,6 @@ import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.UUID;
 
 public class LScheduledTransaction {
     private static final String TAG = LScheduledTransaction.class.getSimpleName();

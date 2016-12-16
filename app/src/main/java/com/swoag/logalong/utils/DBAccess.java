@@ -5,26 +5,15 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountSummary;
-import com.swoag.logalong.entities.LBoxer;
-import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.entities.LTag;
-import com.swoag.logalong.entities.LVendor;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.UUID;
 
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();

@@ -8,10 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountBalance;
-
-import java.util.HashSet;
 
 public class DBAccountBalance {
     private static final String TAG = DBAccountBalance.class.getSimpleName();

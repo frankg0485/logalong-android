@@ -5,14 +5,10 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LTag;
-
-import java.util.UUID;
 
 public class DBTag {
     private static final String TAG = DBTag.class.getSimpleName();

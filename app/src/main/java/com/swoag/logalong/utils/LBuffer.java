@@ -1,9 +1,6 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class LBuffer {
     private static final String TAG = LBuffer.class.getSimpleName();
 

@@ -5,17 +5,14 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LVendor;
 
 import java.util.HashSet;
-import java.util.UUID;
 
 public class DBVendor {
     private static final String TAG = DBVendor.class.getSimpleName();

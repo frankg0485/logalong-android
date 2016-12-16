@@ -5,21 +5,17 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
 import com.swoag.logalong.network.LAppServer;
@@ -31,10 +27,6 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
-import com.swoag.logalong.views.LReminderDialog;
-import com.swoag.logalong.views.LRenameDialog;
-
-import org.w3c.dom.Text;
 
 public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = ProfileEdit.class.getSimpleName();

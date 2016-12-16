@@ -9,8 +9,6 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
 
-import java.util.HashMap;
-
 public class LBroadcastReceiver {
     private static final String TAG = LBroadcastReceiver.class.getSimpleName();
     public static final String EXTRA_RET_CODE = "ert";

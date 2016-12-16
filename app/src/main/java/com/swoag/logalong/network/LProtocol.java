@@ -7,7 +7,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;

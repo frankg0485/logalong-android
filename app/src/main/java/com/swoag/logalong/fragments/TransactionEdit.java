@@ -21,12 +21,10 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
-import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;

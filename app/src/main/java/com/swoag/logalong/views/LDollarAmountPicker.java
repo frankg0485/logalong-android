@@ -8,11 +8,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.swoag.logalong.LApp;
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;

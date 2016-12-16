@@ -6,7 +6,6 @@ import android.util.Log;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.LoggingService;
-import com.swoag.logalong.MainService;
 import com.swoag.logalong.network.LRemoteLogging;
 
 public class LLog {

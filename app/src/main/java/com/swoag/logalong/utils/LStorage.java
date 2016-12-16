@@ -6,7 +6,6 @@ import android.os.Environment;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 public class LStorage {

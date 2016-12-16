@@ -13,10 +13,6 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LOnClickListener;
 
-import org.w3c.dom.Text;
-
-import java.util.Dictionary;
-
 public class GenericListOptionDialog extends Dialog implements
         DialogInterface.OnDismissListener {
 

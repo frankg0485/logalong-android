@@ -7,7 +7,6 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.UUID;
 
 public class LAccount {

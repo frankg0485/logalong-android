@@ -4,7 +4,6 @@ package com.swoag.logalong.utils;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,7 +13,6 @@ import android.net.Uri;
 import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LTransaction;
 
-import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.HashMap;
 

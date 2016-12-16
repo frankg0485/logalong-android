@@ -3,27 +3,16 @@ package com.swoag.logalong.fragments;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
-import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBPorter;
-import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LOnClickListener;
-import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LWarnDialog;

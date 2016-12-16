@@ -2,7 +2,6 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class LSectionSummary {
     private static final String TAG = LSectionSummary.class.getSimpleName();

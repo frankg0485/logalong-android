@@ -7,10 +7,8 @@ import android.content.Intent;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainService;
-import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTransaction;
@@ -21,7 +19,6 @@ import com.swoag.logalong.utils.LPreferences;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 
 public class LAlarmReceiver extends BroadcastReceiver {
     private static final String TAG = LAlarmReceiver.class.getSimpleName();

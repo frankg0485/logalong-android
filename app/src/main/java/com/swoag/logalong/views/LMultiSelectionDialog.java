@@ -3,29 +3,20 @@ package com.swoag.logalong.views;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.widget.CursorAdapter;
-import android.text.Editable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AlphabetIndexer;
 import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
@@ -34,9 +25,7 @@ import android.widget.TextView;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 public class LMultiSelectionDialog extends Dialog
         implements AdapterView.OnItemClickListener {

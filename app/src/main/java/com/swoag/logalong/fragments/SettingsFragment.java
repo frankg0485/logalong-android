@@ -11,9 +11,7 @@ import android.widget.ViewFlipper;
 
 import com.swoag.logalong.BuildConfig;
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
-import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.LOnClickListener;
 
 public class SettingsFragment extends LFragment implements

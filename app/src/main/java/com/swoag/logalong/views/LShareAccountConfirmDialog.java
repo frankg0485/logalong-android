@@ -9,40 +9,20 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountShareRequest;
-import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
-import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.LBroadcastReceiver;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
-import com.swoag.logalong.utils.LPreferences;
-import com.swoag.logalong.utils.LViewUtils;
-
-import java.util.ArrayList;
-import java.util.HashSet;
 
 public class LShareAccountConfirmDialog extends Dialog implements
         LBroadcastReceiver.BroadcastReceiverListener, DialogInterface.OnDismissListener {

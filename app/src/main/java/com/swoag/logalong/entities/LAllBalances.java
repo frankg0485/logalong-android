@@ -3,8 +3,6 @@ package com.swoag.logalong.entities;
 
 import android.database.Cursor;
 
-import com.swoag.logalong.utils.DBAccess;
-import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBHelper;
 
 import java.util.HashMap;

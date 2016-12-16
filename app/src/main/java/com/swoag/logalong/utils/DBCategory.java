@@ -5,14 +5,10 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
-
-import java.util.UUID;
 
 public class DBCategory {
     private static final String TAG = DBCategory.class.getSimpleName();
