@@ -288,9 +288,7 @@ public class ScheduleActivity extends LFragmentActivity implements
 
             tv = (TextView) mainView.findViewById(R.id.date);
             long tm = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP));
-            SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-            sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-            tv.setText(sd.format(tm));
+            tv.setText(new SimpleDateFormat("MMM d, yyy").format(tm));
 
             tv = (TextView) mainView.findViewById(R.id.dollor);
 

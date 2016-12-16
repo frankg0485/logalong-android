@@ -93,9 +93,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     private void updateItemDisplay() {
-        SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-        sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-        dateTV.setText(sd.format(item.getTimeStamp()));
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
 
         accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
         accountTV.setText(DBAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
@@ -191,10 +189,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 }
             }
             if (!TextUtils.isEmpty(uname)) name = " by " + uname;
-
-            SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-            sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-            lastChangeTV.setText(sd.format(item.getTimeStampLast()) + name);
+            lastChangeTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStampLast()) + name);
         }
 
         if (!bScheduleMode) {
@@ -303,9 +298,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.set(year, monthOfYear, dayOfMonth);
-        SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-        sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-        dateTV.setText(sd.format(calendar.getTimeInMillis()));
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
         item.setTimeStamp(calendar.getTimeInMillis());
     }
 

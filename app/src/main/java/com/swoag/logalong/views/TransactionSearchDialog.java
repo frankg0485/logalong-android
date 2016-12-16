@@ -1,6 +1,7 @@
 package com.swoag.logalong.views;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -355,11 +356,8 @@ public class TransactionSearchDialog extends Dialog implements
             timeView.setVisibility(View.VISIBLE);
             LViewUtils.setAlpha(timeCheckView, 0.8f);
         }
-        SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-        sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        fromV.setText(sd.format(LPreferences.getSearchAllTimeFrom()));
-        toV.setText(sd.format(LPreferences.getSearchAllTimeTo()));
+        fromV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()));
+        toV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
     }
 
     private void displayFilterBy() {
@@ -509,8 +507,6 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis() + (long) 24 * 3600 * 1000 - 1);
         }
 
-        SimpleDateFormat sd = new SimpleDateFormat("MMM d, yyy");
-        sd.setTimeZone(TimeZone.getTimeZone("GMT"));
-        tv.setText(sd.format(calendar.getTimeInMillis()));
+        tv.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
     }
 }
