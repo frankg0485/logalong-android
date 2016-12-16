@@ -75,10 +75,8 @@ public class LAppServer {
 
     private void autoReconnect(int timeS) {
         if (tried++ >= 5) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(calendar.getTimeInMillis() + timeS * 1000);
         LAlarm.cancelAutoReconnectAlarm();
-        LAlarm.setAutoReconnectAlarm(calendar.getTimeInMillis());
+        LAlarm.setAutoReconnectAlarm(System.currentTimeMillis() + timeS * 1000);
     }
 
     //caller must hold netLock
