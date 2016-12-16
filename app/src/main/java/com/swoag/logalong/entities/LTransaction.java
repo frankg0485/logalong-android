@@ -5,6 +5,8 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LPreferences;
 
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.util.UUID;
 
 public class LTransaction {
@@ -45,6 +47,18 @@ public class LTransaction {
     private void init() {
         this.timeStampLast = LPreferences.getServerUtc();
         this.timeStamp = System.currentTimeMillis();
+        //set y/m/d to default user timezone based value
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timeStamp);
+        int y = calendar.get(Calendar.YEAR);
+        int m = calendar.get(Calendar.MONTH);
+        int d = calendar.get(Calendar.DAY_OF_MONTH);
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
+        calendar.set(Calendar.YEAR, y);
+        calendar.set(Calendar.MONTH, m);
+        calendar.set(Calendar.DAY_OF_MONTH, d);
+        this.timeStamp = calendar.getTimeInMillis();
+
         this.value = 0;
         this.type = TRANSACTION_TYPE_EXPENSE;
         this.by = 0;
