@@ -17,7 +17,6 @@ import com.swoag.logalong.entities.LTransaction;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.TimeZone;
 
 public class DBProvider extends ContentProvider {
     private static final String TAG = DBProvider.class.getSimpleName();
@@ -452,7 +451,6 @@ public class DBProvider extends ContentProvider {
     private void updateAccountBalance(long id, double amount, long timeStamp) {
         boolean exists = false;
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.setTimeInMillis(timeStamp);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);

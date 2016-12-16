@@ -80,7 +80,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -723,7 +722,6 @@ public class ChartActivity extends LFragmentActivity implements
                 double v = 0;
                 long timeMs = 0;
                 Calendar calendar = Calendar.getInstance();
-                calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
 
                 if (isCancelled()) return false;
                 data.moveToFirst();

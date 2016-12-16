@@ -36,7 +36,6 @@ import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.TimeZone;
 
 public class ScheduleActivity extends LFragmentActivity implements
         ScheduledTransactionEdit.ScheduledTransitionEditItf,
@@ -152,7 +151,6 @@ public class ScheduleActivity extends LFragmentActivity implements
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 if (changed) {
                     Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
                     calendar.setTimeInMillis(scheduledItem.getItem().getTimeStamp());
                     calendar.set(Calendar.HOUR_OF_DAY, 0);
                     calendar.set(Calendar.MINUTE, 0);

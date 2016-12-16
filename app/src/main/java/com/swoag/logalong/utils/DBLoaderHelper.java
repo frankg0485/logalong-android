@@ -12,7 +12,6 @@ import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.TimeZone;
 
 public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = DBLoaderHelper.class.getSimpleName();
@@ -76,7 +75,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
-        now.setTimeZone(TimeZone.getTimeZone("GMT"));
         now.clear();
         now.set(year, month, 1);
         return now.getTimeInMillis();
@@ -84,7 +82,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private long resetMs(long ms, boolean nextMonth) {
         Calendar now = Calendar.getInstance();
-        now.setTimeZone(TimeZone.getTimeZone("GMT"));
         now.setTimeInMillis(ms);
         int year = now.get(Calendar.YEAR);
         int month = now.get(Calendar.MONTH);
@@ -113,7 +110,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         if (ym < allStartMs || ym >= allEndMs) {
             //next try: current year month
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
             AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
         } else return true;
@@ -122,7 +118,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         if (ym < allStartMs || ym >= allEndMs) {
             //last resort: last valid year/month of current DB
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
             calendar.setTimeInMillis(allEndMs - 1);
             AppPersistency.viewTransactionYear = calendar.get(Calendar.YEAR);
             AppPersistency.viewTransactionMonth = calendar.get(Calendar.MONTH);
@@ -399,7 +394,6 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (LOADER_INIT_RANGE == loader.getId()) {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
 
             if (data != null && data.getCount() > 0) {
                 data.moveToFirst();

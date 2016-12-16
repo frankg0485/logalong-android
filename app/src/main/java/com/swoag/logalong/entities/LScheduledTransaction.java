@@ -10,7 +10,6 @@ import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class LScheduledTransaction {
@@ -78,7 +77,6 @@ public class LScheduledTransaction {
 
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.setTimeInMillis(baseTimeMs);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -106,7 +104,6 @@ public class LScheduledTransaction {
 
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.setTimeInMillis(ms);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -138,7 +135,6 @@ public class LScheduledTransaction {
 
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         calendar.setTimeInMillis(baseTimeMs);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
@@ -191,7 +187,6 @@ public class LScheduledTransaction {
 
             // always align time to 00:00:00 of the day
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
             calendar.setTimeInMillis(baseTimeMs);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 0);

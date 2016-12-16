@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Calendar;
 import java.util.Random;
-import java.util.TimeZone;
 
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
@@ -76,8 +75,10 @@ public class LAppServer {
 
     private void autoReconnect(int timeS) {
         if (tried++ >= 5) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(calendar.getTimeInMillis() + timeS * 1000);
         LAlarm.cancelAutoReconnectAlarm();
-        LAlarm.setAutoReconnectAlarm(System.currentTimeMillis() + timeS * 1000);
+        LAlarm.setAutoReconnectAlarm(calendar.getTimeInMillis());
     }
 
     //caller must hold netLock

@@ -9,7 +9,6 @@ import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 
 public class LPreferences {
     //private static final String LAST_DB_RESTORE_DATE = "LastDbRd";
@@ -229,7 +228,6 @@ public class LPreferences {
 
     private static long defaultSearchAllTime(boolean from) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         if (from) calendar.add(Calendar.MONTH, -1);
 
         int year = calendar.get(Calendar.YEAR);
