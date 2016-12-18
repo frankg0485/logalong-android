@@ -345,6 +345,15 @@ public class ScheduleActivity extends LFragmentActivity implements
     }
 
     @Override
+    public void onBackPressed() {
+        if (viewFlipper.getDisplayedChild() == 0) {
+            super.onBackPressed();
+        } else {
+            edit.dismiss();
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         MainService.start(this);
