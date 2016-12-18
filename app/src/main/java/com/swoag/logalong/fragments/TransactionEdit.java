@@ -29,7 +29,7 @@ import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
-import com.swoag.logalong.views.LDollarAmountPicker;
+import com.swoag.logalong.views.LDollarAmountPickerView;
 import com.swoag.logalong.views.LNewEntryDialog;
 import com.swoag.logalong.views.LSelectionDialog;
 import com.swoag.logalong.views.LWarnDialog;
@@ -39,7 +39,7 @@ import java.util.Calendar;
 
 public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         LNewEntryDialog.LNewEntryDialogItf,
-        DatePickerDialog.OnDateSetListener, LDollarAmountPicker.LDollarAmountPickerItf,
+        DatePickerDialog.OnDateSetListener, LDollarAmountPickerView.LDollarAmountPickerViewItf,
         LWarnDialog.LWarnDialogItf {
     private static final String TAG = TransactionEdit.class.getSimpleName();
     private static final int MAX_NOTE_TEXT_LEN = 80;
@@ -55,6 +55,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private View viewDiscard, viewSave, viewFrom, viewTo, viewAccount2, viewCategory, viewVendor, viewTag;
     private TextView amountTV, accountTV, account2TV, categoryTV, vendorTV, tagTV, lastChangeTV;
     private View editHeaderV;
+    private View pickerV;
+    private LDollarAmountPickerView picker;
+    private boolean pickerVisible;
 
     private TextView dateTV;
     private EditText noteET;
@@ -147,6 +150,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         editHeaderV = rootView.findViewById(R.id.editHeader);
         dateTV = (TextView) setViewListener(rootView, R.id.tvDate);
+
+        pickerV = rootView.findViewById(R.id.picker);
 
         TextView typeTV = (TextView) rootView.findViewById(R.id.type);
         typeTV.setText(activity.getString(LTransaction.getTypeStringId(item.getType())));
@@ -251,11 +256,13 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             amountTV.setText(inputString);
         }
 
+        pickerVisible = false;
         viewDiscard = setViewListener(rootView, R.id.discard);
         if (bCreate) {
             if (!bScheduleMode) {
-                LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), this);
-                picker.show();
+                if (picker != null) picker.onDestroy();
+                picker = new LDollarAmountPickerView(rootView, item.getValue(), this);
+                pickerVisible = true;
             }
             viewDiscard.setVisibility(View.GONE);
         } else {
@@ -265,6 +272,12 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         ViewGroup vg = (ViewGroup) rootView.findViewById(R.id.allEditItems);
         LViewUtils.disableEnableControls(bAllowEdit, vg);
 
+
+        if (pickerVisible) {
+            pickerV.setVisibility(View.VISIBLE);
+        } else {
+            pickerV.setVisibility(View.GONE);
+        }
         hideIME();
     }
 
@@ -288,6 +301,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         tagTV = null;
         dateTV = null;
         savedItem = null;
+
+        if (picker != null) {
+            picker.onDestroy();
+            picker = null;
+        }
     }
 
     @Override
@@ -319,6 +337,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         if (firstTimeAmountPicker) firstTimeAmountPicker = false;
         updateOkDisplay();
+        pickerV.setVisibility(View.GONE);
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -351,8 +370,10 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     break;
 
                 case R.id.amountRow:
-                    LDollarAmountPicker picker = new LDollarAmountPicker(activity, item.getValue(), TransactionEdit.this);
-                    picker.show();
+                    if (picker != null) picker.onDestroy();
+                    picker = new LDollarAmountPickerView(rootView, item.getValue(), TransactionEdit.this);
+                    pickerVisible = true;
+                    pickerV.setVisibility(View.VISIBLE);
                     break;
 
                 case R.id.account2Row:

@@ -1,316 +1,330 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/base_bgd_color"
-    android:orientation="vertical">
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/editHeader"
-                android:layout_width="fill_parent"
-                android:layout_height="36dp"
-                android:background="#60ff0000"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingBottom="5dp"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp"
-                android:paddingTop="5dp">
-
-                <TextView
-                    android:id="@+id/type"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Expense"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tvDate"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="15dp"
-                    android:layout_weight="1"
-                    android:gravity="right"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/discard"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/ic_action_discard"
-                    android:visibility="gone" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/repeatRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height"
-                android:background="#e4e6e8"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/repeatIntervalH"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="@string/repeat_every"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/repeatInterval"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical|right"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/repeatWeekMonth"
-                    android:layout_width="85dp"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical|right"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="15dp"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/repeatForRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height"
-                android:layout_marginTop="1dp"
-                android:background="#e4e6e8"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/repeatCountH"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="@string/repeat_for"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/repeatCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:paddingLeft="30dp"
-                    android:paddingRight="15dp"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/amountRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height"
-                android:layout_marginTop="1dp"
-                android:background="#e4e6e8"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/tvAmount"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:text="$123.45"
-                    android:textSize="24sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/accountRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height_small"
-                android:background="@color/base_bgd_separator_color"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/from"
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/transfer_from"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvAccount"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_choose_account"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginLeft="30dp"
-                    android:background="@drawable/ic_action_right" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/account2Row"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height_small"
-                android:layout_marginTop="1dp"
-                android:background="@color/base_bgd_separator_color"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/to"
-                    android:layout_width="45dp"
-                    android:layout_height="wrap_content"
-                    android:text="@string/transfer_to"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvAccount2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_choose_account"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginLeft="30dp"
-                    android:background="@drawable/ic_action_right" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/categoryRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height_small"
-                android:layout_marginTop="1dp"
-                android:background="@color/base_bgd_separator_color"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/tvCategory"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_category_not_specified"
-                    android:textColorHint="#aaa"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginLeft="30dp"
-                    android:background="@drawable/ic_action_right" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/vendorRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height_small"
-                android:layout_marginTop="1dp"
-                android:background="@color/base_bgd_separator_color"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/tvVendor"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textColorHint="#aaa"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginLeft="30dp"
-                    android:background="@drawable/ic_action_right" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/tagRow"
-                android:layout_width="fill_parent"
-                android:layout_height="@dimen/list_item_height_small"
-                android:layout_marginTop="1dp"
-                android:background="@color/base_bgd_separator_color"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingLeft="42dp"
-                android:paddingRight="5dp">
-
-                <TextView
-                    android:id="@+id/tvTag"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/hint_tag_not_specified"
-                    android:textColorHint="#aaa"
-                    android:textSize="16sp" />
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginLeft="30dp"
-                    android:background="@drawable/ic_action_right" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvLastChangeBy"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="right"
-                android:paddingRight="15dp"
-                android:text="Jan 25, 2015 by Michael"
-                android:textColor="#aaa"
-                android:textSize="12sp" />
-
-        </LinearLayout>
-    </ScrollView>
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="bottom">
+        android:layout_height="match_parent"
+        android:background="@color/base_bgd_color"
+        android:orientation="vertical">
 
-        <include layout="@layout/bottom" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/editHeader"
+                    android:layout_width="fill_parent"
+                    android:layout_height="36dp"
+                    android:background="#60ff0000"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp"
+                    android:paddingTop="5dp">
+
+                    <TextView
+                        android:id="@+id/type"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Expense"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tvDate"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="15dp"
+                        android:layout_weight="1"
+                        android:gravity="right"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/discard"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/ic_action_discard"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/repeatRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:background="#e4e6e8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/repeatIntervalH"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="@string/repeat_every"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/repeatInterval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical|right"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/repeatWeekMonth"
+                        android:layout_width="85dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical|right"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="15dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/repeatForRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:layout_marginTop="1dp"
+                    android:background="#e4e6e8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/repeatCountH"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="@string/repeat_for"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/repeatCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:paddingLeft="30dp"
+                        android:paddingRight="15dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/amountRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:layout_marginTop="1dp"
+                    android:background="#e4e6e8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/tvAmount"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="$123.45"
+                        android:textSize="24sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/accountRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height_small"
+                    android:background="@color/base_bgd_separator_color"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/from"
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/transfer_from"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvAccount"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_choose_account"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/account2Row"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height_small"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/base_bgd_separator_color"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/to"
+                        android:layout_width="45dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/transfer_to"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvAccount2"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_choose_account"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/categoryRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height_small"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/base_bgd_separator_color"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/tvCategory"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_category_not_specified"
+                        android:textColorHint="#aaa"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/vendorRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height_small"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/base_bgd_separator_color"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/tvVendor"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColorHint="#aaa"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/tagRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height_small"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/base_bgd_separator_color"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/tvTag"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/hint_tag_not_specified"
+                        android:textColorHint="#aaa"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvLastChangeBy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="right"
+                    android:paddingRight="15dp"
+                    android:text="Jan 25, 2015 by Michael"
+                    android:textColor="#aaa"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="bottom">
+
+            <include layout="@layout/bottom" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/picker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true">
+
+        <include layout="@layout/dollar_amount_picker" />
+    </LinearLayout>
+</FrameLayout>
