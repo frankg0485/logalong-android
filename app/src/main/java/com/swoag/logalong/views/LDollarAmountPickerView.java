@@ -4,6 +4,7 @@ package com.swoag.logalong.views;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -12,11 +13,17 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LViewUtils;
 
 public class LDollarAmountPickerView implements View.OnClickListener {
     private static final String TAG = LDollarAmountPickerView.class.getSimpleName();
+    public static final int VALUE_COLOR_RED = 10;
+    public static final int VALUE_COLOR_GREEN = 20;
+    public static final int VALUE_COLOR_BLUE = 30;
+
+    private static final float VIEW_DIM_ALPHA_VALUE = 0.8f;
 
     private View rootView;
     private double value;
@@ -26,6 +33,8 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private View viewDot, viewBackSpace, viewPlus, viewMinus, viewMultiply, viewDivide;
     private View viewClear, viewCancel, viewSave;
     private TextView valueTV;
+    private View pickerBgdView;
+    private int colorCode;
 
     private String inputString = "";
     private double lastValue;
@@ -37,11 +46,30 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         public void onDollarAmountPickerExit(double value, boolean save);
     }
 
-    public LDollarAmountPickerView(View rootView, double value, LDollarAmountPickerViewItf callback) {
+    public LDollarAmountPickerView(View rootView, double value, int colorCode, LDollarAmountPickerViewItf callback) {
         this.rootView = rootView;
         this.value = value;
+        this.colorCode = colorCode;
         this.callback = callback;
         myClickListener = new MyClickListener();
+
+        pickerBgdView = rootView.findViewById(R.id.pickerBgdView);
+        try {
+            GradientDrawable drawable = (GradientDrawable) pickerBgdView.getBackground();
+            switch (colorCode) {
+                case VALUE_COLOR_RED:
+                    drawable.setStroke(1, 0xffff0000);
+                    break;
+                case VALUE_COLOR_GREEN:
+                    drawable.setStroke(1, 0xff00ff00);
+                    break;
+                default:
+                    drawable.setStroke(1, 0xff0000ff);
+                    break;
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "fail to set background color");
+        }
 
         view0 = setViewListener(R.id.b0, false);
         view1 = setViewListener(R.id.b1, false);
@@ -64,6 +92,20 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         viewSave = setViewListener(R.id.ok, true);
 
         valueTV = (TextView) rootView.findViewById(R.id.value);
+
+        //TODO: pass in activity context to access base_red/base_green/base_blue color codes.
+        switch (colorCode) {
+            case VALUE_COLOR_RED:
+                valueTV.setTextColor(0xffbb4238);
+                break;
+            case VALUE_COLOR_GREEN:
+                valueTV.setTextColor(0xff42bb38);
+                break;
+            default:
+                valueTV.setTextColor(0xff4238bb);
+                break;
+        }
+
         clearInputString();
         inputString = value2string(value);
         if (TextUtils.isEmpty(inputString)) {
@@ -188,7 +230,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private void enableOk(boolean yes) {
         viewSave.setEnabled(yes);
         if (yes) LViewUtils.setAlpha((View) viewSave, 1.0f);
-        else LViewUtils.setAlpha((View) viewSave, 0.5f);
+        else LViewUtils.setAlpha((View) viewSave, VIEW_DIM_ALPHA_VALUE);
     }
 
     private void enableMath(boolean yes) {
@@ -203,17 +245,17 @@ public class LDollarAmountPickerView implements View.OnClickListener {
             LViewUtils.setAlpha((View) viewMultiply, 1.0f);
             LViewUtils.setAlpha((View) viewDivide, 1.0f);
         } else {
-            LViewUtils.setAlpha((View) viewPlus, 0.5f);
-            LViewUtils.setAlpha((View) viewMinus, 0.5f);
-            LViewUtils.setAlpha((View) viewMultiply, 0.5f);
-            LViewUtils.setAlpha((View) viewDivide, 0.5f);
+            LViewUtils.setAlpha((View) viewPlus, VIEW_DIM_ALPHA_VALUE);
+            LViewUtils.setAlpha((View) viewMinus, VIEW_DIM_ALPHA_VALUE);
+            LViewUtils.setAlpha((View) viewMultiply, VIEW_DIM_ALPHA_VALUE);
+            LViewUtils.setAlpha((View) viewDivide, VIEW_DIM_ALPHA_VALUE);
         }
     }
 
     private void enableDot(boolean yes) {
         viewDot.setEnabled(yes);
         if (yes) LViewUtils.setAlpha((View) viewDot, 1.0f);
-        else LViewUtils.setAlpha((View) viewDot, 0.5f);
+        else LViewUtils.setAlpha((View) viewDot, VIEW_DIM_ALPHA_VALUE);
     }
 
     private void clearInputString() {

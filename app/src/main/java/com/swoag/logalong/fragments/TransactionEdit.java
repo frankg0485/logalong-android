@@ -261,7 +261,19 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (bCreate) {
             if (!bScheduleMode) {
                 if (picker != null) picker.onDestroy();
-                picker = new LDollarAmountPickerView(rootView, item.getValue(), this);
+                int colorCode = 0;
+                switch (item.getType()) {
+                    case LTransaction.TRANSACTION_TYPE_INCOME:
+                        colorCode = LDollarAmountPickerView.VALUE_COLOR_GREEN;
+                        break;
+                    case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                        colorCode = LDollarAmountPickerView.VALUE_COLOR_RED;
+                        break;
+                    default:
+                        colorCode = LDollarAmountPickerView.VALUE_COLOR_BLUE;
+                        break;
+                }
+                picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, this);
                 pickerVisible = true;
             }
             viewDiscard.setVisibility(View.GONE);
@@ -371,7 +383,19 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
                 case R.id.amountRow:
                     if (picker != null) picker.onDestroy();
-                    picker = new LDollarAmountPickerView(rootView, item.getValue(), TransactionEdit.this);
+                    int colorCode = 0;
+                    switch (item.getType()) {
+                        case LTransaction.TRANSACTION_TYPE_INCOME:
+                            colorCode = LDollarAmountPickerView.VALUE_COLOR_GREEN;
+                            break;
+                        case LTransaction.TRANSACTION_TYPE_EXPENSE:
+                            colorCode = LDollarAmountPickerView.VALUE_COLOR_RED;
+                            break;
+                        default:
+                            colorCode = LDollarAmountPickerView.VALUE_COLOR_BLUE;
+                            break;
+                    }
+                    picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, TransactionEdit.this);
                     pickerVisible = true;
                     pickerV.setVisibility(View.VISIBLE);
                     break;
