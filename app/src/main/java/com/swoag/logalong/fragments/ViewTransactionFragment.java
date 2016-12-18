@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -87,22 +86,21 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         showBalance(isAltView, data);
 
-        listView.post(new Runnable() {
-            @Override
-            public void run() {
-                //listView.setSelection(adapter.getCount() - 1);
-                Parcelable history = AppPersistency.getViewHistory(AppPersistency.getViewLevel());
-                if (history != null) {
-                    listView.onRestoreInstanceState(history);
+        try {
+
+            AppPersistency.ListViewHistory history = AppPersistency.getViewHistory(AppPersistency.getViewLevel());
+            if (history != null) {
+                listView.setSelectionFromTop(history.index, history.top);
+            } else {
+                if (LPreferences.getQueryOrderAscend()) {
+                    listView.setSelection(adapter.getCount() - 1);
                 } else {
-                    if (LPreferences.getQueryOrderAscend()) {
-                        listView.setSelection(adapter.getCount() - 1);
-                    } else {
-                        listView.setSelection(0);
-                    }
+                    listView.setSelection(0);
                 }
             }
-        });
+        } catch (Exception e) {
+            LLog.w(TAG, "unexpected listview history error: " + e.getMessage());
+        }
     }
 
     @Override
@@ -169,7 +167,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             indexId = data.getLong(0);
             type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
             if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) ||
-                    (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ) {
+                    (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                 if (0 == lastTransferId) {
                     sectionSummary.addVisible(indexId, true);
                     lastTransferId = indexId;
@@ -274,8 +272,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private void initDbLoader() {
         int loaderCode;
-        switch (AppPersistency.viewTransactionFilter)
-        {
+        switch (AppPersistency.viewTransactionFilter) {
             default:
             case AppPersistency.TRANSACTION_FILTER_ALL:
                 loaderCode = DBLoaderHelper.LOADER_TRANSACTION_FILTER_ALL;
@@ -341,7 +338,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         View tmp = listViewFlipper.findViewById(R.id.logs);
         tmp.setOnClickListener(myClickListener);
         queryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
-        queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+        queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
         dispV = tmp.findViewById(R.id.display);
         monthTV = (TextView) tmp.findViewById(R.id.month);
         balanceTV = (TextView) dispV.findViewById(R.id.balance);
@@ -351,7 +348,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         tmp = listViewFlipper.findViewById(R.id.logsAlt);
         tmp.setOnClickListener(myClickListener);
         altQueryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
-        altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+        altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
         altDispV = tmp.findViewById(R.id.display);
         altMonthTV = (TextView) tmp.findViewById(R.id.month);
         altBalanceTV = (TextView) altDispV.findViewById(R.id.balance);
@@ -447,7 +444,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 case R.id.logsAlt:
                     LPreferences.setQueryOrderAscend(!LPreferences.getQueryOrderAscend());
                     queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
-                    altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend()? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+                    altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
                     initDbLoader();
                     break;
                 default:
@@ -507,7 +504,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                 if (!sectionSummary.isVisible(id)) {
                     mainView.setVisibility(View.GONE);
-                } else{
+                } else {
                     mainView.setVisibility(View.VISIBLE);
 
                     int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
@@ -530,8 +527,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
                     vTag.noteTV.setText(note);
                 }
-            }
-            else {
+            } else {
                 mainView.setVisibility(View.VISIBLE);
 
                 String str = "";
@@ -869,6 +865,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private boolean isAltView = false;
+
     private boolean prevNext(boolean prev) {
         boolean ret = true;
         int year = AppPersistency.viewTransactionYear;
@@ -935,13 +932,19 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private long lastClickMs;
+
     private void showPrevNext(boolean prev) {
         if (!prevNext(prev)) return;
 
-        AppPersistency.setViewHistory(AppPersistency.getViewLevel(), listView.onSaveInstanceState());
+        // save index and top position
+        int index = listView.getFirstVisiblePosition();
+        View v = listView.getChildAt(0);
+        int top = (v == null) ? 0 : (v.getTop() - listView.getPaddingTop());
+
+        AppPersistency.setViewHistory(AppPersistency.getViewLevel(), new AppPersistency.ListViewHistory(index, top));
 
         long now = System.currentTimeMillis();
-        boolean animate = (now -lastClickMs > 1000);
+        boolean animate = (now - lastClickMs > 1000);
         lastClickMs = now;
 
         isAltView = !isAltView;

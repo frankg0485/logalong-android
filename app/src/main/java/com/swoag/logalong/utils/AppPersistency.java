@@ -27,16 +27,25 @@ public class AppPersistency {
 
     public static boolean profileSet = false;
 
-    private static HashMap<Integer, Parcelable> viewHistory = new HashMap<Integer, Parcelable>();
+    private static HashMap<Integer, ListViewHistory> viewHistory = new HashMap<Integer, ListViewHistory>();
+    public static class ListViewHistory {
+        public ListViewHistory( int index, int top) {
+            this.index = index;
+            this.top = top;
+        }
+        public int index;
+        public int top;
+    }
+
     private static int viewLevel;
-    public static Parcelable getViewHistory(int level) {
+    public static ListViewHistory getViewHistory(int level) {
         if (viewHistory.containsKey(level)) {
             return viewHistory.get(level);
         } else {
             return null;
         }
     }
-    public static void setViewHistory(int level, Parcelable history) {
+    public static void setViewHistory(int level, ListViewHistory history) {
         viewHistory.put(level, history);
     }
     public static int getViewLevel() {
