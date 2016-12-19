@@ -66,7 +66,7 @@ public class DBTransaction {
         add(LApp.ctx, item, duplicateTransfer, postJournal);
     }
 
-    public static void add(Context context, LTransaction item, boolean duplicateTransfer, boolean postJournal) {
+    private static void add(Context context, LTransaction item, boolean duplicateTransfer, boolean postJournal) {
         ContentValues cv = setValues(item);
         if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
 

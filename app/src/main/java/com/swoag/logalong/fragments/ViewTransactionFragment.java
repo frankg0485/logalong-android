@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -47,6 +48,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
+    private ListView.OnScrollListener onScrollListener;
     private ImageView filterView, searchView;
 
     private MyCursorAdapter adapter;
@@ -86,17 +88,82 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         showBalance(isAltView, data);
 
+        int nextIndex = -1;
         try {
+            if (AppPersistency.lastTransactionChangeTimeMs != 0) {
+                // if currently loaded cursor contains last changed transaction, let's put that as the first item
+                try {
+                    int count = data.getCount();
 
-            AppPersistency.ListViewHistory history = AppPersistency.getViewHistory(AppPersistency.getViewLevel());
-            if (history != null) {
-                listView.setSelectionFromTop(history.index, history.top);
-            } else {
-                if (LPreferences.getQueryOrderAscend()) {
-                    listView.setSelection(adapter.getCount() - 1);
-                } else {
-                    listView.setSelection(0);
+                    int low = 0, to = 0, high = 0, tmp;
+                    boolean search = false;
+                    boolean ascend = LPreferences.getQueryOrderAscend();
+                    data.moveToFirst();
+                    long ms =  data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    if (AppPersistency.lastTransactionChangeTimeMs == ms) {
+                        nextIndex = 0;
+                    } else if (count > 1) {
+                        if ((ascend && (AppPersistency.lastTransactionChangeTimeMs > ms)) ||
+                                ((!ascend) && (AppPersistency.lastTransactionChangeTimeMs < ms))) {
+                            search = true;
+                        }
+                    }
+
+                    if (search) {
+                        search = false;
+
+                        data.moveToLast();
+                        ms = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                        if (AppPersistency.lastTransactionChangeTimeMs == ms) {
+                            nextIndex = count - 1;
+                        } else if (count > 2) {
+                            if ((ascend && (AppPersistency.lastTransactionChangeTimeMs < ms)) ||
+                                    ((!ascend) && (AppPersistency.lastTransactionChangeTimeMs > ms))) {
+                                search = true;
+                                low = 0;
+                                high = count - 1;
+                                to = count / 2;
+                            }
+                        }
+                    }
+
+                    while (search && low != to && high != to) {
+                        data.moveToPosition(to);
+                        ms = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+
+                        if (AppPersistency.lastTransactionChangeTimeMs == ms) {
+                            //match found
+                            nextIndex = to;
+                            break;
+                        } else {
+                            if ((ascend && AppPersistency.lastTransactionChangeTimeMs > ms) ||
+                                    ((!ascend) && AppPersistency.lastTransactionChangeTimeMs < ms)) {
+                                low = to;
+                                to += (high - to + 1) / 2;
+                            } else {
+                                high = to;
+                                to -= (to - low + 1) / 2;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    LLog.w(TAG, "fail to match record: " + e.getMessage());
                 }
+            }
+
+            if (nextIndex == -1) {
+                AppPersistency.ListViewHistory history = AppPersistency.getViewHistory(AppPersistency.getViewLevel());
+                if (history != null) {
+                    listView.setSelectionFromTop(history.index, history.top);
+                } else {
+                    if (LPreferences.getQueryOrderAscend()) {
+                        listView.setSelection(adapter.getCount() - 1);
+                    } else {
+                        listView.setSelection(0);
+                    }
+                }
+            } else {
+                listView.setSelection(nextIndex);
             }
         } catch (Exception e) {
             LLog.w(TAG, "unexpected listview history error: " + e.getMessage());
@@ -335,6 +402,20 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         adapter = new MyCursorAdapter(getActivity(), null, sectionSummary);
         listView.setAdapter(adapter);
 
+        onScrollListener = new ListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                //LLog.d(TAG, "scroll state changed");
+                AppPersistency.lastTransactionChangeTimeMs = 0;
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+            }
+        };
+        listView.setOnScrollListener(onScrollListener);
+
         View tmp = listViewFlipper.findViewById(R.id.logs);
         tmp.setOnClickListener(myClickListener);
         queryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
@@ -378,6 +459,10 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         viewFlipper.setInAnimation(null);
         viewFlipper.setOutAnimation(null);
         viewFlipper = null;
+
+        listView.setOnScrollListener(null);
+        onScrollListener = null;
+        listView = null;
 
         listViewFlipper.setInAnimation(null);
         listViewFlipper.setOutAnimation(null);
@@ -683,9 +768,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             //reset UUID of existing record and treat it as new
                             item.setRid(UUID.randomUUID().toString());
                             item.setTimeStampLast(LPreferences.getServerUtc());
+
+                            AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
                             DBTransaction.add(item, true, true);
                         } else {
                             item.setTimeStampLast(LPreferences.getServerUtc());
+
+                            AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
                             DBTransaction.update(item, false);
                             journal.updateItem(item, itemOrig);
 

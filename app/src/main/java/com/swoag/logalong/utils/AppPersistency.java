@@ -59,5 +59,7 @@ public class AppPersistency {
         viewLevel = 0x4000;
     }
 
+    public static long lastTransactionChangeTimeMs = 0;
+
     public static boolean showPieChart = false;
 }

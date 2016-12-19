@@ -200,7 +200,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     }
                 }
 
-                DBTransaction.add(getActivity(), item, true, true);
+                AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
+                DBTransaction.add(item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;
