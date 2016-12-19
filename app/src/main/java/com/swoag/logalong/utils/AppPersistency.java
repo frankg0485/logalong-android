@@ -60,6 +60,7 @@ public class AppPersistency {
     }
 
     public static long lastTransactionChangeTimeMs = 0;
+    public static boolean lastTransactionChangeTimeMsHonored = false;
 
     public static boolean showPieChart = false;
 }

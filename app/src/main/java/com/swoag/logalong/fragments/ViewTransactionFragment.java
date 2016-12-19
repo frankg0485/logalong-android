@@ -164,6 +164,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 }
             } else {
                 listView.setSelection(nextIndex);
+                AppPersistency.lastTransactionChangeTimeMsHonored = true;
             }
         } catch (Exception e) {
             LLog.w(TAG, "unexpected listview history error: " + e.getMessage());
@@ -406,7 +407,10 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 //LLog.d(TAG, "scroll state changed");
-                AppPersistency.lastTransactionChangeTimeMs = 0;
+                if (AppPersistency.lastTransactionChangeTimeMsHonored) {
+                    AppPersistency.lastTransactionChangeTimeMs = 0;
+                    AppPersistency.lastTransactionChangeTimeMsHonored = false;
+                }
             }
 
             @Override
@@ -770,11 +774,14 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             item.setTimeStampLast(LPreferences.getServerUtc());
 
                             AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
+                            AppPersistency.lastTransactionChangeTimeMsHonored = false;
                             DBTransaction.add(item, true, true);
                         } else {
                             item.setTimeStampLast(LPreferences.getServerUtc());
 
                             AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
+                            AppPersistency.lastTransactionChangeTimeMsHonored = false;
+
                             DBTransaction.update(item, false);
                             journal.updateItem(item, itemOrig);
 
