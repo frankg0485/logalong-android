@@ -28,6 +28,8 @@ public class LPreferences {
     private static final String SEARCH_VENDORS = "SearchVendors";
     private static final String SEARCH_TAGS = "SearchTags";
     private static final String SEARCH_FILTER_BY_EDIT_TIME = "SearchFilterByEditTime";
+    private static final String SEARCH_FILTER_BY_VALUE = "SearchFilterByValue";
+    private static final String SEARCH_VALUE = "SearchValue";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
@@ -353,6 +355,22 @@ public class LPreferences {
         savePreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, yes);
     }
 
+    public static boolean getSearchFilterByValue() {
+        return getPreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, false);
+    }
+
+    public static void setSearchFilterByValue( boolean yes) {
+        savePreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, yes);
+    }
+
+    public static float getSearchValue() {
+        return getPreference(LApp.ctx, SEARCH_VALUE, 0f);
+    }
+
+    public static void setSearchValue( float value) {
+        savePreference(LApp.ctx, SEARCH_VALUE, value);
+    }
+
     public static long getUtcDelta() {
         return getPreference(LApp.ctx, UTC_DELTA, 0L);
     }
@@ -375,6 +393,12 @@ public class LPreferences {
         }
     }
 
+    public static void savePreference(Context context, String key, String value) {
+        SharedPreferences.Editor editor = getEditor(context);
+        editor.putString(key, value);
+        editor.commit();
+    }
+
     public static boolean getPreference(Context context, String key, boolean defaultValue) {
         try {
             SharedPreferences settings = getPreferences(context);
@@ -384,6 +408,12 @@ public class LPreferences {
         }
     }
 
+    public static void savePreference(Context context, String key, boolean value) {
+        SharedPreferences.Editor editor = getEditor(context);
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
+
     public static int getPreference(Context context, String key, int defaultValue) {
         SharedPreferences settings = getPreferences(context);
         try {
@@ -391,18 +421,6 @@ public class LPreferences {
         } catch (Exception e) {
             return defaultValue;
         }
-    }
-
-    public static void savePreference(Context context, String key, String value) {
-        SharedPreferences.Editor editor = getEditor(context);
-        editor.putString(key, value);
-        editor.commit();
-    }
-
-    public static void savePreference(Context context, String key, boolean value) {
-        SharedPreferences.Editor editor = getEditor(context);
-        editor.putBoolean(key, value);
-        editor.commit();
     }
 
     public static void savePreference(Context context, String key, int value) {
@@ -423,6 +441,21 @@ public class LPreferences {
     public static void savePreference(Context context, String key, long value) {
         SharedPreferences.Editor editor = getEditor(context);
         editor.putLong(key, value);
+        editor.commit();
+    }
+
+    public static float getPreference(Context context, String key, float defaultValue) {
+        SharedPreferences settings = getPreferences(context);
+        try {
+            return settings.getFloat(key, defaultValue);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    public static void savePreference(Context context, String key, float value) {
+        SharedPreferences.Editor editor = getEditor(context);
+        editor.putFloat(key, value);
         editor.commit();
     }
 

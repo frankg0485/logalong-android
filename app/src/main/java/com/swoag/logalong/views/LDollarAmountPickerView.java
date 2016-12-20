@@ -22,6 +22,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     public static final int VALUE_COLOR_RED = 10;
     public static final int VALUE_COLOR_GREEN = 20;
     public static final int VALUE_COLOR_BLUE = 30;
+    public static final int VALUE_COLOR_NEUTRAL = 40;
 
     private static final float VIEW_DIM_ALPHA_VALUE = 0.8f;
 
@@ -66,6 +67,9 @@ public class LDollarAmountPickerView implements View.OnClickListener {
                 default:
                     drawable.setStroke(1, 0xff0000ff);
                     break;
+                case VALUE_COLOR_NEUTRAL:
+                    drawable.setStroke(2, 0xff808080);
+                    break;
             }
         } catch (Exception e) {
             LLog.w(TAG, "fail to set background color");
@@ -103,6 +107,9 @@ public class LDollarAmountPickerView implements View.OnClickListener {
                 break;
             default:
                 valueTV.setTextColor(0xff4238bb);
+                break;
+            case VALUE_COLOR_NEUTRAL:
+                valueTV.setTextColor(0xff303030);
                 break;
         }
 
