@@ -919,7 +919,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private void getBalance(LAccountSummary summary, Cursor data) {
         if (data == null || data.getCount() < 1) return;
 
-        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAccounts());
+        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll()? null : LPreferences.getSearchAccounts());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
