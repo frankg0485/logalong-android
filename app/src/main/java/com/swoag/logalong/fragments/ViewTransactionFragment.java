@@ -870,15 +870,16 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             //dispv = dispV;
         }
 
-        if (LPreferences.getSearchAll() || (LPreferences.getSearchCategories() == null &&
+        if ((!LPreferences.getSearchFilterByValue()) && (LPreferences.getSearchAll() || (LPreferences.getSearchCategories() == null &&
                 LPreferences.getSearchTags() == null &&
-                LPreferences.getSearchVendors() == null)) {
+                LPreferences.getSearchVendors() == null))) {
             //dispv.setVisibility(View.VISIBLE);
             btv.setVisibility(View.VISIBLE);
         } else {
             //dispv.setVisibility(View.INVISIBLE);
             btv.setVisibility(View.INVISIBLE);
         }
+        mtv.setVisibility(LPreferences.getSearchFilterByValue()? View.INVISIBLE : View.VISIBLE);
 
         LAccountSummary summary = new LAccountSummary();
         getBalance(summary, data);

@@ -234,6 +234,16 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                     DBHelper.TABLE_COLUMN_NAME + " ASC");
         }
 
+        if (LPreferences.getSearchFilterByValue()) {
+            return new CursorLoader(
+                    context,
+                    DBProvider.URI_TRANSACTIONS,
+                    null,
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND " + DBHelper.TABLE_COLUMN_AMOUNT + "=?",
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LPreferences.getSearchValue()},
+                    DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC"));
+        }
+
         String s, ds, sort;
         String[] sa, dsa;
         Uri uri;

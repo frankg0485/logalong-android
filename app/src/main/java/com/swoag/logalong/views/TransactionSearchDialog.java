@@ -43,6 +43,8 @@ public class TransactionSearchDialog extends Dialog implements
     private MyClickListener myClickListener;
     private CheckBox checkBox, checkBoxTime, checkboxByValue;
     private boolean showAll, allTime, showAllOrig, allTimeOrig;
+    private boolean byValueOrig;
+    private float valuerOrig;
     private View rootView, pickerV;
     private LDollarAmountPickerView picker;
 
@@ -63,6 +65,9 @@ public class TransactionSearchDialog extends Dialog implements
 
         allTimeOrig = LPreferences.getSearchAllTime();
         showAllOrig = LPreferences.getSearchAll();
+
+        byValueOrig = LPreferences.getSearchFilterByValue();
+        valuerOrig = LPreferences.getSearchValue();
 
         accountSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
@@ -184,7 +189,10 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchAllTimeTo(0);
         }
 
-        callback.onTransactionSearchDialogDismiss(!(allTimeOrig && showAllOrig && allTime && showAll));
+        // for time and filter, treat it as change as long as it was/is not all default values.
+        boolean changed = !(allTimeOrig && showAllOrig && allTime && showAll);
+        changed |= ((byValueOrig != LPreferences.getSearchFilterByValue()) || (valuerOrig != LPreferences.getSearchValue()));
+        callback.onTransactionSearchDialogDismiss(changed);
     }
 
     @Override
