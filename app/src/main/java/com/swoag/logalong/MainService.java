@@ -46,6 +46,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private Runnable pollRunnable;
     private Runnable journalPostRunnable;
     private Runnable serviceShutdownRunnable;
+    private boolean accountBalanceSynced = false;
 
     //default to active polling, if polling returned IDLE, switch to IDLE_POLLING interval
     //as soon as any valid command found, go back to active polling.
@@ -133,7 +134,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             @Override
             public void run() {
                 LLog.d(TAG, "shutdown timeout: shutting down service itself");
-                stopSelf();
+                if (!accountBalanceSynced) {
+                    cursorLoader.startLoading();
+                } else {
+                    stopSelf();
+                }
             }
         };
 
@@ -230,6 +235,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             cursorLoader.cancelLoad();
             cursorLoader.stopLoading();
         }
+
+        accountBalanceSynced = false;
         super.onDestroy();
     }
 
@@ -256,7 +263,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (server.UiIsConnected()) {
                         LLog.d(TAG, "post service shutdown runnable");
                         pollHandler.removeCallbacks(serviceShutdownRunnable);
-                        cursorLoader.startLoading();
                         pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
                         stopSelf();
@@ -350,7 +356,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 } else {
                     pollHandler.removeCallbacks(pollRunnable); //disable polling
-                    cursorLoader.startLoading();
                     pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                 }
                 break;
@@ -650,6 +655,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected void onPostExecute(Boolean result) {
+            accountBalanceSynced = true;
+            LLog.d(TAG, "account balance synchronized");
+            pollHandler.removeCallbacks(serviceShutdownRunnable);
+            pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
         }
 
         @Override
