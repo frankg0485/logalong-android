@@ -47,7 +47,7 @@ public class DBAccountBalance {
                     new String[]{"" + DBHelper.STATE_ACTIVE, "" + accountId, "" + year}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find account balance with id: " + accountId + " @ year: " + year);
+                    LLog.w(TAG, "unable to find account balance with id: " + accountId + " @ year: " + year + " count: " + csr.getCount());
                     csr.close();
                     return null;
                 }

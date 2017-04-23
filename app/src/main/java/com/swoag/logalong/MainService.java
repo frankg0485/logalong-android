@@ -102,7 +102,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         server = LAppServer.getInstance();
 
         DBScheduledTransaction.scanAlarm();
-        DBAccountBalance.deleteAll();
 
         pollHandler = new Handler() {
         };
@@ -186,7 +185,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 "b._id ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + " DESC");
 
         cursorLoader.registerListener(LOADER_ID_UPDATE_BALANCE, this);
-        cursorLoader.startLoading();
+        //cursorLoader.startLoading();
     }
 
     @Override
@@ -257,6 +256,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (server.UiIsConnected()) {
                         LLog.d(TAG, "post service shutdown runnable");
                         pollHandler.removeCallbacks(serviceShutdownRunnable);
+                        cursorLoader.startLoading();
                         pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     } else {
                         stopSelf();
@@ -350,6 +350,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 } else {
                     pollHandler.removeCallbacks(pollRunnable); //disable polling
+                    cursorLoader.startLoading();
                     pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                 }
                 break;
@@ -603,6 +604,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         protected Boolean doInBackground(Cursor... params) {
             Cursor data = params[0];
             if (data == null || data.getCount() == 0) return false;
+
+            DBAccountBalance.deleteAll();
 
             try {
                 if (isCancelled()) return false;
