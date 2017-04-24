@@ -1,5 +1,5 @@
 package com.swoag.logalong;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+    /* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -37,10 +37,11 @@ import java.util.HashSet;
 public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener, Loader.OnLoadCompleteListener {
     private static final String TAG = MainService.class.getSimpleName();
 
-    public static final int CMD_START = 10;
-    public static final int CMD_STOP = 20;
-    public static final int CMD_ENABLE = 30;
-    public static final int CMD_DISABLE = 40;
+    private static final int CMD_START = 10;
+    private static final int CMD_STOP = 20;
+    private static final int CMD_ENABLE = 30;
+    private static final int CMD_DISABLE = 40;
+    private static final int CMD_SCAN_BALANCE = 50;
 
     private Handler pollHandler;
     private Runnable pollRunnable;
@@ -89,6 +90,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     public static void disable(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
         serviceIntent.putExtra("cmd", MainService.CMD_DISABLE);
+        context.startService(serviceIntent);
+    }
+
+    public static void scanBalance(Context context) {
+        Intent serviceIntent = new Intent(context, MainService.class);
+        serviceIntent.putExtra("cmd", MainService.CMD_SCAN_BALANCE);
         context.startService(serviceIntent);
     }
 
@@ -196,6 +203,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     @Override
     public void onLoadComplete(Loader loader, Object data) {
         if (loader.getId() == LOADER_ID_UPDATE_BALANCE) {
+            //LLog.d(TAG, "update balance DB loader completed");
             pollHandler.removeCallbacks(updateAccountBalanceRunnable);
             if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING)
             {
@@ -274,6 +282,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                 case CMD_DISABLE:
                     server.disable();
+                    break;
+
+                case CMD_SCAN_BALANCE:
+                    cursorLoader.startLoading();
                     break;
             }
         }
@@ -608,9 +620,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         @Override
         protected Boolean doInBackground(Cursor... params) {
             Cursor data = params[0];
-            if (data == null || data.getCount() == 0) return false;
+            if (data == null || data.getCount() == 0) {
+                LLog.d(TAG, "no account left, deleting all balances");
+                DBAccountBalance.deleteAll(); //clean up balances if all accounts are removed.
+                return false;
+            }
 
-            DBAccountBalance.deleteAll();
+            HashSet<Long> accounts = DBAccount.getAllActiveAccountIds();
 
             try {
                 if (isCancelled()) return false;
@@ -621,6 +637,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 int lastYear = 0;
                 do {
                     long accountId = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    accounts.remove(accountId);
+
                     double amount = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
                     int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
                     //String name = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
@@ -642,6 +660,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)? amount : -amount;
                 } while (!isCancelled() && data.moveToNext());
                 if (!isCancelled()) addUpdateAccountBalance(doubles, lastAccountId, lastYear);
+
+                for (long account : accounts) {
+                    DBAccountBalance.deleteByAccountId(account);
+                }
 
                 return true;
             } catch (Exception e) {

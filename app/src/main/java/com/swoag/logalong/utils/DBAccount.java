@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.entities.LAccount;
 
 import java.util.HashSet;
@@ -223,7 +224,7 @@ public class DBAccount {
     //    updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     //}
 
-    public static boolean updateColumnById(long id, String column, int value) {
+    private static boolean updateColumnById(long id, String column, int value) {
         return DBAccess.updateColumnById(DBProvider.URI_ACCOUNTS, id, column, value);
     }
 

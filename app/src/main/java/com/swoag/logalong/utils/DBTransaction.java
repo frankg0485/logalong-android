@@ -68,7 +68,7 @@ public class DBTransaction {
 
     private static void add(Context context, LTransaction item, boolean duplicateTransfer, boolean postJournal) {
         ContentValues cv = setValues(item);
-        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
+        //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
 
         context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
 
@@ -92,7 +92,7 @@ public class DBTransaction {
                 }
             }
         }
-        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
+        //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
     }
 
     public static void update(LTransaction item) {
@@ -109,7 +109,7 @@ public class DBTransaction {
     }
 
     public static void update(Context context, LTransaction item, boolean postJournal) {
-        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
+        //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
         update(context, item);
 
         LJournal journal = null;
@@ -135,7 +135,7 @@ public class DBTransaction {
                 }
             }
         }
-        if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
+        //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
     }
 
     public static LTransaction getById(long id) {

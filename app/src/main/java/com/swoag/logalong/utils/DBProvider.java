@@ -23,7 +23,8 @@ public class DBProvider extends ContentProvider {
     private SQLiteDatabase db;
 
     private static HashMap<String, String> PROJECTION_MAP;
-    private static boolean updatingAccountBalance = false;
+    //private static boolean updatingAccountBalance = false;
+    private static boolean updatingAccountBalance = true;
 
     private static final String TRANSACTIONS = "trans";
     private static final String TRANSACTIONS_ACCOUNT = "trans/account";
