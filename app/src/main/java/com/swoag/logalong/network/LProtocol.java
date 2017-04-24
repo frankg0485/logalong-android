@@ -335,6 +335,11 @@ public class LProtocol {
         packetConsumptionStatus.bytesConsumed = 0;
         packetConsumptionStatus.isResponseCompleted = true;
 
+        //minimum packet length 8 + CRC32
+        if (pkt.getLen() < 12) {
+            return packetConsumptionStatus;
+        }
+
         Intent rspsIntent;
         int origOffset = pkt.getBufOffset();
         int total = (pkt.getShortAt(origOffset + 2) & 0xfff) + 4; //mask out sequence bits
@@ -579,12 +584,14 @@ public class LProtocol {
             } else if (bytes == 0) {
                 //packet not consumed
                 if (pkt != pktBuf) {
+                    //LLog.d(TAG, "reset packet then append");
                     pkt.reset();
                     pktBuf.reset();
                     pktBuf.append(pkt);
                 } else {
                     //this must be the case where the data is only partially received.
                     //reset packet then quit the loop
+                    //LLog.d(TAG, "reset packet");
                     pkt.reset();
                 }
                 return RESPONSE_PARSE_RESULT_MORE2COME;
