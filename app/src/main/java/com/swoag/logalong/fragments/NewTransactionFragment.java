@@ -36,6 +36,12 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         DBLoaderHelper.DBLoaderHelperCallbacks {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
 
+    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (30 * 60 * 1000);
+    private static long lastTransactionTimestamp;
+    private static long lastTransactionAccountFrom;
+    private static long lastTransactionAccountTo;
+    private static long lastTransactionEditTimestamp = 0;
+
     private View btnExpense, btnIncome, btnTransaction, selectTypeV;
     private ViewFlipper viewFlipper;
 
@@ -203,6 +209,14 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
                 AppPersistency.lastTransactionChangeTimeMsHonored = false;
 
+                //save last edit info
+                lastTransactionAccountFrom = item.getAccount();
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    lastTransactionAccountTo = item.getAccount2();
+                }
+                lastTransactionTimestamp = item.getTimeStamp();
+                lastTransactionEditTimestamp = System.currentTimeMillis();
+
                 DBTransaction.add(item, true, true);
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
@@ -230,9 +244,18 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private void newLog(int type) {
         item = new LTransaction();
         item.setType(type);
-        //TODO: default account/category support.
-        //item.setAccount(4);
-        //item.setCategory(2);
+
+        if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis())
+        {
+            item.setTimeStamp(lastTransactionTimestamp + 1);
+            if (lastTransactionAccountFrom != 0) {
+                item.setAccount(lastTransactionAccountFrom);
+            }
+            if ((lastTransactionAccountTo != 0) && (lastTransactionAccountFrom != lastTransactionAccountTo)
+                    && (type == LTransaction.TRANSACTION_TYPE_TRANSFER)) {
+                item.setAccount2(lastTransactionAccountTo);
+            }
+        }
 
         edit = new TransactionEdit(getActivity(), rootView.findViewById(R.id.editView), item, true, false, true, this);
 
