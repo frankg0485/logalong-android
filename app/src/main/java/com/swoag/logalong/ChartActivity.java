@@ -117,7 +117,8 @@ public class ChartActivity extends LFragmentActivity implements
         double[] incomes;
     }
 
-    private HashMap<Integer, ChartData> chartDataHashMap;
+    private static HashMap<Integer, ChartData> chartDataHashMap = new HashMap<Integer, ChartData>();
+    private static boolean inited = false;
 
     private boolean dbBackgroundActivities = false;
     private Cursor lastLoadedData = null;
@@ -125,8 +126,8 @@ public class ChartActivity extends LFragmentActivity implements
     private Runnable dataRunnable = new Runnable() {
         @Override
         public void run() {
-            loaderFinished = false;
-            progressBar.setVisibility(View.VISIBLE);
+            //loaderFinished = false;
+            //progressBar.setVisibility(View.VISIBLE);
 
             myAsyncTask = new MyAsyncTask();
             LTask.start(myAsyncTask, lastLoadedData);
@@ -150,7 +151,7 @@ public class ChartActivity extends LFragmentActivity implements
                     dbBackgroundActivities = true;
                     //if (lastLoadedData != null) lastLoadedData.close();
 
-                    progressBar.setVisibility(View.VISIBLE);
+                    //progressBar.setVisibility(View.VISIBLE);
                     lastLoadedData = data;
                     handler.postDelayed(dataRunnable, 3000);
                 }
@@ -172,7 +173,7 @@ public class ChartActivity extends LFragmentActivity implements
             }*/
 
             AppPersistency.clearViewHistory();
-            chartDataHashMap.clear();
+            //chartDataHashMap.clear();
             restartDbLoader();
         }
     }
@@ -217,7 +218,6 @@ public class ChartActivity extends LFragmentActivity implements
 
         dbLoaderHelper = new DBLoaderHelper(this, this, true);
 
-        chartDataHashMap = new HashMap<Integer, ChartData>();
         restartDbLoader();
     }
 
@@ -244,10 +244,15 @@ public class ChartActivity extends LFragmentActivity implements
     private void restartDbLoader() {
         ChartData chartData = chartDataHashMap.get(AppPersistency.viewTransactionYear);
         if (null == chartData) {
-            loaderFinished = false;
             progressBar.setVisibility(View.VISIBLE);
-            dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
-        } else {
+        }
+        if ((!inited) || (null == chartData)) {
+            loaderFinished = false;
+            inited = true;
+        }
+        dbLoaderHelper.restart(getSupportLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
+
+        if (null != chartData) {
             pieChartDisplayed = barChartDisplayed = false;
             showChart(chartData);
         }
@@ -781,6 +786,9 @@ public class ChartActivity extends LFragmentActivity implements
                 chartData.expenses = expenses;
                 chartData.incomes = incomes;
                 chartDataHashMap.put(year, chartData);
+            } else
+            {
+                chartDataHashMap.remove(year);
             }
 
             loaderFinished = true;
