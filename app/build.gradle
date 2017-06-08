@@ -8,8 +8,8 @@ android {
         applicationId "com.swoag.logalong"
         minSdkVersion 11
         targetSdkVersion 25
-        versionCode 110
-        versionName "1.10"
+        versionCode 112
+        versionName "1.12"
     }
     buildTypes {
         release {
