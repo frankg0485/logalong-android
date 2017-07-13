@@ -37,6 +37,7 @@ public class LPreferences {
     private static final String USER_NAME = "UserName";
     private static final String USER_PASS = "UserPass";
     private static final String USER_ID = "UserId";
+    private static final String DEVICE_ID = "DeviceId";
     private static final String USER_FULL_NAME = "UserFullName";
     private static final String UTC_DELTA = "UtcDelta";
 
@@ -94,6 +95,15 @@ public class LPreferences {
         }
     }
 
+    public static String getDeviceId() {
+        return getPreference(LApp.ctx, DEVICE_ID, "");
+    }
+
+    public static void setDeviceId(String deviceId) {
+        savePreference(LApp.ctx, DEVICE_ID, deviceId);
+    }
+
+
     public static int getUserId() {
         return getPreference(LApp.ctx, USER_ID, (int) 0);
     }
@@ -101,7 +111,6 @@ public class LPreferences {
     public static void setUserId(int userId) {
         savePreference(LApp.ctx, USER_ID, userId);
     }
-
     /*
     public static String getUserPass() {
         return getPreference(LApp.ctx, USER_PASS, "");

@@ -375,6 +375,11 @@ public class MainActivity extends LFragmentActivity
         AppPersistency.clearViewHistory();
         if (LPreferences.getOneTimeInit()) return;
 
+        if (!DBPorter.restoreDeviceId()) {
+            LPreferences.setDeviceId(UUID.randomUUID().toString());
+            DBPorter.saveDeviceId();
+        }
+
         initDb();
         DBPorter.restoreUserInfo();
 

@@ -209,6 +209,60 @@ public class DBPorter {
         return true;
     }
 
+    public static boolean saveDeviceId() {
+        if (!LStorage.isExternalStorageWritable()) return false;
+
+        try {
+            File path = openCacheDir();
+            if (path == null) return false;
+
+            File file = new File(path, "device.id");
+            if (file != null) {
+                file.delete();
+            }
+            file = new File(path, "device.id");
+
+            MyCSV myCSV = new MyCSV();
+            myCSV.add(LPreferences.getDeviceId() + "," + System.currentTimeMillis());
+
+            FileOutputStream fos = new FileOutputStream(file);
+
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(myCSV);
+            oos.close();
+        } catch (Exception e) {
+            LLog.e(TAG, "unable to export device ID");
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean restoreDeviceId() {
+        try {
+            File path = openCacheDir();
+            if (path == null) return false;
+            File file = new File(path, "device.id");
+            if (file == null) return false;
+
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            MyCSV myCSV = (MyCSV) ois.readObject();
+
+            for (String str : myCSV.getCsv()) {
+                String[] ss = str.split(",", -1);
+                LPreferences.setDeviceId(ss[0]);
+                //TODO: timestamp support
+                break;
+            }
+
+            ois.close();
+        } catch (Exception e) {
+            LLog.e(TAG, "unable to restore user info");
+            return false;
+        }
+        return true;
+    }
+
     public static boolean importDb(int dbVersion) {
         boolean ret = false;
         try {
