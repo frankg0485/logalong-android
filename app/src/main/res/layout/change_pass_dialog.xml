@@ -27,8 +27,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:ellipsize="end"
-                android:padding="6dp"
                 android:maxLines="1"
+                android:padding="6dp"
+                android:text="@string/enter_current_password"
                 android:textColor="@color/base_text_color"
                 android:textSize="@dimen/settings_option_text_size"
                 android:textStyle="bold" />
@@ -68,19 +69,6 @@
                     android:orientation="vertical"
                     android:paddingTop="5dp">
 
-                    <TextView
-                        android:id="@+id/oldname"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginRight="15dp"
-                        android:layout_marginTop="15dp"
-                        android:ellipsize="end"
-                        android:gravity="left"
-                        android:singleLine="true"
-                        android:textColor="@color/gray_text_color"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"
@@ -96,17 +84,49 @@
                             android:padding="1dp">
 
                             <EditText
-                                android:id="@+id/newname"
+                                android:id="@+id/currentPass"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/editbox_bgd"
                                 android:gravity="top"
+                                android:hint="@string/password_hint"
                                 android:imeOptions="flagNoExtractUi"
+                                android:inputType="textPassword"
+                                android:maxLines="1"
                                 android:padding="10dp"
-                                android:singleLine="true"
-                                android:textColor="@color/base_text_color" />
+                                android:textColor="@color/base_text_color"
+                                android:textColorHint="#aaa"
+                                android:textSize="18sp" />
                         </RelativeLayout>
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/showPassView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingLeft="10dp">
+
+                        <CheckBox
+                            android:id="@+id/showPass"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:button="@drawable/btn_check_holo_light"
+                            android:text="@string/show_password"
+                            android:textColor="@color/light_gray_text_color" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/errorMsg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="10dp"
+                        android:paddingLeft="20dp"
+                        android:paddingRight="20dp"
+                        android:paddingTop="10dp"
+                        android:textColor="@color/red_text_color"
+                        android:textSize="16sp"
+                        android:visibility="invisible" />
 
                     <View
                         android:layout_width="wrap_content"

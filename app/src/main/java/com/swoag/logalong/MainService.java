@@ -153,6 +153,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_NETWORK_CONNECTED,
                 LBroadcastReceiver.ACTION_USER_CREATED,
                 LBroadcastReceiver.ACTION_LOGIN,
+                LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
                 LBroadcastReceiver.ACTION_POLL_ACKED,
                 LBroadcastReceiver.ACTION_POLL_IDLE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID,
@@ -309,15 +310,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         switch (action) {
             case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
                 pollHandler.removeCallbacks(pollRunnable); //disable polling
-
                 LLog.d(TAG, "network connected");
                 server.UiInitScrambler();
-                if (TextUtils.isEmpty(LPreferences.getUserName())) {
-                    if (!TextUtils.isEmpty(LPreferences.getUserFullName())) {
-                        LLog.d(TAG, "user name empty but full name specified, request user name automatically");
-                        server.UiRequestUserName();
-                    }
-                } else {
+                break;
+
+            case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
+                if (!TextUtils.isEmpty(LPreferences.getUserName())) {
                     server.UiLogin();
                 }
                 break;
@@ -328,7 +326,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 int userId = intent.getIntExtra("id", 0);
                 String userName = intent.getStringExtra("name");
                 LLog.d(TAG, "user created, id: " + userId + " name: " + userName);
-                LPreferences.setUserId(userId);
+                //LPreferences.setUserId(userId);
                 LPreferences.setUserName(userName);
 
                 server.UiUpdateUserProfile();
@@ -349,7 +347,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollHandler.removeCallbacks(pollRunnable);
                     pollHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
                 } else {
-                    LLog.e(TAG, "unable to login: " + LPreferences.getUserId() + " name: " + LPreferences.getUserName());
                     if (logInAttempts++ > 3) {
                         //the only reason that user is unable to login: user name no longer valid
                         // thus to wipe it off and let user to reset
@@ -389,7 +386,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 int accountGid = intent.getIntExtra("accountGid", 0);
                 String accountName = intent.getStringExtra("accountName");
 
-                if (userId != LPreferences.getUserId()) {
+                /*if (userId != LPreferences.getUserId()) {
                     LLog.e(TAG, "unexpected user id: " + userId + " myId: " + LPreferences.getUserId());
                 } else {
                     LAccount account = DBAccount.getById(accountId);
@@ -409,7 +406,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         account.setGid(accountGid);
                         DBAccount.update(account);
                     }
-                }
+                }*/
                 server.UiPollAck(cacheId);
                 break;
 
@@ -440,7 +437,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     ArrayList<Integer> origStates = new ArrayList<Integer>(account.getShareStates());
 
                     account.removeAllShareUsers();
-                    int  myUserId = LPreferences.getUserId();
+                    int  myUserId = 0;//LPreferences.getUserId();
                     boolean isShared = false;
                     for (int user: shareUSers) if (user == myUserId) {isShared = true; break;}
                     LLog.d(TAG, "account: " + account.getName() + " shared? " + isShared);

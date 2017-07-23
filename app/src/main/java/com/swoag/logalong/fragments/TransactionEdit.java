@@ -181,7 +181,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         } else {
             String uname = "";
             String name = "";
-            if (item.getBy() == LPreferences.getUserId()) {
+            if (item.getBy() == 0/*LPreferences.getUserId()*/) {
                 uname = "myself";
             } else {
                 String fname = LPreferences.getShareUserFullName(item.getBy());
@@ -670,7 +670,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         boolean changed = !item.isEqual(savedItem);
         if (changed) {
             item.setTimeStampLast(LPreferences.getServerUtc());
-            item.setBy(LPreferences.getUserId());
+            //item.setBy(LPreferences.getUserId());
         }
         myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import com.swoag.logalong.BuildConfig;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
@@ -25,7 +26,7 @@ import java.util.Random;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    public static final String serverIp = "192.168.0.112";
+    public static final String serverIp = "192.168.1.114";
     //public static final String serverIp = "auto";
     private static final int serverPort = 8000;
 
@@ -314,7 +315,7 @@ public class LAppServer {
 
             // signal the end of connection.
             LLog.d(TAG, "app server stopped: net thread done");
-            lProtocol.parse(null, (short)0, 0);
+            lProtocol.shutdown();
             synchronized (netLock) {
                 netThreadState = STATE_EXIT;
                 netLock.notifyAll();
@@ -369,7 +370,7 @@ public class LAppServer {
 
     public void UiInitScrambler() {
         scrambler = genScrambler();
-        LTransport.send_rqst(this, LProtocol.RQST_SCRAMBLER_SEED, scrambler, 0);
+        LTransport.send_rqst(this, LProtocol.RQST_SCRAMBLER_SEED, scrambler, (short)BuildConfig.VERSION_CODE, (short)1, 0);
     }
 
     public boolean UiPing() {
@@ -386,11 +387,12 @@ public class LAppServer {
 
     public boolean UiLogin() {
         if (TextUtils.isEmpty(LPreferences.getUserName())) return false;
-        return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, LPreferences.getUserId(), LPreferences.getUserName(), scrambler);
+        return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, 0, LPreferences.getUserName(), scrambler);
     }
 
     public boolean UiUpdateUserProfile() {
-        return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, LPreferences.getUserId(), LPreferences.getUserFullName(), scrambler);
+        //return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, 0, LPreferences.getUserFullName(), scrambler);
+        return false;
     }
 
     public boolean UiGetShareUserByName(String name) {

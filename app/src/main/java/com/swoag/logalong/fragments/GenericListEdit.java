@@ -277,10 +277,10 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.share:
-                        if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences.getUserName()))) {
-                            new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
-                            break;
-                        }
+                        //if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences.getUserName()))) {
+                        //    new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
+                        //    break;
+                        //}
 
                         ArrayList<LUser> users = new ArrayList<LUser>();
                         HashSet<Integer> userSet = DBAccount.getAllShareUser();
@@ -311,7 +311,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             // - account is first backed to shared to state, then go to unshared state
             //   when ack comes back.
             LJournal journal = new LJournal();
-            journal.unshareAccount(LPreferences.getUserId(), (int) account.getId(), account.getGid(), account.getName());
+            journal.unshareAccount(/*LPreferences.getUserId()*/0, (int) account.getId(), account.getGid(), account.getName());
         }
 
         @Override

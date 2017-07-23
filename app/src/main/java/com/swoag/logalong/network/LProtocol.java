@@ -19,7 +19,6 @@ public class LProtocol {
 
     private Object stateLock = new Object();;
     private final int STATE_DISCONNECTED = 10;
-    private final int STATE_CONNECTING = 20;
     private final int STATE_CONNECTED = 30;
     private final int STATE_LOGGED_IN = 40;
     private int state;
@@ -369,6 +368,31 @@ public class LProtocol {
             return packetConsumptionStatus;
         }
 
+        // 'state' is updated only this thread, hence safe to read without lock
+        switch (state) {
+            case STATE_DISCONNECTED:
+                switch (rsps) {
+                    case RSPS | RQST_SCRAMBLER_SEED:
+                        serverVersion = pkt.getShort();
+                        //LLog.d(TAG, "channel scrambler seed sent");
+                        synchronized (stateLock) {
+                            state = STATE_CONNECTED;
+                        }
+
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER));
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+                }
+                break;
+
+            case  STATE_CONNECTED:
+                switch (rsps) {
+                    case RSPS | RQST_CREATE_USER:
+                        break;
+                }
+                break;
+        }
+
         switch (rsps) {
             case RSPS | RQST_PING:
                 //LLog.d(TAG, "pong");
@@ -556,16 +580,15 @@ public class LProtocol {
         return false;
     }
 
+    public void shutdown() {
+        LLog.d(TAG, "network thread is shutting down, socket is no longer connected");
+        synchronized (stateLock) {
+            state = STATE_DISCONNECTED;
+        }
+    }
+
     // parser runs in Network receiving thread, thus no GUI update here.
     public short parse(LBuffer buf, short requestCode, int scrambler) {
-        if (null == buf) {
-            LLog.d(TAG, "network thread is shutting down, socket is no longer connected");
-            synchronized (stateLock) {
-                state = STATE_DISCONNECTED;
-                return RESPONSE_PARSE_RESULT_ERROR;
-            }
-        }
-
         if (pktBuf.getLen() > 0) {
             //LLog.d(TAG, "packet pipe fragmented");
             pktBuf.reset();

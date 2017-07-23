@@ -121,7 +121,7 @@
                     android:layout_weight="1"
                     android:background="@drawable/editbox_bgd"
                     android:gravity="top"
-                    android:hint="@string/hint_type_user_id"
+                    android:hint="@string/hint_user_id"
                     android:imeOptions="flagNoExtractUi"
                     android:paddingBottom="5dp"
                     android:paddingLeft="10dp"

@@ -34,11 +34,10 @@ public class LPreferences {
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
     private static final String SERVER_MSG_BROADCAST = "SrvMsgBroadcast";
-    private static final String USER_NAME = "UserName";
-    private static final String USER_PASS = "UserPass";
-    private static final String USER_ID = "UserId";
-    private static final String DEVICE_ID = "DeviceId";
-    private static final String USER_FULL_NAME = "UserFullName";
+    private static final String USER_ID = "MyUserId";
+    private static final String USER_PASS = "MyUserPass";
+    private static final String DEVICE_ID = "MyDeviceId";
+    private static final String USER_NAME = "MyUserName";
     private static final String UTC_DELTA = "UtcDelta";
 
     /*
@@ -103,15 +102,6 @@ public class LPreferences {
         savePreference(LApp.ctx, DEVICE_ID, deviceId);
     }
 
-
-    public static int getUserId() {
-        return getPreference(LApp.ctx, USER_ID, (int) 0);
-    }
-
-    public static void setUserId(int userId) {
-        savePreference(LApp.ctx, USER_ID, userId);
-    }
-    /*
     public static String getUserPass() {
         return getPreference(LApp.ctx, USER_PASS, "");
     }
@@ -119,7 +109,6 @@ public class LPreferences {
     public static void setUserPass(String userPass) {
         savePreference(LApp.ctx, USER_PASS, userPass);
     }
-    */
 
     public static String getUserName() {
         return getPreference(LApp.ctx, USER_NAME, "");
@@ -129,12 +118,12 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME, userName);
     }
 
-    public static String getUserFullName() {
-        return getPreference(LApp.ctx, USER_FULL_NAME, "");
+    public static String getUserId() {
+        return getPreference(LApp.ctx, USER_ID, "");
     }
 
-    public static void setUserFullName(String userName) {
-        savePreference(LApp.ctx, USER_FULL_NAME, userName);
+    public static void setUserId(String userId) {
+        savePreference(LApp.ctx, USER_ID, userId);
     }
 
     public static String getShareUserName(int userId) {
@@ -146,11 +135,12 @@ public class LPreferences {
     }
 
     public static String getShareUserFullName(int userId) {
-        return getPreference(LApp.ctx, USER_FULL_NAME + "." + userId, "");
+        //return getPreference(LApp.ctx, USER_FULL_NAME + "." + userId, "");
+        return "";
     }
 
     public static void setShareUserFullName(int userId, String name) {
-        savePreference(LApp.ctx, USER_FULL_NAME + "." + userId, name);
+        //savePreference(LApp.ctx, USER_FULL_NAME + "." + userId, name);
     }
 
     public static boolean getShowAccountBalance(long id) {
@@ -368,7 +358,7 @@ public class LPreferences {
         return getPreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, false);
     }
 
-    public static void setSearchFilterByValue( boolean yes) {
+    public static void setSearchFilterByValue(boolean yes) {
         savePreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, yes);
     }
 
@@ -376,7 +366,7 @@ public class LPreferences {
         return getPreference(LApp.ctx, SEARCH_VALUE, 0f);
     }
 
-    public static void setSearchValue( float value) {
+    public static void setSearchValue(float value) {
         savePreference(LApp.ctx, SEARCH_VALUE, value);
     }
 

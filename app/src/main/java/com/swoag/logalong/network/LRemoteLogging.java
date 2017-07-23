@@ -171,7 +171,7 @@ public class LRemoteLogging {
             final int LOG_STATE_CONNECTING = 20;
             final int LOG_STATE_CONNECTED = 30;
             int loggingState = LOG_STATE_DSICONNECTED;
-            int id = LPreferences.getUserId();
+            int id = 0;//LPreferences.getUserId();
             if (0 == id) {
                 Random rand = new Random(System.currentTimeMillis());
                 id = rand.nextInt(0xffff - 0x8000 + 1) + 0x8000;

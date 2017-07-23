@@ -10,46 +10,132 @@
         android:id="@+id/userIdView"
         android:layout_width="match_parent"
         android:layout_height="55dp"
-        android:background="#c0d4d6d8"
+        android:background="@color/row_released_color"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
-        android:paddingRight="25dp">
+        android:paddingRight="15dp">
 
         <TextView
-            android:layout_width="80dp"
+            android:layout_width="90dp"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:text="@string/user_id"
             android:textColor="@color/gray_text_color"
             android:textSize="16sp" />
 
-        <TextView
+        <EditText
             android:id="@+id/userId"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:background="@android:color/transparent"
             android:ellipsize="end"
             android:gravity="center_vertical"
             android:hint="@string/hint_user_id"
-            android:singleLine="true"
-            android:textColor="#909090"
-            android:textColorHint="#ccc"
-            android:textSize="20sp"
-            android:typeface="monospace" />
+            android:imeOptions="flagNoExtractUi"
+            android:maxLines="1"
+            android:textColor="@color/base_text_color"
+            android:textColorHint="#ddd"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/changePassOption"
+            android:layout_width="55dp"
+            android:layout_height="@dimen/list_item_height"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingTop="15dp"
+            android:src="@drawable/ic_action_overflow" />
+
+        <ImageView
+            android:id="@+id/userIdOk"
+            android:layout_width="55dp"
+            android:layout_height="@dimen/list_item_height"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingTop="15dp"
+            android:src="@drawable/ic_action_accept" />
+
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/userView"
+        android:id="@+id/passView"
         android:layout_width="match_parent"
         android:layout_height="55dp"
+        android:layout_marginTop="1dp"
+        android:background="@color/row_released_color"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp">
+
+        <TextView
+            android:layout_width="90dp"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/password"
+            android:textColor="@color/gray_text_color"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/userPass"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:hint="@string/password_hint"
+            android:imeOptions="flagNoExtractUi"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:textColor="@color/base_text_color"
+            android:textColorHint="#ddd"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:id="@+id/userPassOk"
+            android:layout_width="55dp"
+            android:layout_height="@dimen/list_item_height"
+            android:paddingBottom="15dp"
+            android:paddingLeft="15dp"
+            android:paddingTop="15dp"
+            android:src="@drawable/ic_action_accept" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/showPassView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="15dp"
+        android:paddingLeft="10dp">
+
+        <CheckBox
+            android:id="@+id/showPass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@drawable/btn_check_holo_light"
+            android:text="@string/show_password"
+            android:textColor="@color/light_gray_text_color" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nameView"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="1dp"
+        android:background="@color/row_released_color"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingLeft="15dp"
         android:paddingRight="25dp">
 
         <TextView
-            android:layout_width="80dp"
+            android:layout_width="90dp"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:text="@string/user_name"
@@ -66,64 +152,11 @@
             android:gravity="center_vertical"
             android:hint="@string/hint_user_name"
             android:imeOptions="flagNoExtractUi"
-            android:singleLine="true"
+            android:maxLines="1"
             android:textColor="@color/base_text_color"
-            android:textColorHint="#ccc"
+            android:textColorHint="#ddd"
             android:textSize="18sp"
             android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/passView"
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:orientation="horizontal"
-        android:paddingLeft="15dp"
-        android:paddingRight="15dp"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginRight="15dp"
-            android:gravity="center_vertical"
-            android:text="@string/password"
-            android:textColor="@color/gray_text_color"
-            android:textSize="16sp" />
-
-        <EditText
-            android:id="@+id/userPass"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:ellipsize="end"
-            android:gravity="center_vertical|right"
-            android:hint="@string/password_hint"
-            android:imeOptions="flagNoExtractUi"
-            android:inputType="textPassword"
-            android:singleLine="true"
-            android:textColor="@color/base_text_color"
-            android:textColorHint="#ccc"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingBottom="15dp"
-        android:paddingLeft="10dp"
-        android:visibility="gone">
-
-        <CheckBox
-            android:id="@+id/showPass"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:button="@drawable/btn_check_holo_light"
-            android:text="@string/show_password"
-            android:textColor="@color/light_gray_text_color" />
     </LinearLayout>
 
     <TextView
@@ -131,8 +164,8 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:maxLines="5"
         android:padding="20dp"
-        android:singleLine="false"
         android:textColor="@color/red_text_color"
         android:textSize="16sp"
         android:visibility="invisible" />

@@ -381,7 +381,6 @@ public class MainActivity extends LFragmentActivity
         }
 
         initDb();
-        DBPorter.restoreUserInfo();
 
         LPreferences.setOneTimeInit(true);
     }

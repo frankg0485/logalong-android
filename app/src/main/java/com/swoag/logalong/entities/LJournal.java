@@ -443,7 +443,7 @@ public class LJournal {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
         data.setLen(data.getBufOffset());
-        post(LPreferences.getUserId());
+        //post(LPreferences.getUserId());
         return true;
     }
 
@@ -499,7 +499,7 @@ public class LJournal {
         data.putIntAutoInc(shareWithUserId);
         data.putIntAutoInc(shareWithAccountGid);
         data.setLen(data.getBufOffset());
-        post(LPreferences.getUserId());
+        //post(LPreferences.getUserId());
         LLog.d(TAG, "confirm account: " + accountGid + " <--> " + shareWithAccountGid + " with user: "
                 + shareWithUserId + " confirmed: " + confirmed);
         return true;
