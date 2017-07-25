@@ -1,11 +1,8 @@
 package com.swoag.logalong.fragments;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -15,25 +12,15 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
-import com.swoag.logalong.network.LAppServer;
-import com.swoag.logalong.network.LProtocol;
-import com.swoag.logalong.utils.CountDownTimer;
-import com.swoag.logalong.utils.DBPorter;
-import com.swoag.logalong.utils.LBroadcastReceiver;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LChangePassDialog;
-import com.swoag.logalong.views.LRenameDialog;
+import com.swoag.logalong.views.LUpdateProfileDialog;
 
-public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener,
-        LChangePassDialog.LChangePassDialogItf {
+public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpdateProfileDialog.LUpdateProfileDialogItf {
     private static final String TAG = ProfileEdit.class.getSimpleName();
 
     private static final int MAX_USER_ID_LEN = 16;
@@ -47,13 +34,8 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     private String oldUserId, oldUserName, oldUserPass;
     private String userId, userName, userPass;
     private ProfileEditItf callback;
-    private ProgressBar progressBar;
-    private CountDownTimer countDownTimer;
-    private TextView errorMsgV;
-
-    private BroadcastReceiver broadcastReceiver;
     private MyClickListener myClickListener;
-    private boolean active;
+
 
     public interface ProfileEditItf {
         public void onProfileEditExit();
@@ -69,8 +51,6 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     }
 
     private void create() {
-        active = true;
-
         userIdTextWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -185,6 +165,8 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         oldUserName = userName = LPreferences.getUserName();
         oldUserPass = userPass = LPreferences.getUserPass();
 
+        userId = "abc";
+
         if ((!TextUtils.isEmpty(userId)) && (!TextUtils.isEmpty(userPass))) {
             userIdTV.setEnabled(false);
 
@@ -209,15 +191,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
         userNameTV.setText(userName);
 
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-
-        progressBar = (ProgressBar) parentView.findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.GONE);
-        errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
-        hideErrorMsg();
         hideIME();
-
-        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
     }
 
     private void setupSaveButton() {
@@ -239,8 +213,6 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
     }
 
     private void destroy() {
-        active= false;
-
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 
         if (userNameTV != null) {
@@ -258,29 +230,7 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
             userPassTextWatcher = null;
             userPassTV = null;
         }
-
-        if (broadcastReceiver != null) {
-            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
-            broadcastReceiver = null;
-        }
         saveV = null;
-    }
-
-    @Override
-    public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
-        switch (action) {
-            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
-                if (countDownTimer != null) {
-                    countDownTimer.cancel();
-                    progressBar.setVisibility(View.GONE);
-                    if (ret == LProtocol.RSPS_OK) {
-                        if (active) dismiss();
-                    } else {
-                        displayErrorMsg(activity.getString(R.string.warning_unable_to_create_update_profile));
-                    }
-                }
-                break;
-        }
     }
 
     private void requestInputFocus(EditText etv) {
@@ -323,62 +273,15 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
                     break;
 
                 case R.id.add: //SAVE
-                    countDownTimer = new CountDownTimer(15000, 1000) {
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-                            if ((millisUntilFinished < 8000) && (millisUntilFinished > 6500)) {
-                                if (LAppServer.getInstance().UiIsConnected()) createUpdateProfile();
-                            }
-                        }
-
-                        @Override
-                        public void onFinish() {
-                            displayErrorMsg(activity.getString(R.string.warning_get_share_user_time_out));
-                            progressBar.setVisibility(View.GONE);
-                        }
-                    }.start();
-
-                    hideErrorMsg();
-                    progressBar.setVisibility(View.VISIBLE);
-
-                    if (LAppServer.getInstance().UiIsConnected()) {
-                        createUpdateProfile();
-                    } else {
-                        MainService.start(ProfileEdit.this.activity);
-                    }
+                    LUpdateProfileDialog updateProfileDialog = new LUpdateProfileDialog(activity, ProfileEdit.this,
+                            userId, userPass, userName);
+                    updateProfileDialog.show();
                     break;
             }
         }
     }
 
-    private void createUpdateProfile() {
-        if (TextUtils.isEmpty(LPreferences.getUserName())) {
-            LAppServer.getInstance().UiRequestUserName();
-            //profile is automatically updated when username is first-time generated.
-        } else {
-            if (LAppServer.getInstance().UiIsLoggedIn()) {
-                LAppServer.getInstance().UiUpdateUserProfile();
-            } else {
-                MainService.start(ProfileEdit.this.activity);
-            }
-        }
-    }
-
-    private void hideErrorMsg() {
-        errorMsgV.setVisibility(View.GONE);
-    }
-
-    private void displayErrorMsg(String msg) {
-        errorMsgV.setText(msg);
-        errorMsgV.setVisibility(View.VISIBLE);
-    }
-
-    private void restoreOldProfile() {
-        //LPreferences.setUserFullName(oldUserName);
-    }
-
     public void dismiss() {
-        if (countDownTimer != null) countDownTimer.cancel();
         myClickListener.disableEnable(false);
         this.callback.onProfileEditExit();
         destroy();
@@ -412,6 +315,11 @@ public class ProfileEdit implements LBroadcastReceiver.BroadcastReceiverListener
             checkboxShowPass.setChecked(true);
             userPassTV.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
         }
+    }
+
+    @Override
+    public void onUpdateProfileDialogExit(boolean changed) {
+
     }
 }
 

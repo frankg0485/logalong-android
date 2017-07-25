@@ -105,6 +105,7 @@
     <string name="unlimited">unlimited</string>
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
+    <string name="updating_profile">Updating profile ...</string>
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
     <string name="version">Version</string>
