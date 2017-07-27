@@ -9,12 +9,11 @@ public class LTransport {
     private static final String TAG = LTransport.class.getSimpleName();
     private static CRC32 crc32 = new CRC32();
 
-    private static void crc32(LBuffer buf)
-    {
+    private static void crc32(LBuffer buf) {
         crc32.reset();
         crc32.update(buf.getBuf(), 0, buf.getLen());
 
-        buf.putIntAt((int)crc32.getValue(), buf.getLen());
+        buf.putIntAt((int) crc32.getValue(), buf.getLen());
         buf.setLen(buf.getLen() + 4);
     }
 
@@ -70,7 +69,7 @@ public class LTransport {
         return true;
     }
 
-    public static boolean send_rqst(LAppServer server, short rqst, int datai,int datai2, short length, byte[] datab, int offset, short bytes, int scrambler) {
+    public static boolean send_rqst(LAppServer server, short rqst, int datai, int datai2, short length, byte[] datab, int offset, short bytes, int scrambler) {
         LBuffer buf = server.getNetBuffer();
         if (buf == null) return false;
         buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
@@ -83,6 +82,47 @@ public class LTransport {
         buf.putBytesAutoInc(datab, offset, bytes);
 
         int len = LProtocol.PACKET_PAYLOAD_LENGTH(buf.getBufOffset());
+        buf.putShortAt((short) len, 2);
+        buf.setLen(len);
+
+        buf.setBufOffset(0);
+        scramble(buf, scrambler);
+
+        crc32(buf);
+        server.putNetBuffer(buf);
+        return true;
+    }
+
+    public static boolean send_rqst(LAppServer server, short rqst, String s1, String s2, String s3, int scrambler) {
+        LBuffer buf = server.getNetBuffer();
+        if (buf == null) return false;
+        buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
+        buf.putShortAutoInc((short) 0);
+        buf.putShortAutoInc(rqst);
+
+        int len = 0;
+        try {
+            len = (short) s1.getBytes("UTF-8").length;
+        } catch (Exception e) {
+        }
+        buf.putShortAutoInc((short) len);
+        buf.putStringAutoInc(s1);
+
+        try {
+            len = (short) s2.getBytes("UTF-8").length;
+        } catch (Exception e) {
+        }
+        buf.putShortAutoInc((short) len);
+        buf.putStringAutoInc(s2);
+
+        try {
+            len = (short) s3.getBytes("UTF-8").length;
+        } catch (Exception e) {
+        }
+        buf.putShortAutoInc((short) len);
+        buf.putStringAutoInc(s3);
+
+        len = LProtocol.PACKET_PAYLOAD_LENGTH(buf.getBufOffset());
         buf.putShortAt((short) len, 2);
         buf.setLen(len);
 

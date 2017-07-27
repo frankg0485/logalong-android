@@ -380,8 +380,7 @@ public class MainActivity extends LFragmentActivity
             DBPorter.saveDeviceId();
         }
 
-        initDb();
-
+        //initDb();
         LPreferences.setOneTimeInit(true);
     }
 

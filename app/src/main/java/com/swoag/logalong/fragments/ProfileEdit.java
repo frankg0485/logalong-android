@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
 import com.swoag.logalong.network.LAppServer;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LOnClickListener;
@@ -40,7 +41,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     public static final int MAX_USER_PASS_LEN = 32;
     private Activity activity;
     private View parentView, rootView, userNameV, userPassV, saveV, changePassV, showPassV, userIdOkV, userPassOkV, newUserV;
-    private View checkUserIdAvailabilityV;
+    private View checkUserIdAvailabilityV, dummyV;
     private ProgressBar checkUserIdAvailabilityProgressBar;
     private CheckBox checkboxShowPass;
     private RadioButton newUserBtn, loginUserBtn;
@@ -53,6 +54,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     private CountDownTimer countDownTimer;
     private MyClickListener myClickListener;
     private BroadcastReceiver broadcastReceiver;
+    private boolean userIdPresent = false;
 
     public interface ProfileEditItf {
         public void onProfileEditExit();
@@ -147,21 +149,23 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 setupSaveButton();
             }
         };
-        errorMsgV = (TextView) rootView.findViewById(R.id.errorMsg);
+
+        errorMsgV = (TextView) setViewListener(rootView, R.id.errorMsg);
         hideMsg();
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
+                LBroadcastReceiver.ACTION_GET_USER_BY_NAME}, this);
 
         newUserV = rootView.findViewById(R.id.createUserView);
         newUserBtn = (RadioButton) setViewListener(rootView, R.id.createUser);
         loginUserBtn = (RadioButton) setViewListener(rootView, R.id.loginUser);
+        dummyV = setViewListener(rootView, R.id.dummy);
 
         checkUserIdAvailabilityV = setViewListener(rootView, R.id.checkUserIdAvailability);
         checkUserIdAvailabilityProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
         checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
 
-        userIdOkV = rootView.findViewById(R.id.userIdOk);
-        userPassOkV = rootView.findViewById(R.id.userPassOk);
+        userIdOkV = setViewListener(rootView, R.id.userIdOk);
+        userPassOkV = setViewListener(rootView, R.id.userPassOk);
 
         saveV = setViewListener(parentView, R.id.add);
         LViewUtils.setAlpha(saveV, 0.5f);
@@ -193,15 +197,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         oldUserPass = userPass = LPreferences.getUserPass();
 
         if ((!TextUtils.isEmpty(userId)) && (!TextUtils.isEmpty(userPass))) {
-            userIdTV.setEnabled(false);
-
-            userPassV.setVisibility(View.GONE);
-            showPassV.setVisibility(View.GONE);
-            changePassV.setVisibility(View.VISIBLE);
-            userIdOkV.setVisibility(View.GONE);
-            userPassOkV.setVisibility(View.GONE);
-            newUserV.setVisibility(View.GONE);
-            checkUserIdAvailabilityV.setVisibility(View.GONE);
+            enableDisplayForLoggedInUser();
         } else {
             userPassV.setVisibility(View.VISIBLE);
             showPassV.setVisibility(View.VISIBLE);
@@ -217,6 +213,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             checkUserIdAvailabilityV.setEnabled(false);
             newUserBtn.setChecked(true);
             userNameV.setVisibility(View.VISIBLE);
+
+            userIdPresent = false;
         }
 
         userIdTV.setText(userId);
@@ -227,8 +225,21 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         hideIME();
     }
 
+    private void enableDisplayForLoggedInUser() {
+        userPassV.setVisibility(View.GONE);
+        showPassV.setVisibility(View.GONE);
+        changePassV.setVisibility(View.VISIBLE);
+        userIdOkV.setVisibility(View.GONE);
+        userPassOkV.setVisibility(View.GONE);
+        newUserV.setVisibility(View.GONE);
+
+        userIdTV.setEnabled(false);
+        LViewUtils.setAlpha(userIdTV, 0.6f);
+        userIdPresent = true;
+    }
+
     private void setUserIdDisplayControls() {
-        checkUserIdAvailabilityV.setVisibility(newUserBtn.isChecked()? View.VISIBLE: View.INVISIBLE);
+        checkUserIdAvailabilityV.setVisibility((newUserBtn.isChecked() && (!userIdPresent))? View.VISIBLE : View.INVISIBLE);
         if (userId.length() > 1) {
             if (newUserBtn.isChecked()) {
                 LViewUtils.setAlpha(userIdOkV, 0.5f);
@@ -263,13 +274,13 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     private void destroy() {
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-            countDownTimer = null;
-        }
-        disableEnableAllControls(true);
-
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+
+        if (broadcastReceiver != null) {
+            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
+            broadcastReceiver = null;
+        }
+
         checkUserIdAvailabilityStop();
         if (userNameTV != null) {
             userNameTV.removeTextChangedListener(userNameTextWatcher);
@@ -309,7 +320,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                     hideMsg();
                     setupSaveButton();
                     setUserIdDisplayControls();
-                    userNameV.setVisibility(newUserBtn.isChecked()? View.VISIBLE : View.GONE);
+                    userNameV.setVisibility(newUserBtn.isChecked() ? View.VISIBLE : View.GONE);
                     break;
                 case R.id.userId:
                     requestInputFocus(userIdTV);
@@ -333,6 +344,13 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 case R.id.changePassOption:
                     LChangePassDialog changePassDialog = new LChangePassDialog(activity, ProfileEdit.this);
                     changePassDialog.show();
+                    break;
+
+                case R.id.errorMsg:
+                case R.id.userIdOk:
+                case R.id.userPassOk:
+                case R.id.dummy:
+                    hideIME();
                     break;
 
                 case R.id.checkUserIdAvailability:
@@ -366,8 +384,10 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         errorMsgV.setVisibility(View.GONE);
     }
 
-    private void displayMsg(String msg) {
+    private void displayMsg(boolean error, String msg) {
         checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
+        errorMsgV.setTextColor(error ? activity.getResources().getColor(R.color.red_text_color) :
+                activity.getResources().getColor(R.color.base_green));
         errorMsgV.setText(msg);
         errorMsgV.setVisibility(View.VISIBLE);
     }
@@ -384,14 +404,19 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
 
     private void checkUserIdAvailabilityStart() {
         countDownTimer = new CountDownTimer(16000, 1000) {
+            private boolean checkOnce = true;
+
             @Override
             public void onTick(long millisUntilFinished) {
-                if (LAppServer.getInstance().UiIsConnected()) checkUserIdAvailability();
+                if (LAppServer.getInstance().UiIsConnected()) {
+                    if (checkOnce) checkUserIdAvailability();
+                    checkOnce = false;
+                }
             }
 
             @Override
             public void onFinish() {
-                displayMsg(activity.getString(R.string.warning_get_share_user_time_out));
+                displayMsg(true, activity.getString(R.string.warning_get_share_user_time_out));
                 checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
 
                 disableEnableAllControls(true);
@@ -412,11 +437,15 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     private void checkUserIdAvailabilityStop() {
-
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
+        disableEnableAllControls(true);
     }
 
     private void checkUserIdAvailability() {
-
+        LAppServer.getInstance().UiGetUserByName(userId);
     }
 
     private View setViewListener(View v, int id) {
@@ -450,19 +479,31 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     @Override
-    public void onUpdateProfileDialogExit(boolean changed) {
-
+    public void onUpdateProfileDialogExit(boolean success) {
+        if (success) {
+            enableDisplayForLoggedInUser();
+            hideMsg();
+        }
     }
 
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
-            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
+            case LBroadcastReceiver.ACTION_GET_USER_BY_NAME:
+                disableEnableAllControls(true);
+                setupSaveButton();
                 if (countDownTimer != null) {
                     countDownTimer.cancel();
                 }
-                LViewUtils.setAlpha(saveV, 1.0f);
-                saveV.setEnabled(true);
+                if (newUserBtn.isChecked()) {
+                    if (ret != LProtocol.RSPS_OK) {
+                        displayMsg(false, activity.getResources().getString(R.string.warning_user_id_available));
+                    } else {
+                        LViewUtils.setAlpha(saveV, 0.5f);
+                        saveV.setEnabled(false);
+                        displayMsg(true, activity.getResources().getString(R.string.warning_user_id_taken));
+                    }
+                }
                 break;
         }
     }

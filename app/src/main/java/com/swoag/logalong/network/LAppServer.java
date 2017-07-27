@@ -377,6 +377,15 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_PING, 0);
     }
 
+    public boolean UiGetUserByName(String name) {
+        return LTransport.send_rqst(this, LProtocol.RQST_GET_USER_BY_NAME, name, scrambler);
+    }
+
+    public boolean UiCreateUser(String name, String pass, String fullName) {
+        return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, name, pass, fullName, scrambler);
+    }
+
+
     public boolean UiRequestUserName() {
         if(!TextUtils.isEmpty(LPreferences.getUserName())) {
             LLog.w(TAG, "user name request ignored, name already assigned: " + LPreferences.getUserName());

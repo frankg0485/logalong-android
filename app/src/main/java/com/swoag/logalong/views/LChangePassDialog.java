@@ -20,6 +20,7 @@ import com.swoag.logalong.fragments.ProfileEdit;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +34,9 @@ public class LChangePassDialog extends Dialog implements TextWatcher {
     private Context context;
     private Object id;
     private MyClickListener myClickListener;
-    private String userPass;
+    private String userPass = "";
     private TextView errorMsgV;
+    private View okV;
 
     public interface LChangePassDialogItf {
         public void onChangePassDialogExit(boolean changed);
@@ -55,17 +57,22 @@ public class LChangePassDialog extends Dialog implements TextWatcher {
         setContentView(R.layout.change_pass_dialog);
 
         errorMsgV = (TextView) findViewById(R.id.errorMsg);
+        errorMsgV.setOnClickListener(myClickListener);
         hideErrorMsg();
 
+        okV = findViewById(R.id.confirmDialog);
         findViewById(R.id.cancelDialog).setOnClickListener(myClickListener);
-        findViewById(R.id.confirmDialog).setOnClickListener(myClickListener);
+        okV.setOnClickListener(myClickListener);
         findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
+        findViewById(R.id.dummy).setOnClickListener(myClickListener);
 
         userPassET = (EditText) findViewById(R.id.currentPass);
         userPassET.addTextChangedListener(this);
         checkboxShowPass = (CheckBox) findViewById(R.id.showPass);
         checkboxShowPass.setClickable(false);
         findViewById(R.id.showPassView).setOnClickListener(myClickListener);
+
+        setupOkButton();
     }
 
 
@@ -81,6 +88,7 @@ public class LChangePassDialog extends Dialog implements TextWatcher {
             userPassET.setSelection(userPass.length());
         }
         hideErrorMsg();
+        setupOkButton();
     }
 
     @Override
@@ -89,6 +97,25 @@ public class LChangePassDialog extends Dialog implements TextWatcher {
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
+    }
+
+    private void hideIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(userPassET.getWindowToken(), 0);
+            userPassET.setCursorVisible(false);
+        } catch (Exception e) {
+        }
+    }
+
+    private void setupOkButton() {
+        if (userPass.length() > 3) {
+            LViewUtils.setAlpha(okV, 1.0f);
+            okV.setEnabled(true);
+        } else {
+            LViewUtils.setAlpha(okV, 0.5f);
+            okV.setEnabled(false);
+        }
     }
 
     private void hideErrorMsg() {
@@ -104,6 +131,11 @@ public class LChangePassDialog extends Dialog implements TextWatcher {
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
+                case R.id.dummy:
+                case R.id.errorMsg:
+                    hideIME();
+                    break;
+
                 case R.id.showPassView:
                     checkboxShowPass.setChecked(!checkboxShowPass.isChecked());
                     if (checkboxShowPass.isChecked()) {

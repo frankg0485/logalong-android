@@ -110,6 +110,7 @@
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="updating_profile">Updating profile ...</string>
+    <string name="user_create_success">User successfully created</string>
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
     <string name="version">Version</string>
@@ -124,6 +125,8 @@
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
     <string name="warning_unable_to_create_update_profile">Unable to create/update user profile, please try later.</string>
+    <string name="warning_user_id_taken">User ID already taken by someone else</string>
+    <string name="warning_user_id_available">User ID available</string>
     <string name="week">week</string>
     <string name="weeks">weeks</string>
 </resources>

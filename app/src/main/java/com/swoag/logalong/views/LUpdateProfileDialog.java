@@ -57,7 +57,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
     private boolean requestedOnce;
 
     public interface LUpdateProfileDialogItf {
-        public void onUpdateProfileDialogExit(boolean changed);
+        public void onUpdateProfileDialogExit(boolean success);
     }
 
     public LUpdateProfileDialog(Context context, LUpdateProfileDialogItf callback,
@@ -104,6 +104,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressMsg = (TextView)findViewById(R.id.progressMsg);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_CREATE_USER,
                 LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
 
         hideMsg();
@@ -151,7 +152,16 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         if (requestedOnce) return;
         requestedOnce = true;
 
-        LAppServer.getInstance().UiUpdateUserProfile(userId, userPass, userName);
+        switch (action) {
+            case NEW_USER:
+                LAppServer.getInstance().UiCreateUser(userId, userPass, userName);
+                break;
+            case UPDATE_USER:
+                LAppServer.getInstance().UiUpdateUserProfile(userId, userPass, userName);
+                break;
+            case LOGIN_USER:
+                break;
+        }
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -180,18 +190,23 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
         switch (action) {
-            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
-                if (countDownTimer != null) {
-                    countDownTimer.cancel();
-                    if (ret == LProtocol.RSPS_OK) {
-                        //switch (intent.getIntExtra("status", 0)) {
-                        //    case
-                        //}
-                    } else {
-                        displayMsg(true, context.getString(R.string.warning_unable_to_create_update_profile));
-                    }
+            case LBroadcastReceiver.ACTION_CREATE_USER:
+                if (ret == LProtocol.RSPS_OK) {
+                    success = true;
+                    displayMsg(false, context.getString(R.string.user_create_success) + "\n" + userId + " : " + userPass);
+                    LPreferences.setUserPass(userPass);
+                    LPreferences.setUserId(userId);
+                    LPreferences.setUserName(userName);
+                } else {
+                    displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
                 }
+                break;
+            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
                 break;
         }
     }

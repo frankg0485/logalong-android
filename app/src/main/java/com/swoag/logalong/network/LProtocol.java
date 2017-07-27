@@ -17,7 +17,8 @@ import java.util.zip.CRC32;
 public class LProtocol {
     private static final String TAG = LProtocol.class.getSimpleName();
 
-    private Object stateLock = new Object();;
+    private Object stateLock = new Object();
+    ;
     private final int STATE_DISCONNECTED = 10;
     private final int STATE_CONNECTED = 30;
     private final int STATE_LOGGED_IN = 40;
@@ -61,7 +62,9 @@ public class LProtocol {
     public static final short RSPS_ERROR = (short) 0xffff;
 
     public static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
-    public static final short RQST_CREATE_USER = RQST_SYS | 0x104;
+    public static final short RQST_GET_USER_BY_NAME = RQST_SYS | 0x200;
+    public static final short RQST_CREATE_USER = RQST_SYS | 0x204;
+
     public static final short RQST_LOGIN = RQST_SYS | 0x105;
     public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
@@ -78,14 +81,14 @@ public class LProtocol {
     private static final short CMD_UPDATE_ACCOUNT_INFO = 0x0107;
     private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
 
-    private static final short CMD_JRQST_MASK = (short)0x8000;
-    private static final short CMD_SHARE_TRANSITION_RECORD = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORD);
-    private static final short CMD_SHARE_TRANSITION_RECORDS = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORDS);
-    private static final short CMD_SHARE_TRANSITION_CATEGORY = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_CATEGORY);
-    private static final short CMD_SHARE_TRANSITION_PAYER = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_PAYER);
-    private static final short CMD_SHARE_TRANSITION_TAG = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_TAG);
-    private static final short CMD_SHARE_PAYER_CATEGORY = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_PAYER_CATEGORY);
-    private static final short CMD_SHARE_SCHEDULE = (short)(CMD_JRQST_MASK | LJournal.JRQST_SHARE_SCHEDULE);
+    private static final short CMD_JRQST_MASK = (short) 0x8000;
+    private static final short CMD_SHARE_TRANSITION_RECORD = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORD);
+    private static final short CMD_SHARE_TRANSITION_RECORDS = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORDS);
+    private static final short CMD_SHARE_TRANSITION_CATEGORY = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_CATEGORY);
+    private static final short CMD_SHARE_TRANSITION_PAYER = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_PAYER);
+    private static final short CMD_SHARE_TRANSITION_TAG = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_TAG);
+    private static final short CMD_SHARE_PAYER_CATEGORY = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_PAYER_CATEGORY);
+    private static final short CMD_SHARE_SCHEDULE = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_SCHEDULE);
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -155,7 +158,7 @@ public class LProtocol {
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
         rspsIntent.putExtra("accountGid", accountGid);
-        rspsIntent.putExtra("numShareUsers", (short)numShareUsers);
+        rspsIntent.putExtra("numShareUsers", (short) numShareUsers);
         rspsIntent.putExtra("shareUsers", shareUsers);
         LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " + shareUsers);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
@@ -239,6 +242,7 @@ public class LProtocol {
     public static final int RECORDS_RECEIVED_FULL = 10;
     public static final int RECORDS_RECEIVED_PART = 20;
     public static final int RECORDS_RECEIVING = 30;
+
     private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId, boolean lastPacket) {
         Intent rspsIntent;
         int accountGid = pkt.getIntAutoInc();
@@ -280,10 +284,8 @@ public class LProtocol {
         rspsIntent.putExtra("record", record);
         if (lastPacket) {
             rspsIntent.putExtra("done", done ? RECORDS_RECEIVED_FULL : RECORDS_RECEIVED_PART);
-        } else
-        {
-            if (done)
-            {
+        } else {
+            if (done) {
                 LLog.e(TAG, "unexpected: records broken");
             }
             rspsIntent.putExtra("done", RECORDS_RECEIVING);
@@ -326,7 +328,9 @@ public class LProtocol {
     private class PacketConsumptionStatus {
         int bytesConsumed;
         boolean isResponseCompleted;
-    };
+    }
+
+    ;
 
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
     private PacketConsumptionStatus consumePacket(LBuffer pkt, short requestCode, int scrambler) {
@@ -352,7 +356,7 @@ public class LProtocol {
         crc32.reset();
         crc32.update(pkt.getBuf(), pkt.getBufOffset(), total - 4);
 
-        if ((int)crc32.getValue() != pkt.getIntAt(pkt.getBufOffset() + total - 4)) {
+        if ((int) crc32.getValue() != pkt.getIntAt(pkt.getBufOffset() + total - 4)) {
             LLog.w(TAG, "drop corrupted packet: checksum mismatch");
             packetConsumptionStatus.bytesConsumed = total; //discard packet
             return packetConsumptionStatus;
@@ -385,8 +389,32 @@ public class LProtocol {
                 }
                 break;
 
-            case  STATE_CONNECTED:
+            case STATE_CONNECTED:
                 switch (rsps) {
+                    case RSPS | RQST_GET_USER_BY_NAME: {
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_USER_BY_NAME));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+
+                        if (RSPS_OK == status) {
+                            String name, fullName;
+                            int bytes = pkt.getShortAutoInc();
+                            name = pkt.getStringAutoInc(bytes);
+                            bytes = pkt.getShortAutoInc();
+                            fullName = pkt.getStringAutoInc(bytes);
+
+                            rspsIntent.putExtra("name", name);
+                            rspsIntent.putExtra("fullName", fullName);
+                        }
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+                    }
+
+                    case RSPS | RQST_CREATE_USER:
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CREATE_USER));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
                     case RSPS | RQST_UPDATE_USER_PROFILE:
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
@@ -396,6 +424,7 @@ public class LProtocol {
                 break;
         }
 
+        /*
         switch (rsps) {
             case RSPS | RQST_PING:
                 //LLog.d(TAG, "pong");
@@ -433,7 +462,6 @@ public class LProtocol {
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
-
 
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:
@@ -559,7 +587,7 @@ public class LProtocol {
                     LLog.w(TAG, "unable to sync UTC");
                 }
                 break;
-        }
+        }*/
 
         pkt.setBufOffset(origOffset);
 
@@ -620,7 +648,7 @@ public class LProtocol {
             } else {
                 //packet consumed
                 pkt.setLen(pkt.getLen() - bytes);
-                pkt.setBufOffset( (pkt.getLen() == 0)? 0 : pkt.getBufOffset() + bytes);
+                pkt.setBufOffset((pkt.getLen() == 0) ? 0 : pkt.getBufOffset() + bytes);
 
                 //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt.getBufOffset());
                 //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));

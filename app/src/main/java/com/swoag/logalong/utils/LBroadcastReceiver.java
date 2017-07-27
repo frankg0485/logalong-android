@@ -11,7 +11,7 @@ import com.swoag.logalong.LApp;
 
 public class LBroadcastReceiver {
     private static final String TAG = LBroadcastReceiver.class.getSimpleName();
-    public static final String EXTRA_RET_CODE = "ert";
+    public static final String EXTRA_RET_CODE = "ret";
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
     public static final int ACTION_POLL_ACKED = 1;
     public static final int ACTION_POLL_IDLE = 2;
@@ -22,7 +22,10 @@ public class LBroadcastReceiver {
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
     public static final int ACTION_JOURNAL_POSTED = 70;
     public static final int ACTION_USER_PROFILE_UPDATED = 84;
+
     public static final int ACTION_NETWORK_CONNECTED = 90;
+    public static final int ACTION_GET_USER_BY_NAME = 95;
+    public static final int ACTION_CREATE_USER = 96;
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;
