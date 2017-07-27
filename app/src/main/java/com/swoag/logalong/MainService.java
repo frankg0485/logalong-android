@@ -329,7 +329,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 //LPreferences.setUserId(userId);
                 LPreferences.setUserName(userName);
 
-                server.UiUpdateUserProfile();
+                //server.UiUpdateUserProfile();
                 server.UiLogin();
                 break;
 
@@ -339,7 +339,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (ret == LProtocol.RSPS_OK) {
                     logInAttempts = 0;
                     server.UiUtcSync();
-                    server.UiUpdateUserProfile();
+                    //server.UiUpdateUserProfile();
                     LLog.d(TAG, "user logged in");
                     //journal posting and polling start only upon successful login
                     pollHandler.removeCallbacks(journalPostRunnable);

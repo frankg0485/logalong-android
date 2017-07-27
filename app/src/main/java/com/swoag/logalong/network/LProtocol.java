@@ -387,7 +387,10 @@ public class LProtocol {
 
             case  STATE_CONNECTED:
                 switch (rsps) {
-                    case RSPS | RQST_CREATE_USER:
+                    case RSPS | RQST_UPDATE_USER_PROFILE:
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
                 }
                 break;
@@ -431,11 +434,7 @@ public class LProtocol {
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 break;
 
-            case RSPS | RQST_UPDATE_USER_PROFILE:
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
-                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                break;
+
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME));

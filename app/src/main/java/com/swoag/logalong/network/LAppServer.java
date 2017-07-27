@@ -390,7 +390,7 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, 0, LPreferences.getUserName(), scrambler);
     }
 
-    public boolean UiUpdateUserProfile() {
+    public boolean UiUpdateUserProfile(String userId, String userPass, String userName) {
         //return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, 0, LPreferences.getUserFullName(), scrambler);
         return false;
     }

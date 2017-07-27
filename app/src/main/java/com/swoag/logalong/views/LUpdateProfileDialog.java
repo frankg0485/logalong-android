@@ -33,33 +33,45 @@ import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
+import org.w3c.dom.Text;
+
 public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = LUpdateProfileDialog.class.getSimpleName();
+
+    public static final int NEW_USER = 10;
+    public static final int LOGIN_USER = 20;
+    public static final int UPDATE_USER = 30;
 
     private LUpdateProfileDialogItf callback;
     private Context context;
     private MyClickListener myClickListener;
     private TextView errorMsgV;
     private String userId, userPass, userName;
+    private int action;
     private Button okBtn;
     private CountDownTimer countDownTimer;
     private ProgressBar progressBar;
-    private TextView progressMsg;
+    private TextView progressMsg, titleTV;
     private BroadcastReceiver broadcastReceiver;
+    private boolean success;
+    private boolean requestedOnce;
 
     public interface LUpdateProfileDialogItf {
         public void onUpdateProfileDialogExit(boolean changed);
     }
 
     public LUpdateProfileDialog(Context context, LUpdateProfileDialogItf callback,
-                                String userId, String userPass, String userName) {
+                                int action, String userId, String userPass, String userName) {
         super(context, android.R.style.Theme_Translucent_NoTitleBar);
 
         this.context = context;
         this.callback = callback;
+        this.action = action;
         this.userId = userId;
         this.userPass = userPass;
         this.userName = userName;
+        this.success = false;
+        this.requestedOnce = false;
 
         myClickListener = new MyClickListener();
     }
@@ -71,6 +83,20 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         setContentView(R.layout.update_profile_progress_dialog);
 
         errorMsgV = (TextView) findViewById(R.id.errorMsg);
+        titleTV = (TextView)findViewById(R.id.title);
+        String title = "";
+        switch (action) {
+            case UPDATE_USER:
+                title = context.getResources().getString(R.string.updating_profile);
+                break;
+            case NEW_USER:
+                title = context.getResources().getString(R.string.creating_user);
+                break;
+            case LOGIN_USER:
+                title = context.getResources().getString(R.string.logging_in);
+                break;
+        }
+        titleTV.setText(title);
 
         okBtn = (Button) findViewById(R.id.confirmDialog);
         okBtn.setOnClickListener(myClickListener);
@@ -80,13 +106,13 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
 
+        hideMsg();
+
         countDownTimer = new CountDownTimer(16000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
                 progressMsg.setText(millisUntilFinished/1000 + "");
-                if ((millisUntilFinished < 8000) && (millisUntilFinished > 6500)) {
-                    if (LAppServer.getInstance().UiIsConnected()) createUpdateProfile();
-                }
+                if (LAppServer.getInstance().UiIsConnected()) createUpdateProfile();
             }
 
             @Override
@@ -95,11 +121,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             }
         }.start();
 
-        hideMsg();
-
-        if (LAppServer.getInstance().UiIsConnected()) {
-            createUpdateProfile();
-        } else {
+        if (!LAppServer.getInstance().UiIsConnected()) {
             MainService.start(context);
         }
     }
@@ -126,16 +148,10 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
 
     private void createUpdateProfile() {
-        if (TextUtils.isEmpty(LPreferences.getUserName())) {
-            LAppServer.getInstance().UiRequestUserName();
-            //profile is automatically updated when username is first-time generated.
-        } else {
-            if (LAppServer.getInstance().UiIsLoggedIn()) {
-                LAppServer.getInstance().UiUpdateUserProfile();
-            } else {
-                MainService.start(context);
-            }
-        }
+        if (requestedOnce) return;
+        requestedOnce = true;
+
+        LAppServer.getInstance().UiUpdateUserProfile(userId, userPass, userName);
     }
 
     private class MyClickListener extends LOnClickListener {
@@ -143,13 +159,17 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         public void onClicked(View v) {
             switch (v.getId()) {
                 case R.id.confirmDialog:
-                    dismiss();
+                    if(callback != null) callback.onUpdateProfileDialogExit(success);
+                    destroy();
             }
         }
     }
 
     private void destroy() {
-        if (countDownTimer != null) countDownTimer.cancel();
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
 
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
@@ -165,7 +185,9 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 if (countDownTimer != null) {
                     countDownTimer.cancel();
                     if (ret == LProtocol.RSPS_OK) {
-
+                        //switch (intent.getIntExtra("status", 0)) {
+                        //    case
+                        //}
                     } else {
                         displayMsg(true, context.getString(R.string.warning_unable_to_create_update_profile));
                     }

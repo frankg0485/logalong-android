@@ -16,6 +16,8 @@
     <string name="categories">Categories</string>
     <string name="count_time">time</string>
     <string name="count_times">times</string>
+    <string name="create_new_user_id">Create new user ID</string>
+    <string name="creating_user">Creating user ...</string>
     <string name="data_backup">Data Backup</string>
     <string name="delete">Delete</string>
     <string name="delete_now">Delete now</string>
@@ -43,6 +45,8 @@
     <string name="income">Income</string>
     <string name="loading">Loading ...</string>
     <string name="login">Log In</string>
+    <string name="login_with_existing_user_id">Login with existing user ID</string>
+    <string name="logging_in">Logging in ... </string>
     <string name="month">month</string>
     <string name="months">months</string>
     <string name="monthly">monthly</string>
