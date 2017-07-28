@@ -3,6 +3,7 @@ package com.swoag.logalong.network;
 
 import com.swoag.logalong.utils.LBuffer;
 
+import java.util.List;
 import java.util.zip.CRC32;
 
 public class LTransport {
@@ -93,7 +94,7 @@ public class LTransport {
         return true;
     }
 
-    public static boolean send_rqst(LAppServer server, short rqst, String s1, String s2, String s3, int scrambler) {
+    public static boolean send_rqst(LAppServer server, short rqst, List<String> stringList, int scrambler) {
         LBuffer buf = server.getNetBuffer();
         if (buf == null) return false;
         buf.putShortAutoInc(LProtocol.PACKET_SIGNATURE1);
@@ -101,26 +102,14 @@ public class LTransport {
         buf.putShortAutoInc(rqst);
 
         int len = 0;
-        try {
-            len = (short) s1.getBytes("UTF-8").length;
-        } catch (Exception e) {
+        for (String string : stringList) {
+            try {
+                len = (short) string.getBytes("UTF-8").length;
+            } catch (Exception e) {
+            }
+            buf.putShortAutoInc((short) len);
+            buf.putStringAutoInc(string);
         }
-        buf.putShortAutoInc((short) len);
-        buf.putStringAutoInc(s1);
-
-        try {
-            len = (short) s2.getBytes("UTF-8").length;
-        } catch (Exception e) {
-        }
-        buf.putShortAutoInc((short) len);
-        buf.putStringAutoInc(s2);
-
-        try {
-            len = (short) s3.getBytes("UTF-8").length;
-        } catch (Exception e) {
-        }
-        buf.putShortAutoInc((short) len);
-        buf.putStringAutoInc(s3);
 
         len = LProtocol.PACKET_PAYLOAD_LENGTH(buf.getBufOffset());
         buf.putShortAt((short) len, 2);

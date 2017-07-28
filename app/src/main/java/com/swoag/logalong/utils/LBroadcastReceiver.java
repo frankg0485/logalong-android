@@ -26,6 +26,8 @@ public class LBroadcastReceiver {
     public static final int ACTION_NETWORK_CONNECTED = 90;
     public static final int ACTION_GET_USER_BY_NAME = 95;
     public static final int ACTION_CREATE_USER = 96;
+    public static final int ACTION_SIGN_IN = 97;
+    public static final int ACTION_LOG_IN = 98;
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;

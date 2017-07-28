@@ -18,9 +18,10 @@ public class LProtocol {
     private static final String TAG = LProtocol.class.getSimpleName();
 
     private Object stateLock = new Object();
-    ;
+
     private final int STATE_DISCONNECTED = 10;
     private final int STATE_CONNECTED = 30;
+    private final int STATE_SIGNED_IN = 35;
     private final int STATE_LOGGED_IN = 40;
     private int state;
 
@@ -58,14 +59,16 @@ public class LProtocol {
     public static final short RSPS_OK = (short) 0x0010;
     public static final short RSPS_ACK = (short) 0x005a;
     public static final short RSPS_USER_NOT_FOUND = (short) 0xf000;
+    public static final short RSPS_WRONG_PASSWORD = (short) 0xf0001;
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
 
     public static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     public static final short RQST_GET_USER_BY_NAME = RQST_SYS | 0x200;
     public static final short RQST_CREATE_USER = RQST_SYS | 0x204;
+    public static final short RQST_SIGN_IN = RQST_SYS | 0x208;
+    public static final short RQST_LOG_IN = RQST_SYS | 0x209;
 
-    public static final short RQST_LOGIN = RQST_SYS | 0x105;
     public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -391,7 +394,8 @@ public class LProtocol {
 
             case STATE_CONNECTED:
                 switch (rsps) {
-                    case RSPS | RQST_GET_USER_BY_NAME: {
+                    case RSPS | RQST_GET_USER_BY_NAME:
+                    {
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_USER_BY_NAME));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
 
@@ -412,9 +416,27 @@ public class LProtocol {
                     case RSPS | RQST_CREATE_USER:
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CREATE_USER));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        synchronized (stateLock) {
+                            state = STATE_SIGNED_IN;
+                        }
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
+                    case RSPS | RQST_SIGN_IN:
+                    {
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_SIGN_IN));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        if (RSPS_OK == status) {
+                            int bytes = pkt.getShortAutoInc();
+                            String name = pkt.getStringAutoInc(bytes);
+                            rspsIntent.putExtra("userName", name);
+                        }
+                        synchronized (stateLock) {
+                            state = STATE_SIGNED_IN;
+                        }
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+                    }
                     case RSPS | RQST_UPDATE_USER_PROFILE:
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);

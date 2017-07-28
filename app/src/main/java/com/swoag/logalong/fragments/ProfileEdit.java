@@ -232,7 +232,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         userIdOkV.setVisibility(View.GONE);
         userPassOkV.setVisibility(View.GONE);
         newUserV.setVisibility(View.GONE);
-
+        userNameV.setVisibility(View.VISIBLE);
         userIdTV.setEnabled(false);
         LViewUtils.setAlpha(userIdTV, 0.6f);
         userIdPresent = true;
@@ -481,6 +481,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     @Override
     public void onUpdateProfileDialogExit(boolean success) {
         if (success) {
+            userName = LPreferences.getUserName(); //user full name may get updated on first signin
+            userNameTV.setText(userName);
             enableDisplayForLoggedInUser();
             hideMsg();
         }

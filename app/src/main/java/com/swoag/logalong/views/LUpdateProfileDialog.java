@@ -105,6 +105,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         progressMsg = (TextView)findViewById(R.id.progressMsg);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_CREATE_USER,
+                LBroadcastReceiver.ACTION_SIGN_IN,
                 LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
 
         hideMsg();
@@ -156,10 +157,11 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             case NEW_USER:
                 LAppServer.getInstance().UiCreateUser(userId, userPass, userName);
                 break;
+            case LOGIN_USER:
+                LAppServer.getInstance().UiSignIn(userId, userPass);
+                break;
             case UPDATE_USER:
                 LAppServer.getInstance().UiUpdateUserProfile(userId, userPass, userName);
-                break;
-            case LOGIN_USER:
                 break;
         }
     }
@@ -204,6 +206,27 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                     LPreferences.setUserName(userName);
                 } else {
                     displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
+                }
+                break;
+            case LBroadcastReceiver.ACTION_SIGN_IN:
+                switch (ret) {
+                    case LProtocol.RSPS_OK:
+                        success = true;
+                        LPreferences.setUserPass(userPass);
+                        LPreferences.setUserId(userId);
+                        LPreferences.setUserName(intent.getStringExtra("userName"));
+                        if(callback != null) callback.onUpdateProfileDialogExit(success);
+                        destroy();
+                        break;
+                    case LProtocol.RSPS_WRONG_PASSWORD:
+                        displayMsg(true, context.getString(R.string.warning_password_mismatch));
+                        break;
+                    case LProtocol.RSPS_USER_NOT_FOUND:
+                        displayMsg(true, context.getString(R.string.warning_user_id_invalid));
+                        break;
+                    default:
+                        displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
+                        break;
                 }
                 break;
             case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:

@@ -261,7 +261,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                     LLog.d(TAG, "starting service, already connected: " + server.UiIsConnected());
                     if (server.UiIsConnected()) {
-                        server.UiLogin();
+                        //server.UiLogin();
                     } else {
                         server.connect();
                     }
@@ -316,7 +316,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
                 if (!TextUtils.isEmpty(LPreferences.getUserName())) {
-                    server.UiLogin();
+                    //server.UiLogin();
                 }
                 break;
 
@@ -330,7 +330,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LPreferences.setUserName(userName);
 
                 //server.UiUpdateUserProfile();
-                server.UiLogin();
+                //server.UiLogin();
                 break;
 
             case LBroadcastReceiver.ACTION_LOGIN:
@@ -353,7 +353,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         //
                         LPreferences.setUserName("");
                     } else {
-                        server.UiLogin();
+                        //server.UiLogin();
                     }
                 }
                 break;

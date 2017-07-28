@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class LAppServer {
@@ -382,9 +384,27 @@ public class LAppServer {
     }
 
     public boolean UiCreateUser(String name, String pass, String fullName) {
-        return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, name, pass, fullName, scrambler);
+        List<String> strings = new ArrayList<>();
+        strings.add(name);
+        strings.add(pass);
+        strings.add(fullName);
+        return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, strings, scrambler);
     }
 
+    public boolean UiSignIn(String name, String pass) {
+        List<String> strings = new ArrayList<>();
+        strings.add(name);
+        strings.add(pass);
+        return LTransport.send_rqst(this, LProtocol.RQST_SIGN_IN, strings, scrambler);
+    }
+
+    public boolean UiLogIn(String name, String pass) {
+        List<String> strings = new ArrayList<>();
+        strings.add(name);
+        strings.add(pass);
+        strings.add(LPreferences.getDeviceId());
+        return LTransport.send_rqst(this, LProtocol.RQST_LOG_IN, strings, scrambler);
+    }
 
     public boolean UiRequestUserName() {
         if(!TextUtils.isEmpty(LPreferences.getUserName())) {
@@ -392,11 +412,6 @@ public class LAppServer {
             return true;
         }
         return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, 0);
-    }
-
-    public boolean UiLogin() {
-        if (TextUtils.isEmpty(LPreferences.getUserName())) return false;
-        return LTransport.send_rqst(this, LProtocol.RQST_LOGIN, 0, LPreferences.getUserName(), scrambler);
     }
 
     public boolean UiUpdateUserProfile(String userId, String userPass, String userName) {

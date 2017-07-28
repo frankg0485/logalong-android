@@ -120,13 +120,14 @@
     <string name="warning_delete_tag">Tag will be permanently deleted.</string>
     <string name="warning_delete_vendor">Payer/Payee will be permanently deleted.</string>
     <string name="warning_get_share_user_time_out">Unable to connect to server, please try later.</string>
-    <string name="warning_password_mismatch">Password mismatch.</string>
+    <string name="warning_password_mismatch">Password mismatch</string>
     <string name="warning_restore_db">To keep data consistent, please restore on fresh App installation, and setup account share again if any were shared.</string>
     <string name="warning_unable_to_complete_share_request">Unable to complete share request</string>
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
     <string name="warning_unable_to_create_update_profile">Unable to create/update user profile, please try later.</string>
     <string name="warning_user_id_taken">User ID already taken by someone else</string>
     <string name="warning_user_id_available">User ID available</string>
+    <string name="warning_user_id_invalid">Invalid user ID</string>
     <string name="week">week</string>
     <string name="weeks">weeks</string>
 </resources>
