@@ -17,6 +17,7 @@ public class LPreferences {
     private static final String CACHE_LENGTH = "CacheLength";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
+    private static final String LOGIN_ERROR = "LoginError";
     private static final String ONE_TIME_INIT = "OneTimeInit";
     private static final String QUERY_ORDER = "QueryOrder";
     private static final String SEARCH_ALLTIME = "SearchAllTime";
@@ -49,6 +50,13 @@ public class LPreferences {
         savePreference(LApp.ctx, LAST_DB_RESTORE_DATE, date);
     }
     */
+    public static boolean getLoginError() {
+        return getPreference(LApp.ctx, LOGIN_ERROR, false);
+    }
+
+    public static void setLoginError(boolean error) {
+        savePreference(LApp.ctx, LOGIN_ERROR, error);
+    }
 
     public static long getCacheReadPointer() {
         return getPreference(LApp.ctx, CACHE_READ_POINTER, 0L);

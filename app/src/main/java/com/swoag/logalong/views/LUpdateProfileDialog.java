@@ -83,7 +83,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         setContentView(R.layout.update_profile_progress_dialog);
 
         errorMsgV = (TextView) findViewById(R.id.errorMsg);
-        titleTV = (TextView)findViewById(R.id.title);
+        titleTV = (TextView) findViewById(R.id.title);
         String title = "";
         switch (action) {
             case UPDATE_USER:
@@ -102,24 +102,24 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         okBtn.setOnClickListener(myClickListener);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        progressMsg = (TextView)findViewById(R.id.progressMsg);
+        progressMsg = (TextView) findViewById(R.id.progressMsg);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_CREATE_USER,
                 LBroadcastReceiver.ACTION_SIGN_IN,
-                LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED}, this);
+                LBroadcastReceiver.ACTION_UPDATE_USER_PROFILE}, this);
 
         hideMsg();
 
         countDownTimer = new CountDownTimer(16000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                progressMsg.setText(millisUntilFinished/1000 + "");
+                progressMsg.setText(millisUntilFinished / 1000 + "");
                 if (LAppServer.getInstance().UiIsConnected()) createUpdateProfile();
             }
 
             @Override
             public void onFinish() {
-                displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
+                displayMsg(true, context.getString(R.string.warning_unable_to_connect));
             }
         }.start();
 
@@ -137,7 +137,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
     }
 
     private void displayMsg(boolean error, String msg) {
-        errorMsgV.setTextColor(error? context.getResources().getColor(R.color.red_text_color):
+        errorMsgV.setTextColor(error ? context.getResources().getColor(R.color.red_text_color) :
                 context.getResources().getColor(R.color.base_black_text_color));
         errorMsgV.setText(msg);
         errorMsgV.setVisibility(View.VISIBLE);
@@ -151,17 +151,21 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
     private void createUpdateProfile() {
         if (requestedOnce) return;
-        requestedOnce = true;
 
         switch (action) {
             case NEW_USER:
+                requestedOnce = true;
                 LAppServer.getInstance().UiCreateUser(userId, userPass, userName);
                 break;
             case LOGIN_USER:
+                requestedOnce = true;
                 LAppServer.getInstance().UiSignIn(userId, userPass);
                 break;
             case UPDATE_USER:
-                LAppServer.getInstance().UiUpdateUserProfile(userId, userPass, userName);
+                if (LAppServer.getInstance().UiIsLoggedIn()) {
+                    requestedOnce = true;
+                    LAppServer.getInstance().UiUpdateUserProfile(LPreferences.getUserId(), LPreferences.getUserPass(), userPass, userName);
+                }
                 break;
         }
     }
@@ -171,7 +175,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         public void onClicked(View v) {
             switch (v.getId()) {
                 case R.id.confirmDialog:
-                    if(callback != null) callback.onUpdateProfileDialogExit(success);
+                    if (callback != null) callback.onUpdateProfileDialogExit(success);
                     destroy();
             }
         }
@@ -204,18 +208,17 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                     LPreferences.setUserPass(userPass);
                     LPreferences.setUserId(userId);
                     LPreferences.setUserName(userName);
+                    LAppServer.getInstance().UiLogIn(userId, userPass);
                 } else {
-                    displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
+                    displayMsg(true, context.getString(R.string.warning_unable_to_connect));
                 }
                 break;
             case LBroadcastReceiver.ACTION_SIGN_IN:
                 switch (ret) {
                     case LProtocol.RSPS_OK:
-                        success = true;
-                        LPreferences.setUserPass(userPass);
-                        LPreferences.setUserId(userId);
                         LPreferences.setUserName(intent.getStringExtra("userName"));
-                        if(callback != null) callback.onUpdateProfileDialogExit(success);
+                        LAppServer.getInstance().UiLogIn(userId, userPass);
+                        if (callback != null) callback.onUpdateProfileDialogExit(true);
                         destroy();
                         break;
                     case LProtocol.RSPS_WRONG_PASSWORD:
@@ -225,11 +228,20 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                         displayMsg(true, context.getString(R.string.warning_user_id_invalid));
                         break;
                     default:
-                        displayMsg(true, context.getString(R.string.warning_get_share_user_time_out));
+                        displayMsg(true, context.getString(R.string.warning_unable_to_connect));
                         break;
                 }
                 break;
-            case LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED:
+
+            case LBroadcastReceiver.ACTION_UPDATE_USER_PROFILE:
+                if (ret == LProtocol.RSPS_OK) {
+                    LPreferences.setUserPass(userPass);
+                    LPreferences.setUserName(userName);
+                    if (callback != null) callback.onUpdateProfileDialogExit(true);
+                    destroy();
+                } else {
+                    displayMsg(true, context.getString(R.string.warning_unable_to_connect));
+                }
                 break;
         }
     }

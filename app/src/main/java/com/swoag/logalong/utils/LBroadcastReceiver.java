@@ -16,18 +16,19 @@ public class LBroadcastReceiver {
     public static final int ACTION_POLL_ACKED = 1;
     public static final int ACTION_POLL_IDLE = 2;
     public static final int ACTION_USER_CREATED = 4;
-    public static final int ACTION_LOGIN = 5;
     public static final int ACTION_CONNECTED_TO_SERVER = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
     public static final int ACTION_JOURNAL_POSTED = 70;
-    public static final int ACTION_USER_PROFILE_UPDATED = 84;
 
-    public static final int ACTION_NETWORK_CONNECTED = 90;
-    public static final int ACTION_GET_USER_BY_NAME = 95;
-    public static final int ACTION_CREATE_USER = 96;
-    public static final int ACTION_SIGN_IN = 97;
-    public static final int ACTION_LOG_IN = 98;
+
+    public static final int ACTION_NETWORK_CONNECTED = 50;
+    public static final int ACTION_GET_USER_BY_NAME = 52;
+    public static final int ACTION_CREATE_USER = 54;
+    public static final int ACTION_SIGN_IN = 56;
+    public static final int ACTION_LOG_IN = 58;
+    public static final int ACTION_UPDATE_USER_PROFILE = 60;
+
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;

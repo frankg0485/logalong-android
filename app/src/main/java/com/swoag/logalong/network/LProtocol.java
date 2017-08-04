@@ -7,6 +7,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
@@ -21,7 +22,6 @@ public class LProtocol {
 
     private final int STATE_DISCONNECTED = 10;
     private final int STATE_CONNECTED = 30;
-    private final int STATE_SIGNED_IN = 35;
     private final int STATE_LOGGED_IN = 40;
     private int state;
 
@@ -68,8 +68,9 @@ public class LProtocol {
     public static final short RQST_CREATE_USER = RQST_SYS | 0x204;
     public static final short RQST_SIGN_IN = RQST_SYS | 0x208;
     public static final short RQST_LOG_IN = RQST_SYS | 0x209;
+    public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x20c;
 
-    public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x106;
+
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     public static final short RQST_POLL = RQST_SYS | 0x777;
@@ -389,13 +390,16 @@ public class LProtocol {
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER));
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
+
+                    default:
+                        LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
+                        break;
                 }
                 break;
 
             case STATE_CONNECTED:
                 switch (rsps) {
-                    case RSPS | RQST_GET_USER_BY_NAME:
-                    {
+                    case RSPS | RQST_GET_USER_BY_NAME: {
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_USER_BY_NAME));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
 
@@ -416,14 +420,10 @@ public class LProtocol {
                     case RSPS | RQST_CREATE_USER:
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CREATE_USER));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                        synchronized (stateLock) {
-                            state = STATE_SIGNED_IN;
-                        }
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
-                    case RSPS | RQST_SIGN_IN:
-                    {
+                    case RSPS | RQST_SIGN_IN: {
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_SIGN_IN));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         if (RSPS_OK == status) {
@@ -431,16 +431,44 @@ public class LProtocol {
                             String name = pkt.getStringAutoInc(bytes);
                             rspsIntent.putExtra("userName", name);
                         }
-                        synchronized (stateLock) {
-                            state = STATE_SIGNED_IN;
-                        }
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
                     }
+
+                    case RSPS | RQST_LOG_IN:
+                        if (RSPS_OK == status) {
+                            LPreferences.setLoginError(false);
+                            AppPersistency.loginId = pkt.getIntAutoInc();
+
+                            synchronized (stateLock) {
+                                state = STATE_LOGGED_IN;
+                            }
+
+                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOG_IN));
+                            rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        } else {
+                            //login error, remember to force user to login
+                            LPreferences.setLoginError(true);
+                        }
+                        break;
+
+                    default:
+                        LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
+                        break;
+                }
+                break;
+
+            case STATE_LOGGED_IN:
+                switch (rsps) {
                     case RSPS | RQST_UPDATE_USER_PROFILE:
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_PROFILE_UPDATED));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UPDATE_USER_PROFILE));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
+                    default:
+                        LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
                         break;
                 }
                 break;
@@ -690,7 +718,7 @@ public class LProtocol {
 
     public boolean isLoggedIn() {
         synchronized (stateLock) {
-            return state == STATE_LOGGED_IN;
+            return state >= STATE_LOGGED_IN;
         }
     }
 

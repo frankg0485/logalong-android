@@ -152,7 +152,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_NETWORK_CONNECTED,
                 LBroadcastReceiver.ACTION_USER_CREATED,
-                LBroadcastReceiver.ACTION_LOGIN,
+                LBroadcastReceiver.ACTION_LOG_IN,
                 LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
                 LBroadcastReceiver.ACTION_POLL_ACKED,
                 LBroadcastReceiver.ACTION_POLL_IDLE,
@@ -315,47 +315,17 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 break;
 
             case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
-                if (!TextUtils.isEmpty(LPreferences.getUserName())) {
-                    //server.UiLogin();
+                if (!TextUtils.isEmpty(LPreferences.getUserId())) {
+                    server.UiLogIn(LPreferences.getUserId(), LPreferences.getUserPass());
                 }
                 break;
 
-            case LBroadcastReceiver.ACTION_USER_CREATED:
-                pollHandler.removeCallbacks(pollRunnable); //disable polling
-
-                int userId = intent.getIntExtra("id", 0);
-                String userName = intent.getStringExtra("name");
-                LLog.d(TAG, "user created, id: " + userId + " name: " + userName);
-                //LPreferences.setUserId(userId);
-                LPreferences.setUserName(userName);
-
-                //server.UiUpdateUserProfile();
-                //server.UiLogin();
-                break;
-
-            case LBroadcastReceiver.ACTION_LOGIN:
-                pollHandler.removeCallbacks(pollRunnable); //disable polling
-
-                if (ret == LProtocol.RSPS_OK) {
-                    logInAttempts = 0;
-                    server.UiUtcSync();
-                    //server.UiUpdateUserProfile();
-                    LLog.d(TAG, "user logged in");
-                    //journal posting and polling start only upon successful login
-                    pollHandler.removeCallbacks(journalPostRunnable);
-                    pollHandler.post(journalPostRunnable);
-                    pollHandler.removeCallbacks(pollRunnable);
-                    pollHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
-                } else {
-                    if (logInAttempts++ > 3) {
-                        //the only reason that user is unable to login: user name no longer valid
-                        // thus to wipe it off and let user to reset
-                        //
-                        LPreferences.setUserName("");
-                    } else {
-                        //server.UiLogin();
-                    }
-                }
+            case LBroadcastReceiver.ACTION_LOG_IN:
+                //journal posting and polling start only upon successful login
+                //pollHandler.removeCallbacks(journalPostRunnable);
+                //pollHandler.post(journalPostRunnable);
+                //pollHandler.removeCallbacks(pollRunnable);
+                //pollHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
                 break;
 
             case LBroadcastReceiver.ACTION_POLL_IDLE:
@@ -378,38 +348,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 int cacheId = intent.getIntExtra("cacheId", 0);
                 server.UiPollAck(cacheId);
                 break;
-
-            case LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                userId = intent.getIntExtra("id", 0);
-                int accountId = intent.getIntExtra("accountId", 0);
-                int accountGid = intent.getIntExtra("accountGid", 0);
-                String accountName = intent.getStringExtra("accountName");
-
-                /*if (userId != LPreferences.getUserId()) {
-                    LLog.e(TAG, "unexpected user id: " + userId + " myId: " + LPreferences.getUserId());
-                } else {
-                    LAccount account = DBAccount.getById(accountId);
-                    if (account == null) {
-                        LLog.w(TAG, "requested account no longer exist? id: " + accountId + " name: " + accountName);
-                    } else {
-                        if (!accountName.contentEquals(account.getName())) {
-                            LLog.w(TAG, "account: " + accountId + " renamed before getting its GID: " + accountName + " -> " + account.getName());
-                            account.setName(accountName);
-                        }
-                        if (account.getGid() != 0 && accountGid != account.getGid()) {
-                            LLog.w(TAG, "account GID already set: " + account.getGid() + " and mismatches new request: " + accountGid);
-                        }
-
-                        DBAccount.resetGidIfNotUnique(accountGid);
-
-                        account.setGid(accountGid);
-                        DBAccount.update(account);
-                    }
-                }*/
-                server.UiPollAck(cacheId);
-                break;
-
+/*
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 userName = intent.getStringExtra("userName");
@@ -583,7 +522,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 pollHandler.removeCallbacks(pollRunnable);
                 pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                 break;
-
+*/
             case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
                 LLog.w(TAG, "unknown message received");
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:

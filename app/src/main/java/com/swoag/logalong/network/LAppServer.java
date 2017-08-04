@@ -28,7 +28,7 @@ import java.util.Random;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    public static final String serverIp = "192.168.1.114";
+    public static final String serverIp = "192.168.1.115";
     //public static final String serverIp = "auto";
     private static final int serverPort = 8000;
 
@@ -398,6 +398,15 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_SIGN_IN, strings, scrambler);
     }
 
+    public boolean UiUpdateUserProfile(String name, String pass, String newPass, String fullName) {
+        List<String> strings = new ArrayList<>();
+        strings.add(name);
+        strings.add(pass);
+        strings.add(newPass);
+        strings.add(fullName);
+        return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, strings, scrambler);
+    }
+
     public boolean UiLogIn(String name, String pass) {
         List<String> strings = new ArrayList<>();
         strings.add(name);
@@ -412,11 +421,6 @@ public class LAppServer {
             return true;
         }
         return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, 0);
-    }
-
-    public boolean UiUpdateUserProfile(String userId, String userPass, String userName) {
-        //return LTransport.send_rqst(this, LProtocol.RQST_UPDATE_USER_PROFILE, 0, LPreferences.getUserFullName(), scrambler);
-        return false;
     }
 
     public boolean UiGetShareUserByName(String name) {

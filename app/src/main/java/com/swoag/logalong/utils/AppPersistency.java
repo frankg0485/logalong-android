@@ -63,4 +63,6 @@ public class AppPersistency {
     public static boolean lastTransactionChangeTimeMsHonored = false;
 
     public static boolean showPieChart = false;
+
+    public static int loginId;
 }

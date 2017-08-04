@@ -416,7 +416,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
 
             @Override
             public void onFinish() {
-                displayMsg(true, activity.getString(R.string.warning_get_share_user_time_out));
+                displayMsg(true, activity.getString(R.string.warning_unable_to_connect));
                 checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
 
                 disableEnableAllControls(true);

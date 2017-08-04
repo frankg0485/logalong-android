@@ -204,7 +204,7 @@ public class LShareAccountDialog extends Dialog
 
             @Override
             public void onFinish() {
-                displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_get_share_user_time_out));
+                displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string.warning_unable_to_connect));
                 progressBar.setVisibility(View.GONE);
                 addIV.setVisibility(View.VISIBLE);
                 editText.setEnabled(true);
