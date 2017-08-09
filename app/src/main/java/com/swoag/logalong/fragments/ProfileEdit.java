@@ -432,6 +432,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         disableEnableAllControls(false);
 
         if (!LAppServer.getInstance().UiIsConnected()) {
+            LAppServer.getInstance().connect();
             MainService.start(activity);
         }
     }

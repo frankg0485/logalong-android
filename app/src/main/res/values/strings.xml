@@ -98,6 +98,7 @@
     <string name="show_all">Show All</string>
     <string name="show_balance">Show balance</string>
     <string name="show_password">show password</string>
+    <string name="synchronizing_database">Synchronizing database ...</string>
     <string name="tags">Tags</string>
     <string name="to">to</string>
     <string name="transfer">Transfer</string>
@@ -110,7 +111,6 @@
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="updating_profile">Updating profile ...</string>
-    <string name="user_create_success">User successfully created</string>
     <string name="user_id">User ID</string>
     <string name="user_name">Name</string>
     <string name="version">Version</string>

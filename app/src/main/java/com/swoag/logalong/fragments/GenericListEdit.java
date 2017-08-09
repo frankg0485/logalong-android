@@ -320,7 +320,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             if (!ok) return;
 
             HashSet<Long> set;
-            if (applyToAllAccounts) set = DBAccount.getAllActiveAccountIds();
+            if (applyToAllAccounts) set = DBAccount.getAllActiveIds();
             else {
                 set = new HashSet<Long>();
                 set.add(accountId);

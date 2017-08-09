@@ -5,10 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import com.swoag.logalong.BuildConfig;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
+import com.swoag.logalong.BuildConfig;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LBroadcastReceiver;
@@ -428,7 +428,8 @@ public class LAppServer {
     }
 
     public boolean UiPoll() {
-        return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
+        //return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
+        return true;
     }
 
     public boolean UiPollAck(int cacheId) {
@@ -440,7 +441,10 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_UTC_SYNC, System.currentTimeMillis() / 1000, scrambler);
     }
 
-    public boolean UiPostJournal(int userId, int journalId, byte[] data) {
+    public boolean UiPostJournal(int journalId, byte[] data) {
+        return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, journalId, data, scrambler);
+
+        /*
         short maxPayloadLen = LProtocol.PACKET_MAX_PAYLOAD_LEN - 2 - 4 - 4 - 2;
         //DATA_LENGTH = PAYLOAD_LENGTH - REQUEST_CODE - USER_ID - JOURNAL_ID - DATA_LENGTH_FIELD
         if (data.length <= maxPayloadLen) {
@@ -460,6 +464,6 @@ public class LAppServer {
                 length = bytes = (totalBytes > maxPayloadLen) ? maxPayloadLen : (short) totalBytes;
             } while (bytes > 0);
             return true;
-        }
+        }*/
     }
 }

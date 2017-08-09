@@ -15,6 +15,7 @@ public class LPreferences {
     private static final String CACHE_READ_POINTER = "CacheRdPtr";
     private static final String CACHE_WRITE_POINTER = "CacheWrPtr";
     private static final String CACHE_LENGTH = "CacheLength";
+    private static final String DB_SYNCED = "DbSynced";
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
     private static final String LOGIN_ERROR = "LoginError";
@@ -50,6 +51,15 @@ public class LPreferences {
         savePreference(LApp.ctx, LAST_DB_RESTORE_DATE, date);
     }
     */
+
+    public static boolean getDbSynced() {
+        return getPreference(LApp.ctx, DB_SYNCED, false);
+    }
+
+    public static void setDbSynced(boolean synced) {
+        savePreference(LApp.ctx, DB_SYNCED, synced);
+    }
+
     public static boolean getLoginError() {
         return getPreference(LApp.ctx, LOGIN_ERROR, false);
     }

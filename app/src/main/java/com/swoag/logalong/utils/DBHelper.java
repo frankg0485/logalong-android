@@ -13,7 +13,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final int STATE_DISABLED = 30;
 
     public static final String DATABASE_NAME = "LogAlongDB";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
 
     public static final String TABLE_COLUMN_ACCOUNT = "Account";
     public static final String TABLE_COLUMN_ACCOUNT2 = "Account2";
@@ -31,6 +31,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_REPEAT_UNIT = "RptUnit";
     public static final String TABLE_COLUMN_REPEAT_COUNT = "RptCount";
     public static final String TABLE_COLUMN_RID = "Rid";
+    public static final String TABLE_COLUMN_GID = "Gid";
     public static final String TABLE_COLUMN_SCHEDULE_TIMESTAMP = "SchTimeStmp";
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
@@ -53,19 +54,20 @@ public class DBHelper extends SQLiteOpenHelper {
 
     private static final String TABLE_TRANSACTION_ROWS =
             TABLE_COLUMN_AMOUNT + " REAL," +
-            TABLE_COLUMN_CATEGORY + " INTEGER," +
-            TABLE_COLUMN_ACCOUNT + " INTEGER," +
-            TABLE_COLUMN_ACCOUNT2 + " INTEGER," +
-            TABLE_COLUMN_TAG + " INTEGER," +
-            TABLE_COLUMN_VENDOR + " INTEGER," +
-            TABLE_COLUMN_TIMESTAMP + " INTEGER," +
-            TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_TYPE + " INTEGER," +
-            TABLE_COLUMN_STATE + " INTEGER," +
-            TABLE_COLUMN_MADEBY + " INTEGER," +
-            TABLE_COLUMN_RID + " TEXT," +
-            TABLE_COLUMN_NOTE + " TEXT," +
-            TABLE_COLUMN_ICON + " BLOB";
+                    TABLE_COLUMN_CATEGORY + " INTEGER," +
+                    TABLE_COLUMN_ACCOUNT + " INTEGER," +
+                    TABLE_COLUMN_ACCOUNT2 + " INTEGER," +
+                    TABLE_COLUMN_TAG + " INTEGER," +
+                    TABLE_COLUMN_VENDOR + " INTEGER," +
+                    TABLE_COLUMN_TIMESTAMP + " INTEGER," +
+                    TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
+                    TABLE_COLUMN_TYPE + " INTEGER," +
+                    TABLE_COLUMN_STATE + " INTEGER," +
+                    TABLE_COLUMN_MADEBY + " INTEGER," +
+                    TABLE_COLUMN_RID + " TEXT," +
+                    TABLE_COLUMN_NOTE + " TEXT," +
+                    TABLE_COLUMN_ICON + " BLOB," +
+                    TABLE_COLUMN_GID + " INTEGER";
 
     //transaction table: VENDOR carries to_account for transfer.
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
@@ -98,7 +100,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_NUMBER + " INTEGER," +
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_ICON + " BLOB" +
+            TABLE_COLUMN_ICON + " BLOB," +
+            TABLE_COLUMN_GID + " INTEGER" +
             ");";
 
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY_NAME +
@@ -107,7 +110,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_NAME + " TEXT," +
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_ICON + " BLOB" +
+            TABLE_COLUMN_ICON + " BLOB," +
+            TABLE_COLUMN_GID + " INTEGER" +
             ");";
 
     private static final String CREATE_TABLE_TAG = "CREATE TABLE " + TABLE_TAG_NAME +
@@ -116,7 +120,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_NAME + " TEXT," +
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_ICON + " BLOB" +
+            TABLE_COLUMN_ICON + " BLOB," +
+            TABLE_COLUMN_GID + " INTEGER" +
             ");";
 
     private static final String CREATE_TABLE_VENDOR = "CREATE TABLE " + TABLE_VENDOR_NAME +
@@ -126,7 +131,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_NAME + " TEXT," +
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
-            TABLE_COLUMN_ICON + " BLOB" +
+            TABLE_COLUMN_ICON + " BLOB," +
+            TABLE_COLUMN_GID + " INTEGER" +
             ");";
 
     private static final String CREATE_TABLE_VENDOR_CATEGORY = "CREATE TABLE " + TABLE_VENDOR_CATEGORY_NAME +
@@ -163,8 +169,14 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
-        //if (oldVersion == 4 && newVersion == 5) {
-        //db.execSQL("DROP TABLE IF EXISTS " + TABLE_reserved1);
-        //}
+        if (oldVersion == 1 && newVersion == 2) {
+            String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_CATEGORY_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_TAG_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_VENDOR_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_TRANSACTION_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER";
+            db.execSQL(sql);
+        }
     }
 }

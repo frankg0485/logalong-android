@@ -14,7 +14,7 @@ public class LStorage {
     private static final int MAX_CACHE_LENGTH = (16 * 1024 * 1024);
     private static LStorage instance = null;
     private static int runningId = (new Random()).nextInt();
-    private static int SIGNATURE = 0xa55a55aa;
+    private static int SIGNATURE = 0xa55a55ac;
 
     private RandomAccessFile file;
     private Object lock;
@@ -34,7 +34,6 @@ public class LStorage {
     public static class Entry {
         public int id;
         public byte[] data;
-        public int userId;
 
         public Entry() {
         }
@@ -78,7 +77,6 @@ public class LStorage {
 
                 entry.id = runningId;
                 file.writeInt(entry.id);
-                file.writeInt(entry.userId);
                 file.writeShort(entry.data.length);
                 file.write(entry.data);
 
@@ -117,7 +115,6 @@ public class LStorage {
                 }
 
                 entry.id = file.readInt();
-                entry.userId = file.readInt();
                 int bytes = 0xffff & file.readShort();
                 if (bytes <= 0) {
                     LLog.e(TAG, "unexpected: negative bytes: " + bytes);
@@ -153,7 +150,6 @@ public class LStorage {
                 }
                 int entryId = file.readInt();
                 if (id == entryId) {
-                    file.skipBytes(4); //int userId
                     int bytes = 0xffff & file.readShort();
                     if (bytes <= 0) {
                         LLog.e(TAG, "unexpected: negative bytes: " + bytes);
@@ -200,7 +196,12 @@ public class LStorage {
             file = null;
             memory = new Memory();
             ret = memory.open();
+        } else {
+            //this dummy get() call essentially validates or otherwise reset existing cache file, by
+            //comparing the cache entry signature.
+            if (null == get()) reset();
         }
+
         return ret;
     }
 

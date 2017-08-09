@@ -19,8 +19,6 @@ public class LBroadcastReceiver {
     public static final int ACTION_CONNECTED_TO_SERVER = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
-    public static final int ACTION_JOURNAL_POSTED = 70;
-
 
     public static final int ACTION_NETWORK_CONNECTED = 50;
     public static final int ACTION_GET_USER_BY_NAME = 52;
@@ -28,6 +26,9 @@ public class LBroadcastReceiver {
     public static final int ACTION_SIGN_IN = 56;
     public static final int ACTION_LOG_IN = 58;
     public static final int ACTION_UPDATE_USER_PROFILE = 60;
+    public static final int ACTION_POST_JOURNAL = 62;
+
+    public static final int ACTION_NEW_JOURNAL_AVAILABLE = 300;
 
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;

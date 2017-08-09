@@ -222,10 +222,14 @@ public class DBTransaction {
         return getAllCursor(LApp.ctx);
     }
 
-    public static Cursor getAllCursor(Context context) {
+    private static Cursor getAllCursor(Context context) {
         Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =?", new String[]{"" + DBHelper.STATE_ACTIVE},
                 DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
+        if (cur == null || cur.getCount() < 1) {
+            if (cur != null) cur.close();
+            return null;
+        }
         return cur;
     }
 

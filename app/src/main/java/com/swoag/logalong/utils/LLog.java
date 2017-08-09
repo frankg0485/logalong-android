@@ -12,7 +12,7 @@ public class LLog {
     private static boolean debug = true;
 
     private static boolean localLog = true;
-    private static boolean netLog = true;
+    private static boolean netLog = false;
 
     private static String lastMsg = "";
     private static int repeatCount = 0;
@@ -20,6 +20,7 @@ public class LLog {
     private static boolean opened;
     private static int STACK_INDEX;
     private static String pkg = "";
+
     static {
         try {
             int ii = 0;
@@ -28,7 +29,8 @@ public class LLog {
                 if (ste.getClassName().equals(LLog.class.getName())) break;
             }
             STACK_INDEX = ii;
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
     }
 
     private static String caller() {
@@ -88,9 +90,10 @@ public class LLog {
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
+        for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
@@ -107,11 +110,11 @@ public class LLog {
             LBuffer buffer = server.getNetBuffer();
             if (null != buffer) {
                 buffer.putShortAutoInc(LRemoteLogging.LOGGING_REQUEST_SYNC);
-                buffer.putShortAutoInc((short)0);
-                if (repeatCount > 0 ) buffer.putStringAutoInc("*** last msg repeated " + repeatCount + " times\n");
+                buffer.putShortAutoInc((short) 0);
+                if (repeatCount > 0) buffer.putStringAutoInc("*** last msg repeated " + repeatCount + " times\n");
                 buffer.putStringAutoInc(msg + "\n");
                 buffer.setLen(buffer.getBufOffset());
-                buffer.putShortAt((short)(buffer.getLen() - 4), 2);
+                buffer.putShortAt((short) (buffer.getLen() - 4), 2);
                 buffer.setBufOffset(0);
                 server.putNetBuffer(buffer);
             } else {

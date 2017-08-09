@@ -10,6 +10,8 @@ import android.net.Uri;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LCategory;
 
+import java.util.HashSet;
+
 public class DBCategory {
     private static final String TAG = DBCategory.class.getSimpleName();
 
@@ -191,5 +193,19 @@ public class DBCategory {
 
     public static int getDbIndexById(long id) {
         return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_CATEGORIES, id);
+    }
+
+    public static HashSet<Long> getAllActiveIds() {
+        HashSet<Long> set = new HashSet<Long>();
+        Cursor cur = getCursorSortedBy(null);
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                set.add(cur.getLong(0));
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
     }
 }

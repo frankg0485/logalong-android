@@ -2,10 +2,13 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
+import com.swoag.logalong.LApp;
 import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
@@ -15,9 +18,9 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
-import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LStorage;
 
 import java.util.ArrayList;
@@ -30,6 +33,9 @@ public class LJournal {
 
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
+
+    public static final short JRQST_ADD_ACCOUNT = 0x001;
+    public static final short JRQST_GET_ACCOUNTS = 0x100;
 
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
@@ -59,52 +65,26 @@ public class LJournal {
         init();
     }
 
-    /*
-    public static void flush() {
-        Cursor cursor = DBAccess.getAllActiveJournalCursor();
-        if (cursor != null && cursor.getCount() > 0) {
-            LLog.d(TAG, "journal count: " + cursor.getCount());
-            cursor.moveToFirst();
-            do {
-                int userId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER));
-                String rec = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD));
-                long id = cursor.getLong(0);
-                LProtocol.ui.postJournal(userId, id + ":" + rec);
-                break;
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
-    }
-
-    public static void deleteById (long journalId) {
-        DBAccess.deleteJournalById(journalId);
-    }
-
-    private void post(int userId) {
-        this.userId = userId;
-        long id = DBAccess.addJournal(this);
-        LProtocol.ui.postJournal(userId, id + ":" + this.record);
-    }
-    */
-
     private static long lastFlushMs;
     private static long lastFlushId;
 
-    public static void flush() {
+    public static boolean flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
-        if (entry != null) {
-            if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 15000)) {
-                //so not to keep flushing the same journal over and over
-                LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
-                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
-            } else {
-                lastFlushId = entry.id;
-                lastFlushMs = System.currentTimeMillis();
-                //LLog.d(TAG, "post journal: " + entry.id);
 
-                LAppServer.getInstance().UiPostJournal(entry.userId, entry.id, entry.data);
-            }
+        if (null == entry) return false;
+
+        if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 15000)) {
+            //so not to keep flushing the same journal over and over
+            LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
+                    + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
+        } else {
+            lastFlushId = entry.id;
+            lastFlushMs = System.currentTimeMillis();
+            //LLog.d(TAG, "post journal: " + entry.id);
+
+            LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
         }
+        return true;
     }
 
     public static void deleteById(int journalId) {
@@ -112,9 +92,24 @@ public class LJournal {
         LStorage.getInstance().release(journalId);
     }
 
-    private void post(int userId) {
+    private void post() {
         LStorage.Entry entry = new LStorage.Entry();
-        entry.userId = userId;
+        try {
+            //entry.data = Arrays.copyOf(this.data.getBuf(), this.data.getLen());
+            entry.data = new byte[this.data.getLen()];
+            System.arraycopy(this.data.getBuf(), 0, entry.data, 0, this.data.getLen());
+        } catch(Exception e) {
+            LLog.e(TAG, "unexpected journal post error: " + e.getMessage());
+        }
+        LStorage.getInstance().put(entry);
+
+        Intent intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE));
+        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
+    }
+
+    private void post(int userId) {
+        /*
+        LStorage.Entry entry = new LStorage.Entry();
         try {
             //entry.data = Arrays.copyOf(this.data.getBuf(), this.data.getLen());
             entry.data = new byte[this.data.getLen()];
@@ -126,13 +121,14 @@ public class LJournal {
         //automatically flush the very first journal, so we don't always wait for polling handler to time out.
         //this is not thread safe, unlikely but possible that the following may happen,
         // 1. postNow = FALSE (since there's pending journal)
-        // 2. other thread prempts, and release journal, do a flush(), and nothing happens, since
+        // 2. other thread preempts, and release journal, do a flush(), and nothing happens, since
         //    there's no more journal available
         // 3. this thread comes back, create the new journal, but will not post the journal immediately
         //remedy: when this happens the journal will be posted when polling handler times out in main service thread.
         boolean postNow = LStorage.getInstance().getCacheLength() <= 0;
         LStorage.getInstance().put(entry);
         if (postNow) flush();
+        */
     }
 
     public static String transactionItemString(LTransaction item) {
@@ -444,6 +440,47 @@ public class LJournal {
         }
         data.setLen(data.getBufOffset());
         //post(LPreferences.getUserId());
+        return true;
+    }
+
+    public boolean addTransaction(LTransaction transaction) {
+        return true;
+    }
+
+    public boolean getAllAccounts() {
+        data.clear();
+        data.putShortAutoInc(JRQST_GET_ACCOUNTS);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+
+    public boolean addAccount(LAccount account) {
+        data.clear();
+        data.putShortAutoInc(JRQST_ADD_ACCOUNT);
+        data.putIntAutoInc((int)account.getId());
+
+        try {
+            byte[] name = account.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding account: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean addCategory(LCategory category) {
+        return true;
+    }
+    public boolean addVendor(LVendor vendor) {
+        return true;
+    }
+    public boolean addTag(LTag tag) {
         return true;
     }
 

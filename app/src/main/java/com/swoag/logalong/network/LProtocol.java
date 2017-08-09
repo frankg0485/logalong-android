@@ -57,7 +57,7 @@ public class LProtocol {
     private static final short RSPS = PAYLOAD_DIRECTION_RSPS;
 
     public static final short RSPS_OK = (short) 0x0010;
-    public static final short RSPS_ACK = (short) 0x005a;
+    public static final short RSPS_MORE = (short) 0x005a;
     public static final short RSPS_USER_NOT_FOUND = (short) 0xf000;
     public static final short RSPS_WRONG_PASSWORD = (short) 0xf0001;
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
@@ -86,13 +86,20 @@ public class LProtocol {
     private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
 
     private static final short CMD_JRQST_MASK = (short) 0x8000;
-    private static final short CMD_SHARE_TRANSITION_RECORD = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORD);
-    private static final short CMD_SHARE_TRANSITION_RECORDS = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_RECORDS);
-    private static final short CMD_SHARE_TRANSITION_CATEGORY = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_CATEGORY);
-    private static final short CMD_SHARE_TRANSITION_PAYER = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_PAYER);
-    private static final short CMD_SHARE_TRANSITION_TAG = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_TRANSITION_TAG);
-    private static final short CMD_SHARE_PAYER_CATEGORY = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_PAYER_CATEGORY);
-    private static final short CMD_SHARE_SCHEDULE = (short) (CMD_JRQST_MASK | LJournal.JRQST_SHARE_SCHEDULE);
+    private static final short CMD_SHARE_TRANSITION_RECORD = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_TRANSITION_RECORD);
+    private static final short CMD_SHARE_TRANSITION_RECORDS = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_TRANSITION_RECORDS);
+    private static final short CMD_SHARE_TRANSITION_CATEGORY = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_TRANSITION_CATEGORY);
+    private static final short CMD_SHARE_TRANSITION_PAYER = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_TRANSITION_PAYER);
+    private static final short CMD_SHARE_TRANSITION_TAG = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_TRANSITION_TAG);
+    private static final short CMD_SHARE_PAYER_CATEGORY = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_PAYER_CATEGORY);
+    private static final short CMD_SHARE_SCHEDULE = (short) (CMD_JRQST_MASK | LJournal
+            .JRQST_SHARE_SCHEDULE);
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -141,8 +148,10 @@ public class LProtocol {
         bytes = pkt.getByteAutoInc();
         String accountName = pkt.getStringAutoInc(bytes);
 
-        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " + accountName + " GID: " + accountGid);
-        LPreferences.addAccountShareRequest(new LAccountShareRequest(userId, userName, userFullName, accountName, accountGid, shareAccountGid));
+        LLog.d(TAG, "account share request from: " + userId + ":" + userName + " account: " +
+                accountName + " GID: " + accountGid);
+        LPreferences.addAccountShareRequest(new LAccountShareRequest(userId, userName,
+                userFullName, accountName, accountGid, shareAccountGid));
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
@@ -164,7 +173,8 @@ public class LProtocol {
         rspsIntent.putExtra("accountGid", accountGid);
         rspsIntent.putExtra("numShareUsers", (short) numShareUsers);
         rspsIntent.putExtra("shareUsers", shareUsers);
-        LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " + shareUsers);
+        LLog.d(TAG, "update account " + accountGid + " share num: " + numShareUsers + " : " +
+                shareUsers);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
@@ -225,7 +235,8 @@ public class LProtocol {
         int accountGid2 = pkt.getIntAutoInc();
         int bytes = pkt.getShortAutoInc();
         String schedule = pkt.getStringAutoInc(bytes);
-        //LLog.d(TAG, "schedule share request for account: " + accountGid + " schedule: " + schedule);
+        //LLog.d(TAG, "schedule share request for account: " + accountGid + " schedule: " +
+        // schedule);
 
         rspsIntent = new Intent(LBroadcastReceiver.action(action));
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
@@ -247,7 +258,8 @@ public class LProtocol {
     public static final int RECORDS_RECEIVED_PART = 20;
     public static final int RECORDS_RECEIVING = 30;
 
-    private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId, boolean lastPacket) {
+    private void handleRecordsShare(LBuffer pkt, int status, int action, int cacheId, boolean
+            lastPacket) {
         Intent rspsIntent;
         int accountGid = pkt.getIntAutoInc();
         int num = pkt.getShortAutoInc();
@@ -266,14 +278,16 @@ public class LProtocol {
                 break;
 
             case RECORDS_SHARE_STATE_RECEIVING:
-                if (expectedAccountGid != accountGid || expectedRecordNum != num || cacheId != expectedCacheId) {
+                if (expectedAccountGid != accountGid || expectedRecordNum != num || cacheId !=
+                        expectedCacheId) {
                     LLog.w(TAG, "share records request out of sync, reset");
                     expectedAccountGid = accountGid;
                     expectedRecordNum = num;
                     receivedRecordNum = 1;
                 } else {
                     receivedRecordNum++;
-                    //LLog.d(TAG, "received cache: " + cacheId + " num: " + receivedRecordNum + " of: " + expectedRecordNum);
+                    //LLog.d(TAG, "received cache: " + cacheId + " num: " + receivedRecordNum + "
+                    // of: " + expectedRecordNum);
                 }
                 break;
         }
@@ -387,7 +401,8 @@ public class LProtocol {
                             state = STATE_CONNECTED;
                         }
 
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_CONNECTED_TO_SERVER));
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
@@ -400,7 +415,8 @@ public class LProtocol {
             case STATE_CONNECTED:
                 switch (rsps) {
                     case RSPS | RQST_GET_USER_BY_NAME: {
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_USER_BY_NAME));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_GET_USER_BY_NAME));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
 
                         if (RSPS_OK == status) {
@@ -418,13 +434,15 @@ public class LProtocol {
                     }
 
                     case RSPS | RQST_CREATE_USER:
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_CREATE_USER));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_CREATE_USER));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
                     case RSPS | RQST_SIGN_IN: {
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_SIGN_IN));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_SIGN_IN));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         if (RSPS_OK == status) {
                             int bytes = pkt.getShortAutoInc();
@@ -444,7 +462,8 @@ public class LProtocol {
                                 state = STATE_LOGGED_IN;
                             }
 
-                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOG_IN));
+                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                    .ACTION_LOG_IN));
                             rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                             LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         } else {
@@ -462,8 +481,42 @@ public class LProtocol {
             case STATE_LOGGED_IN:
                 switch (rsps) {
                     case RSPS | RQST_UPDATE_USER_PROFILE:
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UPDATE_USER_PROFILE));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_UPDATE_USER_PROFILE));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
+                    case RSPS | RQST_POST_JOURNAL:
+                        packetConsumptionStatus.isResponseCompleted = (status != RSPS_MORE);
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_POST_JOURNAL));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        if (RSPS_OK == status || RSPS_MORE == status) {
+                            int journalId = pkt.getIntAutoInc();
+                            rspsIntent.putExtra("journalId", journalId);
+                            short jrqstId = pkt.getShortAutoInc();
+                            rspsIntent.putExtra("jrqstId", jrqstId);
+                            short jret = pkt.getShortAutoInc();
+                            rspsIntent.putExtra("jret", jret);
+                            if (RSPS_OK == jret) {
+                                switch (jrqstId) {
+                                    case LJournal.JRQST_ADD_ACCOUNT:
+                                        rspsIntent.putExtra("accountId", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("accountGid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("accountUid", pkt.getIntAutoInc());
+                                        break;
+                                    case LJournal.JRQST_GET_ACCOUNTS:
+                                        rspsIntent.putExtra("accountGid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("accountUid", pkt.getIntAutoInc());
+                                        int bytes = pkt.getShortAutoInc();
+                                        String name = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("accountName", name);
+                                        break;
+                                }
+                            }
+                        }
+
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
@@ -494,7 +547,8 @@ public class LProtocol {
                     int bytes = pkt.getShortAutoInc();
                     String userName = pkt.getStringAutoInc(bytes);
 
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_USER_CREATED));
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                    .ACTION_USER_CREATED));
                     rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                     rspsIntent.putExtra("id", userId);
                     rspsIntent.putExtra("name", userName);
@@ -515,7 +569,8 @@ public class LProtocol {
 
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME));
+                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                .ACTION_GET_SHARE_USER_BY_NAME));
                 rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                 if (status == RSPS_OK) {
                     int userId = pkt.getIntAutoInc();
@@ -536,7 +591,8 @@ public class LProtocol {
                     //Do nothing
                     LLog.d(TAG, "jumbo journal posting ack");
                 } else {
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_JOURNAL_POSTED));
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                    .ACTION_JOURNAL_POSTED));
                     rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                     int userId = pkt.getIntAutoInc();
                     rspsIntent.putExtra("userId", userId);
@@ -547,66 +603,83 @@ public class LProtocol {
                 break;
 
             case RSPS | RQST_POLL:
-                packetConsumptionStatus.isResponseCompleted = (status == RSPS_OK || status == RSPS_ERROR);
+                packetConsumptionStatus.isResponseCompleted = (status == RSPS_OK || status ==
+                RSPS_ERROR);
                 if (status == RSPS_OK || status == RSPS_ACK) {
                     int cacheId = pkt.getIntAutoInc();
                     short cmd = pkt.getShortAutoInc();
                     switch (cmd) {
                         case CMD_SET_ACCOUNT_GID:
-                            handleAccountSetGid(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID, cacheId);
+                            handleAccountSetGid(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SET_ACCOUNT_GID, cacheId);
                             break;
                         case CMD_REQUEST_ACCOUNT_SHARE:
-                            handleAccountShareRequest(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
+                            handleAccountShareRequest(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH, cacheId);
                             break;
                         case CMD_UPDATE_ACCOUNT_SHARE:
-                            handleAccountShareUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE, cacheId);
+                            handleAccountShareUpdate(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE, cacheId);
                             break;
                         case CMD_UPDATE_ACCOUNT_INFO:
-                            handleAccountInfoUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO, cacheId);
+                            handleAccountInfoUpdate(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO, cacheId);
                             break;
                         case CMD_UPDATE_SHARE_USER_PROFILE:
-                            handleShareUserProfileUpdate(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE, cacheId);
+                            handleShareUserProfileUpdate(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE, cacheId);
                             break;
 
                         case CMD_SHARE_TRANSITION_RECORD:
-                            handleRecordShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD, cacheId);
+                            handleRecordShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD, cacheId);
                             break;
 
                         case CMD_SHARE_TRANSITION_RECORDS:
-                            handleRecordsShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS, cacheId, status == RSPS_OK);
+                            handleRecordsShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS, cacheId, status ==
+                            RSPS_OK);
                             break;
 
                         case CMD_SHARE_TRANSITION_CATEGORY:
-                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY, cacheId);
+                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY, cacheId);
                             break;
 
                         case CMD_SHARE_TRANSITION_PAYER:
-                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER, cacheId);
+                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER, cacheId);
                             break;
 
                         case CMD_SHARE_TRANSITION_TAG:
-                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG, cacheId);
+                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG, cacheId);
                             break;
 
                         case CMD_SHARE_PAYER_CATEGORY:
-                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY, cacheId);
+                            handleCategoryPayerTagShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY, cacheId);
                             break;
 
                         case CMD_SHARE_SCHEDULE:
-                            handleScheduleShare(pkt, status, LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE, cacheId);
+                            handleScheduleShare(pkt, status, LBroadcastReceiver
+                            .ACTION_REQUESTED_TO_SHARE_SCHEDULE, cacheId);
                             break;
 
                         case CMD_SYSTEM_MSG_BROADCAST:
-                            handleSystemMsgBroadcast(pkt, status, LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED, cacheId);
+                            handleSystemMsgBroadcast(pkt, status, LBroadcastReceiver
+                            .ACTION_SERVER_BROADCAST_MSG_RECEIVED, cacheId);
                             break;
 
                         default:
                             LLog.w(TAG, "ignore: unknown command: " + cmd + " cacheId: " + cacheId);
-                            handlerUnknownMsg(pkt, status, LBroadcastReceiver.ACTION_UNKNOWN_MSG, cacheId);
+                            handlerUnknownMsg(pkt, status, LBroadcastReceiver.ACTION_UNKNOWN_MSG,
+                             cacheId);
                             break;
                     }
                 } else {
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_IDLE));
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                    .ACTION_POLL_IDLE));
                     rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int) RSPS_OK);
                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 }
@@ -614,7 +687,8 @@ public class LProtocol {
 
             case RSPS | RQST_POLL_ACK:
                 if (status == RSPS_OK) {
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_ACKED));
+                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                    .ACTION_POLL_ACKED));
                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                 } else {
                     LLog.w(TAG, "unable to acknowledge polling");
@@ -630,7 +704,8 @@ public class LProtocol {
                         LLog.w(TAG, "ignored invalid UTC: " + myUtc);
                     } else {
                         long delta = serverUtc + (now - myUtc) / 2 - now;
-                        //LLog.d(TAG, "utc delta: " + delta + " " + serverUtc + " " + myUtc + " " + now);
+                        //LLog.d(TAG, "utc delta: " + delta + " " + serverUtc + " " + myUtc + " "
+                         +  now);
                         LPreferences.setUtcDelta(delta);
                     }
                 } else {
@@ -700,7 +775,8 @@ public class LProtocol {
                 pkt.setLen(pkt.getLen() - bytes);
                 pkt.setBufOffset((pkt.getLen() == 0) ? 0 : pkt.getBufOffset() + bytes);
 
-                //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt.getBufOffset());
+                //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt
+                // .getBufOffset());
                 //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));
                 if (status.isResponseCompleted) return RESPONSE_PARSE_RESULT_DONE;
             }

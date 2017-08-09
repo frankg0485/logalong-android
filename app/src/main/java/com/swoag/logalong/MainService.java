@@ -30,11 +30,11 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LTask;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 
-public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener, Loader.OnLoadCompleteListener {
+public class MainService extends Service implements LBroadcastReceiver.BroadcastReceiverListener,
+        Loader.OnLoadCompleteListener {
     private static final String TAG = MainService.class.getSimpleName();
 
     private static final int CMD_START = 10;
@@ -43,21 +43,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final int CMD_DISABLE = 40;
     private static final int CMD_SCAN_BALANCE = 50;
 
-    private Handler pollHandler;
+    private boolean loggedIn = false;
+    private Handler serviceHandler;
     private Runnable pollRunnable;
-    private Runnable journalPostRunnable;
     private Runnable serviceShutdownRunnable;
     private boolean accountBalanceSynced = false;
 
     //default to active polling, if polling returned IDLE, switch to IDLE_POLLING interval
     //as soon as any valid command found, go back to active polling.
     static final int NETWORK_IDLE_POLLING_MS = 5000;
-    static final int NETWORK_ACTIVE_POLLING_MS = 15 * 60000; //so each polled command has a 15-min window to respond
-    static final int NETWORK_JOURNAL_POST_TIMEOUT_MS = 15 * 60000;
-    static final int NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS = 30000;
+    static final int NETWORK_ACTIVE_POLLING_MS = 15 * 60000; //so each polled command has a
+    // 15-min window to respond
     static final int SERVICE_SHUTDOWN_MS = 15000;
-    private int pollingCount;
-    private int logInAttempts;
     private BroadcastReceiver broadcastReceiver;
     private LAppServer server;
 
@@ -111,29 +108,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         DBScheduledTransaction.scanAlarm();
 
-        pollHandler = new Handler() {
+        serviceHandler = new Handler() {
         };
 
         pollRunnable = new Runnable() {
             @Override
             public void run() {
-                if ((!server.UiIsConnected()) && (pollingCount++ > 3)) {
-                    LLog.d(TAG, "stop self: unable to connect, after " + pollingCount + " tries");
-                    stopSelf();
-                } else {
+                if (loggedIn) {
                     LLog.d(TAG, "heart beat polling");
                     server.UiPoll();
                     //default to active polling
-                    pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
+                    serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 }
-            }
-        };
-
-        journalPostRunnable = new Runnable() {
-            @Override
-            public void run() {
-                LJournal.flush();
-                pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
             }
         };
 
@@ -168,18 +154,19 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
-                LBroadcastReceiver.ACTION_JOURNAL_POSTED}, this);
+                LBroadcastReceiver.ACTION_POST_JOURNAL,
+                LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE}, this);
 
 
         updateAccountBalanceRunnable = new Runnable() {
             @Override
             public void run() {
-                if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING)
-                {
+                if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING) {
                     asyncScanBalances = new AsyncScanBalances();
                     LTask.start(asyncScanBalances, lastLoadedData);
                 } else {
-                    pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+                    serviceHandler.postDelayed(updateAccountBalanceRunnable,
+                            UPDATE_ACCOUNT_BALANCE_DELAY_MS);
                 }
             }
         };
@@ -205,24 +192,23 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     public void onLoadComplete(Loader loader, Object data) {
         if (loader.getId() == LOADER_ID_UPDATE_BALANCE) {
             //LLog.d(TAG, "update balance DB loader completed");
-            pollHandler.removeCallbacks(updateAccountBalanceRunnable);
-            if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING)
-            {
+            serviceHandler.removeCallbacks(updateAccountBalanceRunnable);
+            if (asyncScanBalances.getStatus() != AsyncTask.Status.RUNNING) {
                 asyncScanBalances = new AsyncScanBalances();
-                LTask.start(asyncScanBalances, (Cursor)data);
+                LTask.start(asyncScanBalances, (Cursor) data);
             } else {
-                lastLoadedData = (Cursor)data;
-                pollHandler.postDelayed(updateAccountBalanceRunnable, UPDATE_ACCOUNT_BALANCE_DELAY_MS);
+                lastLoadedData = (Cursor) data;
+                serviceHandler.postDelayed(updateAccountBalanceRunnable,
+                        UPDATE_ACCOUNT_BALANCE_DELAY_MS);
             }
         }
     }
 
     @Override
     public void onDestroy() {
-        pollHandler.removeCallbacks(serviceShutdownRunnable);
-        pollHandler.removeCallbacks(pollRunnable);
-        pollHandler.removeCallbacks(journalPostRunnable);
-        pollHandler.removeCallbacks(updateAccountBalanceRunnable);
+        serviceHandler.removeCallbacks(serviceShutdownRunnable);
+        serviceHandler.removeCallbacks(pollRunnable);
+        serviceHandler.removeCallbacks(updateAccountBalanceRunnable);
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
             broadcastReceiver = null;
@@ -234,10 +220,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         asyncScanBalances = null;
 
         pollRunnable = null;
-        journalPostRunnable = null;
         serviceShutdownRunnable = null;
         updateAccountBalanceRunnable = null;
-        pollHandler = null;
+        serviceHandler = null;
 
         if (cursorLoader != null) {
             cursorLoader.unregisterListener(this);
@@ -246,6 +231,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         }
 
         accountBalanceSynced = false;
+        loggedIn = false;
         super.onDestroy();
     }
 
@@ -255,27 +241,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             int cmd = intent.getIntExtra("cmd", 0);
             switch (cmd) {
                 case CMD_START:
-                    pollingCount = 0;
-                    pollHandler.removeCallbacks(serviceShutdownRunnable);
-                    logInAttempts = 0;
-
-                    LLog.d(TAG, "starting service, already connected: " + server.UiIsConnected());
-                    if (server.UiIsConnected()) {
-                        //server.UiLogin();
-                    } else {
+                    serviceHandler.removeCallbacks(serviceShutdownRunnable);
+                    if (!TextUtils.isEmpty(LPreferences.getUserId())) {
                         server.connect();
                     }
                     break;
 
                 case CMD_STOP:
-                    LLog.d(TAG, "requested to stop service, connected: " + server.UiIsConnected());
-                    if (server.UiIsConnected()) {
-                        LLog.d(TAG, "post service shutdown runnable");
-                        pollHandler.removeCallbacks(serviceShutdownRunnable);
-                        pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
-                    } else {
-                        stopSelf();
-                    }
+                    serviceHandler.removeCallbacks(serviceShutdownRunnable);
+                    serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     break;
                 case CMD_ENABLE:
                     server.enable();
@@ -294,60 +268,150 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     }
 
     private int journalPostErrorCount = 0;
+
+    /*
+     +----------------+      +----------------+      +-----------+      +-----------------+
+     |                |      |                |      |           |      |                 |
+     | network thread | ---> | response parse | ---> | broadcast | ---> | service         |
+     |                |      |                |      |           |      |                 |
+     +---^------------+      +----------------+      +-----------+      +---^-------------+
+         |                                                 |                |       |   |
+         |                                                 |                |       |   |
+      +---------------+      +-----------+                 |    +---------------+   |   |
+      |               |      |           | <---------------'    |               |   |   |
+      | request queue | <--- | activity  | -------------------> | journal queue |   |   |
+      |               |      |           |                      |               |   |   |
+      +--^----^-------+      +-----------+                      +---------------+   |   |
+         |    |                                                                     |   |
+         |    |                                                 +---------------+   |   |
+         |    '-------------------------------------------------| flush journal |<--'   |
+         |                                                      +---------------+       |
+         |                                                                              |
+         |                                                 +---------------+            |
+         '-------------------------------------------------| poll server   |<-----------'
+                                                           +---------------+
+    */
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         //on Samsung phone, receiver may still get called when service is destroyed!!
-        if (pollHandler == null) {
+        if (serviceHandler == null) {
             LLog.w(TAG, "unexpected, receiver called on destroyed service!");
             return;
         }
+        serviceHandler.removeCallbacks(pollRunnable); //disable polling by default
 
-        pollHandler.removeCallbacks(serviceShutdownRunnable);
+        //serviceHandler.removeCallbacks(serviceShutdownRunnable);
         //default polling policy: active, with longer period
-        pollHandler.removeCallbacks(pollRunnable);
-        pollHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
+        //serviceHandler.removeCallbacks(pollRunnable);
+        //serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
+        if (!loggedIn) {
+            switch (action) {
+                case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
+                    LLog.d(TAG, "network connected");
+                    server.UiInitScrambler();
+                    break;
 
-        switch (action) {
-            case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:
-                pollHandler.removeCallbacks(pollRunnable); //disable polling
-                LLog.d(TAG, "network connected");
-                server.UiInitScrambler();
-                break;
+                case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
+                    if (!TextUtils.isEmpty(LPreferences.getUserId())) {
+                        server.UiLogIn(LPreferences.getUserId(), LPreferences.getUserPass());
+                    }
+                    break;
 
-            case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
-                if (!TextUtils.isEmpty(LPreferences.getUserId())) {
-                    server.UiLogIn(LPreferences.getUserId(), LPreferences.getUserPass());
-                }
-                break;
+                case LBroadcastReceiver.ACTION_LOG_IN:
+                    loggedIn = true;
+                    //journal posting and polling start only upon successful login
+                    serviceHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
+                    break;
+            }
+        } else {
+            switch (action) {
+                case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
+                    LJournal.flush();
+                    break;
 
-            case LBroadcastReceiver.ACTION_LOG_IN:
-                //journal posting and polling start only upon successful login
-                //pollHandler.removeCallbacks(journalPostRunnable);
-                //pollHandler.post(journalPostRunnable);
-                //pollHandler.removeCallbacks(pollRunnable);
-                //pollHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
-                break;
+                case LBroadcastReceiver.ACTION_POST_JOURNAL:
+                    boolean moreJournal = true;
+                    int journalId = intent.getIntExtra("journalId", 0);
+                    if (LProtocol.RSPS_OK == ret || LProtocol.RSPS_MORE == ret) {
+                        short jrqstId = intent.getShortExtra("jrqstId", (short) 0);
+                        short jret = intent.getShortExtra("jret", (short) 0);
+                        switch (jrqstId) {
+                            case LJournal.JRQST_ADD_ACCOUNT: {
+                                int accountId = intent.getIntExtra("accountId", 0);
+                                int accountGid = intent.getIntExtra("accountGid", 0);
+                                LAccount account = DBAccount.getByGid(accountGid);
+                                if (null != account) {
+                                    if (account.getId() != accountId) {
+                                        LLog.e(TAG, "unexpected error, account GID: " + accountGid + " already taken " +
+                                                "by " + account.getName());
+                                    }
+                                }
+                                DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_GID,
+                                        accountGid);
+                                break;
+                            }
+                            case LJournal.JRQST_GET_ACCOUNTS: {
+                                int accountGid = intent.getIntExtra("accountGid", 0);
+                                int accountUid = intent.getIntExtra("accountUid", 0);
+                                String name = intent.getStringExtra("accountName");
+                                LAccount account = DBAccount.getByGid(accountGid);
+                                if (null != account) {
+                                    account.setName(name);
+                                    DBAccount.updateColumnById(account.getId(), DBHelper.TABLE_COLUMN_GID, accountGid);
+                                } else {
+                                    account = new LAccount();
+                                    account.setGid(accountGid);
+                                    account.setName(name);
+                                    DBAccount.add(account);
+                                }
+                                break;
+                            }
+                        }
 
-            case LBroadcastReceiver.ACTION_POLL_IDLE:
-                if (LFragmentActivity.upRunning) {
-                    server.UiUtcSync();
-                    pollHandler.removeCallbacks(pollRunnable);
-                    pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                } else {
-                    pollHandler.removeCallbacks(pollRunnable); //disable polling
-                    pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
-                }
-                break;
+                        if (LProtocol.RSPS_OK == ret) {
+                            LJournal.deleteById(journalId);
+                            moreJournal = LJournal.flush();
+                        }
+                    } else {
+                        // try a few more times, then bail, so not to lock out polling altogether
+                        if (journalPostErrorCount++ < 3) {
+                            LLog.w(TAG, "unexpected journal post error: " + ret);
+                        } else {
+                            journalPostErrorCount = 0;
+                            LLog.e(TAG, "fatal journal post error, journal skipped");
+                            LJournal.deleteById(journalId);
+                        }
+                        moreJournal = LJournal.flush();
+                    }
 
-            case LBroadcastReceiver.ACTION_POLL_ACKED:
-                //LLog.d(TAG, "polling after being acked");
-                server.UiPoll();
-                break;
+                    //no more active journal, start polling
+                    if (!moreJournal) {
+                        serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                    }
+                    break;
 
-            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
-                int cacheId = intent.getIntExtra("cacheId", 0);
-                server.UiPollAck(cacheId);
-                break;
+
+                case LBroadcastReceiver.ACTION_POLL_IDLE:
+                    if (!LJournal.flush()) {
+                        if (LFragmentActivity.upRunning) {
+                            server.UiUtcSync();
+                            serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                        } else {
+                            serviceHandler.postDelayed(serviceShutdownRunnable,
+                                    SERVICE_SHUTDOWN_MS);
+                        }
+                    }
+                    break;
+
+                case LBroadcastReceiver.ACTION_POLL_ACKED:
+                    //LLog.d(TAG, "polling after being acked");
+                    server.UiPoll();
+                    break;
+
+                case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+                    int cacheId = intent.getIntExtra("cacheId", 0);
+                    server.UiPollAck(cacheId);
+                    break;
 /*
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
                 cacheId = intent.getIntExtra("cacheId", 0);
@@ -373,7 +437,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.d(TAG, "requested to update account share for: " + account.getName());
                     HashSet<Integer> newShareUsers = new HashSet<Integer>();
                     ArrayList<Integer> origIds = new ArrayList<Integer>(account.getShareIds());
-                    ArrayList<Integer> origStates = new ArrayList<Integer>(account.getShareStates());
+                    ArrayList<Integer> origStates = new ArrayList<Integer>(account.getShareStates
+                    ());
 
                     account.removeAllShareUsers();
                     int  myUserId = 0;//LPreferences.getUserId();
@@ -386,7 +451,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                             boolean newShare = true;
                             for (int ii = 0; ii < origIds.size(); ii++) {
-                                if (user == origIds.get(ii) && origStates.get(ii) == LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED) {
+                                if (user == origIds.get(ii) && origStates.get(ii) == LAccount
+                                .ACCOUNT_SHARE_CONFIRMED_SYNCED) {
                                     newShare = false;
                                     break;
                                 }
@@ -482,60 +548,22 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LJournal.updateVendorCategoryFromReceivedRecord(record);
                 break;
 
-            case LBroadcastReceiver.ACTION_JOURNAL_POSTED:
-                pollHandler.removeCallbacks(journalPostRunnable);
-                pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_TIMEOUT_MS);
-                int journalId = intent.getIntExtra("journalId", 0);
-                userId = intent.getIntExtra("userId", 0);
-                switch (ret) {
-                    case LProtocol.RSPS_OK: {
-                        LJournal.deleteById(journalId);
-                        LJournal.flush();
-                        break;
-                    }
-                    case LProtocol.RSPS_USER_NOT_FOUND:
-                    {
-                        LLog.w(TAG, "journal post targeting user no longer available, id: " + userId);
-                        LJournal.deleteById(journalId);
-                        LJournal.flush();
-                        break;
-                    }
-                    default:
-                    {
-                        // try a few more times, then bail, so not to lock out polling altogether
-                        if (journalPostErrorCount++ < 3) {
-                            // upon post error, do not flush immediately, instead let it timeout and retry
-                            // this is to prevent flooding network layer when something goes wrong.
-                            pollHandler.removeCallbacks(journalPostRunnable);
-                            pollHandler.postDelayed(journalPostRunnable, NETWORK_JOURNAL_POST_RETRY_TIMEOUT_MS);
-                            LLog.w(TAG, "unexpected journal post error, to: " + userId + " reture code: " + ret);
-                        } else {
-                            LLog.e(TAG, "fatal journal post error, journal skipped, to user: " + userId);
-                            LJournal.deleteById(journalId);
-                            LJournal.flush();
-                            journalPostErrorCount = 0;
-                        }
-                        break;
-                    }
-                }
-
-                pollHandler.removeCallbacks(pollRunnable);
-                pollHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                break;
 */
-            case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
-                LLog.w(TAG, "unknown message received");
-            case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
-                cacheId = intent.getIntExtra("cacheId", 0);
-                server.UiPollAck(cacheId);
-                break;
+                case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
+                    LLog.w(TAG, "unknown message received");
+                    break;
+
+                case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
+                    cacheId = intent.getIntExtra("cacheId", 0);
+                    server.UiPollAck(cacheId);
+                    break;
+            }
         }
     }
 
     private class AsyncScanBalances extends AsyncTask<Cursor, Void, Boolean> {
 
-        private void addUpdateAccountBalance(double[] doubles, long accountId, int year)
-        {
+        private void addUpdateAccountBalance(double[] doubles, long accountId, int year) {
             boolean newEntry = false;
             LAccountBalance balance = DBAccountBalance.getByAccountId(accountId, year);
             if (balance == null) {
@@ -562,7 +590,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 return false;
             }
 
-            HashSet<Long> accounts = DBAccount.getAllActiveAccountIds();
+            HashSet<Long> accounts = DBAccount.getAllActiveIds();
 
             try {
                 if (isCancelled()) return false;
@@ -572,20 +600,23 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 long lastAccountId = 0;
                 int lastYear = 0;
                 do {
-                    long accountId = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    long accountId = data.getLong(data.getColumnIndexOrThrow(DBHelper
+                            .TABLE_COLUMN_ACCOUNT));
                     accounts.remove(accountId);
 
-                    double amount = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
+                    double amount = data.getDouble(data.getColumnIndexOrThrow(DBHelper
+                            .TABLE_COLUMN_AMOUNT));
                     int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
-                    //String name = data.getString(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
-                    calendar.setTimeInMillis(data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+                    //String name = data.getString(data.getColumnIndexOrThrow(DBHelper
+                    // .TABLE_COLUMN_NAME));
+                    calendar.setTimeInMillis(data.getLong(data.getColumnIndexOrThrow(DBHelper
+                            .TABLE_COLUMN_TIMESTAMP)));
                     int year = calendar.get(Calendar.YEAR);
                     int mon = calendar.get(Calendar.MONTH);
                     if (lastAccountId == 0) {
                         lastAccountId = accountId;
                         lastYear = year;
-                    }
-                    else if (lastAccountId != accountId || lastYear != year) {
+                    } else if (lastAccountId != accountId || lastYear != year) {
                         addUpdateAccountBalance(doubles, lastAccountId, lastYear);
 
                         lastAccountId = accountId;
@@ -593,7 +624,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         for (int ii = 0; ii < 12; ii++) doubles[ii] = 0.0;
                     }
                     doubles[mon] += (type == LTransaction.TRANSACTION_TYPE_INCOME ||
-                            type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)? amount : -amount;
+                            type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ? amount : -amount;
                 } while (!isCancelled() && data.moveToNext());
                 if (!isCancelled()) addUpdateAccountBalance(doubles, lastAccountId, lastYear);
 
@@ -615,8 +646,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         protected void onPostExecute(Boolean result) {
             accountBalanceSynced = true;
             LLog.d(TAG, "account balance synchronized");
-            pollHandler.removeCallbacks(serviceShutdownRunnable);
-            pollHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
+            serviceHandler.removeCallbacks(serviceShutdownRunnable);
+            serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
         }
 
         @Override
@@ -624,7 +655,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         }
     }
 
-    private void updateAccountFromReceivedRecord(int accountGid, String name, String receivedRecord) {
+    private void updateAccountFromReceivedRecord(int accountGid, String name, String
+            receivedRecord) {
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
@@ -713,7 +745,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 DBAccount.update(account);
 
                 if (!name.contentEquals(nameOrig)) {
-                    LLog.d(TAG, "account name conflicts, renaming from: " + nameOrig + " to: " + name);
+                    LLog.d(TAG, "account name conflicts, renaming from: " + nameOrig + " to: " +
+                            name);
                     LJournal journal = new LJournal();
                     journal.updateAccount(account, nameOrig);
                 }

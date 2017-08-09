@@ -4,6 +4,7 @@ package com.swoag.logalong.receivers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainService;
@@ -28,8 +29,10 @@ public class LAlarmReceiver extends BroadcastReceiver {
         int action = intent.getIntExtra("action", 0);
         switch (action) {
             case LAlarm.ACTION_AUTO_RECONNECT:
-                LLog.d(TAG, "auto reconnect at: " + (new Date()));
-                MainService.start(LApp.ctx);
+                if (!TextUtils.isEmpty(LPreferences.getUserId())) {
+                    LLog.d(TAG, "auto reconnect at: " + (new Date()));
+                    MainService.start(LApp.ctx);
+                }
                 break;
 
             case LAlarm.ACTION_SCHEDULE: {

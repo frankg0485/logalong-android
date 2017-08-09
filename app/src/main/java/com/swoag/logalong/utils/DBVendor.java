@@ -381,4 +381,19 @@ public class DBVendor {
     public static void updateCategory(long vendor, long category, boolean add) {
         do_updateCategory(LApp.ctx, vendor, category, add, false);
     }
+
+    public static HashSet<Long> getAllActiveIds() {
+        HashSet<Long> set = new HashSet<Long>();
+        Cursor cur = getCursorSortedBy(null);
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                set.add(cur.getLong(0));
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
+    }
+
 }

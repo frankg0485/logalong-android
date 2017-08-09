@@ -6,34 +6,37 @@ import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
-import com.swoag.logalong.fragments.ProfileEdit;
+import com.swoag.logalong.entities.LAccount;
+import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LTag;
+import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.CountDownTimer;
+import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBCategory;
+import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBTransaction;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
-import org.w3c.dom.Text;
+import java.util.HashSet;
 
 public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = LUpdateProfileDialog.class.getSimpleName();
@@ -51,7 +54,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
     private Button okBtn;
     private CountDownTimer countDownTimer;
     private ProgressBar progressBar;
-    private TextView progressMsg, titleTV;
+    private TextView progressMsg, progressTxt, titleTV;
     private BroadcastReceiver broadcastReceiver;
     private boolean success;
     private boolean requestedOnce;
@@ -103,6 +106,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         progressMsg = (TextView) findViewById(R.id.progressMsg);
+        progressTxt = (TextView) findViewById(R.id.progressText);
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_CREATE_USER,
                 LBroadcastReceiver.ACTION_SIGN_IN,
@@ -124,6 +128,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         }.start();
 
         if (!LAppServer.getInstance().UiIsConnected()) {
+            LAppServer.getInstance().connect();
             MainService.start(context);
         }
     }
@@ -144,8 +149,10 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
         progressBar.setVisibility(View.GONE);
         progressMsg.setVisibility(View.GONE);
-        LViewUtils.setAlpha(okBtn, 1.0f);
-        okBtn.setEnabled(true);
+        if (error) {
+            LViewUtils.setAlpha(okBtn, 1.0f);
+            okBtn.setEnabled(true);
+        }
     }
 
 
@@ -204,11 +211,16 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             case LBroadcastReceiver.ACTION_CREATE_USER:
                 if (ret == LProtocol.RSPS_OK) {
                     success = true;
-                    displayMsg(false, context.getString(R.string.user_create_success) + "\n" + userId + " : " + userPass);
+                    displayMsg(false, context.getString(R.string.user_id) + ": " + userId +"\n"
+                            + context.getString(R.string.password) + ": " + userPass + "\n\n"
+                            + context.getString(R.string.synchronizing_database));
+
                     LPreferences.setUserPass(userPass);
                     LPreferences.setUserId(userId);
                     LPreferences.setUserName(userName);
                     LAppServer.getInstance().UiLogIn(userId, userPass);
+
+                    pushLocalDb();
                 } else {
                     displayMsg(true, context.getString(R.string.warning_unable_to_connect));
                 }
@@ -216,10 +228,12 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             case LBroadcastReceiver.ACTION_SIGN_IN:
                 switch (ret) {
                     case LProtocol.RSPS_OK:
+                        success = true;
                         LPreferences.setUserName(intent.getStringExtra("userName"));
                         LAppServer.getInstance().UiLogIn(userId, userPass);
-                        if (callback != null) callback.onUpdateProfileDialogExit(true);
-                        destroy();
+                        displayMsg(false, context.getString(R.string.synchronizing_database));
+
+                        pushLocalDb();
                         break;
                     case LProtocol.RSPS_WRONG_PASSWORD:
                         displayMsg(true, context.getString(R.string.warning_password_mismatch));
@@ -237,12 +251,98 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 if (ret == LProtocol.RSPS_OK) {
                     LPreferences.setUserPass(userPass);
                     LPreferences.setUserName(userName);
-                    if (callback != null) callback.onUpdateProfileDialogExit(true);
-                    destroy();
+                    ////////////////////////////////////////////////////////////////////////////
+                    if (false) {
+                        if (callback != null) callback.onUpdateProfileDialogExit(true);
+                        destroy();
+                    } else {
+                        pushLocalDb();
+                    }
                 } else {
                     displayMsg(true, context.getString(R.string.warning_unable_to_connect));
                 }
                 break;
+        }
+    }
+
+
+    private void pushLocalDb() {
+        new MyTask().execute();
+    }
+
+    private class MyTask extends AsyncTask<Void, String, Boolean> {
+        private boolean do_pushLocalDb() {
+            LJournal journal = new LJournal();
+
+            // send over all account/category/tag/vendor
+            HashSet<Long> accountIds = DBAccount.getAllActiveIds();
+            for (long id: accountIds) {
+                LAccount account = DBAccount.getById(id);
+                if (null != account) {
+                    publishProgress(account.getName());
+                    journal.addAccount(account);
+                }
+            }
+            HashSet<Long> catIds = DBCategory.getAllActiveIds();
+            for (long id: catIds) {
+                LCategory category = DBCategory.getById(id);
+                if (null != category) {
+                    publishProgress(category.getName());
+                    journal.addCategory(category);
+                }
+            }
+            HashSet<Long> vendorIds = DBVendor.getAllActiveIds();
+            for (long id: vendorIds) {
+                LVendor vendor = DBVendor.getById(id);
+                if (null != vendor) {
+                    publishProgress(vendor.getName());
+                    journal.addVendor(vendor);
+                }
+            }
+            HashSet<Long> tagIds = DBTag.getAllActiveIds();
+            for (long id: tagIds) {
+                LTag tag = DBTag.getById(id);
+                if (null != tag) {
+                    publishProgress(tag.getName());
+                    journal.addTag(tag);
+                }
+            }
+
+            // send all records
+            Cursor cursor = DBTransaction.getAllCursor();
+            if (cursor != null) {
+                LTransaction transaction = new LTransaction();
+                cursor.moveToFirst();
+                do {
+                    DBTransaction.getValues(cursor, transaction);
+                    journal.addTransaction(transaction);
+                    publishProgress(DBAccount.getNameById(transaction.getAccount()) + " : " + transaction.getValue());
+                } while (cursor.moveToNext());
+                cursor.close();
+            }
+
+            // get all accounts
+            journal.getAllAccounts();
+            return true;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            return do_pushLocalDb();
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            progressTxt.setText(values[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            if (aBoolean) {
+                progressTxt.setText(context.getString(R.string.done));
+                LViewUtils.setAlpha(okBtn, 1.0f);
+                okBtn.setEnabled(true);
+            }
         }
     }
 }

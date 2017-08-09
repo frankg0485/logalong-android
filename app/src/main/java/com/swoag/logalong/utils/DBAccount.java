@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.MainService;
 import com.swoag.logalong.entities.LAccount;
 
 import java.util.HashSet;
@@ -20,7 +19,7 @@ public class DBAccount {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
-        cv.put(DBHelper.TABLE_COLUMN_NUMBER, account.getGid());
+        cv.put(DBHelper.TABLE_COLUMN_GID, account.getGid());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
         cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid());
@@ -30,7 +29,7 @@ public class DBAccount {
     private static void getValues(Cursor cur, LAccount account) {
         account.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         account.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        account.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NUMBER)));
+        account.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         account.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
@@ -82,7 +81,7 @@ public class DBAccount {
         LAccount account = new LAccount();
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
-                    DBHelper.TABLE_COLUMN_NUMBER + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    DBHelper.TABLE_COLUMN_GID + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{"" + gid, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
@@ -224,7 +223,7 @@ public class DBAccount {
     //    updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     //}
 
-    private static boolean updateColumnById(long id, String column, int value) {
+    public static boolean updateColumnById(long id, String column, int value) {
         return DBAccess.updateColumnById(DBProvider.URI_ACCOUNTS, id, column, value);
     }
 
@@ -289,7 +288,8 @@ public class DBAccount {
         return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_ACCOUNTS, id);
     }
 
-    public static HashSet<Long> getAllActiveAccountIds() {
+
+    public static HashSet<Long> getAllActiveIds() {
         HashSet<Long> set = new HashSet<Long>();
         Cursor cur = getCursorSortedBy(null);
         if (cur != null && cur.getCount() > 0) {
