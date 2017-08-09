@@ -19,7 +19,7 @@ public class DBCategory {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
-        cv.put(DBHelper.TABLE_COLUMN_RID, category.getRid());
+        cv.put(DBHelper.TABLE_COLUMN_GID, category.getGid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, category.getTimeStampLast());
         return cv;
     }
@@ -27,7 +27,7 @@ public class DBCategory {
     private static void getValues(Cursor cur, LCategory category) {
         category.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
         category.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        category.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
+        category.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         category.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         category.setId(cur.getLong(0));
     }
@@ -150,41 +150,41 @@ public class DBCategory {
         return category;
     }
 
-    public static LCategory getByRid(String rid) {
-        return getByRid(LApp.ctx, rid);
-    }
-
-    public static LCategory getByRid(Context context, String rid) {
-        LCategory category = new LCategory();
-
-        try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
-                    DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
-            if (csr != null) {
-                if (csr.getCount() > 1 || csr.getCount() < 1) {
-                    LLog.w(TAG, "unable to find category with rid: " + rid + " count: " + csr.getCount());
-                    csr.close();
-                    return null;
-                }
-
-                csr.moveToFirst();
-                getValues(csr, category);
-                category.setId(csr.getLong(0));
-                csr.close();
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get category with rid: " + rid + ":" + e.getMessage());
-            category = null;
-        }
-        return category;
-    }
-
     public static long getIdByName(String name) {
         return DBAccess.getIdByName(DBProvider.URI_CATEGORIES, name);
     }
 
     public static String getNameById(long id) {
         return DBAccess.getStringFromDbById(DBProvider.URI_CATEGORIES, DBHelper.TABLE_COLUMN_NAME, id);
+    }
+
+    public static LCategory getByGid(int gid) {
+        return getByGid(LApp.ctx, gid);
+    }
+
+    private static LCategory getByGid(Context context, int gid) {
+        if (gid <= 0) return null;
+
+        LCategory category = new LCategory();
+        try {
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_CATEGORIES, null,
+                    DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "GID not unique: unable to find category with gid: " + gid);
+                    csr.close();
+                    return null;
+                }
+
+                csr.moveToFirst();
+                getValues(csr, category);
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get category with gid: " + gid + ":" + e.getMessage());
+            category = null;
+        }
+        return category;
     }
 
     public static long getIdByRid(String rid) {

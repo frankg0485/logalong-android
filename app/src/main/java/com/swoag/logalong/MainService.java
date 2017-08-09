@@ -15,16 +15,22 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountBalance;
+import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBAccountBalance;
+import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBProvider;
 import com.swoag.logalong.utils.DBScheduledTransaction;
+import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
+import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
@@ -116,7 +122,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             public void run() {
                 if (loggedIn) {
                     LLog.d(TAG, "heart beat polling");
-                    server.UiPoll();
+                    //polling happens only where there's no pending journal
+                    if (!LJournal.flush()) server.UiPoll();
                     //default to active polling
                     serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 }
@@ -335,39 +342,127 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     if (LProtocol.RSPS_OK == ret || LProtocol.RSPS_MORE == ret) {
                         short jrqstId = intent.getShortExtra("jrqstId", (short) 0);
                         short jret = intent.getShortExtra("jret", (short) 0);
-                        switch (jrqstId) {
-                            case LJournal.JRQST_ADD_ACCOUNT: {
-                                int accountId = intent.getIntExtra("accountId", 0);
-                                int accountGid = intent.getIntExtra("accountGid", 0);
-                                LAccount account = DBAccount.getByGid(accountGid);
-                                if (null != account) {
-                                    if (account.getId() != accountId) {
-                                        LLog.e(TAG, "unexpected error, account GID: " + accountGid + " already taken " +
-                                                "by " + account.getName());
+                        if (LProtocol.RSPS_OK != jret) {
+                            LLog.w(TAG, "journal request " + jrqstId + " failed.");
+                        } else {
+                            switch (jrqstId) {
+                                case LProtocol.JRQST_ADD_ACCOUNT:
+                                    int id = intent.getIntExtra("id", 0);
+                                    int gid = intent.getIntExtra("gid", 0);
+                                    int uid = intent.getIntExtra("uid", 0);
+
+                                    LAccount account = DBAccount.getByGid(gid);
+                                    if (null != account) {
+                                        if (account.getId() != id) {
+                                            LLog.e(TAG, "unexpected error, account GID: " + gid + " already taken " +
+                                                    "by " + account.getName());
+                                        }
                                     }
-                                }
-                                DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_GID,
-                                        accountGid);
-                                break;
-                            }
-                            case LJournal.JRQST_GET_ACCOUNTS: {
-                                int accountGid = intent.getIntExtra("accountGid", 0);
-                                int accountUid = intent.getIntExtra("accountUid", 0);
-                                String name = intent.getStringExtra("accountName");
-                                LAccount account = DBAccount.getByGid(accountGid);
-                                if (null != account) {
-                                    account.setName(name);
-                                    DBAccount.updateColumnById(account.getId(), DBHelper.TABLE_COLUMN_GID, accountGid);
-                                } else {
-                                    account = new LAccount();
-                                    account.setGid(accountGid);
-                                    account.setName(name);
-                                    DBAccount.add(account);
-                                }
-                                break;
+                                    DBAccount.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    break;
+
+                                case LProtocol.JRQST_ADD_CATEGORY:
+                                    id = intent.getIntExtra("id", 0);
+                                    gid = intent.getIntExtra("gid", 0);
+
+                                    LCategory category = DBCategory.getByGid(gid);
+                                    if (null != category) {
+                                        if (category.getId() != id) {
+                                            LLog.e(TAG, "unexpected error, category GID: " + gid + " already taken " +
+                                                    "by " + category.getName());
+                                        }
+                                    }
+                                    DBCategory.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    break;
+                                case LProtocol.JRQST_ADD_TAG:
+                                    id = intent.getIntExtra("id", 0);
+                                    gid = intent.getIntExtra("gid", 0);
+
+                                    LTag tag = DBTag.getByGid(gid);
+                                    if (null != tag) {
+                                        if (tag.getId() != id) {
+                                            LLog.e(TAG, "unexpected error, tag GID: " + gid + " already taken " +
+                                                    "by " + tag.getName());
+                                        }
+                                    }
+                                    DBTag.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    break;
+                                case LProtocol.JRQST_ADD_VENDOR:
+                                    id = intent.getIntExtra("id", 0);
+                                    gid = intent.getIntExtra("gid", 0);
+
+                                    LVendor vendor = DBVendor.getByGid(gid);
+                                    if (null != vendor) {
+                                        if (vendor.getId() != id) {
+                                            LLog.e(TAG, "unexpected error, vendor GID: " + gid + " already taken " +
+                                                    "by " + vendor.getName());
+                                        }
+                                    }
+                                    DBVendor.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    break;
+
+                                case LProtocol.JRQST_GET_ACCOUNTS:
+                                    gid = intent.getIntExtra("gid", 0);
+                                    uid = intent.getIntExtra("uid", 0);
+                                    String name = intent.getStringExtra("name");
+                                    account = DBAccount.getByGid(gid);
+                                    if (null != account) {
+                                        account.setName(name);
+                                        DBAccount.updateColumnById(account.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                    } else {
+                                        account = new LAccount();
+                                        account.setGid(gid);
+                                        account.setName(name);
+                                        DBAccount.add(account);
+                                    }
+                                    break;
+                                case LProtocol.JRQST_GET_CATEGORIES:
+                                    gid = intent.getIntExtra("gid", 0);
+                                    name = intent.getStringExtra("name");
+                                    category = DBCategory.getByGid(gid);
+                                    if (null != category) {
+                                        category.setName(name);
+                                        DBCategory.updateColumnById(category.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                    } else {
+                                        category = new LCategory();
+                                        category.setGid(gid);
+                                        category.setName(name);
+                                        DBCategory.add(category);
+                                    }
+                                    break;
+                                case LProtocol.JRQST_GET_TAGS:
+                                    gid = intent.getIntExtra("gid", 0);
+                                    name = intent.getStringExtra("name");
+                                    tag = DBTag.getByGid(gid);
+                                    if (null != tag) {
+                                        tag.setName(name);
+                                        DBTag.updateColumnById(tag.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                    } else {
+                                        tag = new LTag();
+                                        tag.setGid(gid);
+                                        tag.setName(name);
+                                        DBTag.add(tag);
+                                    }
+                                    break;
+                                case LProtocol.JRQST_GET_VENDORS:
+                                    gid = intent.getIntExtra("gid", 0);
+                                    int type = intent.getIntExtra("type", LVendor.TYPE_PAYEE);
+                                    name = intent.getStringExtra("name");
+                                    vendor = DBVendor.getByGid(gid);
+                                    if (null != vendor) {
+                                        vendor.setName(name);
+                                        vendor.setType(type);
+                                        DBVendor.updateColumnById(vendor.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                    } else {
+                                        vendor = new LVendor();
+                                        vendor.setGid(gid);
+                                        vendor.setName(name);
+                                        vendor.setType(type);
+                                        DBVendor.add(vendor);
+                                    }
+                                    break;
                             }
                         }
-
                         if (LProtocol.RSPS_OK == ret) {
                             LJournal.deleteById(journalId);
                             moreJournal = LJournal.flush();
@@ -376,12 +471,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         // try a few more times, then bail, so not to lock out polling altogether
                         if (journalPostErrorCount++ < 3) {
                             LLog.w(TAG, "unexpected journal post error: " + ret);
+                            //retry happens when one of the following happens
+                            // - new journal request
+                            // - polling timer expired
+                            moreJournal = false;
                         } else {
                             journalPostErrorCount = 0;
                             LLog.e(TAG, "fatal journal post error, journal skipped");
                             LJournal.deleteById(journalId);
+                            moreJournal = LJournal.flush();
                         }
-                        moreJournal = LJournal.flush();
                     }
 
                     //no more active journal, start polling

@@ -332,7 +332,7 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < categories.length; ii++) {
             category.setName(categories[ii]);
             DBCategory.add(category);
-            category.setRid(UUID.randomUUID().toString());
+            //TODO: category.setRid(UUID.randomUUID().toString());
         }
     }
 

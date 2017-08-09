@@ -70,6 +70,14 @@ public class LProtocol {
     public static final short RQST_LOG_IN = RQST_SYS | 0x209;
     public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x20c;
 
+    public static final short JRQST_ADD_ACCOUNT = 0x001;
+    public static final short JRQST_ADD_CATEGORY = 0x002;
+    public static final short JRQST_ADD_TAG = 0x003;
+    public static final short JRQST_ADD_VENDOR = 0x004;
+    public static final short JRQST_GET_ACCOUNTS = 0x101;
+    public static final short JRQST_GET_CATEGORIES = 0x102;
+    public static final short JRQST_GET_TAGS = 0x103;
+    public static final short JRQST_GET_VENDORS = 0x104;
 
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -501,17 +509,43 @@ public class LProtocol {
                             rspsIntent.putExtra("jret", jret);
                             if (RSPS_OK == jret) {
                                 switch (jrqstId) {
-                                    case LJournal.JRQST_ADD_ACCOUNT:
-                                        rspsIntent.putExtra("accountId", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("accountGid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("accountUid", pkt.getIntAutoInc());
+                                    case JRQST_ADD_ACCOUNT:
+                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
                                         break;
-                                    case LJournal.JRQST_GET_ACCOUNTS:
-                                        rspsIntent.putExtra("accountGid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("accountUid", pkt.getIntAutoInc());
+                                    case JRQST_ADD_CATEGORY:
+                                    case JRQST_ADD_VENDOR:
+                                    case JRQST_ADD_TAG:
+                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        break;
+                                    case JRQST_GET_ACCOUNTS:
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
                                         int bytes = pkt.getShortAutoInc();
                                         String name = pkt.getStringAutoInc(bytes);
-                                        rspsIntent.putExtra("accountName", name);
+                                        rspsIntent.putExtra("name", name);
+                                        break;
+                                    case JRQST_GET_CATEGORIES:
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("pgid", pkt.getIntAutoInc());
+                                        bytes = pkt.getShortAutoInc();
+                                        name = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("name", name);
+                                        break;
+                                    case JRQST_GET_VENDORS:
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("type", (int)pkt.getByteAutoInc());
+                                        bytes = pkt.getShortAutoInc();
+                                        name = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("name", name);
+                                        break;
+                                    case JRQST_GET_TAGS:
+                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        bytes = pkt.getShortAutoInc();
+                                        name = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("name", name);
                                         break;
                                 }
                             }

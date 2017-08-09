@@ -40,7 +40,7 @@ public class DBPorter {
         String row = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ",";
 
         if (lCategory != null)
-            row += lCategory.getName() + "," + lCategory.getRid() + ",";
+            row += lCategory.getName() + "," + lCategory.getGid() + ",";
         else
             row += "," + ",";
 
@@ -55,12 +55,12 @@ public class DBPorter {
             row += "," + ",";
 
         if (lTag != null)
-            row += lTag.getName() + "," + lTag.getRid() + ",";
+            row += lTag.getName() + "," + lTag.getGid() + ",";
         else
             row += "," + ",";
 
         if (lVendor != null)
-            row += lVendor.getName() + "," + lVendor.getRid() + "," + lVendor.getType() + ",";
+            row += lVendor.getName() + "," + lVendor.getGid() + "," + lVendor.getType() + ",";
         else
             row += "," + "," + ",";
 
@@ -268,7 +268,7 @@ public class DBPorter {
                             if (categoryId != 0) {
                                 DBCategory.updateColumnById(categoryId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
-                                categoryId = DBCategory.add(new LCategory(category, ss[ii]));
+                                //TODO: categoryId = DBCategory.add(new LCategory(category, ss[ii]));
                             }
                             categoryMap.put(category, categoryId);
                         } else {
@@ -325,7 +325,7 @@ public class DBPorter {
                             if (tagId != 0) {
                                 DBTag.updateColumnById(tagId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
-                                tagId = DBTag.add(new LTag(tag, ss[ii]));
+                                //TODO: tagId = DBTag.add(new LTag(tag, ss[ii]));
                             }
                             tagMap.put(tag, tagId);
                         } else {
@@ -344,7 +344,7 @@ public class DBPorter {
                             if (vendorId != 0) {
                                 DBVendor.updateColumnById(vendorId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
-                                vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
+                                //TODO: vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
                             }
                             vendorMap.put(vendor, vendorId);
                         } else {

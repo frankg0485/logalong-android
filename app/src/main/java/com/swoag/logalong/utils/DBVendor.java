@@ -8,8 +8,6 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LVendor;
 
 import java.util.HashSet;
@@ -23,7 +21,7 @@ public class DBVendor {
         cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
         cv.put(DBHelper.TABLE_COLUMN_TYPE, vendor.getType());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, vendor.getRid());
+        cv.put(DBHelper.TABLE_COLUMN_GID, vendor.getGid());
         return cv;
     }
 
@@ -32,7 +30,7 @@ public class DBVendor {
         vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
         vendor.setType(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)));
         vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        vendor.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
+        vendor.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         vendor.setId(cur.getLong(0));
     }
 
@@ -100,20 +98,20 @@ public class DBVendor {
         return vendor;
     }
 
-    public static LVendor getByRid(String rid) {
-        return getByRid(LApp.ctx, rid);
+    public static LVendor getByGid(int gid) {
+        return getByGid(LApp.ctx, gid);
     }
 
-    public static LVendor getByRid(Context context, String rid) {
+    public static LVendor getByGid(Context context, int gid) {
         LVendor vendor = new LVendor();
 
         try {
             Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_RID + "=?", new String[]{rid}, null);
+                    DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
 
             if (csr != null) {
-                if (csr.getCount() > 1 || csr.getCount() < 1) {
-                    LLog.w(TAG, "unable to find vendor with rid: " + rid + " count: " + csr.getCount());
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find vendor with rid: " + gid + " count: " + csr.getCount());
                     csr.close();
                     return null;
                 }
@@ -123,7 +121,7 @@ public class DBVendor {
                 csr.close();
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with RID: " + rid + ":" + e.getMessage());
+            LLog.w(TAG, "unable to get vendor with RID: " + gid + ":" + e.getMessage());
             vendor = null;
         }
         return vendor;
@@ -331,6 +329,7 @@ public class DBVendor {
     }
 
     private static void do_updateCategory(Context context, long vendor, long category, boolean add, boolean writeJournal) {
+        /*
         boolean exists = false;
         Cursor csr = null;
         long id = 0;
@@ -376,6 +375,7 @@ public class DBVendor {
             LJournal journal = new LJournal();
             journal.updateVendorCategory(add, vend.getRid(), cat.getRid());
         }
+        */
     }
 
     public static void updateCategory(long vendor, long category, boolean add) {

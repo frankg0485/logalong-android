@@ -10,6 +10,7 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.network.LAppServer;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
@@ -33,9 +34,6 @@ public class LJournal {
 
     public static final int JOURNAL_STATE_ACTIVE = 10;
     public static final int JOURNAL_STATE_DELETED = 20;
-
-    public static final short JRQST_ADD_ACCOUNT = 0x001;
-    public static final short JRQST_GET_ACCOUNTS = 0x100;
 
     private static final short JRQST_SHARE_ACCOUNT = 0x0100;
     private static final short JRQST_UNSHARE_ACCOUNT = 0x0101;
@@ -73,7 +71,7 @@ public class LJournal {
 
         if (null == entry) return false;
 
-        if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 15000)) {
+        if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 5000)) {
             //so not to keep flushing the same journal over and over
             LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
                     + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
@@ -132,6 +130,7 @@ public class LJournal {
     }
 
     public static String transactionItemString(LTransaction item) {
+        /*
         LCategory category = DBCategory.getById(item.getCategory());
         LVendor vendor = DBVendor.getById(item.getVendor());
         LTag tag = DBTag.getById(item.getTag());
@@ -173,7 +172,6 @@ public class LJournal {
             str += DBHelper.TABLE_COLUMN_NOTE + "=" + item.getNote() + ",";
         }
 
-        /*
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
             LAccount account2 = DBAccount.getById(item.getAccount2());
             str += DBHelper.TABLE_COLUMN_ACCOUNT2 + "=" + account2.getName()
@@ -190,7 +188,7 @@ public class LJournal {
             account = account2;
             rid = item.getRid().substring(0, item.getRid().length() - 1);
         }
-        */
+
         str += DBHelper.TABLE_COLUMN_RID + "=" + rid;
         //str += DBHelper.TABLE_COLUMN_RID + "=" + rid + ",";
         //str += DBHelper.TABLE_COLUMN_ACCOUNT + "=" + account.getName()
@@ -198,6 +196,8 @@ public class LJournal {
         //        + ";" + account.getTimeStampLast();
 
         return str;
+        */
+        return "";
     }
 
     public boolean shareItem(int userId, int accountGid, LTransaction item) {
@@ -282,6 +282,7 @@ public class LJournal {
     }
 
     private void item_diff(LTransaction item, LTransaction oldItem) {
+        /*
         if (oldItem.getValue() != item.getValue()) {
             record += DBHelper.TABLE_COLUMN_AMOUNT + "old=" + oldItem.getValue() + ",";
         }
@@ -328,6 +329,7 @@ public class LJournal {
                 record += DBHelper.TABLE_COLUMN_NOTE + "old=_,";
             }
         }
+        */
     }
 
     public boolean updateItem(LTransaction item, LTransaction oldItem) {
@@ -449,7 +451,31 @@ public class LJournal {
 
     public boolean getAllAccounts() {
         data.clear();
-        data.putShortAutoInc(JRQST_GET_ACCOUNTS);
+        data.putShortAutoInc(LProtocol.JRQST_GET_ACCOUNTS);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean getAllCategories() {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_GET_CATEGORIES);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean getAllTags() {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_GET_TAGS);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean getAllVendors() {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_GET_VENDORS);
         data.setLen(data.getBufOffset());
         post();
 
@@ -458,7 +484,7 @@ public class LJournal {
 
     public boolean addAccount(LAccount account) {
         data.clear();
-        data.putShortAutoInc(JRQST_ADD_ACCOUNT);
+        data.putShortAutoInc(LProtocol.JRQST_ADD_ACCOUNT);
         data.putIntAutoInc((int)account.getId());
 
         try {
@@ -475,14 +501,63 @@ public class LJournal {
         return true;
     }
     public boolean addCategory(LCategory category) {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_ADD_CATEGORY);
+        data.putIntAutoInc((int)category.getId());
+        //TODO: data.putIntAutoInc((int)category.getParentId());
+        data.putIntAutoInc(0);
+
+        try {
+            byte[] name = category.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding category: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        post();
+
         return true;
     }
     public boolean addVendor(LVendor vendor) {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_ADD_VENDOR);
+        data.putIntAutoInc((int)vendor.getId());
+        data.putByteAutoInc((byte)vendor.getType());
+
+        try {
+            byte[] name = vendor.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding vendor: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        post();
+
         return true;
     }
     public boolean addTag(LTag tag) {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_ADD_TAG);
+        data.putIntAutoInc((int)tag.getId());
+
+        try {
+            byte[] name = tag.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding tag: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        post();
+
         return true;
     }
+
 
     public boolean updateAccount(LAccount account, String oldName) {
         record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
@@ -543,6 +618,7 @@ public class LJournal {
     }
 
     private boolean post_category_update(LCategory category) {
+        /*
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
@@ -564,6 +640,7 @@ public class LJournal {
         data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
+        */
         return true;
     }
 
@@ -583,6 +660,7 @@ public class LJournal {
     }
 
     private boolean post_vendor_update(LVendor vendor) {
+        /*
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
@@ -604,6 +682,7 @@ public class LJournal {
         data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
+        */
         return true;
 
     }
@@ -624,6 +703,7 @@ public class LJournal {
     }
 
     private boolean post_tag_update(LTag tag) {
+        /*
         HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
         if (users.size() < 1) return false;
 
@@ -644,6 +724,7 @@ public class LJournal {
         data.setLen(data.getBufOffset());
 
         for (int user : users) post(user);
+        */
         return true;
     }
 
@@ -743,6 +824,7 @@ public class LJournal {
     }
 
     private static LTransaction parseItemFromReceivedRecord(String receivedRecord, OldRecord oldRecord) {
+        /*
         LTransaction item = new LTransaction();
 
         String[] splitRecords = receivedRecord.split(",", -1);
@@ -874,7 +956,9 @@ public class LJournal {
         item.setRid(rid);
         item.setBy(madeBy);
 
-        return item;
+       return item;
+       */
+        return null;
     }
 
     //return 0: has old value, but no conflict
@@ -1161,6 +1245,7 @@ public class LJournal {
     }
 
     public static void updateCategoryFromReceivedRecord(String receivedRecord) {
+        /*
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
@@ -1244,9 +1329,11 @@ public class LJournal {
                 }
             }
         }
+        */
     }
 
     public static void updateVendorFromReceivedRecord(String receivedRecord) {
+        /*
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
@@ -1329,9 +1416,11 @@ public class LJournal {
                 }
             }
         }
+        */
     }
 
     public static void updateTagFromReceivedRecord(String receivedRecord) {
+        /*
         String[] splitRecords = receivedRecord.split(",", -1);
         String rid = "";
         int state = DBHelper.STATE_ACTIVE;
@@ -1406,6 +1495,7 @@ public class LJournal {
                 }
             }
         }
+        */
     }
 
     public static void updateVendorCategoryFromReceivedRecord(String receivedRecord) {

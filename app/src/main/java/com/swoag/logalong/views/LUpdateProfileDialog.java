@@ -229,6 +229,8 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 switch (ret) {
                     case LProtocol.RSPS_OK:
                         success = true;
+                        LPreferences.setUserPass(userPass);
+                        LPreferences.setUserId(userId);
                         LPreferences.setUserName(intent.getStringExtra("userName"));
                         LAppServer.getInstance().UiLogIn(userId, userPass);
                         displayMsg(false, context.getString(R.string.synchronizing_database));
@@ -308,6 +310,12 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 }
             }
 
+            // get all accounts
+            journal.getAllAccounts();
+            journal.getAllCategories();
+            journal.getAllTags();
+            journal.getAllVendors();
+
             // send all records
             Cursor cursor = DBTransaction.getAllCursor();
             if (cursor != null) {
@@ -321,8 +329,8 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 cursor.close();
             }
 
-            // get all accounts
-            journal.getAllAccounts();
+            //journal.getAllRecords();
+
             return true;
         }
 

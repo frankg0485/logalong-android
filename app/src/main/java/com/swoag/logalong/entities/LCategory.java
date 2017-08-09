@@ -3,8 +3,6 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.utils.LPreferences;
 
-import java.util.UUID;
-
 public class LCategory {
     private static final String TAG = LCategory.class.getSimpleName();
 
@@ -14,13 +12,13 @@ public class LCategory {
     private long id;
     private int state;
     private String name;
-    private String rid;
+    private int gid;
     private long timeStampLast;
 
     private void init() {
         this.state = CATEGORY_STATE_ACTIVE;
         this.timeStampLast = LPreferences.getServerUtc();
-        this.rid = UUID.randomUUID().toString();
+        this.gid = 0;
         this.name = "";
     }
 
@@ -33,10 +31,10 @@ public class LCategory {
         this.name = name;
     }
 
-    public LCategory(String name, String rid) {
+    public LCategory(String name, int gid) {
         init();
         this.name = name;
-        this.rid = rid;
+        this.gid = gid;
     }
 
     public LCategory(int state, String name) {
@@ -45,10 +43,10 @@ public class LCategory {
         this.name = name;
     }
 
-    public LCategory(String name, String rid, long timeStampLast) {
+    public LCategory(String name, int gid, long timeStampLast) {
         init();
         this.name = name;
-        this.rid = rid;
+        this.gid = gid;
         this.timeStampLast = timeStampLast;
     }
 
@@ -76,12 +74,12 @@ public class LCategory {
         this.name = name;
     }
 
-    public String getRid() {
-        return rid;
+    public int getGid() {
+        return gid;
     }
 
-    public void setRid(String rid) {
-        this.rid = rid;
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
     public long getTimeStampLast() {

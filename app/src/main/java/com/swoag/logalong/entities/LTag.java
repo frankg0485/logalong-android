@@ -3,8 +3,6 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.utils.LPreferences;
 
-import java.util.UUID;
-
 public class LTag {
     private static final String TAG = LTag.class.getSimpleName();
 
@@ -14,13 +12,13 @@ public class LTag {
     private long id;
     private int state;
     private String name;
-    private String rid;
+    private int gid;
     private long timeStampLast;
 
     private void init() {
         this.state = TAG_STATE_ACTIVE;
         this.timeStampLast = LPreferences.getServerUtc();
-        this.rid = UUID.randomUUID().toString();
+        this.gid = 0;
         this.name = "";
     }
 
@@ -39,16 +37,16 @@ public class LTag {
         this.name = name;
     }
 
-    public LTag(String name, String rid) {
+    public LTag(String name, int gid) {
         init();
         this.name = name;
-        this.rid = rid;
+        this.gid = gid;
     }
 
-    public LTag(String name, String rid, long timeStampLast) {
+    public LTag(String name, int gid, long timeStampLast) {
         init();
         this.name = name;
-        this.rid = rid;
+        this.gid = gid;
         this.timeStampLast = timeStampLast;
     }
 
@@ -76,12 +74,12 @@ public class LTag {
         this.id = id;
     }
 
-    public String getRid() {
-        return rid;
+    public int getGid() {
+        return gid;
     }
 
-    public void setRid(String rid) {
-        this.rid = rid;
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
     public long getTimeStampLast() {

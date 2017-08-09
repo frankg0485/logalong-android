@@ -4,8 +4,6 @@ package com.swoag.logalong.entities;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LPreferences;
 
-import java.util.UUID;
-
 public class LVendor {
     private static final String TAG = LVendor.class.getSimpleName();
 
@@ -17,14 +15,14 @@ public class LVendor {
     private int state;
     private int type;
     private String name;
-    private String rid;
+    private int gid;
     private long timeStampLast;
 
     private void init() {
         this.state = DBHelper.STATE_ACTIVE;
         this.type = TYPE_PAYEE;
         this.timeStampLast = LPreferences.getServerUtc();
-        this.rid = UUID.randomUUID().toString();
+        this.gid = 0;
         this.name = "";
     }
 
@@ -43,12 +41,14 @@ public class LVendor {
         this.type = type;
     }
 
-    public LVendor(String name, String rid, int type) {
+    /*
+    public LVendor(String name, int gid, int type) {
         init();
         this.name = name;
         this.type = type;
-        this.rid = rid;
+        this.gid = gid;
     }
+    */
 
     public LVendor(String name, int type, int state) {
         init();
@@ -57,11 +57,11 @@ public class LVendor {
         this.name = name;
     }
 
-    public LVendor(String name, int type, String rid, long timeStampLast) {
+    public LVendor(String name, int type, int rid, long timeStampLast) {
         init();
         this.name = name;
         this.type = type;
-        this.rid = rid;
+        this.gid = gid;
         this.timeStampLast = timeStampLast;
     }
 
@@ -97,12 +97,12 @@ public class LVendor {
         this.name = name;
     }
 
-    public String getRid() {
-        return rid;
+    public int getGid() {
+        return gid;
     }
 
-    public void setRid(String rid) {
-        this.rid = rid;
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
     public long getTimeStampLast() {
