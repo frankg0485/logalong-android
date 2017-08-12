@@ -400,7 +400,17 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     }
                                     DBVendor.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
-
+                                case LProtocol.JRQST_ADD_RECORD:
+                                    id = intent.getIntExtra("id", 0);
+                                    long lgid = intent.getLongExtra("gid", 0L);
+                                    LTransaction transaction = DBTransaction.getByGid(lgid);
+                                    if (null != transaction) {
+                                        if (transaction.getId() == id) {
+                                            LLog.e(TAG, "unexpected error, record GID: " + lgid + " already taken ");
+                                        }
+                                    }
+                                    DBTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, lgid);
+                                    break;
                                 case LProtocol.JRQST_GET_ACCOUNTS:
                                     gid = intent.getIntExtra("gid", 0);
                                     uid = intent.getIntExtra("uid", 0);
@@ -408,7 +418,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     account = DBAccount.getByGid(gid);
                                     if (null != account) {
                                         account.setName(name);
-                                        DBAccount.updateColumnById(account.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                        DBAccount.update(account);
                                     } else {
                                         account = new LAccount();
                                         account.setGid(gid);
@@ -422,7 +432,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     category = DBCategory.getByGid(gid);
                                     if (null != category) {
                                         category.setName(name);
-                                        DBCategory.updateColumnById(category.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                        DBCategory.update(category);
                                     } else {
                                         category = new LCategory();
                                         category.setGid(gid);
@@ -436,7 +446,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     tag = DBTag.getByGid(gid);
                                     if (null != tag) {
                                         tag.setName(name);
-                                        DBTag.updateColumnById(tag.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                        DBTag.update(tag);
                                     } else {
                                         tag = new LTag();
                                         tag.setGid(gid);
@@ -452,13 +462,57 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     if (null != vendor) {
                                         vendor.setName(name);
                                         vendor.setType(type);
-                                        DBVendor.updateColumnById(vendor.getId(), DBHelper.TABLE_COLUMN_GID, gid);
+                                        DBVendor.update(vendor);
                                     } else {
                                         vendor = new LVendor();
                                         vendor.setGid(gid);
                                         vendor.setName(name);
                                         vendor.setType(type);
                                         DBVendor.add(vendor);
+                                    }
+                                    break;
+                                case LProtocol.JRQST_GET_RECORDS:
+                                    lgid = intent.getLongExtra("gid", 0L);
+                                    int aid = intent.getIntExtra("aid", 0);
+                                    int aid2 = intent.getIntExtra("aid2", 0);
+                                    int cid = intent.getIntExtra("cid", 0);
+                                    int tid = intent.getIntExtra("tid", 0);
+                                    int vid = intent.getIntExtra("vid", 0);
+                                    type = intent.getByteExtra("type", (byte)LTransaction.TRANSACTION_TYPE_EXPENSE);
+                                    double amount = intent.getDoubleExtra("amount", 0);
+                                    uid = intent.getIntExtra("uid", 0);
+                                    long timestamp = intent.getLongExtra("timestamp", 0L);
+                                    long lastChange = intent.getLongExtra("lastChange", 0L);
+                                    String note = intent.getStringExtra("note");
+                                    transaction = DBTransaction.getByGid(lgid);
+                                    if (null != transaction) {
+                                        transaction.setAccount(aid);
+                                        transaction.setAccount2(aid2);
+                                        transaction.setCategory(cid);
+                                        transaction.setTag(tid);
+                                        transaction.setVendor(vid);
+                                        transaction.setType(type);
+                                        transaction.setValue(amount);
+                                        transaction.setBy(uid);
+                                        transaction.setTimeStamp(timestamp);
+                                        transaction.setTimeStampLast(lastChange);
+                                        transaction.setNote(note);
+                                        DBTransaction.update(transaction);
+                                    } else {
+                                        transaction = new LTransaction();
+                                        transaction.setGid(lgid);
+                                        transaction.setAccount(aid);
+                                        transaction.setAccount2(aid2);
+                                        transaction.setCategory(cid);
+                                        transaction.setTag(tid);
+                                        transaction.setVendor(vid);
+                                        transaction.setType(type);
+                                        transaction.setValue(amount);
+                                        transaction.setBy(uid);
+                                        transaction.setTimeStamp(timestamp);
+                                        transaction.setTimeStampLast(lastChange);
+                                        transaction.setNote(note);
+                                        DBTransaction.add(transaction);
                                     }
                                     break;
                             }

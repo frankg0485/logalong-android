@@ -14,6 +14,12 @@ public class LBuffer {
         bytes = 0;
     }
 
+    public LBuffer(byte[] data) {
+        array = data;
+        offset = 0;
+        bytes = 0;
+    }
+
     public byte[] getBuf() {
         return array;
     }
@@ -92,11 +98,16 @@ public class LBuffer {
         return ret;
     }
 
+    public double getDoubleAutoInc() {
+        long bits = getLongAutoInc();
+        return Double.longBitsToDouble(bits);
+    }
+
     public long getLongAutoInc() {
-        long ret = (array[offset] & 0xff) |
-                (0xff00 & (array[offset + 1] << 8)) |
-                (0xff0000 & (array[offset + 2] << 16)) |
-                (0xff000000 & (array[offset + 3] << 24)) |
+        long ret = (array[offset] & 0xffL) |
+                (0xff00L & (array[offset + 1] << 8)) |
+                (0xff0000L & (array[offset + 2] << 16)) |
+                (0xff000000L & (array[offset + 3] << 24)) |
                 (0xff00000000L & ((long) array[offset + 4] << 32)) |
                 (0xff0000000000L & ((long) array[offset + 5] << 40)) |
                 (0xff000000000000L & ((long) array[offset + 6] << 48)) |
@@ -187,6 +198,11 @@ public class LBuffer {
         array[offset + 7] = (byte) ((val >>> 56) & 0xff);
         offset += 8;
         return 0;
+    }
+
+    public int putDoubleAutoInc(double val) {
+        long bits = Double.doubleToLongBits(val);
+        return putLongAutoInc(bits);
     }
 
     public int putStringAutoInc(String str) {

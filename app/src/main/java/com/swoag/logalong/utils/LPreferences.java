@@ -40,6 +40,8 @@ public class LPreferences {
     private static final String USER_PASS = "MyUserPass";
     private static final String DEVICE_ID = "MyDeviceId";
     private static final String USER_NAME = "MyUserName";
+    private static final String USER_ID_NUM = "UserIdNum";
+    private static final String USER_LOGIN_NUM = "UserLoginNum";
     private static final String UTC_DELTA = "UtcDelta";
 
     /*
@@ -142,6 +144,22 @@ public class LPreferences {
 
     public static void setUserId(String userId) {
         savePreference(LApp.ctx, USER_ID, userId);
+    }
+
+    public static int getUserIdNum() {
+        return getPreference(LApp.ctx, USER_ID_NUM, 0);
+    }
+
+    public static void setUserIdNum(int num) {
+        savePreference(LApp.ctx, USER_ID_NUM, num);
+    }
+
+    public static int getUserLoginNum() {
+        return getPreference(LApp.ctx, USER_LOGIN_NUM, 0);
+    }
+
+    public static void setUserLoginNum(int num) {
+        savePreference(LApp.ctx, USER_LOGIN_NUM, num);
     }
 
     public static String getShareUserName(int userId) {

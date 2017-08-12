@@ -2,11 +2,8 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBScheduledTransaction;
-import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LLog;
-import com.swoag.logalong.utils.LPreferences;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -119,6 +116,9 @@ public class LScheduledTransaction {
     }
 
     public void scanNextTimeMs() {
+        return;
+        //TODO
+        /*
         if (timestamp >= System.currentTimeMillis()) return;
 
         if (timestamp == 0) {
@@ -175,6 +175,7 @@ public class LScheduledTransaction {
             }
         }
         DBScheduledTransaction.update(this);
+        */
     }
 
     private void nextTimeMs() {

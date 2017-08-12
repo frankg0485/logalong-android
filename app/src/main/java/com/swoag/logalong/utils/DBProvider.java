@@ -31,6 +31,7 @@ public class DBProvider extends ContentProvider {
     private static final String TRANSACTIONS_CATEGORY = "trans/category";
     private static final String TRANSACTIONS_TAG = "trans/tag";
     private static final String TRANSACTIONS_VENDOR = "trans/vendor";
+    private static final String TRANSACTIONS_ALL = "trans/all";
     private static final String ACCOUNTS = "accounts";
     private static final String CATEGORIES = "categories";
     private static final String TAGS = "tags";
@@ -46,6 +47,7 @@ public class DBProvider extends ContentProvider {
     private static final int TRANSACTIONS_CATEGORY_ID = 3;
     private static final int TRANSACTIONS_TAG_ID = 4;
     private static final int TRANSACTIONS_VENDOR_ID = 5;
+    private static final int TRANSACTIONS_ALL_ID = 6;
     private static final int ACCOUNTS_ID = 10;
     private static final int CATEGORIES_ID = 20;
     private static final int TAGS_ID = 30;
@@ -57,19 +59,25 @@ public class DBProvider extends ContentProvider {
     private static final int META_ACCOUNT_BALANCE_UPDATE_ID = 255;
 
     public static final Uri URI_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS);
-    public static final Uri URI_TRANSACTIONS_ACCOUNT = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_ACCOUNT);
-    public static final Uri URI_TRANSACTIONS_CATEGORY = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_CATEGORY);
+    public static final Uri URI_TRANSACTIONS_ACCOUNT = Uri.parse("content://" + PROVIDER_NAME + "/" +
+            TRANSACTIONS_ACCOUNT);
+    public static final Uri URI_TRANSACTIONS_CATEGORY = Uri.parse("content://" + PROVIDER_NAME + "/" +
+            TRANSACTIONS_CATEGORY);
     public static final Uri URI_TRANSACTIONS_TAG = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_TAG);
-    public static final Uri URI_TRANSACTIONS_VENDOR = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_VENDOR);
+    public static final Uri URI_TRANSACTIONS_VENDOR = Uri.parse("content://" + PROVIDER_NAME + "/" +
+            TRANSACTIONS_VENDOR);
+    public static final Uri URI_TRANSACTIONS_ALL = Uri.parse("content://" + PROVIDER_NAME + "/" + TRANSACTIONS_ALL);
     public static final Uri URI_ACCOUNTS = Uri.parse("content://" + PROVIDER_NAME + "/" + ACCOUNTS);
     public static final Uri URI_CATEGORIES = Uri.parse("content://" + PROVIDER_NAME + "/" + CATEGORIES);
     public static final Uri URI_TAGS = Uri.parse("content://" + PROVIDER_NAME + "/" + TAGS);
     public static final Uri URI_VENDORS = Uri.parse("content://" + PROVIDER_NAME + "/" + VENDORS);
     public static final Uri URI_VENDORS_CATEGORY = Uri.parse("content://" + PROVIDER_NAME + "/" + VENDORS_CATEGORY);
-    public static final Uri URI_SCHEDULED_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" + SCHEDULED_TRANSACTIONS);
+    public static final Uri URI_SCHEDULED_TRANSACTIONS = Uri.parse("content://" + PROVIDER_NAME + "/" +
+            SCHEDULED_TRANSACTIONS);
     public static final Uri URI_JOURNALS = Uri.parse("content://" + PROVIDER_NAME + "/" + JOURNALS);
     public static final Uri URI_ACCOUNT_BALANCES = Uri.parse("content://" + PROVIDER_NAME + "/" + ACCOUNT_BALANCES);
-    public static final Uri URI_META_ACCOUNT_BALANCE_UPDATE = Uri.parse("content://" + PROVIDER_NAME + "/" + META_ACCOUNT_BALANCE_UPDATE);
+    public static final Uri URI_META_ACCOUNT_BALANCE_UPDATE = Uri.parse("content://" + PROVIDER_NAME + "/" +
+            META_ACCOUNT_BALANCE_UPDATE);
 
     static final UriMatcher uriMatcher;
 
@@ -80,6 +88,7 @@ public class DBProvider extends ContentProvider {
         uriMatcher.addURI(PROVIDER_NAME, TRANSACTIONS_CATEGORY, TRANSACTIONS_CATEGORY_ID);
         uriMatcher.addURI(PROVIDER_NAME, TRANSACTIONS_TAG, TRANSACTIONS_TAG_ID);
         uriMatcher.addURI(PROVIDER_NAME, TRANSACTIONS_VENDOR, TRANSACTIONS_VENDOR_ID);
+        uriMatcher.addURI(PROVIDER_NAME, TRANSACTIONS_ALL, TRANSACTIONS_ALL_ID);
         uriMatcher.addURI(PROVIDER_NAME, ACCOUNTS, ACCOUNTS_ID);
         uriMatcher.addURI(PROVIDER_NAME, CATEGORIES, CATEGORIES_ID);
         uriMatcher.addURI(PROVIDER_NAME, TAGS, TAGS_ID);
@@ -169,7 +178,8 @@ public class DBProvider extends ContentProvider {
                         double oldAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
                         long oldAccount = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                         long oldAccount2 = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                        long oldTimeStamp = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                        long oldTimeStamp = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
+                                .TABLE_COLUMN_TIMESTAMP));
 
                         count = db.update(table0, values, selection, selectionArgs);
                         updated = true;
@@ -392,6 +402,24 @@ public class DBProvider extends ContentProvider {
                 columnName = DBHelper.TABLE_COLUMN_VENDOR;
                 break;
 
+            case TRANSACTIONS_ALL_ID:
+                qb.setTables(DBHelper.TABLE_TRANSACTION_NAME + " s " +
+                        "LEFT JOIN " + DBHelper.TABLE_ACCOUNT_NAME + " a1 " +
+                        "ON s." + DBHelper.TABLE_COLUMN_ACCOUNT + " = a1._id " +
+                        "LEFT JOIN " + DBHelper.TABLE_ACCOUNT_NAME + " a2 " +
+                        "ON s." + DBHelper.TABLE_COLUMN_ACCOUNT2 + " = a2._id " +
+                        "LEFT JOIN " + DBHelper.TABLE_CATEGORY_NAME + " c " +
+                        "ON s." + DBHelper.TABLE_COLUMN_CATEGORY + " = c._id " +
+                        "LEFT JOIN " + DBHelper.TABLE_TAG_NAME + " t " +
+                        "ON s." + DBHelper.TABLE_COLUMN_TAG + " = t._id " +
+                        "LEFT JOIN " + DBHelper.TABLE_VENDOR_NAME + " v " +
+                        "ON s." + DBHelper.TABLE_COLUMN_VENDOR + " = v._id "
+                );
+
+                ret = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+                if (ret != null) ret.setNotificationUri(getContext().getContentResolver(), uri);
+                return ret;
+
             case ACCOUNTS_ID:
                 qb.setTables(DBHelper.TABLE_ACCOUNT_NAME);
                 break;
@@ -445,6 +473,7 @@ public class DBProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_CATEGORY, null);
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_TAG, null);
         getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_VENDOR, null);
+        getContext().getContentResolver().notifyChange(URI_TRANSACTIONS_ALL, null);
     }
 
     private void updateAccountBalance(long id, double amount, long timeStamp) {

@@ -8,18 +8,11 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainService;
-import com.swoag.logalong.entities.LScheduledTransaction;
-import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBScheduledTransaction;
-import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.LAlarm;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 
-import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 public class LAlarmReceiver extends BroadcastReceiver {
     private static final String TAG = LAlarmReceiver.class.getSimpleName();
@@ -36,6 +29,8 @@ public class LAlarmReceiver extends BroadcastReceiver {
                 break;
 
             case LAlarm.ACTION_SCHEDULE: {
+                //TODO
+                /*
                 int scheduleId = intent.getIntExtra(LAlarm.SCHEDULE_ID, 0);
 
                 LScheduledTransaction sch = DBScheduledTransaction.getById(scheduleId);
@@ -55,7 +50,8 @@ public class LAlarmReceiver extends BroadcastReceiver {
                     // always use GMT timezone y/m/d to avoid duplicated schedule entry.
                     calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
                     calendar.setTimeInMillis(sch.getTimestamp());
-                    String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
+                    String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get
+                    (Calendar.DAY_OF_MONTH);
 
                     LTransaction item = DBTransaction.getByRid(sch.getItem().getRid() + ymd);
                     if (item == null) {
@@ -83,14 +79,17 @@ public class LAlarmReceiver extends BroadcastReceiver {
                         DBTransaction.update(item, true);
                     }
                 } else {
-                    LLog.w(TAG, "schedule already happened? " + (new Date(sch.getTimestamp())) + " now: " + (new Date()));
+                    LLog.w(TAG, "schedule already happened? " + (new Date(sch.getTimestamp())) + " now: " + (new Date
+                    ()));
                 }
 
                 // always check to schedule next alarm locally.
                 sch.calculateNextTimeMs();
                 sch.setAlarm();
                 DBScheduledTransaction.update(sch);
+                */
             }
         }
+
     }
 }

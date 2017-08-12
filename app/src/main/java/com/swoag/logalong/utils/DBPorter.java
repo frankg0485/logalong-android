@@ -361,7 +361,7 @@ public class DBPorter {
                     String rid = ss[ii++];
                     String note = ss[ii];
 
-                    LTransaction trans = new LTransaction(rid, amount, type, categoryId, vendorId, tagId,
+                    LTransaction trans = new LTransaction(0, amount, type, categoryId, vendorId, tagId,
                             accountId, account2Id, madeby, timestamp, timestampLast, note);
 
                     if (schedule) {

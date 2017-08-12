@@ -14,21 +14,23 @@ public class LStorage {
     private static final int MAX_CACHE_LENGTH = (16 * 1024 * 1024);
     private static LStorage instance = null;
     private static int runningId = (new Random()).nextInt();
-    private static int SIGNATURE = 0xa55a55ac;
+    private static int SIGNATURE = 0xa55a55aa;
 
     private RandomAccessFile file;
-    private Object lock;
+    private static final Object lock = new Object();
     private Memory memory;
 
     public LStorage() {
     }
 
     public static LStorage getInstance() {
-        if (null == instance) {
-            instance = new LStorage();
-            instance.open();
+        synchronized (lock) {
+            if (null == instance) {
+                instance = new LStorage();
+                instance.open();
+            }
+            return instance;
         }
-        return instance;
     }
 
     public static class Entry {
@@ -177,7 +179,6 @@ public class LStorage {
 
     public boolean open() {
         boolean ret = false;
-        lock = new Object();
         try {
             if (isExternalStorageWritable()) {
                 File path = openDir("cache");

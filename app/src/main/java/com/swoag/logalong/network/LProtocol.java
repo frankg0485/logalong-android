@@ -7,7 +7,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LJournal;
-import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
@@ -74,10 +73,12 @@ public class LProtocol {
     public static final short JRQST_ADD_CATEGORY = 0x002;
     public static final short JRQST_ADD_TAG = 0x003;
     public static final short JRQST_ADD_VENDOR = 0x004;
+    public static final short JRQST_ADD_RECORD = 0x005;
     public static final short JRQST_GET_ACCOUNTS = 0x101;
     public static final short JRQST_GET_CATEGORIES = 0x102;
     public static final short JRQST_GET_TAGS = 0x103;
     public static final short JRQST_GET_VENDORS = 0x104;
+    public static final short JRQST_GET_RECORDS = 0x105;
 
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -464,7 +465,8 @@ public class LProtocol {
                     case RSPS | RQST_LOG_IN:
                         if (RSPS_OK == status) {
                             LPreferences.setLoginError(false);
-                            AppPersistency.loginId = pkt.getIntAutoInc();
+                            LPreferences.setUserIdNum(pkt.getIntAutoInc());
+                            LPreferences.setUserLoginNum(pkt.getIntAutoInc());
 
                             synchronized (stateLock) {
                                 state = STATE_LOGGED_IN;
@@ -520,6 +522,10 @@ public class LProtocol {
                                         rspsIntent.putExtra("id", pkt.getIntAutoInc());
                                         rspsIntent.putExtra("gid", pkt.getIntAutoInc());
                                         break;
+                                    case JRQST_ADD_RECORD:
+                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        break;
                                     case JRQST_GET_ACCOUNTS:
                                         rspsIntent.putExtra("gid", pkt.getIntAutoInc());
                                         rspsIntent.putExtra("uid", pkt.getIntAutoInc());
@@ -546,6 +552,23 @@ public class LProtocol {
                                         bytes = pkt.getShortAutoInc();
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
+                                        break;
+                                    case JRQST_GET_RECORDS:
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("aid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("aid2", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("cid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("tid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("vid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("type", pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
+                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("timestamp", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("lastChange", pkt.getLongAutoInc());
+
+                                        bytes = pkt.getShortAutoInc();
+                                        String note = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("note", note);
                                         break;
                                 }
                             }

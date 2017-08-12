@@ -231,6 +231,17 @@ public class DBAccess {
         return true;
     }
 
+    public static boolean updateColumnById(Uri uri, long id, String column, long value) {
+        try {
+            ContentValues cv = new ContentValues();
+            cv.put(column, value);
+            LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     /*
     private static Uri table2uri(String table) {
         if (table.contentEquals(DBHelper.TABLE_TRANSACTION_NAME)) {

@@ -323,13 +323,13 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 cursor.moveToFirst();
                 do {
                     DBTransaction.getValues(cursor, transaction);
-                    journal.addTransaction(transaction);
+                    journal.addRecord(transaction.getId());
                     publishProgress(DBAccount.getNameById(transaction.getAccount()) + " : " + transaction.getValue());
                 } while (cursor.moveToNext());
                 cursor.close();
             }
 
-            //journal.getAllRecords();
+            journal.getAllRecords();
 
             return true;
         }

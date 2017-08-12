@@ -8,6 +8,7 @@ import android.database.Cursor;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.entities.LTransactionDetails;
 
 import java.util.Calendar;
 
@@ -27,7 +28,7 @@ public class DBTransaction {
         cv.put(DBHelper.TABLE_COLUMN_NOTE, trans.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, trans.getTag());
         cv.put(DBHelper.TABLE_COLUMN_VENDOR, trans.getVendor());
-        cv.put(DBHelper.TABLE_COLUMN_RID, trans.getRid());
+        cv.put(DBHelper.TABLE_COLUMN_GID, trans.getGid());
     }
 
     public static void getValues(Cursor cursor, LTransaction trans) {
@@ -42,8 +43,9 @@ public class DBTransaction {
         trans.setNote(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
         trans.setBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
-        trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        trans.setRid(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
+        trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
+                .TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        trans.setGid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         trans.setId(cursor.getLong(0));
     }
 
@@ -82,7 +84,7 @@ public class DBTransaction {
             //duplicate record for transfer
             if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                 item.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                item.setRid(item.getRid() + "2");
+                //TODO: item.setGid(item.getGid() + "2");
                 long accountId = item.getAccount();
                 item.setAccount(item.getAccount2());
                 item.setAccount2(accountId);
@@ -121,11 +123,12 @@ public class DBTransaction {
         //duplicate record for transfer
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
             long dbid = 0;
-            dbid = DBAccess.getIdByRid(context, DBProvider.URI_TRANSACTIONS, item.getRid() + "2");
+            //TODO: dbid = DBAccess.getIdByRid(context, DBProvider.URI_TRANSACTIONS, item.getRid() + "2");
+
             if (dbid > 0) {
                 LTransaction item2 = new LTransaction(item);
                 item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                item2.setRid(item.getRid() + "2");
+                //TODO: item2.setRid(item.getRid() + "2");
                 item2.setId(dbid);
                 item2.setAccount(item.getAccount2());
                 item2.setAccount2(item.getAccount());
@@ -136,6 +139,10 @@ public class DBTransaction {
             }
         }
         //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
+    }
+
+    public static boolean updateColumnById(long id, String column, long value) {
+        return DBAccess.updateColumnById(DBProvider.URI_TRANSACTIONS, id, column, value);
     }
 
     public static LTransaction getById(long id) {
@@ -151,15 +158,17 @@ public class DBTransaction {
         try {
             csr = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                     "_id=?", new String[]{"" + id}, null);
-            if (csr.getCount() != 1) {
-                LLog.w(TAG, "unable to find id: " + id + " from log table");
-                csr.close();
-                return null;
-            }
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find id: " + id + " from log table");
+                    csr.close();
+                    return null;
+                }
 
-            csr.moveToFirst();
-            getValues(csr, item);
-            item.setId(id);
+                csr.moveToFirst();
+                getValues(csr, item);
+                item.setId(id);
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
             item = null;
@@ -172,13 +181,13 @@ public class DBTransaction {
         return DBAccess.getIdByRid(DBProvider.URI_TRANSACTIONS, rid);
     }
 
-    public static LTransaction getByRid(String rid) {
-        return getByRid(LApp.ctx, rid);
+    public static LTransaction getByGid(long gid) {
+        return getByGid(LApp.ctx, gid);
     }
 
-    public static LTransaction getByRid(Context context, String rid) {
+    public static LTransaction getByGid(Context context, long gid) {
         Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
-                DBHelper.TABLE_COLUMN_RID + " =?", new String[]{rid}, null);
+                DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
         if (cur != null && cur.getCount() > 0) {
             if (cur.getCount() != 1) {
                 LLog.e(TAG, "unexpected error: duplicated record");
@@ -243,7 +252,8 @@ public class DBTransaction {
 
         Cursor cursor = LApp.ctx.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
                 DBHelper.TABLE_COLUMN_STATE + " =? AND " + DBHelper.TABLE_COLUMN_TIMESTAMP + ">? AND "
-                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?", new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs},
+                        + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?", new String[]{"" + DBHelper.STATE_ACTIVE, "" +
+                        startMs, "" + endMs},
                 DBHelper.TABLE_COLUMN_TIMESTAMP + " ASC");
 
         if (cursor != null && cursor.getCount() > 0) {
@@ -253,5 +263,72 @@ public class DBTransaction {
         }
         if (cursor != null) cursor.close();
         return item;
+    }
+
+    public static LTransactionDetails getDetailsById(long id) {
+        LTransactionDetails details = null;
+
+        Cursor cursor = LApp.ctx.getContentResolver().query(DBProvider.URI_TRANSACTIONS_ALL, new String[]{
+                        "s." + DBHelper.TABLE_COLUMN_AMOUNT + " AS s_amount",
+                        "s." + DBHelper.TABLE_COLUMN_TYPE + " AS s_type",
+                        "s." + DBHelper.TABLE_COLUMN_MADEBY + " AS s_by",
+                        "s." + DBHelper.TABLE_COLUMN_TIMESTAMP + " AS s_timestamp",
+                        "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " AS s_timestamp_last",
+                        "s." + DBHelper.TABLE_COLUMN_GID + " AS s_gid",
+                        "s." + DBHelper.TABLE_COLUMN_STATE + " AS s_state",
+                        "s." + DBHelper.TABLE_COLUMN_NOTE + " AS s_note",
+                        "s." + DBHelper.TABLE_COLUMN_ACCOUNT + " AS s_account",
+                        "s." + DBHelper.TABLE_COLUMN_ACCOUNT2 + " AS s_account2",
+                        "s." + DBHelper.TABLE_COLUMN_CATEGORY + " AS s_category",
+                        "s." + DBHelper.TABLE_COLUMN_TAG + " AS s_tag",
+                        "s." + DBHelper.TABLE_COLUMN_VENDOR + " AS s_vendor",
+                        "a1." + DBHelper.TABLE_COLUMN_NAME + " AS a1_name",
+                        "a1._id AS a1_id",
+                        "a1." + DBHelper.TABLE_COLUMN_GID + " AS a1_gid",
+                        "a2." + DBHelper.TABLE_COLUMN_NAME + " AS a2_name",
+                        "a2._id AS a2_id",
+                        "a2." + DBHelper.TABLE_COLUMN_GID + " AS a2_gid",
+                        "v." + DBHelper.TABLE_COLUMN_NAME + " AS v_name",
+                        "v._id AS v_id",
+                        "v." + DBHelper.TABLE_COLUMN_GID + " AS v_gid",
+                        "t." + DBHelper.TABLE_COLUMN_NAME + " AS t_name",
+                        "t._id AS t_id",
+                        "t." + DBHelper.TABLE_COLUMN_GID + " AS t_gid",
+                        "c." + DBHelper.TABLE_COLUMN_NAME + " AS c_name",
+                        "c._id AS c_id",
+                        "c." + DBHelper.TABLE_COLUMN_GID + " AS c_gid"
+                },
+                "s._id=?", new String[]{"" + id}, null);
+
+        if (cursor != null && cursor.getCount() != 0) {
+            details = new LTransactionDetails();
+            cursor.moveToFirst();
+            details.getTransaction().setValue(cursor.getDouble(cursor.getColumnIndex("s_amount")));
+            details.getTransaction().setType(cursor.getInt(cursor.getColumnIndex("s_type")));
+            details.getTransaction().setBy(cursor.getInt(cursor.getColumnIndex("s_by")));
+            details.getTransaction().setTimeStamp(cursor.getLong(cursor.getColumnIndex("s_timestamp")));
+            details.getTransaction().setTimeStampLast(cursor.getLong(cursor.getColumnIndex("s_timestamp_last")));
+            details.getTransaction().setId(id);
+            details.getTransaction().setGid(cursor.getLong(cursor.getColumnIndex("s_gid")));
+            details.getTransaction().setNote(cursor.getString(cursor.getColumnIndex("s_note")));
+            details.getTransaction().setAccount(cursor.getLong(cursor.getColumnIndex("s_account")));
+            details.getTransaction().setAccount2(cursor.getLong(cursor.getColumnIndex("s_account2")));
+            details.getTransaction().setCategory(cursor.getLong(cursor.getColumnIndex("s_category")));
+            details.getTransaction().setTag(cursor.getLong(cursor.getColumnIndex("s_tag")));
+            details.getTransaction().setVendor(cursor.getLong(cursor.getColumnIndex("s_vendor")));
+            details.getAccount().setName(cursor.getString(cursor.getColumnIndex("a1_name")));
+            details.getAccount().setGid(cursor.getInt(cursor.getColumnIndex("a1_gid")));
+            details.getAccount2().setName(cursor.getString(cursor.getColumnIndex("a2_name")));
+            details.getAccount2().setGid(cursor.getInt(cursor.getColumnIndex("a2_gid")));
+            details.getCategory().setName(cursor.getString(cursor.getColumnIndex("c_name")));
+            details.getCategory().setGid(cursor.getInt(cursor.getColumnIndex("c_gid")));
+            details.getTag().setName(cursor.getString(cursor.getColumnIndex("t_name")));
+            details.getTag().setGid(cursor.getInt(cursor.getColumnIndex("t_gid")));
+            details.getVendor().setName(cursor.getString(cursor.getColumnIndex("v_name")));
+            details.getVendor().setGid(cursor.getInt(cursor.getColumnIndex("v_gid")));
+        }
+
+        if (cursor != null) cursor.close();
+        return details;
     }
 }

@@ -66,9 +66,34 @@ public class LJournal {
     private static long lastFlushMs;
     private static long lastFlushId;
 
+    private static boolean do_add_record(LBuffer jdata, LTransactionDetails details) {
+        jdata.clear();
+        jdata.putShortAutoInc(LProtocol.JRQST_ADD_RECORD);
+        jdata.putIntAutoInc((int)details.getTransaction().getId());
+        jdata.putIntAutoInc((int)details.getAccount().getGid());
+        jdata.putIntAutoInc((int)details.getAccount2().getGid());
+        jdata.putIntAutoInc((int)details.getCategory().getGid());
+        jdata.putIntAutoInc((int)details.getTag().getGid());
+        jdata.putIntAutoInc((int)details.getVendor().getGid());
+        jdata.putByteAutoInc((byte)details.getTransaction().getType());
+        jdata.putDoubleAutoInc(details.getTransaction().getValue());
+        jdata.putIntAutoInc(details.getTransaction().getBy());
+        jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
+        jdata.putLongAutoInc(details.getTransaction().getTimeStampLast());
+        try {
+            byte[] note = details.getTransaction().getNote().getBytes("UTF-8");
+            jdata.putShortAutoInc((short) note.length);
+            jdata.putBytesAutoInc(note);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding record " + e.getMessage());
+            return false;
+        }
+        jdata.setLen(jdata.getBufOffset());
+
+        return true;
+    }
     public static boolean flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
-
         if (null == entry) return false;
 
         if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 5000)) {
@@ -78,7 +103,33 @@ public class LJournal {
         } else {
             lastFlushId = entry.id;
             lastFlushMs = System.currentTimeMillis();
-            //LLog.d(TAG, "post journal: " + entry.id);
+
+            LBuffer jdata = new LBuffer(entry.data);
+            switch(jdata.getShortAutoInc()) {
+                case LProtocol.JRQST_ADD_RECORD:
+                    int id = jdata.getIntAutoInc();
+                    boolean ret = false;
+
+                    LTransactionDetails details = DBTransaction.getDetailsById(id);
+                    if (details == null) {
+                        LLog.e(TAG, "unable to fetch record with id: " + id);
+                    } else {
+                        jdata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
+                        do_add_record(jdata, details);
+                        try {
+                            entry.data = new byte[jdata.getLen()];
+                            System.arraycopy(jdata.getBuf(), 0, entry.data, 0, jdata.getLen());
+                            ret = true;
+                        } catch (Exception e) {
+                            LLog.e(TAG, "unexpected record post error: " + e.getMessage());
+                        }
+                    }
+                    if (!ret) {
+                        deleteById(entry.id);
+                        return true;
+                    }
+                    break;
+            }
 
             LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
         }
@@ -86,18 +137,21 @@ public class LJournal {
     }
 
     public static void deleteById(int journalId) {
-        //LLog.d(TAG, "release journal: " + journalId);
         LStorage.getInstance().release(journalId);
     }
 
     private void post() {
         LStorage.Entry entry = new LStorage.Entry();
+        if (entry == null) {
+            LLog.e(TAG, "unexpected journal post error: out of memory?");
+            return;
+        }
         try {
-            //entry.data = Arrays.copyOf(this.data.getBuf(), this.data.getLen());
             entry.data = new byte[this.data.getLen()];
             System.arraycopy(this.data.getBuf(), 0, entry.data, 0, this.data.getLen());
         } catch(Exception e) {
             LLog.e(TAG, "unexpected journal post error: " + e.getMessage());
+            return;
         }
         LStorage.getInstance().put(entry);
 
@@ -445,10 +499,6 @@ public class LJournal {
         return true;
     }
 
-    public boolean addTransaction(LTransaction transaction) {
-        return true;
-    }
-
     public boolean getAllAccounts() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_ACCOUNTS);
@@ -476,6 +526,14 @@ public class LJournal {
     public boolean getAllVendors() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_VENDORS);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean getAllRecords() {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_GET_RECORDS);
         data.setLen(data.getBufOffset());
         post();
 
@@ -558,6 +616,15 @@ public class LJournal {
         return true;
     }
 
+    public boolean addRecord(long id) {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_ADD_RECORD);
+        data.putIntAutoInc((int)id);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
 
     public boolean updateAccount(LAccount account, String oldName) {
         record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
@@ -1008,6 +1075,7 @@ public class LJournal {
     }
 
     public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {
+        /*
         LAccount account = DBAccount.getByGid(accountGid);
         if (account == null) {
             LLog.w(TAG, "unexpected, account no longer available: " + accountGid);
@@ -1116,9 +1184,11 @@ public class LJournal {
         if (!updated) {
             DBTransaction.update(item);
         }
+        */
     }
 
     public static void updateScheduleFromReceivedRecord(int accountGid, int accountGid2, String receivedRecord) {
+        /*
         LAccount account = DBAccount.getByGid(accountGid);
         LAccount account2 = DBAccount.getByGid(accountGid2);
         if (account == null) {
@@ -1242,6 +1312,7 @@ public class LJournal {
         } else {
             DBScheduledTransaction.add(new LScheduledTransaction(repeatInterval, repeatUnit, repeatCount, timestamp, receivedItem));
         }
+        */
     }
 
     public static void updateCategoryFromReceivedRecord(String receivedRecord) {

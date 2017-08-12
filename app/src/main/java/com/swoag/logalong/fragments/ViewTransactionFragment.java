@@ -41,7 +41,6 @@ import com.swoag.logalong.views.TransactionSearchDialog;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.UUID;
 
 public class ViewTransactionFragment extends LFragment implements DBLoaderHelper.DBLoaderHelperCallbacks,
         TransactionSearchDialog.TransactionSearchDialogItf {
@@ -721,6 +720,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 //handle edit of transfer: require both records to be present, and only edit
                 //the original record (not the duplicate)
                 boolean allowEdit = true;
+                //TODO:
+                /*
                 if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                     if (null == DBTransaction.getByRid(item.getRid() + "2")) allowEdit = false;
                 } else if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
@@ -731,6 +732,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                         item = item2;
                     }
                 }
+                */
 
                 itemOrig = new LTransaction(item);
 
@@ -760,6 +762,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             journal.updateItem(oldItem, DBHelper.STATE_ACTIVE);
 
                             //delete the duplicate record for transfer
+                            //TODO:
+                            /*
                             if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                                 LTransaction copy = DBTransaction.getByRid(oldItem.getRid() + "2");
                                 if (copy == null) {
@@ -771,6 +775,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                             //reset UUID of existing record and treat it as new
                             item.setRid(UUID.randomUUID().toString());
+                            */
                             item.setTimeStampLast(LPreferences.getServerUtc());
 
                             AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
@@ -786,6 +791,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             journal.updateItem(item, itemOrig);
 
                             //update also transfer copy
+                            //TODO:
+                            /*
                             if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                                 LTransaction copy = DBTransaction.getByRid(item.getRid() + "2");
                                 LTransaction copyOrig = new LTransaction(itemOrig);
@@ -798,6 +805,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                                     journal.updateItem(copy, copyOrig);
                                 }
                             }
+                            */
                         }
                         onSelected(true);
                     }
@@ -814,6 +822,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     LJournal journal = new LJournal();
                     journal.updateItem(itemOrig, DBHelper.STATE_ACTIVE);
 
+                    //TODO
+                    /*
                     if (itemOrig.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                         LTransaction copy = DBTransaction.getByRid(itemOrig.getRid() + "2");
                         if (copy == null) {
@@ -822,6 +832,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             journal.updateItem(copy, DBHelper.STATE_ACTIVE);
                         }
                     }
+                    */
 
                     onSelected(true);
                     break;

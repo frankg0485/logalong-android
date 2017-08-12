@@ -1,8 +1,6 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.os.Parcelable;
-
 import java.util.HashMap;
 
 public class AppPersistency {
@@ -63,6 +61,4 @@ public class AppPersistency {
     public static boolean lastTransactionChangeTimeMsHonored = false;
 
     public static boolean showPieChart = false;
-
-    public static int loginId;
 }

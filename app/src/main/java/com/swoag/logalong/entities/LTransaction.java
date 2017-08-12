@@ -5,8 +5,6 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LPreferences;
 
-import java.util.UUID;
-
 public class LTransaction {
     private static final String TAG = LTransaction.class.getSimpleName();
 
@@ -39,7 +37,7 @@ public class LTransaction {
     private long vendor;
     private long timeStamp;
     private long timeStampLast;
-    private String rid;
+    private long gid;
     private String note;
 
     private void init() {
@@ -55,7 +53,7 @@ public class LTransaction {
         this.account2 = 0;
         this.tag = 0;
         this.vendor = 0;
-        this.rid = UUID.randomUUID().toString();
+        this.gid = 0;
 
         this.note = "";
     }
@@ -78,7 +76,7 @@ public class LTransaction {
         this.tag = item.tag;
         this.vendor = item.vendor;
         this.note = item.note;
-        this.rid = item.rid;
+        this.gid = item.gid;
     }
 
     public LTransaction(LTransaction item) {
@@ -125,10 +123,10 @@ public class LTransaction {
         this.note = note;
     }
 
-    public LTransaction(String rid, double value, int type, long category, long vendor, long tag,
+    public LTransaction(long gid, double value, int type, long category, long vendor, long tag,
                         long account, long account2, int by, long timeStamp, long timeStampLast, String note) {
         init();
-        this.rid = rid;
+        this.gid = gid;
         this.value = value;
         this.type = type;
         this.category = category;
@@ -246,11 +244,11 @@ public class LTransaction {
         this.note = note;
     }
 
-    public String getRid() {
-        return rid;
+    public long getGid() {
+        return gid;
     }
 
-    public void setRid(String rid) {
-        this.rid = rid;
+    public void setGid(long gid) {
+        this.gid = gid;
     }
 }
