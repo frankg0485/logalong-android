@@ -562,9 +562,11 @@ public class LProtocol {
                                         rspsIntent.putExtra("vid", pkt.getIntAutoInc());
                                         rspsIntent.putExtra("type", pkt.getByteAutoInc());
                                         rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
-                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("createBy", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("changeBy", pkt.getIntAutoInc());
                                         rspsIntent.putExtra("timestamp", pkt.getLongAutoInc());
-                                        rspsIntent.putExtra("lastChange", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("createTime", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("changeTime", pkt.getLongAutoInc());
 
                                         bytes = pkt.getShortAutoInc();
                                         String note = pkt.getStringAutoInc(bytes);

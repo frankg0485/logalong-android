@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.network.LAppServer;
@@ -77,8 +76,9 @@ public class LJournal {
         jdata.putIntAutoInc((int)details.getVendor().getGid());
         jdata.putByteAutoInc((byte)details.getTransaction().getType());
         jdata.putDoubleAutoInc(details.getTransaction().getValue());
-        jdata.putIntAutoInc(details.getTransaction().getBy());
+        jdata.putIntAutoInc(details.getTransaction().getChangeBy());
         jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
+        jdata.putLongAutoInc(details.getTransaction().getTimeStampCreate());
         jdata.putLongAutoInc(details.getTransaction().getTimeStampLast());
         try {
             byte[] note = details.getTransaction().getNote().getBytes("UTF-8");
@@ -1570,6 +1570,7 @@ public class LJournal {
     }
 
     public static void updateVendorCategoryFromReceivedRecord(String receivedRecord) {
+        /*
         String[] splitRecords = receivedRecord.split(",", -1);
         String vendorRid = "", categoryRid = "";
         int state = DBHelper.STATE_ACTIVE;
@@ -1590,6 +1591,7 @@ public class LJournal {
             long category = DBCategory.getIdByRid(categoryRid);
             DBVendor.updateCategory(vendor, category, state == DBHelper.STATE_ACTIVE);
         }
+        */
     }
 
     //////////////////////////////////////////////////////////////////////////

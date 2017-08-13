@@ -212,7 +212,8 @@ public class DBAccount {
     public static boolean update(Context context, LAccount account) {
         try {
             ContentValues cv = setValues(account);
-            context.getContentResolver().update(DBProvider.URI_ACCOUNTS, cv, "_id=?", new String[]{"" + account.getId()});
+            context.getContentResolver().update(DBProvider.URI_ACCOUNTS, cv, "_id=?", new String[]{"" + account.getId
+                    ()});
         } catch (Exception e) {
             return false;
         }
@@ -243,7 +244,8 @@ public class DBAccount {
         LAccount account = new LAccount();
         HashSet<Integer> set = new HashSet<Integer>();
 
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, new String[]{DBHelper.TABLE_COLUMN_SHARE},
+        Cursor cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, new String[]{DBHelper
+                        .TABLE_COLUMN_SHARE},
                 DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         if (cur != null && cur.getCount() > 0) {
 
@@ -288,6 +290,9 @@ public class DBAccount {
         return DBAccess.getDbIndexById(LApp.ctx, DBProvider.URI_ACCOUNTS, id);
     }
 
+    public static long getIdByGid(long gid) {
+        return DBAccess.getIdByGid(DBProvider.URI_ACCOUNTS, gid);
+    }
 
     public static HashSet<Long> getAllActiveIds() {
         HashSet<Long> set = new HashSet<Long>();

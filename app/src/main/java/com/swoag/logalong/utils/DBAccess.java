@@ -77,7 +77,8 @@ public class DBAccess {
         int ret = -1;
         try {
             csr = context.getContentResolver().query(uri, new String[]{"_id"},
-                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, DBHelper.TABLE_COLUMN_NAME + " ASC");
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, DBHelper
+                            .TABLE_COLUMN_NAME + " ASC");
 
             csr.moveToFirst();
             while (true) {
@@ -169,7 +170,8 @@ public class DBAccess {
     public static boolean updateJournal(Context context, LJournal journal) {
         try {
             ContentValues cv = setJournalValues(journal);
-            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv, "_id=?", new String[]{"" + journal.getId()});
+            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv, "_id=?", new String[]{"" + journal.getId
+            ()});
         } catch (Exception e) {
             return false;
         }
@@ -266,10 +268,14 @@ public class DBAccess {
             Cursor csr = null;
             if (caseSensitive) {
                 csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? AND "
-                        + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
+                                + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper
+                                .STATE_ACTIVE},
+                        null);
             } else {
                 csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=? COLLATE NOCASE AND "
-                        + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper.STATE_ACTIVE}, null);
+                                + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper
+                                .STATE_ACTIVE},
+                        null);
             }
             if (csr != null) {
                 if (csr.getCount() != 1) {
@@ -283,6 +289,30 @@ public class DBAccess {
                 csr.close();
             }
 
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
+        }
+        return id;
+    }
+
+    private static long getIdByColumn(Context context, Uri uri, String column, long value) {
+        long id = 0;
+
+        try {
+            Cursor csr = null;
+            csr = context.getContentResolver().query(uri, new String[]{"_id"}, column + "=?",
+                    new String[]{"" + value}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to get unique " + column + ": " + value + " in table: " + uri);
+                    csr.close();
+                    return 0;
+                }
+
+                csr.moveToFirst();
+                id = csr.getLong(0);
+                csr.close();
+            }
         } catch (Exception e) {
             LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + uri);
         }
@@ -304,4 +334,9 @@ public class DBAccess {
     public static long getIdByRid(Context context, Uri uri, String rid) {
         return getIdByColumn(context, uri, DBHelper.TABLE_COLUMN_RID, rid, false);
     }
+
+    public static long getIdByGid(Uri uri, long gid) {
+        return getIdByColumn(LApp.ctx, uri, DBHelper.TABLE_COLUMN_GID, gid);
+    }
+
 }

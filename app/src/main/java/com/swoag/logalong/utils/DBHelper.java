@@ -23,6 +23,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_ICON = "Icon";
     public static final String TABLE_COLUMN_SHARE = "Share";
     public static final String TABLE_COLUMN_MADEBY = "MadeBy";
+    public static final String TABLE_COLUMN_CHANGEBY = "ChangeBy";
     public static final String TABLE_COLUMN_NAME = "Name";
     public static final String TABLE_COLUMN_NUMBER = "Number";
     public static final String TABLE_COLUMN_NOTE = "Note";
@@ -36,6 +37,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
     public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
+    public static final String TABLE_COLUMN_TIMESTAMP_CREATE = "TimeStmpCreate";
     public static final String TABLE_COLUMN_TIMESTAMP_LAST_CHANGE = "TimeStmpLast";
     public static final String TABLE_COLUMN_TO_USER = "ToUser";
     public static final String TABLE_COLUMN_TYPE = "Type";
@@ -67,6 +69,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     TABLE_COLUMN_RID + " TEXT," +
                     TABLE_COLUMN_NOTE + " TEXT," +
                     TABLE_COLUMN_ICON + " BLOB," +
+                    TABLE_COLUMN_CHANGEBY + " INTEGER," +
+                    TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER," +
                     TABLE_COLUMN_GID + " INTEGER";
 
     //transaction table: VENDOR carries to_account for transfer.
@@ -174,7 +178,10 @@ public class DBHelper extends SQLiteOpenHelper {
                     "ALTER TABLE " + TABLE_CATEGORY_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_TAG_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_VENDOR_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    "ALTER TABLE " + TABLE_TRANSACTION_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_TRANSACTION_NAME +
+                    "ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER; " +
+                    "ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE +  " INTEGER; " +
+                    "ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER";
             db.execSQL(sql);
         }

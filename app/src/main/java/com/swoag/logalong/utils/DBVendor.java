@@ -157,8 +157,8 @@ public class DBVendor {
         return vendor;
     }
 
-    public static long getIdByRid(String rid) {
-        return DBAccess.getIdByRid(DBProvider.URI_VENDORS, rid);
+    public static long getIdByGid(long gid) {
+        return DBAccess.getIdByGid(DBProvider.URI_VENDORS, gid);
     }
 
     public static String getNameById(long id) {

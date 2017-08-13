@@ -183,6 +183,10 @@ public class DBTag {
         return DBAccess.getIdByName(DBProvider.URI_TAGS, name);
     }
 
+    public static long getIdByGid(long gid) {
+        return DBAccess.getIdByGid(DBProvider.URI_TAGS, gid);
+    }
+
     public static String getNameById(long id) {
         return DBAccess.getStringFromDbById(DBProvider.URI_TAGS, DBHelper.TABLE_COLUMN_NAME, id);
     }

@@ -187,8 +187,8 @@ public class DBCategory {
         return category;
     }
 
-    public static long getIdByRid(String rid) {
-        return DBAccess.getIdByRid(DBProvider.URI_CATEGORIES, rid);
+    public static long getIdByGid(long gid) {
+        return DBAccess.getIdByGid(DBProvider.URI_CATEGORIES, gid);
     }
 
     public static int getDbIndexById(long id) {

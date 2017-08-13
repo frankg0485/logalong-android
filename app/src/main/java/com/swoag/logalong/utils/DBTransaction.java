@@ -21,9 +21,11 @@ public class DBTransaction {
         cv.put(DBHelper.TABLE_COLUMN_CATEGORY, trans.getCategory());
         cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, trans.getAccount());
         cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, trans.getAccount2());
-        cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getBy());
+        cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getCreateBy());
+        cv.put(DBHelper.TABLE_COLUMN_CHANGEBY, trans.getChangeBy());
         cv.put(DBHelper.TABLE_COLUMN_AMOUNT, trans.getValue());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, trans.getTimeStamp());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE, trans.getTimeStampCreate());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, trans.getTimeStampLast());
         cv.put(DBHelper.TABLE_COLUMN_NOTE, trans.getNote());
         cv.put(DBHelper.TABLE_COLUMN_TAG, trans.getTag());
@@ -41,8 +43,10 @@ public class DBTransaction {
         trans.setVendor(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
         trans.setValue(cursor.getDouble(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_AMOUNT)));
         trans.setNote(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
-        trans.setBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
+        trans.setCreateBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
+        trans.setChangeBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CHANGEBY)));
         trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
+        trans.setTimeStampCreate(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE)));
         trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
                 .TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         trans.setGid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
@@ -272,7 +276,9 @@ public class DBTransaction {
                         "s." + DBHelper.TABLE_COLUMN_AMOUNT + " AS s_amount",
                         "s." + DBHelper.TABLE_COLUMN_TYPE + " AS s_type",
                         "s." + DBHelper.TABLE_COLUMN_MADEBY + " AS s_by",
+                        "s." + DBHelper.TABLE_COLUMN_CHANGEBY + " AS s_cby",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP + " AS s_timestamp",
+                        "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE + " AS s_timestamp_create",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " AS s_timestamp_last",
                         "s." + DBHelper.TABLE_COLUMN_GID + " AS s_gid",
                         "s." + DBHelper.TABLE_COLUMN_STATE + " AS s_state",
@@ -305,8 +311,10 @@ public class DBTransaction {
             cursor.moveToFirst();
             details.getTransaction().setValue(cursor.getDouble(cursor.getColumnIndex("s_amount")));
             details.getTransaction().setType(cursor.getInt(cursor.getColumnIndex("s_type")));
-            details.getTransaction().setBy(cursor.getInt(cursor.getColumnIndex("s_by")));
+            details.getTransaction().setCreateBy(cursor.getInt(cursor.getColumnIndex("s_by")));
+            details.getTransaction().setChangeBy(cursor.getInt(cursor.getColumnIndex("s_cby")));
             details.getTransaction().setTimeStamp(cursor.getLong(cursor.getColumnIndex("s_timestamp")));
+            details.getTransaction().setTimeStampCreate(cursor.getLong(cursor.getColumnIndex("s_timestamp_create")));
             details.getTransaction().setTimeStampLast(cursor.getLong(cursor.getColumnIndex("s_timestamp_last")));
             details.getTransaction().setId(id);
             details.getTransaction().setGid(cursor.getLong(cursor.getColumnIndex("s_gid")));

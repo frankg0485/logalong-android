@@ -480,40 +480,36 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     int vid = intent.getIntExtra("vid", 0);
                                     type = intent.getByteExtra("type", (byte)LTransaction.TRANSACTION_TYPE_EXPENSE);
                                     double amount = intent.getDoubleExtra("amount", 0);
-                                    uid = intent.getIntExtra("uid", 0);
                                     long timestamp = intent.getLongExtra("timestamp", 0L);
-                                    long lastChange = intent.getLongExtra("lastChange", 0L);
+                                    int createUid = intent.getIntExtra("createBy", 0);
+                                    int changeUid = intent.getIntExtra("changeBy", 0);
+                                    long createTime = intent.getLongExtra("createTime", 0L);
+                                    long changeTime = intent.getLongExtra("changeTime", 0L);
                                     String note = intent.getStringExtra("note");
                                     transaction = DBTransaction.getByGid(lgid);
+                                    boolean create = true;
                                     if (null != transaction) {
-                                        transaction.setAccount(aid);
-                                        transaction.setAccount2(aid2);
-                                        transaction.setCategory(cid);
-                                        transaction.setTag(tid);
-                                        transaction.setVendor(vid);
-                                        transaction.setType(type);
-                                        transaction.setValue(amount);
-                                        transaction.setBy(uid);
-                                        transaction.setTimeStamp(timestamp);
-                                        transaction.setTimeStampLast(lastChange);
-                                        transaction.setNote(note);
-                                        DBTransaction.update(transaction);
+                                        create = false;
                                     } else {
                                         transaction = new LTransaction();
-                                        transaction.setGid(lgid);
-                                        transaction.setAccount(aid);
-                                        transaction.setAccount2(aid2);
-                                        transaction.setCategory(cid);
-                                        transaction.setTag(tid);
-                                        transaction.setVendor(vid);
-                                        transaction.setType(type);
-                                        transaction.setValue(amount);
-                                        transaction.setBy(uid);
-                                        transaction.setTimeStamp(timestamp);
-                                        transaction.setTimeStampLast(lastChange);
-                                        transaction.setNote(note);
-                                        DBTransaction.add(transaction);
                                     }
+                                    transaction.setGid(lgid);
+                                    transaction.setAccount(DBAccount.getIdByGid(aid));
+                                    transaction.setAccount2(DBAccount.getIdByGid(aid2));
+                                    transaction.setCategory(DBCategory.getIdByGid(cid));
+                                    transaction.setTag(DBTag.getIdByGid(tid));
+                                    transaction.setVendor(DBVendor.getIdByGid(vid));
+                                    transaction.setType(type);
+                                    transaction.setValue(amount);
+                                    transaction.setCreateBy(createUid);
+                                    transaction.setChangeBy(changeUid);
+                                    transaction.setTimeStamp(timestamp);
+                                    transaction.setTimeStampCreate(createTime);
+                                    transaction.setTimeStampLast(changeTime);
+                                    transaction.setNote(note);
+
+                                    if (create) DBTransaction.add(transaction); else DBTransaction.update(transaction);
+
                                     break;
                             }
                         }

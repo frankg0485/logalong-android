@@ -176,16 +176,16 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         updateItemDisplay();
 
         lastChangeTV = (TextView) rootView.findViewById(R.id.tvLastChangeBy);
-        if (item.getBy() == 0) {
+        if (item.getChangeBy() == 0) {
             lastChangeTV.setText("");
         } else {
             String uname = "";
             String name = "";
-            if (item.getBy() == LPreferences.getUserIdNum()) {
+            if (item.getChangeBy() == LPreferences.getUserIdNum()) {
                 uname = "myself";
             } else {
-                String fname = LPreferences.getShareUserFullName(item.getBy());
-                String id = LPreferences.getShareUserName(item.getBy());
+                String fname = LPreferences.getShareUserFullName(item.getChangeBy());
+                String id = LPreferences.getShareUserName(item.getChangeBy());
                 if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
                     uname = fname + " (" + id + ")";
                 }
@@ -670,7 +670,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         boolean changed = !item.isEqual(savedItem);
         if (changed) {
             item.setTimeStampLast(LPreferences.getServerUtc());
-            item.setBy(LPreferences.getUserIdNum());
+            item.setChangeBy(LPreferences.getUserIdNum());
         }
         myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);

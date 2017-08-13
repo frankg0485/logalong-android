@@ -27,7 +27,9 @@ public class LTransaction {
 
     private double value;
     private int type;
-    private int by;
+
+    private int changeBy;
+    private int createBy;
     private int state;
     private long id;
     private long category;
@@ -36,6 +38,7 @@ public class LTransaction {
     private long tag;
     private long vendor;
     private long timeStamp;
+    private long timeStampCreate;
     private long timeStampLast;
     private long gid;
     private String note;
@@ -45,7 +48,7 @@ public class LTransaction {
         this.timeStamp = System.currentTimeMillis();
         this.value = 0;
         this.type = TRANSACTION_TYPE_EXPENSE;
-        this.by = 0;
+        this.createBy = 0;
         this.state = DBHelper.STATE_ACTIVE;
         this.id = 0;
         this.category = 0;
@@ -67,7 +70,7 @@ public class LTransaction {
         this.timeStampLast = item.timeStampLast;
         this.value = item.value;
         this.type = item.type;
-        this.by = item.by;
+        this.createBy = item.createBy;
         this.state = item.state;
         this.id = item.id;
         this.category = item.category;
@@ -87,7 +90,7 @@ public class LTransaction {
         return (this.timeStamp == item.timeStamp &&
                 this.value == item.value &&
                 this.type == item.type &&
-                this.by == item.by &&
+                this.createBy == item.createBy &&
                 this.category == item.category &&
                 this.account == item.account &&
                 this.account2 == item.account2 &&
@@ -100,7 +103,7 @@ public class LTransaction {
         return (this.timeStamp == item.timeStamp &&
                 this.value == item.value &&
                 this.type == item.type &&
-                this.by == item.by &&
+                this.createBy == item.createBy &&
                 this.category == item.category &&
                 this.account == item.account &&
                 /*this.account2 == item.account2 &&*/
@@ -124,7 +127,7 @@ public class LTransaction {
     }
 
     public LTransaction(long gid, double value, int type, long category, long vendor, long tag,
-                        long account, long account2, int by, long timeStamp, long timeStampLast, String note) {
+                        long account, long account2, int createBy, long timeStamp, long timeStampLast, String note) {
         init();
         this.gid = gid;
         this.value = value;
@@ -134,7 +137,7 @@ public class LTransaction {
         this.tag = tag;
         this.account = account;
         this.account2 = account2;
-        this.by = by;
+        this.createBy = createBy;
         this.timeStamp = timeStamp;
         this.timeStampLast = timeStampLast;
         this.note = note;
@@ -220,6 +223,14 @@ public class LTransaction {
         this.timeStampLast = timeStampLast;
     }
 
+    public long getTimeStampCreate() {
+        return timeStampCreate;
+    }
+
+    public void setTimeStampCreate(long timeStampCreate) {
+        this.timeStampCreate = timeStampCreate;
+    }
+
     public long getTimeStamp() {
         return timeStamp;
     }
@@ -228,12 +239,20 @@ public class LTransaction {
         this.timeStamp = timeStamp;
     }
 
-    public int getBy() {
-        return by;
+    public int getCreateBy() {
+        return createBy;
     }
 
-    public void setBy(int by) {
-        this.by = by;
+    public void setCreateBy(int createBy) {
+        this.createBy = createBy;
+    }
+
+    public int getChangeBy() {
+        return changeBy;
+    }
+
+    public void setChangeBy(int changeBy) {
+        this.changeBy = changeBy;
     }
 
     public String getNote() {
