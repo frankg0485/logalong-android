@@ -428,13 +428,11 @@ public class LAppServer {
     }
 
     public boolean UiPoll() {
-        //return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
-        return true;
+        return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
     }
 
-    public boolean UiPollAck(int cacheId) {
-        //LLog.d(TAG, "acking: " + cacheId);
-        return LTransport.send_rqst(this, LProtocol.RQST_POLL_ACK, cacheId, scrambler);
+    public boolean UiPollAck(long id) {
+        return LTransport.send_rqst(this, LProtocol.RQST_POLL_ACK, id, scrambler);
     }
 
     public boolean UiUtcSync() {

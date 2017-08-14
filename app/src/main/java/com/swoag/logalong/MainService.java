@@ -49,6 +49,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final int CMD_DISABLE = 40;
     private static final int CMD_SCAN_BALANCE = 50;
 
+    private static final short NOTIFICATION_UPDATE_USER_PROFILE = 0x001;
+    private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
+
     private boolean loggedIn = false;
     private Handler serviceHandler;
     private Runnable pollRunnable;
@@ -147,8 +150,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_USER_CREATED,
                 LBroadcastReceiver.ACTION_LOG_IN,
                 LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
-                LBroadcastReceiver.ACTION_POLL_ACKED,
-                LBroadcastReceiver.ACTION_POLL_IDLE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SET_ACCOUNT_GID,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO,
@@ -162,6 +163,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_POST_JOURNAL,
+                LBroadcastReceiver.ACTION_POLL,
+                LBroadcastReceiver.ACTION_POLL_ACK,
                 LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE}, this);
 
 
@@ -539,29 +542,60 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     }
                     break;
 
+                case LBroadcastReceiver.ACTION_POLL:
+                    if (LProtocol.RSPS_OK == ret) {
+                        long id = intent.getLongExtra("id", 0);
+                        short nid = intent.getShortExtra("nid", (short)0);
+                        switch (nid) {
+                            case NOTIFICATION_ADD_ACCOUNT:
+                                int gid = intent.getIntExtra("int1", 0);
+                                int uid = intent.getIntExtra("int2", 0);
+                                String name = intent.getStringExtra("txt1");
+                                LAccount account = DBAccount.getByGid(gid);
+                                if (null != account) {
+                                    account.setName(name);
+                                    DBAccount.update(account);
+                                } else {
+                                    account = new LAccount();
+                                    account.setGid(gid);
+                                    account.setName(name);
+                                    DBAccount.add(account);
+                                }
+                                break;
 
-                case LBroadcastReceiver.ACTION_POLL_IDLE:
-                    if (!LJournal.flush()) {
-                        if (LFragmentActivity.upRunning) {
-                            server.UiUtcSync();
-                            serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                        } else {
-                            serviceHandler.postDelayed(serviceShutdownRunnable,
-                                    SERVICE_SHUTDOWN_MS);
+                            case NOTIFICATION_UPDATE_USER_PROFILE:
+                                LPreferences.setUserName(intent.getStringExtra("txt1"));
+                                break;
+
+                            default:
+                                LLog.w(TAG, "unexpected notification id: " + nid);
+
+                        }
+                        server.UiPollAck(id);
+                    } else {
+                        //no more
+                        if (!LJournal.flush()) {
+                            if (LFragmentActivity.upRunning) {
+                                //server.UiUtcSync();
+                                serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                            } else {
+                                serviceHandler.postDelayed(serviceShutdownRunnable,
+                                        SERVICE_SHUTDOWN_MS);
+                            }
                         }
                     }
                     break;
 
-                case LBroadcastReceiver.ACTION_POLL_ACKED:
-                    //LLog.d(TAG, "polling after being acked");
-                    server.UiPoll();
+                case LBroadcastReceiver.ACTION_POLL_ACK:
+                    if (!LJournal.flush()) {
+                        server.UiPoll();
+                    }
                     break;
-
+/*
                 case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
                     int cacheId = intent.getIntExtra("cacheId", 0);
                     server.UiPollAck(cacheId);
                     break;
-/*
             case LBroadcastReceiver.ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
                 cacheId = intent.getIntExtra("cacheId", 0);
                 userName = intent.getStringExtra("userName");
@@ -702,10 +736,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.w(TAG, "unknown message received");
                     break;
 
-                case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
-                    cacheId = intent.getIntExtra("cacheId", 0);
-                    server.UiPollAck(cacheId);
-                    break;
+                //case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
+                //    cacheId = intent.getIntExtra("cacheId", 0);
+                //    server.UiPollAck(cacheId);
+                //    break;
             }
         }
     }

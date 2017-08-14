@@ -499,8 +499,7 @@ public class LProtocol {
 
                     case RSPS | RQST_POST_JOURNAL:
                         packetConsumptionStatus.isResponseCompleted = (status != RSPS_MORE);
-                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                                .ACTION_POST_JOURNAL));
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POST_JOURNAL));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         if (RSPS_OK == status || RSPS_MORE == status) {
                             int journalId = pkt.getIntAutoInc();
@@ -542,7 +541,7 @@ public class LProtocol {
                                         break;
                                     case JRQST_GET_VENDORS:
                                         rspsIntent.putExtra("gid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("type", (int)pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("type", (int) pkt.getByteAutoInc());
                                         bytes = pkt.getShortAutoInc();
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
@@ -579,6 +578,36 @@ public class LProtocol {
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
+                    case RSPS | RQST_POLL:
+                        packetConsumptionStatus.isResponseCompleted = (status == RSPS_OK || status == RSPS_ERROR);
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        if (status == RSPS_OK) {
+                            rspsIntent.putExtra("id", pkt.getLongAutoInc());
+                            rspsIntent.putExtra("nid", pkt.getShortAutoInc());
+                            rspsIntent.putExtra("int1", pkt.getIntAutoInc());
+                            rspsIntent.putExtra("int2", pkt.getIntAutoInc());
+                            rspsIntent.putExtra("int3", pkt.getIntAutoInc());
+                            rspsIntent.putExtra("int4", pkt.getIntAutoInc());
+                            int bytes = pkt.getShortAutoInc();
+                            String txt = pkt.getStringAutoInc(bytes);
+                            rspsIntent.putExtra("txt1", txt);
+                            bytes = pkt.getShortAutoInc();
+                            txt = pkt.getStringAutoInc(bytes);
+                            rspsIntent.putExtra("txt2", txt);
+                        }
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
+                    case RSPS | RQST_POLL_ACK:
+                        if (status == RSPS_OK) {
+                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_POLL_ACK));
+                            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        } else {
+                            LLog.w(TAG, "unable to acknowledge polling");
+                        }
+                        break;
+
                     default:
                         LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
                         break;
@@ -591,41 +620,6 @@ public class LProtocol {
             case RSPS | RQST_PING:
                 //LLog.d(TAG, "pong");
                 break;
-
-            case RSPS | RQST_SCRAMBLER_SEED:
-                //LLog.d(TAG, "channel scrambler seed sent");
-                synchronized (stateLock) {
-                    state = STATE_CONNECTED;
-                }
-                serverVersion = pkt.getShort();
-                break;
-
-            case RSPS | RQST_CREATE_USER:
-                if (status == RSPS_OK) {
-                    int userId = pkt.getIntAutoInc();
-                    int bytes = pkt.getShortAutoInc();
-                    String userName = pkt.getStringAutoInc(bytes);
-
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                    .ACTION_USER_CREATED));
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                    rspsIntent.putExtra("id", userId);
-                    rspsIntent.putExtra("name", userName);
-                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                } else {
-                    LLog.w(TAG, "unable to create user");
-                }
-                break;
-
-            case RSPS | RQST_LOGIN:
-                synchronized (stateLock) {
-                    state = (status == RSPS_OK) ? STATE_LOGGED_IN : state;
-                }
-                rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_LOGIN));
-                rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                break;
-
 
             case RSPS | RQST_GET_SHARE_USER_BY_NAME:
                 rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
@@ -643,22 +637,6 @@ public class LProtocol {
                     LLog.d(TAG, "user returned as: " + userName + " full name: " + userFullName);
                 }
                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                break;
-
-            case RSPS | RQST_POST_JOURNAL:
-                if (status == RSPS_ACK) {
-                    //Do nothing
-                    LLog.d(TAG, "jumbo journal posting ack");
-                } else {
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                    .ACTION_JOURNAL_POSTED));
-                    rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                    int userId = pkt.getIntAutoInc();
-                    rspsIntent.putExtra("userId", userId);
-                    int journalId = pkt.getIntAutoInc();
-                    rspsIntent.putExtra("journalId", journalId);
-                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                }
                 break;
 
             case RSPS | RQST_POLL:
@@ -744,15 +722,6 @@ public class LProtocol {
                 }
                 break;
 
-            case RSPS | RQST_POLL_ACK:
-                if (status == RSPS_OK) {
-                    rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                    .ACTION_POLL_ACKED));
-                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-                } else {
-                    LLog.w(TAG, "unable to acknowledge polling");
-                }
-                break;
 
             case RSPS | RQST_UTC_SYNC:
                 if (status == RSPS_OK) {

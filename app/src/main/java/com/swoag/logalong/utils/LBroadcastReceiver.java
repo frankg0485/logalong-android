@@ -13,8 +13,6 @@ public class LBroadcastReceiver {
     private static final String TAG = LBroadcastReceiver.class.getSimpleName();
     public static final String EXTRA_RET_CODE = "ret";
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
-    public static final int ACTION_POLL_ACKED = 1;
-    public static final int ACTION_POLL_IDLE = 2;
     public static final int ACTION_USER_CREATED = 4;
     public static final int ACTION_CONNECTED_TO_SERVER = 10;
     public static final int ACTION_GET_SHARE_USER_BY_NAME = 20;
@@ -27,6 +25,8 @@ public class LBroadcastReceiver {
     public static final int ACTION_LOG_IN = 58;
     public static final int ACTION_UPDATE_USER_PROFILE = 60;
     public static final int ACTION_POST_JOURNAL = 62;
+    public static final int ACTION_POLL = 63;
+    public static final int ACTION_POLL_ACK = 64;
 
     public static final int ACTION_NEW_JOURNAL_AVAILABLE = 300;
 
