@@ -253,13 +253,8 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 if (ret == LProtocol.RSPS_OK) {
                     LPreferences.setUserPass(userPass);
                     LPreferences.setUserName(userName);
-                    ////////////////////////////////////////////////////////////////////////////
-                    if (false) {
-                        if (callback != null) callback.onUpdateProfileDialogExit(true);
-                        destroy();
-                    } else {
-                        pushLocalDb();
-                    }
+                    if (callback != null) callback.onUpdateProfileDialogExit(true);
+                    destroy();
                 } else {
                     displayMsg(true, context.getString(R.string.warning_unable_to_connect));
                 }

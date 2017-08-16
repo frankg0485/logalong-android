@@ -30,6 +30,8 @@ public class LBroadcastReceiver {
 
     public static final int ACTION_NEW_JOURNAL_AVAILABLE = 300;
 
+    public static final int ACTION_UI_UPDATE_USER_PROFILE = 500;
+
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;

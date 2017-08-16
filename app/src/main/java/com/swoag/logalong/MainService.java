@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
@@ -565,6 +566,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                             case NOTIFICATION_UPDATE_USER_PROFILE:
                                 LPreferences.setUserName(intent.getStringExtra("txt1"));
+                                Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UI_UPDATE_USER_PROFILE));
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 break;
 
                             default:

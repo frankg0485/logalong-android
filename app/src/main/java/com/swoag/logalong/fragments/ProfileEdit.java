@@ -30,8 +30,6 @@ import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.LChangePassDialog;
 import com.swoag.logalong.views.LUpdateProfileDialog;
 
-import static com.swoag.logalong.R.id.progressMsg;
-
 public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpdateProfileDialog.LUpdateProfileDialogItf,
         LBroadcastReceiver.BroadcastReceiverListener {
     private static final String TAG = ProfileEdit.class.getSimpleName();
@@ -153,6 +151,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         errorMsgV = (TextView) setViewListener(rootView, R.id.errorMsg);
         hideMsg();
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_UI_UPDATE_USER_PROFILE,
                 LBroadcastReceiver.ACTION_GET_USER_BY_NAME}, this);
 
         newUserV = rootView.findViewById(R.id.createUserView);
@@ -507,6 +506,10 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                         displayMsg(true, activity.getResources().getString(R.string.warning_user_id_taken));
                     }
                 }
+                break;
+            case LBroadcastReceiver.ACTION_UI_UPDATE_USER_PROFILE:
+                oldUserName = userName = LPreferences.getUserName();
+                userNameTV.setText(userName);
                 break;
         }
     }
