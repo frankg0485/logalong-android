@@ -92,6 +92,27 @@ public class LJournal {
 
         return true;
     }
+
+    private static boolean add_account_data(LBuffer data, LAccount account) {
+        try {
+            byte[] name = account.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding account: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        return true;
+    }
+
+    private static boolean do_update_account(LBuffer jdata, LAccount account) {
+        jdata.clear();
+        jdata.putShortAutoInc(LProtocol.JRQST_UPDATE_ACCOUNT);
+        jdata.putIntAutoInc(account.getGid());
+        return add_account_data(jdata, account);
+    }
+
     public static boolean flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (null == entry) return false;
@@ -100,39 +121,67 @@ public class LJournal {
             //so not to keep flushing the same journal over and over
             LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
                     + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
-        } else {
-            lastFlushId = entry.id;
-            lastFlushMs = System.currentTimeMillis();
+            return true;
+        }
 
-            LBuffer jdata = new LBuffer(entry.data);
-            switch(jdata.getShortAutoInc()) {
-                case LProtocol.JRQST_ADD_RECORD:
-                    int id = jdata.getIntAutoInc();
-                    boolean ret = false;
+        boolean ret = false;
+        boolean newEntry = false;
 
-                    LTransactionDetails details = DBTransaction.getDetailsById(id);
-                    if (details == null) {
-                        LLog.e(TAG, "unable to fetch record with id: " + id);
+        lastFlushId = entry.id;
+        lastFlushMs = System.currentTimeMillis();
+
+        LBuffer jdata = new LBuffer(entry.data);
+        LBuffer ndata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
+        switch(jdata.getShortAutoInc()) {
+            case LProtocol.JRQST_ADD_RECORD:
+                int id = jdata.getIntAutoInc();
+
+                LTransactionDetails details = DBTransaction.getDetailsById(id);
+                if (details == null) {
+                    LLog.e(TAG, "unable to fetch record with id: " + id);
+                } else {
+                    do_add_record(ndata, details);
+                    newEntry = true;
+                    ret = true;
+                }
+                break;
+
+            case LProtocol.JRQST_UPDATE_ACCOUNT:
+                id = jdata.getIntAutoInc();
+                ret = false;
+                LAccount account = DBAccount.getById(id);
+                if (account == null) {
+                    //ok to ignore update request if account has been deleted afterwards
+                    LLog.w(TAG, "unable to find account record with id: " + id);
+                } else {
+                    if (account.getGid() == 0) {
+                        // let service to retry later
+                        LLog.w(TAG, "account " + account.getName() + " GID not yet available");
+                        return true;
                     } else {
-                        jdata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
-                        do_add_record(jdata, details);
-                        try {
-                            entry.data = new byte[jdata.getLen()];
-                            System.arraycopy(jdata.getBuf(), 0, entry.data, 0, jdata.getLen());
+                        if (do_update_account(ndata, account)) {
+                            newEntry = true;
                             ret = true;
-                        } catch (Exception e) {
-                            LLog.e(TAG, "unexpected record post error: " + e.getMessage());
                         }
                     }
-                    if (!ret) {
-                        deleteById(entry.id);
-                        return true;
-                    }
-                    break;
-            }
+                }
+                break;
+        }
 
+        if (!ret) {
+            deleteById(entry.id);
+        } else {
+            if (newEntry) {
+                try {
+                    entry.data = new byte[ndata.getLen()];
+                    System.arraycopy(ndata.getBuf(), 0, entry.data, 0, ndata.getLen());
+                } catch (Exception e) {
+                    LLog.e(TAG, "unexpected record post error: " + e.getMessage());
+                }
+            }
             LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
         }
+
         return true;
     }
 
@@ -545,19 +594,13 @@ public class LJournal {
         data.putShortAutoInc(LProtocol.JRQST_ADD_ACCOUNT);
         data.putIntAutoInc((int)account.getId());
 
-        try {
-            byte[] name = account.getName().getBytes("UTF-8");
-            data.putShortAutoInc((short) name.length);
-            data.putBytesAutoInc(name);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error when adding account: " + e.getMessage());
+        if (!add_account_data(data, account)) {
             return false;
         }
-        data.setLen(data.getBufOffset());
         post();
-
         return true;
     }
+
     public boolean addCategory(LCategory category) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_CATEGORY);
@@ -624,6 +667,22 @@ public class LJournal {
         post();
 
         return true;
+    }
+
+    private boolean updateById(int id, short jrqst) {
+        data.clear();
+        data.putShortAutoInc(jrqst);
+        data.putIntAutoInc((int)id);
+        data.setLen(data.getBufOffset());
+        post();
+
+        return true;
+    }
+    public boolean updateAccount(int id) {
+        return updateById(id, LProtocol.JRQST_UPDATE_ACCOUNT);
+    }
+    public boolean deleteAccount(int id) {
+        return updateById(id, LProtocol.JRQST_DELETE_ACCOUNT);
     }
 
     public boolean updateAccount(LAccount account, String oldName) {

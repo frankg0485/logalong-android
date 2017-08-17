@@ -34,7 +34,6 @@ public class LPreferences {
     private static final String SEARCH_VALUE = "SearchValue";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
-    private static final String SHOW_ACCOUNT_BALANCE = "ShowAB";
     private static final String SERVER_MSG_BROADCAST = "SrvMsgBroadcast";
     private static final String USER_ID = "MyUserId";
     private static final String USER_PASS = "MyUserPass";
@@ -177,14 +176,6 @@ public class LPreferences {
 
     public static void setShareUserFullName(int userId, String name) {
         //savePreference(LApp.ctx, USER_FULL_NAME + "." + userId, name);
-    }
-
-    public static boolean getShowAccountBalance(long id) {
-        return getPreference(LApp.ctx, SHOW_ACCOUNT_BALANCE + "." + id, true);
-    }
-
-    public static void setShowAccountBalance(long id, boolean show) {
-        savePreference(LApp.ctx, SHOW_ACCOUNT_BALANCE + "." + id, show);
     }
 
     private static int getEmptyAccountShareRequest() {

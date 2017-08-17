@@ -303,7 +303,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             View mainView = view.findViewById(R.id.mainView);
-            if (!LPreferences.getShowAccountBalance(cursor.getLong(0))) {
+            if (0 == cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE))) {
                 mainView.setVisibility(View.GONE);
             } else {
                 mainView.setVisibility(View.VISIBLE);

@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LViewUtils;
 
 public class GenericListOptionDialog extends Dialog implements
         DialogInterface.OnDismissListener {
@@ -47,7 +48,8 @@ public class GenericListOptionDialog extends Dialog implements
     public void onDismiss(DialogInterface dialog) {
         switch (listId) {
             case R.id.vendors:
-                callback.onGenericListOptionDialogDismiss(context, checkBoxPayee.isChecked(), checkBoxPayer.isChecked());
+                callback.onGenericListOptionDialogDismiss(context, checkBoxPayee.isChecked(), checkBoxPayer.isChecked
+                        ());
                 break;
             case R.id.accounts:
                 callback.onGenericListOptionDialogDismiss(context, checkBoxAccountShowBalance.isChecked(), false);
@@ -115,8 +117,11 @@ public class GenericListOptionDialog extends Dialog implements
 
                 default:
                     //findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-                    if (callback.onGenericListOptionDialogExit(context, v.getId()))
+                    if (callback.onGenericListOptionDialogExit(context, v.getId())) {
+                        View vv = findViewById(R.id.catchAll);
+                        LViewUtils.smoothFade(vv, true, 1000);
                         return;
+                    }
                     break;
             }
             //findViewById(R.id.progressBar).setVisibility(View.GONE);

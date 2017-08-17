@@ -2,7 +2,9 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.support.v4.widget.CursorAdapter;
@@ -30,6 +32,7 @@ import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
@@ -38,7 +41,6 @@ import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
 import com.swoag.logalong.views.LNewEntryDialog;
-import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LShareAccountDialog;
 import com.swoag.logalong.views.LWarnDialog;
@@ -46,7 +48,8 @@ import com.swoag.logalong.views.LWarnDialog;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
+public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBroadcastReceiver
+        .BroadcastReceiverListener {
     private static final String TAG = GenericListEdit.class.getSimpleName();
 
     private Activity activity;
@@ -57,7 +60,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
     private MyCursorAdapter adapter;
     private View addV;
     private MyClickListener myClickListener;
-
+    private BroadcastReceiver broadcastReceiver;
 
     public interface GenericListEditItf {
         public void onGenericListEditExit();
@@ -106,9 +109,18 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             adapter = new MyCursorAdapter(activity, cursor);
             listView.setAdapter(adapter);
         }
+
+        broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT}, this);
+
     }
 
     private void destroy() {
+        if (broadcastReceiver != null) {
+            LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
+            broadcastReceiver = null;
+        }
+
         listView = null;
 
         addV.setOnClickListener(null);
@@ -143,10 +155,26 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         default:
                             break;
                     }
-                    LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, 0, type, GenericListEdit.this, title, null, attr1, attr2);
+                    LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, 0, type, GenericListEdit.this,
+                            title, null, attr1, attr2);
                     newEntryDialog.show();
                     break;
             }
+        }
+    }
+
+    @Override
+    public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
+        switch (action) {
+            case LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT:
+                Cursor cursor = getMyCursor();
+                if (null == cursor) {
+                    LLog.e(TAG, "fatal: unable to open database");
+                } else {
+                    adapter.swapCursor(cursor);
+                    adapter.notifyDataSetChanged();
+                }
+                break;
         }
     }
 
@@ -216,7 +244,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             v.setTag(tag);
 
             if (listId == R.id.accounts) {
-                ImageView iv = (ImageView)view.findViewById(R.id.share);
+                ImageView iv = (ImageView) view.findViewById(R.id.share);
                 if (account.isAnySharePending()) {
                     iv.setImageResource(R.drawable.ic_action_share_yellow);
                 } else if (account.isShareConfirmed()) {
@@ -269,7 +297,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                                 attr1 = attr2 = true;
                             }
                         } else if (listId == R.id.accounts) {
-                            attr1 = LPreferences.getShowAccountBalance(tag.id);
+                            LAccount account = DBAccount.getById(tag.id);
+                            attr1 = account.isShowBalance();
                         }
                         optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
                                 listId, MyCursorAdapter.this, attr1, attr2);
@@ -277,8 +306,10 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         break;
 
                     case R.id.share:
-                        //if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences.getUserName()))) {
-                        //    new LReminderDialog(activity, activity.getResources().getString(R.string.please_complete_your_profile)).show();
+                        //if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences
+                        // .getUserName()))) {
+                        //    new LReminderDialog(activity, activity.getResources().getString(R.string
+                        // .please_complete_your_profile)).show();
                         //    break;
                         //}
 
@@ -286,7 +317,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         HashSet<Integer> userSet = DBAccount.getAllShareUser();
                         for (int ii : userSet) {
                             if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
-                                users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences.getShareUserFullName(ii), ii));
+                                users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences
+                                        .getShareUserFullName(ii), ii));
                             }
                         }
 
@@ -311,7 +343,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             // - account is first backed to shared to state, then go to unshared state
             //   when ack comes back.
             LJournal journal = new LJournal();
-            journal.unshareAccount(/*LPreferences.getUserId()*/0, (int) account.getId(), account.getGid(), account.getName());
+            journal.unshareAccount(/*LPreferences.getUserId()*/0, (int) account.getId(), account.getGid(), account
+                    .getName());
         }
 
         @Override
@@ -367,6 +400,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
         @Override
         public void onRenameDialogExit(Object id, boolean renamed, String newName) {
             if (renamed) {
+                LJournal journal = new LJournal();
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
@@ -375,13 +409,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         if ((naccount != null) && (!account.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            String oldName = account.getName();
                             account.setName(newName);
                             account.setTimeStampLast(LPreferences.getServerUtc());
                             DBAccount.update(account);
 
-                            LJournal journal = new LJournal();
-                            journal.updateAccount(account, oldName);
+                            journal.updateAccount((int) account.getId());
                         }
                         break;
 
@@ -396,7 +428,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             category.setTimeStampLast(LPreferences.getServerUtc());
                             DBCategory.update(category);
 
-                            LJournal journal = new LJournal();
                             journal.updateCategory(category, oldName);
                         }
                         break;
@@ -412,7 +443,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             vendor.setTimeStampLast(LPreferences.getServerUtc());
                             DBVendor.update(vendor);
 
-                            LJournal journal = new LJournal();
                             journal.updateVendor(vendor, oldName);
                         }
                         break;
@@ -427,7 +457,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                             tag1.setTimeStampLast(LPreferences.getServerUtc());
                             DBTag.update(tag1);
 
-                            LJournal journal = new LJournal();
                             journal.updateTag(tag1, oldName);
                         }
                         break;
@@ -447,6 +476,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
         @Override
         public void onGenericListOptionDialogDismiss(Object context, boolean attr1, boolean attr2) {
             VTag tag = (VTag) context;
+            LJournal journal = new LJournal();
             if (listId == R.id.vendors) {
                 LVendor vendor = DBVendor.getById(tag.id);
                 int type = LVendor.TYPE_PAYEE;
@@ -455,8 +485,14 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                 else type = LVendor.TYPE_PAYER;
                 vendor.setType(type);
                 DBVendor.update(vendor);
+
+                //journal.updateVendor(vendor.getId());
             } else if (listId == R.id.accounts) {
-                LPreferences.setShowAccountBalance(tag.id, attr1);
+                LAccount account = DBAccount.getById(tag.id);
+                account.setShowBalance(attr1);
+                DBAccount.update(account);
+
+                journal.updateAccount((int) account.getId());
             }
         }
 
@@ -465,6 +501,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
             VTag tag = (VTag) obj;
 
             if (confirm && ok) {
+                LJournal journal = new LJournal();
                 switch (listId) {
                     case R.id.accounts:
                         LTask.start(new MyAccountDeleteTask(), tag.id);
@@ -474,8 +511,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         account.setTimeStampLast(LPreferences.getServerUtc());
                         DBAccount.update(account);
 
-                        LJournal journal = new LJournal();
-                        journal.updateAccount(account, DBHelper.STATE_ACTIVE);
+                        journal.deleteAccount((int) account.getId());
                         break;
 
                     case R.id.categories:
@@ -484,7 +520,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf {
                         category.setTimeStampLast(LPreferences.getServerUtc());
                         DBCategory.update(category);
 
-                        journal = new LJournal();
                         journal.updateCategory(category, DBHelper.STATE_ACTIVE);
                         break;
 

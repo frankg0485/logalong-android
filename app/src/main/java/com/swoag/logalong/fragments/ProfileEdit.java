@@ -273,7 +273,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     private void destroy() {
-        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
         if (broadcastReceiver != null) {
             LBroadcastReceiver.getInstance().unregister(broadcastReceiver);
@@ -460,6 +460,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             inputManager.hideSoftInputFromWindow(userIdTV.getWindowToken(), 0);
             inputManager.hideSoftInputFromWindow(userNameTV.getWindowToken(), 0);
             inputManager.hideSoftInputFromWindow(userPassTV.getWindowToken(), 0);
+
             userIdTV.setCursorVisible(false);
             userNameTV.setCursorVisible(false);
             userPassTV.setCursorVisible(false);

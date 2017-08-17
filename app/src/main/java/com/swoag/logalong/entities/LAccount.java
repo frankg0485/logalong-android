@@ -7,7 +7,6 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.LPreferences;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 public class LAccount {
     private static final String TAG = LAccount.class.getSimpleName();
@@ -25,6 +24,7 @@ public class LAccount {
     private String name;
     private String rid;
     private int gid;
+    private boolean showBalance;
 
     private long timeStampLast;
     private long shareTimeStampLast;
@@ -37,7 +37,8 @@ public class LAccount {
         this.state = DBHelper.STATE_ACTIVE;
         this.timeStampLast = LPreferences.getServerUtc();
         this.shareTimeStampLast = 0;
-        this.rid = UUID.randomUUID().toString();
+        this.rid = "";
+        this.showBalance = true;
         this.name = "";
         this.shareIds = new ArrayList<Integer>();
         this.shareStates = new ArrayList<Integer>();
@@ -240,5 +241,13 @@ public class LAccount {
 
     public void setGid(int gid) {
         this.gid = gid;
+    }
+
+    public boolean isShowBalance() {
+        return showBalance;
+    }
+
+    public void setShowBalance(boolean showBalance) {
+        this.showBalance = showBalance;
     }
 }

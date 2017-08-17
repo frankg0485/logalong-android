@@ -34,6 +34,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_RID = "Rid";
     public static final String TABLE_COLUMN_GID = "Gid";
     public static final String TABLE_COLUMN_SCHEDULE_TIMESTAMP = "SchTimeStmp";
+    public static final String TABLE_COLUMN_SHOW_BALANCE = "ShowBalance";
     public static final String TABLE_COLUMN_STATE = "State";
     public static final String TABLE_COLUMN_TAG = "Tag";
     public static final String TABLE_COLUMN_TIMESTAMP = "TimeStmp";
@@ -105,7 +106,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_RID + " TEXT," +
             TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " INTEGER," +
             TABLE_COLUMN_ICON + " BLOB," +
-            TABLE_COLUMN_GID + " INTEGER" +
+            TABLE_COLUMN_GID + " INTEGER," +
+            TABLE_COLUMN_SHOW_BALANCE + " INTEGER" +
             ");";
 
     private static final String CREATE_TABLE_CATEGORY = "CREATE TABLE " + TABLE_CATEGORY_NAME +
@@ -174,15 +176,21 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
         if (oldVersion == 1 && newVersion == 2) {
-            String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    "ALTER TABLE " + TABLE_CATEGORY_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    "ALTER TABLE " + TABLE_TAG_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    "ALTER TABLE " + TABLE_VENDOR_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+            String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_SHOW_BALANCE + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_CATEGORY_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_TAG_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_VENDOR_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_TRANSACTION_NAME +
-                    "ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER; " +
-                    "ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE +  " INTEGER; " +
-                    "ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME + " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER";
+                    " ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE +  " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER";
             db.execSQL(sql);
         }
     }

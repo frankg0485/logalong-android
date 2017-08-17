@@ -15,6 +15,15 @@ import java.util.HashSet;
 public class DBAccount {
     private static final String TAG = DBAccount.class.getSimpleName();
 
+    private static final String[] account_columns = new String[]{
+            "_id",
+            DBHelper.TABLE_COLUMN_GID,
+            DBHelper.TABLE_COLUMN_NAME,
+            DBHelper.TABLE_COLUMN_STATE,
+            DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE,
+            DBHelper.TABLE_COLUMN_SHOW_BALANCE,
+            DBHelper.TABLE_COLUMN_SHARE};
+
     private static ContentValues setValues(LAccount account) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
@@ -22,7 +31,7 @@ public class DBAccount {
         cv.put(DBHelper.TABLE_COLUMN_GID, account.getGid());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());
-        cv.put(DBHelper.TABLE_COLUMN_RID, account.getRid());
+        cv.put(DBHelper.TABLE_COLUMN_SHOW_BALANCE, account.isShowBalance()? 1 : 0);
         return cv;
     }
 
@@ -32,7 +41,7 @@ public class DBAccount {
         account.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        account.setRid(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
+        account.setShowBalance((0 == cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE)))? false : true);
         account.setId(cur.getLong(0));
     }
 
@@ -138,7 +147,7 @@ public class DBAccount {
         LAccount account = new LAccount();
 
         try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, account_columns,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
@@ -273,11 +282,11 @@ public class DBAccount {
     public static Cursor getCursorSortedBy(Context context, String sortColumn) {
         Cursor cur;
         if (sortColumn != null)
-            cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, account_columns,
                     DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
                     sortColumn + " ASC");
         else
-            cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, null,
+            cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, account_columns,
                     DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         return cur;
     }

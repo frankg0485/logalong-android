@@ -52,6 +52,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     private static final short NOTIFICATION_UPDATE_USER_PROFILE = 0x001;
     private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
+    private static final short NOTIFICATION_UPDATE_ACCOUNT = 0x011;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -482,7 +483,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     int cid = intent.getIntExtra("cid", 0);
                                     int tid = intent.getIntExtra("tid", 0);
                                     int vid = intent.getIntExtra("vid", 0);
-                                    type = intent.getByteExtra("type", (byte)LTransaction.TRANSACTION_TYPE_EXPENSE);
+                                    type = intent.getByteExtra("type", (byte) LTransaction.TRANSACTION_TYPE_EXPENSE);
                                     double amount = intent.getDoubleExtra("amount", 0);
                                     long timestamp = intent.getLongExtra("timestamp", 0L);
                                     int createUid = intent.getIntExtra("createBy", 0);
@@ -512,8 +513,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     transaction.setTimeStampLast(changeTime);
                                     transaction.setNote(note);
 
-                                    if (create) DBTransaction.add(transaction); else DBTransaction.update(transaction);
+                                    if (create) DBTransaction.add(transaction);
+                                    else DBTransaction.update(transaction);
 
+                                    break;
+
+                                case LProtocol.JRQST_UPDATE_ACCOUNT:
+                                    break;
+                                default:
+                                    LLog.w(TAG, "unknown journal request: " + jrqstId);
                                     break;
                             }
                         }
@@ -546,7 +554,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case LBroadcastReceiver.ACTION_POLL:
                     if (LProtocol.RSPS_OK == ret) {
                         long id = intent.getLongExtra("id", 0);
-                        short nid = intent.getShortExtra("nid", (short)0);
+                        short nid = intent.getShortExtra("nid", (short) 0);
                         switch (nid) {
                             case NOTIFICATION_ADD_ACCOUNT:
                                 int gid = intent.getIntExtra("int1", 0);
@@ -562,11 +570,28 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     account.setName(name);
                                     DBAccount.add(account);
                                 }
+                                Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_UI_UPDATE_ACCOUNT));
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                break;
+
+                            case NOTIFICATION_UPDATE_ACCOUNT:
+                                gid = intent.getIntExtra("int1", 0);
+                                name = intent.getStringExtra("txt1");
+                                account = DBAccount.getByGid(gid);
+                                if (null != account) {
+                                    account.setName(name);
+                                    DBAccount.update(account);
+                                }
+                                uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_UI_UPDATE_ACCOUNT));
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 break;
 
                             case NOTIFICATION_UPDATE_USER_PROFILE:
                                 LPreferences.setUserName(intent.getStringExtra("txt1"));
-                                Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UI_UPDATE_USER_PROFILE));
+                                uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_UI_UPDATE_USER_PROFILE));
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 break;
 

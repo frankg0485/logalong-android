@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.Window;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,7 @@ public class LRenameDialog extends Dialog implements TextWatcher {
     private static final String TAG = LRenameDialog.class.getSimpleName();
 
     private LRenameDialogItf callback;
+    private View catchallV;
     private String oldname;
     private String title;
     private String hint;
@@ -31,6 +34,8 @@ public class LRenameDialog extends Dialog implements TextWatcher {
     private Context context;
     private Object id;
     private MyClickListener myClickListener;
+    private boolean isNameAvailable;
+    private View okView;
 
     public interface LRenameDialogItf {
         public void onRenameDialogExit(Object id, boolean renamed, String name);
@@ -55,8 +60,9 @@ public class LRenameDialog extends Dialog implements TextWatcher {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.rename_dialog);
 
+        okView = findViewById(R.id.confirmDialog);
         findViewById(R.id.cancelDialog).setOnClickListener(myClickListener);
-        findViewById(R.id.confirmDialog).setOnClickListener(myClickListener);
+        okView.setOnClickListener(myClickListener);
         findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
 
         ((TextView) findViewById(R.id.title)).setText(title);
@@ -65,6 +71,13 @@ public class LRenameDialog extends Dialog implements TextWatcher {
         text = (EditText) findViewById(R.id.newname);
         text.setHint((hint != null) ? hint : "");
         text.addTextChangedListener(this);
+
+        catchallV = findViewById(R.id.catchAll);
+        catchallV.setOnClickListener(myClickListener);
+
+        isNameAvailable = false;
+        okView.setEnabled(false);
+        LViewUtils.setAlpha(okView, 0.5f);
     }
 
 
@@ -89,16 +102,45 @@ public class LRenameDialog extends Dialog implements TextWatcher {
             text.setText(str2);
             text.setSelection(str2.length());
         }
+
+        if (isEntryNameAvailable(str2)) {
+            if (!isNameAvailable) {
+                isNameAvailable = true;
+                okView.setEnabled(true);
+                LViewUtils.setAlpha(okView, 1.0f);
+            }
+        } else {
+            if (isNameAvailable) {
+                isNameAvailable = false;
+                okView.setEnabled(false);
+                LViewUtils.setAlpha(okView, 0.5f);
+            }
+        }
+    }
+
+    private boolean isEntryNameAvailable(String name) {
+        boolean ret = false;
+        if (name != null && (!TextUtils.isEmpty(name))) {
+            return true;
+        }
+        return ret;
+    }
+
+    private void hideIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context
+                    .INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
+            text.setCursorVisible(false);
+        } catch (Exception e) {
+        }
     }
 
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
-            try {
-                InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
-            } catch (Exception e) {
-            }
+            hideIME();
+            if (v.getId() == R.id.catchAll) return;
 
             try {
                 List<String> msg = new ArrayList<String>();

@@ -28,7 +28,6 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
-import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 public class LNewEntryDialog extends Dialog implements TextWatcher {
@@ -47,6 +46,7 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
     private int type;
     private int id;
     private View okView;
+    private View catchallV;
     private View payeePayerView, accountShowBalanceView;
     private CheckBox checkBoxAttr1, checkBoxAttr2, checkBoxAccountShowBalance;
     private boolean isNameAvailable;
@@ -59,19 +59,32 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
     }
 
     private boolean isEntryNameAvailable(String name) {
-        return (name != null && (!TextUtils.isEmpty(name)));
+        boolean ret = false;
+        if (name != null && (!TextUtils.isEmpty(name))) {
+            switch (type) {
+                case TYPE_ACCOUNT:
+                    ret = (null == DBAccount.getByName(name));
+                    break;
+            }
+        }
+        return ret;
     }
 
     private boolean onExit(int type, boolean created, String name, boolean attr1, boolean attr2) {
         if (created && (!TextUtils.isEmpty(name))) {
-            LJournal journal;
+            LJournal journal = new LJournal();
+
             switch (type) {
                 case TYPE_ACCOUNT:
-                    long did = DBAccount.getIdByName(name);
-                    if (did == 0) {
-                        did = DBAccount.add(new LAccount(name));
+                    LAccount account = DBAccount.getByName(name);
+                    if (null == account) {
+                        account = new LAccount(name);
+                        account.setShowBalance(attr1);
+                        DBAccount.add(account);
+                        journal.addAccount(account);
+                    } else {
+                        LLog.w(TAG, "account already exists");
                     }
-                    LPreferences.setShowAccountBalance(did, attr1);
                     break;
 
                 case TYPE_CATEGORY:
@@ -79,7 +92,7 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                         LCategory category = new LCategory(name);
                         DBCategory.add(category);
 
-                        journal = new LJournal();
+
                         journal.updateCategory(category);
                     }
                     break;
@@ -170,14 +183,15 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
         }
 
         findViewById(R.id.cancelDialog).setOnClickListener(myClickListener);
+
         okView = findViewById(R.id.confirmDialog);
         okView.setOnClickListener(myClickListener);
+        catchallV = findViewById(R.id.catchAll);
+        catchallV.setOnClickListener(myClickListener);
 
         isNameAvailable = false;
-        okView.setClickable(false);
+        okView.setEnabled(false);
         LViewUtils.setAlpha(okView, 0.5f);
-
-        findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
 
         ((TextView) findViewById(R.id.title)).setText(title);
         text = (EditText) findViewById(R.id.newname);
@@ -211,26 +225,31 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
         if (isEntryNameAvailable(str2)) {
             if (!isNameAvailable) {
                 isNameAvailable = true;
-                okView.setClickable(true);
+                okView.setEnabled(true);
                 LViewUtils.setAlpha(okView, 1.0f);
             }
         } else {
             if (isNameAvailable) {
                 isNameAvailable = false;
-                okView.setClickable(false);
+                okView.setEnabled(false);
                 LViewUtils.setAlpha(okView, 0.5f);
             }
+        }
+    }
+
+    private void hideIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
+            text.setCursorVisible(false);
+        } catch (Exception e) {
         }
     }
 
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
-            try {
-                InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
-            } catch (Exception e) {
-            }
+            hideIME();
             boolean ret = true;
             try {
                 switch (v.getId()) {
@@ -251,7 +270,6 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                         }
                         break;
                     case R.id.cancelDialog:
-                    case R.id.closeDialog:
                         ret = onExit(type, false, null, false, false);
                         break;
 
@@ -263,6 +281,9 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                         }
                         break;
                     case R.id.checkboxAccountShowBalance:
+                        ret = false;
+                        break;
+                    case R.id.catchAll:
                         ret = false;
                         break;
                 }

@@ -1,146 +1,153 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/catchAll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dialog_bg_color"
-    android:gravity="center"
+    android:orientation="vertical"
     android:weightSum="100">
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="240dp"
-        android:layout_weight="90"
-        android:background="@drawable/dialog_row_bgd"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="3dp">
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="60"
+        android:gravity="center"
+        android:weightSum="100">
 
         <LinearLayout
-            android:id="@+id/topBar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dialog_title_height"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:padding="6dp"
-                android:maxLines="1"
-                android:textColor="@color/base_text_color"
-                android:textSize="@dimen/settings_option_text_size"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/closeDialog"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginBottom="2dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_marginTop="2dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_action_cancel" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="90"
+            android:background="@drawable/dialog_row_bgd"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:padding="1dp">
+            android:padding="3dp">
+
+            <LinearLayout
+                android:id="@+id/topBar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dialog_title_height"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:padding="6dp"
+                    android:textColor="@color/base_text_color"
+                    android:textSize="@dimen/settings_option_text_size"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:visibility="invisible"
+                    android:id="@+id/closeDialog"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginBottom="2dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginTop="2dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_action_cancel" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="#606060"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="1dp">
 
                 <LinearLayout
-                    android:id="@+id/dontcare1"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
-                    android:background="@drawable/row_selector"
-                    android:orientation="vertical"
-                    android:paddingTop="5dp">
-
-                    <TextView
-                        android:id="@+id/oldname"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginRight="15dp"
-                        android:layout_marginTop="15dp"
-                        android:ellipsize="end"
-                        android:gravity="left"
-                        android:singleLine="true"
-                        android:textColor="@color/gray_text_color"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:background="#606060"
+                    android:orientation="vertical">
 
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:id="@+id/dontcare1"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp">
+                        android:layout_marginTop="1dp"
+                        android:background="@color/row_released_color"
+                        android:orientation="vertical"
+                        android:paddingTop="5dp">
 
-                        <RelativeLayout
+                        <TextView
+                            android:id="@+id/oldname"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:gravity="center_horizontal"
-                            android:padding="1dp">
+                            android:layout_marginLeft="15dp"
+                            android:layout_marginRight="15dp"
+                            android:layout_marginTop="15dp"
+                            android:ellipsize="end"
+                            android:gravity="left"
+                            android:singleLine="true"
+                            android:textColor="@color/gray_text_color"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
 
-                            <EditText
-                                android:id="@+id/newname"
-                                android:layout_width="match_parent"
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="10dp">
+
+                            <RelativeLayout
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="@drawable/editbox_bgd"
-                                android:gravity="top"
-                                android:imeOptions="flagNoExtractUi"
-                                android:padding="10dp"
-                                android:singleLine="true"
-                                android:textColor="@color/base_text_color" />
-                        </RelativeLayout>
-                    </LinearLayout>
+                                android:gravity="center_horizontal"
+                                android:padding="1dp">
 
-                    <View
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
+                                <EditText
+                                    android:id="@+id/newname"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/editbox_bgd"
+                                    android:gravity="top"
+                                    android:imeOptions="flagNoExtractUi"
+                                    android:padding="10dp"
+                                    android:singleLine="true"
+                                    android:textColor="@color/base_text_color" />
+                            </RelativeLayout>
+                        </LinearLayout>
 
-                    <LinearLayout
-                        android:id="@+id/buttons"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dialog_btn_height"
-                        android:layout_marginLeft="1dp"
-                        android:layout_marginRight="1dp"
-                        android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/cancelDialog"
-                            style="@style/dialogButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                        <LinearLayout
+                            android:id="@+id/buttons"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/dialog_btn_height"
+                            android:layout_marginLeft="1dp"
                             android:layout_marginRight="1dp"
-                            android:layout_weight="1"
-                            android:text="@android:string/cancel" />
+                            android:layout_marginTop="15dp"
+                            android:orientation="horizontal">
 
-                        <Button
-                            android:id="@+id/confirmDialog"
-                            style="@style/dialogButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@android:string/ok" />
+                            <Button
+                                android:id="@+id/cancelDialog"
+                                style="@style/dialogButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginRight="1dp"
+                                android:layout_weight="1"
+                                android:text="@android:string/cancel" />
+
+                            <Button
+                                android:id="@+id/confirmDialog"
+                                style="@style/dialogButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@android:string/ok" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
+    </LinearLayout>
 </LinearLayout>

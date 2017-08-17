@@ -80,6 +80,9 @@ public class LProtocol {
     public static final short JRQST_GET_VENDORS = 0x104;
     public static final short JRQST_GET_RECORDS = 0x105;
 
+    public static final short JRQST_UPDATE_ACCOUNT = 0x201;
+    public static final short JRQST_DELETE_ACCOUNT = 0x202;
+
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     public static final short RQST_POLL = RQST_SYS | 0x777;
@@ -125,24 +128,6 @@ public class LProtocol {
     private LProtocol() {
         pktBuf = new LBuffer(PACKET_MAX_LEN * 2);
         state = STATE_DISCONNECTED;
-    }
-
-    private void handleAccountSetGid(LBuffer pkt, int status, int action, int cacheId) {
-        Intent rspsIntent;
-        int userId = pkt.getIntAutoInc();
-        int accountId = pkt.getIntAutoInc();
-        int accountGid = pkt.getIntAutoInc();
-        byte bytes = pkt.getByteAutoInc();
-        String accountName = pkt.getStringAutoInc(bytes);
-
-        rspsIntent = new Intent(LBroadcastReceiver.action(action));
-        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-        rspsIntent.putExtra("id", userId);
-        rspsIntent.putExtra("cacheId", cacheId);
-        rspsIntent.putExtra("accountId", accountId);
-        rspsIntent.putExtra("accountGid", accountGid);
-        rspsIntent.putExtra("accountName", accountName);
-        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
     private void handleAccountShareRequest(LBuffer pkt, int status, int action, int cacheId) {
