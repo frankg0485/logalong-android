@@ -53,6 +53,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_UPDATE_USER_PROFILE = 0x001;
     private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
     private static final short NOTIFICATION_UPDATE_ACCOUNT = 0x011;
+    private static final short NOTIFICATION_DELETE_ACCOUNT = 0x012;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -260,6 +261,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
 
                 case CMD_STOP:
+                    LLog.d(TAG, "shutdown in responding to stop command");
                     serviceHandler.removeCallbacks(serviceShutdownRunnable);
                     serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     break;
@@ -361,7 +363,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         if (account.getId() != id) {
                                             LLog.e(TAG, "unexpected error, account GID: " + gid + " already taken " +
                                                     "by " + account.getName());
+                                            //this is an unrecoverable error, we'll delete the dangling account
+                                            DBAccount.deleteById(account.getId());
                                         }
+
                                     }
                                     DBAccount.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
@@ -519,6 +524,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     break;
 
                                 case LProtocol.JRQST_UPDATE_ACCOUNT:
+                                case LProtocol.JRQST_DELETE_ACCOUNT:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);
@@ -588,6 +594,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 break;
 
+                            case NOTIFICATION_DELETE_ACCOUNT:
+                                gid = intent.getIntExtra("int1", 0);
+                                account = DBAccount.getByGid(gid);
+                                if (null != account) {
+                                    LTask.start(new MyAccountDeleteTask(), account.getId());
+                                    DBAccount.deleteById(account.getId());
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
                             case NOTIFICATION_UPDATE_USER_PROFILE:
                                 LPreferences.setUserName(intent.getStringExtra("txt1"));
                                 uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
@@ -607,6 +625,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 //server.UiUtcSync();
                                 serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                             } else {
+                                LLog.d(TAG, "no activity visible, shutdown now");
                                 serviceHandler.postDelayed(serviceShutdownRunnable,
                                         SERVICE_SHUTDOWN_MS);
                             }
@@ -863,105 +882,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         @Override
         protected void onPreExecute() {
-        }
-    }
-
-    private void updateAccountFromReceivedRecord(int accountGid, String name, String
-            receivedRecord) {
-        String[] splitRecords = receivedRecord.split(",", -1);
-        String rid = "";
-        int state = DBHelper.STATE_ACTIVE;
-        long timestampLast = 0;
-        boolean oldNameFound = false;
-        String oldName = "";
-        boolean oldStateFound = false;
-        int oldState = DBHelper.STATE_ACTIVE;
-        boolean stateFound = false;
-
-        for (String str : splitRecords) {
-            String[] ss = str.split("=", -1);
-            if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE)) {
-                state = Integer.parseInt(ss[1]);
-                stateFound = true;
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_STATE + "old")) {
-                oldState = Integer.parseInt(ss[1]);
-                oldStateFound = true;
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)) {
-                timestampLast = Long.valueOf(ss[1]);
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_RID)) {
-                rid = ss[1];
-            } else if (ss[0].contentEquals(DBHelper.TABLE_COLUMN_NAME + "old")) {
-                oldName = ss[1];
-                oldNameFound = true;
-            }
-        }
-
-        LAccount account = DBAccount.getByGid(accountGid);
-        if (account == null) {
-            LLog.w(TAG, "account no longer exists, GID: " + accountGid);
-        } else {
-            boolean conflict = true;
-            boolean update = false;
-
-            if (oldNameFound || oldStateFound) {
-                conflict = false;
-                if ((oldStateFound && oldState != account.getState())
-                        || (oldNameFound && !oldName.contentEquals(account.getName())))
-                    conflict = true;
-            }
-
-            if (!conflict) {
-                if (oldStateFound) {
-                    account.setState(state);
-                    if (account.getState() == DBHelper.STATE_DELETED) {
-                        LTask.start(new MyAccountDeleteTask(), account.getId());
-                    }
-                }
-                if (oldNameFound) account.setName(name);
-
-                if (account.getTimeStampLast() < timestampLast)
-                    account.setTimeStampLast(timestampLast);
-                update = true;
-            } else if (account.getTimeStampLast() <= timestampLast) {
-                LLog.w(TAG, "conflict detected, force to update account: " + account.getName());
-                if (!TextUtils.isEmpty(name)) account.setName(name);
-                if (stateFound) account.setState(state);
-
-                if (account.getState() == DBHelper.STATE_DELETED) {
-                    LTask.start(new MyAccountDeleteTask(), account.getId());
-                }
-                account.setTimeStampLast(timestampLast);
-                update = true;
-            }
-
-            if (update) {
-                //detect name conflict, before applying update
-                int ii = 0;
-                String nameOrig = name;
-                boolean dup = true;
-                while (ii++ < 9) {
-                    LAccount account1 = DBAccount.getByName(name);
-                    if ((account1 != null) && account1.getId() != account.getId()) {
-                        name = nameOrig + ii++;
-                    } else {
-                        dup = false;
-                        break;
-                    }
-                }
-                if (dup) {
-                    //if there's still dup after 10 tries, we bail and take the name as is.
-                    LLog.w(TAG, "FAIL: unresolvable account name duplication found");
-                }
-                account.setName(name);
-                DBAccount.update(account);
-
-                if (!name.contentEquals(nameOrig)) {
-                    LLog.d(TAG, "account name conflicts, renaming from: " + nameOrig + " to: " +
-                            name);
-                    LJournal journal = new LJournal();
-                    journal.updateAccount(account, nameOrig);
-                }
-            }
         }
     }
 

@@ -323,7 +323,6 @@ public class MainActivity extends LFragmentActivity
         for (int ii = 0; ii < accounts.length; ii++) {
             account.setName(accounts[ii]);
             DBAccount.add(account);
-            account.setRid(UUID.randomUUID().toString());
         }
     }
 

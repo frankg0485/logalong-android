@@ -68,13 +68,13 @@ public class LJournal {
     private static boolean do_add_record(LBuffer jdata, LTransactionDetails details) {
         jdata.clear();
         jdata.putShortAutoInc(LProtocol.JRQST_ADD_RECORD);
-        jdata.putIntAutoInc((int)details.getTransaction().getId());
-        jdata.putIntAutoInc((int)details.getAccount().getGid());
-        jdata.putIntAutoInc((int)details.getAccount2().getGid());
-        jdata.putIntAutoInc((int)details.getCategory().getGid());
-        jdata.putIntAutoInc((int)details.getTag().getGid());
-        jdata.putIntAutoInc((int)details.getVendor().getGid());
-        jdata.putByteAutoInc((byte)details.getTransaction().getType());
+        jdata.putIntAutoInc((int) details.getTransaction().getId());
+        jdata.putIntAutoInc((int) details.getAccount().getGid());
+        jdata.putIntAutoInc((int) details.getAccount2().getGid());
+        jdata.putIntAutoInc((int) details.getCategory().getGid());
+        jdata.putIntAutoInc((int) details.getTag().getGid());
+        jdata.putIntAutoInc((int) details.getVendor().getGid());
+        jdata.putByteAutoInc((byte) details.getTransaction().getType());
         jdata.putDoubleAutoInc(details.getTransaction().getValue());
         jdata.putIntAutoInc(details.getTransaction().getChangeBy());
         jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
@@ -113,6 +113,19 @@ public class LJournal {
         return add_account_data(jdata, account);
     }
 
+    private static boolean do_delete_account(LBuffer jdata, LAccount account) {
+        jdata.clear();
+        jdata.putShortAutoInc(LProtocol.JRQST_DELETE_ACCOUNT);
+        jdata.putIntAutoInc(account.getGid());
+        jdata.setLen(jdata.getBufOffset());
+        return true;
+    }
+
+    //return TRUE if any journal is actually posted, otherwise FALSE
+    //returning FALSE tells service that it can move forward with server polling, which would
+    //come back to flush() again to double check *before* polling actually happens.
+    private static int errorCount = 0;
+    private static final int MAX_ERROR_RETRIES = 10;
     public static boolean flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (null == entry) return false;
@@ -121,10 +134,10 @@ public class LJournal {
             //so not to keep flushing the same journal over and over
             LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
                     + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
-            return true;
+            return false;
         }
 
-        boolean ret = false;
+        boolean removeEntry = false;
         boolean newEntry = false;
 
         lastFlushId = entry.id;
@@ -132,56 +145,78 @@ public class LJournal {
 
         LBuffer jdata = new LBuffer(entry.data);
         LBuffer ndata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
-        switch(jdata.getShortAutoInc()) {
+        switch (jdata.getShortAutoInc()) {
             case LProtocol.JRQST_ADD_RECORD:
                 int id = jdata.getIntAutoInc();
-
                 LTransactionDetails details = DBTransaction.getDetailsById(id);
                 if (details == null) {
                     LLog.e(TAG, "unable to fetch record with id: " + id);
+                    removeEntry = true;
                 } else {
                     do_add_record(ndata, details);
                     newEntry = true;
-                    ret = true;
                 }
                 break;
 
             case LProtocol.JRQST_UPDATE_ACCOUNT:
                 id = jdata.getIntAutoInc();
-                ret = false;
                 LAccount account = DBAccount.getById(id);
                 if (account == null) {
                     //ok to ignore update request if account has been deleted afterwards
                     LLog.w(TAG, "unable to find account record with id: " + id);
+                    removeEntry = true;
                 } else {
                     if (account.getGid() == 0) {
                         // let service to retry later
-                        LLog.w(TAG, "account " + account.getName() + " GID not yet available");
-                        return true;
+                        if (++errorCount > MAX_ERROR_RETRIES) {
+                            removeEntry = true;
+                            LLog.e(TAG, "update account " + account.getName() + " GID not available");
+                        } else
+                            return false;
                     } else {
-                        if (do_update_account(ndata, account)) {
-                            newEntry = true;
-                            ret = true;
-                        }
+                        do_update_account(ndata, account);
+                        newEntry = true;
+                    }
+                }
+                break;
+            case LProtocol.JRQST_DELETE_ACCOUNT:
+                id = jdata.getIntAutoInc();
+                account = DBAccount.getByIdAll(id);
+                if (account == null) {
+                    //ok to ignore delete request if account has been deleted already
+                    LLog.w(TAG, "unable to find account record with id: " + id);
+                    removeEntry = true;
+                } else {
+                    if (account.getGid() == 0) {
+                        // let service to retry later
+                        if (++errorCount > MAX_ERROR_RETRIES) {
+                            removeEntry = true;
+                            LLog.e(TAG, "delete account " + account.getName() + " GID not available");
+                        } else
+                            return false;
+                    } else {
+                        do_delete_account(ndata, account);
+                        newEntry = true;
                     }
                 }
                 break;
         }
 
-        if (!ret) {
+        errorCount = 0;
+        if (removeEntry) {
             deleteById(entry.id);
-        } else {
-            if (newEntry) {
-                try {
-                    entry.data = new byte[ndata.getLen()];
-                    System.arraycopy(ndata.getBuf(), 0, entry.data, 0, ndata.getLen());
-                } catch (Exception e) {
-                    LLog.e(TAG, "unexpected record post error: " + e.getMessage());
-                }
-            }
-            LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
+            return false;
         }
 
+        if (newEntry) {
+            try {
+                entry.data = new byte[ndata.getLen()];
+                System.arraycopy(ndata.getBuf(), 0, entry.data, 0, ndata.getLen());
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected record post error: " + e.getMessage());
+            }
+        }
+        LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
         return true;
     }
 
@@ -198,7 +233,7 @@ public class LJournal {
         try {
             entry.data = new byte[this.data.getLen()];
             System.arraycopy(this.data.getBuf(), 0, entry.data, 0, this.data.getLen());
-        } catch(Exception e) {
+        } catch (Exception e) {
             LLog.e(TAG, "unexpected journal post error: " + e.getMessage());
             return;
         }
@@ -322,11 +357,11 @@ public class LJournal {
 
     private boolean shareItems(int userId, int accountGid, LTransaction[] items, int entries) {
         int ii = 0;
-        while(ii < entries) {
+        while (ii < entries) {
             data.clear();
             data.putShortAutoInc(JRQST_SHARE_TRANSITION_RECORDS);
             data.putIntAutoInc(accountGid);
-            data.putShortAutoInc((short)0);
+            data.putShortAutoInc((short) 0);
 
             short shared = 0;
             while (ii < entries) {
@@ -524,27 +559,6 @@ public class LJournal {
     }
 
     private boolean post_account_update(LAccount account) {
-        record += DBHelper.TABLE_COLUMN_STATE + "=" + account.getState() + ","
-                + DBHelper.TABLE_COLUMN_RID + "=" + account.getRid() + ","
-                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + account.getTimeStampLast();
-
-        data.clear();
-        data.putShortAutoInc(JRQST_UPDATE_ACCOUNT_INFO);
-        data.putIntAutoInc(account.getGid());
-
-        try {
-            byte[] name = account.getName().getBytes("UTF-8");
-            data.putByteAutoInc((byte)name.length);
-            data.putBytesAutoInc(name);
-
-            byte[] rec = record.getBytes("UTF-8");
-            data.putShortAutoInc((short) rec.length);
-            data.putBytesAutoInc(rec);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
-        data.setLen(data.getBufOffset());
-        //post(LPreferences.getUserId());
         return true;
     }
 
@@ -556,6 +570,7 @@ public class LJournal {
 
         return true;
     }
+
     public boolean getAllCategories() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_CATEGORIES);
@@ -564,6 +579,7 @@ public class LJournal {
 
         return true;
     }
+
     public boolean getAllTags() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_TAGS);
@@ -572,6 +588,7 @@ public class LJournal {
 
         return true;
     }
+
     public boolean getAllVendors() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_VENDORS);
@@ -580,6 +597,7 @@ public class LJournal {
 
         return true;
     }
+
     public boolean getAllRecords() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_RECORDS);
@@ -592,7 +610,7 @@ public class LJournal {
     public boolean addAccount(LAccount account) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_ACCOUNT);
-        data.putIntAutoInc((int)account.getId());
+        data.putIntAutoInc((int) account.getId());
 
         if (!add_account_data(data, account)) {
             return false;
@@ -604,7 +622,7 @@ public class LJournal {
     public boolean addCategory(LCategory category) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_CATEGORY);
-        data.putIntAutoInc((int)category.getId());
+        data.putIntAutoInc((int) category.getId());
         //TODO: data.putIntAutoInc((int)category.getParentId());
         data.putIntAutoInc(0);
 
@@ -621,11 +639,12 @@ public class LJournal {
 
         return true;
     }
+
     public boolean addVendor(LVendor vendor) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_VENDOR);
-        data.putIntAutoInc((int)vendor.getId());
-        data.putByteAutoInc((byte)vendor.getType());
+        data.putIntAutoInc((int) vendor.getId());
+        data.putByteAutoInc((byte) vendor.getType());
 
         try {
             byte[] name = vendor.getName().getBytes("UTF-8");
@@ -640,10 +659,11 @@ public class LJournal {
 
         return true;
     }
+
     public boolean addTag(LTag tag) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_TAG);
-        data.putIntAutoInc((int)tag.getId());
+        data.putIntAutoInc((int) tag.getId());
 
         try {
             byte[] name = tag.getName().getBytes("UTF-8");
@@ -662,7 +682,7 @@ public class LJournal {
     public boolean addRecord(long id) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_RECORD);
-        data.putIntAutoInc((int)id);
+        data.putIntAutoInc((int) id);
         data.setLen(data.getBufOffset());
         post();
 
@@ -672,27 +692,19 @@ public class LJournal {
     private boolean updateById(int id, short jrqst) {
         data.clear();
         data.putShortAutoInc(jrqst);
-        data.putIntAutoInc((int)id);
+        data.putIntAutoInc((int) id);
         data.setLen(data.getBufOffset());
         post();
 
         return true;
     }
+
     public boolean updateAccount(int id) {
         return updateById(id, LProtocol.JRQST_UPDATE_ACCOUNT);
     }
+
     public boolean deleteAccount(int id) {
         return updateById(id, LProtocol.JRQST_DELETE_ACCOUNT);
-    }
-
-    public boolean updateAccount(LAccount account, String oldName) {
-        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
-        return post_account_update(account);
-    }
-
-    public boolean updateAccount(LAccount account, int oldState) {
-        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
-        return post_account_update(account);
     }
 
     public boolean unshareAccount(int userId, int accountId, int accountGid, String accountName) {
@@ -729,7 +741,8 @@ public class LJournal {
         return true;
     }
 
-    public boolean confirmAccountShare(boolean confirmed, int accountGid, int shareWithUserId, int shareWithAccountGid) {
+    public boolean confirmAccountShare(boolean confirmed, int accountGid, int shareWithUserId, int
+            shareWithAccountGid) {
         data.clear();
         data.putShortAutoInc(JRQST_CONFIRM_ACCOUNT_SHARE);
         data.putByteAutoInc((byte) (confirmed ? 1 : 0));
@@ -986,7 +999,8 @@ public class LJournal {
                 } else {
                     boolean update = false;
                     if (sss[1].compareTo(category1.getRid()) > 0) {
-                        LLog.d(TAG, "updating category: " + sss[0] + " UUID to : " + sss[1] + " from: " + category1.getRid());
+                        LLog.d(TAG, "updating category: " + sss[0] + " UUID to : " + sss[1] + " from: " +
+                        category1.getRid());
                         category1.setRid(sss[1]);
                         update = true;
                     }
@@ -1320,7 +1334,8 @@ public class LJournal {
                         || (oldTimestampFound && oldTimestamp != timestamp)) {
                     conflict = 1;
                 } else {
-                    conflict = ((!oldCountFound) && (!oldIntervalFound) && (!oldUnitFound) && (!oldTimestampFound)) ? 2 : 0;
+                    conflict = ((!oldCountFound) && (!oldIntervalFound) && (!oldUnitFound) && (!oldTimestampFound)) ?
+                     2 : 0;
                 }
             }
 
@@ -1369,7 +1384,8 @@ public class LJournal {
                 DBScheduledTransaction.update(sch);
             }
         } else {
-            DBScheduledTransaction.add(new LScheduledTransaction(repeatInterval, repeatUnit, repeatCount, timestamp, receivedItem));
+            DBScheduledTransaction.add(new LScheduledTransaction(repeatInterval, repeatUnit, repeatCount, timestamp,
+            receivedItem));
         }
         */
     }
@@ -1416,7 +1432,8 @@ public class LJournal {
                 //- this is a rename to an existing category that has yet to be shared
                 //- shared category RID has been updated without our knowledge
                 //either way, before creating a new entry, let's query to make sure the name is unique.
-                LLog.d(TAG, "unable to find category with given ID, but named category exist: '" + name + "' with id: " + rid);
+                LLog.d(TAG, "unable to find category with given ID, but named category exist: '" + name + "' with id:
+                 " + rid);
                 category = DBCategory.getByName(name);
                 if (category == null && oldNameFound) {
                     category = DBCategory.getByName(oldName);

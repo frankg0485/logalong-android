@@ -479,20 +479,22 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             LJournal journal = new LJournal();
             if (listId == R.id.vendors) {
                 LVendor vendor = DBVendor.getById(tag.id);
-                int type = LVendor.TYPE_PAYEE;
-                if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
-                else if (attr1) type = LVendor.TYPE_PAYEE;
-                else type = LVendor.TYPE_PAYER;
-                vendor.setType(type);
-                DBVendor.update(vendor);
-
-                //journal.updateVendor(vendor.getId());
+                if (null != vendor) {
+                    int type = LVendor.TYPE_PAYEE;
+                    if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
+                    else if (attr1) type = LVendor.TYPE_PAYEE;
+                    else type = LVendor.TYPE_PAYER;
+                    vendor.setType(type);
+                    DBVendor.update(vendor);
+                    //journal.updateVendor(vendor.getId());
+                }
             } else if (listId == R.id.accounts) {
                 LAccount account = DBAccount.getById(tag.id);
-                account.setShowBalance(attr1);
-                DBAccount.update(account);
-
-                journal.updateAccount((int) account.getId());
+                if (null != account) {
+                    account.setShowBalance(attr1);
+                    DBAccount.update(account);
+                    journal.updateAccount((int) account.getId());
+                }
             }
         }
 
