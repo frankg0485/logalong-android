@@ -1,5 +1,5 @@
 package com.swoag.logalong.views;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 
 import android.app.Dialog;
@@ -55,7 +55,8 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
     public interface LNewEntryDialogItf {
         // return FALSE to keep this dialog alive.
-        public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2);
+        public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean
+                attr2);
     }
 
     private boolean isEntryNameAvailable(String name) {
@@ -64,6 +65,15 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
             switch (type) {
                 case TYPE_ACCOUNT:
                     ret = (null == DBAccount.getByName(name));
+                    break;
+                case TYPE_CATEGORY:
+                    ret = (null == DBCategory.getInstance().getByName(name));
+                    break;
+                case TYPE_TAG:
+                    ret = (null == DBTag.getByName(name));
+                    break;
+                case TYPE_VENDOR:
+                    ret = (null == DBVendor.getByName(name));
                     break;
             }
         }
@@ -76,9 +86,8 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
             switch (type) {
                 case TYPE_ACCOUNT:
-                    LAccount account = DBAccount.getByName(name);
-                    if (null == account) {
-                        account = new LAccount(name);
+                    if (null == DBAccount.getByName(name)) {
+                        LAccount account = new LAccount(name);
                         account.setShowBalance(attr1);
                         DBAccount.add(account);
                         journal.addAccount(account);
@@ -88,12 +97,10 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                     break;
 
                 case TYPE_CATEGORY:
-                    if (DBCategory.getIdByName(name) == 0) {
+                    if (null == DBCategory.getInstance().getByName(name)) {
                         LCategory category = new LCategory(name);
-                        DBCategory.add(category);
-
-
-                        journal.updateCategory(category);
+                        DBCategory.getInstance().add(category);
+                        journal.addCategory(category);
                     }
                     break;
 
@@ -102,31 +109,19 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                     if (attr1 && attr2) vtype = LVendor.TYPE_PAYEE_PAYER;
                     else if (attr1) vtype = LVendor.TYPE_PAYEE;
                     else vtype = LVendor.TYPE_PAYER;
-                    LVendor vendor;
-                    if (DBVendor.getIdByName(name) == 0) {
-                        vendor = new LVendor(name, vtype);
+                    if (null == DBVendor.getByName(name)) {
+                        LVendor vendor = new LVendor(name, vtype);
                         DBVendor.add(vendor);
-                    } else {
-                        vendor = DBVendor.getByName(name);
-                        vendor.setType(vtype);
+                        journal.addVendor(vendor);
                     }
-
-                    journal = new LJournal();
-                    journal.updateVendor(vendor);
                     break;
 
                 case TYPE_TAG:
-
-                    LTag tag;
-                    if (DBTag.getIdByName(name) == 0) {
-                        tag = new LTag(name);
+                    if (null == DBTag.getByName(name)) {
+                        LTag tag = new LTag(name);
                         DBTag.add(tag);
-                    } else {
-                        tag = DBTag.getByName(name);
+                        journal.addTag(tag);
                     }
-
-                    journal = new LJournal();
-                    journal.updateTag(tag);
                     break;
 
                 default:
@@ -239,7 +234,8 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
     private void hideIME() {
         try {
-            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context
+                    .INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
             text.setCursorVisible(false);
         } catch (Exception e) {

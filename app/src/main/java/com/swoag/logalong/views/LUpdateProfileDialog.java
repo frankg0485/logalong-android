@@ -282,7 +282,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             }
             HashSet<Long> catIds = DBCategory.getAllActiveIds();
             for (long id: catIds) {
-                LCategory category = DBCategory.getById(id);
+                LCategory category = DBCategory.getInstance().getById(id);
                 if (null != category) {
                     publishProgress(category.getName());
                     journal.addCategory(category);

@@ -15,9 +15,7 @@ import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
-import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
-import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
@@ -121,11 +119,42 @@ public class LJournal {
         return true;
     }
 
+    private static boolean add_category_data(LBuffer data, LCategory category) {
+        //data.putIntAutoInc(category.getPid());
+        data.putIntAutoInc(0);
+        try {
+            byte[] name = category.getName().getBytes("UTF-8");
+            data.putShortAutoInc((short) name.length);
+            data.putBytesAutoInc(name);
+        } catch (Exception e) {
+            LLog.e(TAG, "unexpected error when adding account: " + e.getMessage());
+            return false;
+        }
+        data.setLen(data.getBufOffset());
+        return true;
+    }
+
+    private static boolean do_update_category(LBuffer jdata, LCategory category) {
+        jdata.clear();
+        jdata.putShortAutoInc(LProtocol.JRQST_UPDATE_CATEGORY);
+        jdata.putIntAutoInc(category.getGid());
+        return add_category_data(jdata, category);
+    }
+
+    private static boolean do_delete_category(LBuffer jdata, LCategory category) {
+        jdata.clear();
+        jdata.putShortAutoInc(LProtocol.JRQST_DELETE_CATEGORY);
+        jdata.putIntAutoInc(category.getGid());
+        jdata.setLen(jdata.getBufOffset());
+        return true;
+    }
+
     //return TRUE if any journal is actually posted, otherwise FALSE
     //returning FALSE tells service that it can move forward with server polling, which would
     //come back to flush() again to double check *before* polling actually happens.
     private static int errorCount = 0;
     private static final int MAX_ERROR_RETRIES = 10;
+
     public static boolean flush() {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (null == entry) return false;
@@ -196,6 +225,46 @@ public class LJournal {
                             return false;
                     } else {
                         do_delete_account(ndata, account);
+                        newEntry = true;
+                    }
+                }
+                break;
+            case LProtocol.JRQST_UPDATE_CATEGORY:
+                id = jdata.getIntAutoInc();
+                LCategory category = DBCategory.getInstance().getById(id);
+                if (category == null) {
+                    LLog.w(TAG, "unable to find category with id: " + id);
+                    removeEntry = true;
+                } else {
+                    if (category.getGid() == 0) {
+                        // let service to retry later
+                        if (++errorCount > MAX_ERROR_RETRIES) {
+                            removeEntry = true;
+                            LLog.e(TAG, "update category " + category.getName() + " GID not available");
+                        } else
+                            return false;
+                    } else {
+                        do_update_category(ndata, category);
+                        newEntry = true;
+                    }
+                }
+                break;
+            case LProtocol.JRQST_DELETE_CATEGORY:
+                id = jdata.getIntAutoInc();
+                category = DBCategory.getInstance().getByIdAll(id);
+                if (category == null) {
+                    LLog.w(TAG, "unable to find category with id: " + id);
+                    removeEntry = true;
+                } else {
+                    if (category.getGid() == 0) {
+                        // let service to retry later
+                        if (++errorCount > MAX_ERROR_RETRIES) {
+                            removeEntry = true;
+                            LLog.e(TAG, "delete category " + category.getName() + " GID not available");
+                        } else
+                            return false;
+                    } else {
+                        do_delete_category(ndata, category);
                         newEntry = true;
                     }
                 }
@@ -623,20 +692,11 @@ public class LJournal {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_ADD_CATEGORY);
         data.putIntAutoInc((int) category.getId());
-        //TODO: data.putIntAutoInc((int)category.getParentId());
-        data.putIntAutoInc(0);
 
-        try {
-            byte[] name = category.getName().getBytes("UTF-8");
-            data.putShortAutoInc((short) name.length);
-            data.putBytesAutoInc(name);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error when adding category: " + e.getMessage());
+        if (!add_category_data(data, category)) {
             return false;
         }
-        data.setLen(data.getBufOffset());
         post();
-
         return true;
     }
 
@@ -705,6 +765,14 @@ public class LJournal {
 
     public boolean deleteAccount(int id) {
         return updateById(id, LProtocol.JRQST_DELETE_ACCOUNT);
+    }
+
+    public boolean updateCategory(int id) {
+        return updateById(id, LProtocol.JRQST_UPDATE_CATEGORY);
+    }
+
+    public boolean deleteCategory(int id) {
+        return updateById(id, LProtocol.JRQST_DELETE_CATEGORY);
     }
 
     public boolean unshareAccount(int userId, int accountId, int accountGid, String accountName) {
@@ -1105,6 +1173,7 @@ public class LJournal {
     //       1: has old value, has conflict
     //       2. no old value
     private static int itemHasConflict(LTransaction item, OldRecord old) {
+        /*
         if ((old.oldState && old.state != item.getState())
                 || (old.oldAmount && old.amount != item.getValue())
                 || (old.oldTimestamp && old.timestamp != item.getTimeStamp())
@@ -1145,6 +1214,8 @@ public class LJournal {
                 && (!old.oldCategory)
                 && (!old.oldVendor)
                 && (!old.oldTag)) ? 2 : 0;
+                */
+        return 0;
     }
 
     public static void updateItemFromReceivedRecord(int accountGid, String receivedRecord) {

@@ -28,7 +28,7 @@ import java.util.Random;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    public static final String serverIp = "192.168.1.115";
+    public static final String serverIp = "192.168.1.116";
     //public static final String serverIp = "auto";
     private static final int serverPort = 8000;
 
@@ -106,7 +106,7 @@ public class LAppServer {
         synchronized (netLock) {
             if (!connected) {
                 connected = true;
-
+                LLog.d(TAG, "connection startup ...");
                 ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
                 if ((activeNetwork != null) && activeNetwork.isConnectedOrConnecting()) {
@@ -233,6 +233,7 @@ public class LAppServer {
                             closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
                             break;
                         } else {
+                            LLog.d(TAG, "flushing socket");
                             UiPing(); //flush socket
                         }
                         try {

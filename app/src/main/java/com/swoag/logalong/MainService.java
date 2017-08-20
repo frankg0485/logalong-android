@@ -54,6 +54,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
     private static final short NOTIFICATION_UPDATE_ACCOUNT = 0x011;
     private static final short NOTIFICATION_DELETE_ACCOUNT = 0x012;
+    private static final short NOTIFICATION_ADD_CATEGORY = 0x020;
+    private static final short NOTIFICATION_UPDATE_CATEGORY = 0x021;
+    private static final short NOTIFICATION_DELETE_CATEGORY = 0x022;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -340,7 +343,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         } else {
             switch (action) {
                 case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
-                    LJournal.flush();
+                    if (!LJournal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
                 case LBroadcastReceiver.ACTION_POST_JOURNAL:
@@ -375,7 +378,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     id = intent.getIntExtra("id", 0);
                                     gid = intent.getIntExtra("gid", 0);
 
-                                    LCategory category = DBCategory.getByGid(gid);
+                                    LCategory category = DBCategory.getInstance().getByGid(gid);
                                     if (null != category) {
                                         if (category.getId() != id) {
                                             LLog.e(TAG, "unexpected error, category GID: " + gid + " already taken " +
@@ -439,15 +442,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_GET_CATEGORIES:
                                     gid = intent.getIntExtra("gid", 0);
                                     name = intent.getStringExtra("name");
-                                    category = DBCategory.getByGid(gid);
+                                    DBCategory dbCategory = DBCategory.getInstance();
+                                    category = dbCategory.getByGid(gid);
                                     if (null != category) {
                                         category.setName(name);
-                                        DBCategory.update(category);
+                                        dbCategory.update(category);
                                     } else {
                                         category = new LCategory();
                                         category.setGid(gid);
                                         category.setName(name);
-                                        DBCategory.add(category);
+                                        dbCategory.add(category);
                                     }
                                     break;
                                 case LProtocol.JRQST_GET_TAGS:
@@ -525,6 +529,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                                 case LProtocol.JRQST_UPDATE_ACCOUNT:
                                 case LProtocol.JRQST_DELETE_ACCOUNT:
+                                case LProtocol.JRQST_UPDATE_CATEGORY:
+                                case LProtocol.JRQST_DELETE_CATEGORY:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);
@@ -588,10 +594,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 if (null != account) {
                                     account.setName(name);
                                     DBAccount.update(account);
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 }
-                                uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                                        .ACTION_UI_UPDATE_ACCOUNT));
-                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 break;
 
                             case NOTIFICATION_DELETE_ACCOUNT:
@@ -602,6 +608,56 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     DBAccount.deleteById(account.getId());
                                     uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                             .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_ADD_CATEGORY:
+                                gid = intent.getIntExtra("int1", 0);
+                                int pid = intent.getIntExtra("int2", 0);
+                                name = intent.getStringExtra("txt1");
+                                DBCategory dbCategory = DBCategory.getInstance();
+                                LCategory category = dbCategory.getByGid(gid);
+                                if (null != category) {
+                                    category.setName(name);
+                                    //category.setPid(pid);
+                                    dbCategory.update(category);
+                                } else {
+                                    category = new LCategory();
+                                    category.setGid(gid);
+                                    category.setName(name);
+                                    dbCategory.add(category);
+                                }
+                                uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_UI_UPDATE_CATEGORY));
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                break;
+
+                            case NOTIFICATION_UPDATE_CATEGORY:
+                                gid = intent.getIntExtra("int1", 0);
+                                pid = intent.getIntExtra("int2", 0);
+                                name = intent.getStringExtra("txt1");
+                                dbCategory = DBCategory.getInstance();
+                                category = dbCategory.getInstance().getByGid(gid);
+                                if (null != category) {
+                                    category.setName(name);
+                                    //category.setPid(pid);
+                                    dbCategory.update(category);
+
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_CATEGORY));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_DELETE_CATEGORY:
+                                gid = intent.getIntExtra("int1", 0);
+                                dbCategory = DBCategory.getInstance();
+                                category = dbCategory.getInstance().getByGid(gid);
+                                if (null != category) {
+                                    dbCategory.deleteById(category.getId());
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_CATEGORY));
                                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 }
                                 break;
@@ -781,6 +837,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 */
                 case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
                     LLog.w(TAG, "unknown message received");
+                    if (!LJournal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
                 //case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:

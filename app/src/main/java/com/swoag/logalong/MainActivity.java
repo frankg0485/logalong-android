@@ -330,7 +330,7 @@ public class MainActivity extends LFragmentActivity
         LCategory category = new LCategory();
         for (int ii = 0; ii < categories.length; ii++) {
             category.setName(categories[ii]);
-            DBCategory.add(category);
+            DBCategory.getInstance().add(category);
             //TODO: category.setRid(UUID.randomUUID().toString());
         }
     }

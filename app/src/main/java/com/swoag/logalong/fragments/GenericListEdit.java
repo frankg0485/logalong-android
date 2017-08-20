@@ -111,7 +111,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         }
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT}, this);
+                LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT,
+                LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY}, this);
 
     }
 
@@ -167,6 +168,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT:
+            case LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY:
                 Cursor cursor = getMyCursor();
                 if (null == cursor) {
                     LLog.e(TAG, "fatal: unable to open database");
@@ -418,17 +420,16 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         break;
 
                     case R.id.categories:
-                        LCategory ncategory = DBCategory.getByName(newName);
-                        LCategory category = DBCategory.getById(tag.id);
+                        DBCategory dbCategory = DBCategory.getInstance();
+                        LCategory ncategory = dbCategory.getByName(newName);
+                        LCategory category = dbCategory.getById(tag.id);
                         if ((ncategory != null) && (!category.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
-                            String oldName = category.getName();
                             category.setName(newName);
                             category.setTimeStampLast(LPreferences.getServerUtc());
-                            DBCategory.update(category);
-
-                            journal.updateCategory(category, oldName);
+                            dbCategory.update(category);
+                            journal.updateCategory((int)category.getId());
                         }
                         break;
 
@@ -517,12 +518,13 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         break;
 
                     case R.id.categories:
-                        LCategory category = DBCategory.getById(tag.id);
+                        DBCategory dbCategory = DBCategory.getInstance();
+                        LCategory category = dbCategory.getById(tag.id);
                         category.setState(DBHelper.STATE_DELETED);
                         category.setTimeStampLast(LPreferences.getServerUtc());
-                        DBCategory.update(category);
+                        dbCategory.update(category);
 
-                        journal.updateCategory(category, DBHelper.STATE_ACTIVE);
+                        journal.deleteCategory((int)category.getId());
                         break;
 
                     case R.id.vendors:

@@ -112,7 +112,7 @@ public class TransactionSearchDialog extends Dialog implements
                         categories = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            LCategory category = DBCategory.getById(ll);
+                            LCategory category = DBCategory.getInstance().getById(ll);
                             if ((category != null) && (category.getState() == DBHelper.STATE_ACTIVE)) {
                                 categories[ii++] = ll;
                                 ok = true;
@@ -283,7 +283,7 @@ public class TransactionSearchDialog extends Dialog implements
         boolean ok = false;
         if (null != vals) {
             for (int ii = 0; ii < vals.length; ii++) {
-                LCategory category = DBCategory.getById(vals[ii]);
+                LCategory category = DBCategory.getInstance().getById(vals[ii]);
                 if ((category != null) && (category.getState() == DBHelper.STATE_ACTIVE)) {
                     str += DBCategory.getNameById(vals[ii]) + ", ";
                     ok = true;

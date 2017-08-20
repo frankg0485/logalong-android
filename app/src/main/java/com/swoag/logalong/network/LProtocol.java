@@ -82,6 +82,8 @@ public class LProtocol {
 
     public static final short JRQST_UPDATE_ACCOUNT = 0x201;
     public static final short JRQST_DELETE_ACCOUNT = 0x202;
+    public static final short JRQST_UPDATE_CATEGORY = 0x211;
+    public static final short JRQST_DELETE_CATEGORY = 0x212;
 
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -172,26 +174,7 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
-    private void handleAccountInfoUpdate(LBuffer pkt, int status, int action, int cacheId) {
-        Intent rspsIntent;
-        int accountGid = pkt.getIntAutoInc();
-
-        byte nameLen = pkt.getByteAutoInc();
-        String accountName = pkt.getStringAutoInc(nameLen);
-
-        int bytes = pkt.getShortAutoInc();
-        String record = pkt.getStringAutoInc(bytes);
-
-        rspsIntent = new Intent(LBroadcastReceiver.action(action));
-        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-        rspsIntent.putExtra("cacheId", cacheId);
-        rspsIntent.putExtra("accountGid", accountGid);
-        rspsIntent.putExtra("accountName", accountName);
-        rspsIntent.putExtra("record", record);
-        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-    }
-
-    private void handleShareUserProfileUpdate(LBuffer pkt, int status, int action, int cacheId) {
+     private void handleShareUserProfileUpdate(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
         int userId = pkt.getIntAutoInc();
         byte bytes = pkt.getByteAutoInc();

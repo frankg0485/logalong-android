@@ -15,6 +15,14 @@ import java.util.HashSet;
 public class DBVendor {
     private static final String TAG = DBVendor.class.getSimpleName();
 
+    private static final String[] vendor_columns = new String[]{
+            "_id",
+            DBHelper.TABLE_COLUMN_GID,
+            DBHelper.TABLE_COLUMN_NAME,
+            DBHelper.TABLE_COLUMN_STATE,
+            DBHelper.TABLE_COLUMN_TYPE,
+            DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE};
+
     private static ContentValues setValues(LVendor vendor) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
@@ -106,7 +114,7 @@ public class DBVendor {
         LVendor vendor = new LVendor();
 
         try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, vendor_columns,
                     DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
 
             if (csr != null) {
@@ -131,11 +139,11 @@ public class DBVendor {
         return getByName(LApp.ctx, name);
     }
 
-    public static LVendor getByName(Context context, String name) {
+    private static LVendor getByName(Context context, String name) {
         LVendor vendor = new LVendor();
 
         try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
+            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, vendor_columns,
                     DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
 
