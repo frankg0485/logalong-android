@@ -9,14 +9,21 @@ import android.net.Uri;
 
 import com.swoag.logalong.LApp;
 
+import java.util.HashSet;
+
 public abstract class DBGeneric<T> {
     private static final String TAG = DBAccess.class.getSimpleName();
 
     abstract Uri getUri();
+
     abstract String[] getColumns();
+
     abstract T getValues(Cursor cursor, T t);
+
     abstract ContentValues setValues(T t);
+
     abstract long getId(T t);
+
     abstract void setId(T t, long id);
 
     public T getByName(String name) {
@@ -48,7 +55,7 @@ public abstract class DBGeneric<T> {
         try {
             Cursor csr;
             String id_str;
-            id_str = (byId)? "_id" : DBHelper.TABLE_COLUMN_GID;
+            id_str = (byId) ? "_id" : DBHelper.TABLE_COLUMN_GID;
             if (active)
                 csr = context.getContentResolver().query(getUri(), getColumns(),
                         id_str + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
@@ -90,6 +97,117 @@ public abstract class DBGeneric<T> {
         return getByIdGid(LApp.ctx, gid, false, true);
     }
 
+    private long getIdByColumn(String column, String value, boolean caseSensitive) {
+        long id = 0;
+
+        try {
+            Cursor csr = null;
+            if (caseSensitive) {
+                csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, column + "=? AND "
+                                + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper
+                                .STATE_ACTIVE},
+                        null);
+            } else {
+                csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, column + "=? COLLATE NOCASE " +
+                                "AND "
+                                + DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + value, "" + DBHelper
+                                .STATE_ACTIVE},
+                        null);
+            }
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + getUri());
+                    csr.close();
+                    return 0;
+                }
+
+                csr.moveToFirst();
+                id = csr.getLong(0);
+                csr.close();
+            }
+
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + getUri());
+        }
+        return id;
+    }
+
+    private long getIdByColumn(String column, long value) {
+        long id = 0;
+
+        try {
+            Cursor csr = null;
+            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, column + "=?",
+                    new String[]{"" + value}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to get unique " + column + ": " + value + " in table: " + getUri());
+                    csr.close();
+                    return 0;
+                }
+
+                csr.moveToFirst();
+                id = csr.getLong(0);
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + getUri());
+        }
+        return id;
+    }
+
+    public long getIdByGid(long gid) {
+        return getIdByColumn(DBHelper.TABLE_COLUMN_GID, gid);
+    }
+
+    public long getIdByName(String name) {
+        return getIdByColumn(DBHelper.TABLE_COLUMN_NAME, name, true);
+    }
+
+    public String getNameById(long id) {
+        String str = "";
+        try {
+            Cursor csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{DBHelper.TABLE_COLUMN_NAME},
+                    "_id=? AND " + DBHelper.TABLE_COLUMN_STATE + " =?",
+                    new String[]{"" + id, "" + DBHelper.STATE_ACTIVE}, null);
+            if (csr != null) {
+                if (csr.getCount() > 0) {
+                    csr.moveToFirst();
+                    str = csr.getString(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
+                }
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        return str;
+    }
+
+    public int getDbIndexById(long id) {
+        Cursor csr = null;
+        int index = 0;
+        int ret = -1;
+        try {
+            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"},
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
+                    DBHelper.TABLE_COLUMN_NAME + " ASC");
+
+            csr.moveToFirst();
+            while (true) {
+                if (id == csr.getLong(0)) {
+                    ret = index;
+                    break;
+                }
+                csr.moveToNext();
+                index++;
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+        }
+        if (csr != null) csr.close();
+        return ret;
+    }
+
     public long add(T t) {
         ContentValues cv = setValues(t);
         long id = -1;
@@ -114,7 +232,7 @@ public abstract class DBGeneric<T> {
         return true;
     }
 
-    private boolean updateColumnById(long id, String column, int value) {
+    public boolean updateColumnById(long id, String column, int value) {
         try {
             ContentValues cv = new ContentValues();
             cv.put(column, value);
@@ -124,8 +242,34 @@ public abstract class DBGeneric<T> {
         }
         return true;
     }
+
     public void deleteById(long id) {
         updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 
+    public Cursor getCursorSortedBy(String sortColumn) {
+        Cursor cur;
+        if (sortColumn != null)
+            cur = LApp.ctx.getContentResolver().query(getUri(), getColumns(),
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
+                    sortColumn + " ASC");
+        else
+            cur = LApp.ctx.getContentResolver().query(getUri(), null,
+                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+        return cur;
+    }
+
+    public HashSet<Long> getAllActiveIds() {
+        HashSet<Long> set = new HashSet<Long>();
+        Cursor cur = getCursorSortedBy(null);
+        if (cur != null && cur.getCount() > 0) {
+
+            cur.moveToFirst();
+            do {
+                set.add(cur.getLong(0));
+            } while (cur.moveToNext());
+        }
+        if (cur != null) cur.close();
+        return set;
+    }
 }

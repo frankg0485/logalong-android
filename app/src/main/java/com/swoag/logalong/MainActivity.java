@@ -358,7 +358,7 @@ public class MainActivity extends LFragmentActivity
             addAccounts();
         }
 
-        if (TextUtils.isEmpty(DBCategory.getNameById(1))) {
+        if (TextUtils.isEmpty(DBCategory.getInstance().getNameById(1))) {
             addCategories();
         }
         /*if (TextUtils.isEmpty(DBVendor.getNameById(1))) {

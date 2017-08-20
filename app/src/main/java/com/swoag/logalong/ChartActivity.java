@@ -735,7 +735,7 @@ public class ChartActivity extends LFragmentActivity implements
                     }
 
                     if (v < 0) {
-                        String category = DBCategory.getNameById(categoryId);
+                        String category = DBCategory.getInstance().getNameById(categoryId);
                         if (category == null || TextUtils.isEmpty(category)) {
                             category = "Unspecified";
                         } else {

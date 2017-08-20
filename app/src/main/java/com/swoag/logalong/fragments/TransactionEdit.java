@@ -105,7 +105,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     item.getAccount2() : item.getAccount()));
         } else {
             categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            categoryTV.setText(DBCategory.getNameById(item.getCategory()));
+            categoryTV.setText(DBCategory.getInstance().getNameById(item.getCategory()));
 
             vendorTV.setTypeface(null, item.getVendor() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
             if (item.getType() == LTransaction.TRANSACTION_TYPE_EXPENSE) {
@@ -360,9 +360,12 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 case R.id.tvDate:
                     final Calendar c = Calendar.getInstance();
                     c.setTimeInMillis(item.getTimeStamp());
-                    DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
-                            TransactionEdit.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-                    datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+                    DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style
+                            .Theme_Holo_Light_Dialog_NoActionBar,
+                            TransactionEdit.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar
+                            .DAY_OF_MONTH));
+                    datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color
+                            .TRANSPARENT));
                     datePickerDialog.show();
                     break;
 
@@ -370,7 +373,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     noteET.setCursorVisible(true);
                     try {
                         if (noteET.requestFocus()) {
-                            InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            InputMethodManager keyboard = (InputMethodManager) activity.getSystemService(Context
+                                    .INPUT_METHOD_SERVICE);
                             keyboard.showSoftInput(noteET, 0);
                         }
                     } catch (Exception e) {
@@ -406,9 +410,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount2()), DLG_ID_ACCOUNT2);
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount2()),
+                                        DLG_ID_ACCOUNT2);
                         mSelectionDialog.show();
-                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
+                                .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
                     }
                     break;
@@ -419,9 +425,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount()), DLG_ID_ACCOUNT);
+                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount()),
+                                        DLG_ID_ACCOUNT);
                         mSelectionDialog.show();
-                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
+                                .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
                     }
                     break;
@@ -432,9 +440,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_CATEGORY_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBCategory.getDbIndexById(item.getCategory()), DLG_ID_CATEGORY);
+                                        DBHelper.TABLE_COLUMN_NAME, DBCategory.getInstance().getDbIndexById(item
+                                        .getCategory()), DLG_ID_CATEGORY);
                         mSelectionDialog.show();
-                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
+                                .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
                     }
                     break;
@@ -444,10 +454,13 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_VENDOR_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
-                                        DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById(item.getVendor()), DLG_ID_VENDOR);
+                                        DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction
+                                        .TRANSACTION_TYPE_INCOME ?
+                                        DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById
+                                        (item.getVendor()), DLG_ID_VENDOR);
                         mSelectionDialog.show();
-                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
+                                .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
                     }
                     break;
@@ -459,7 +472,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                                         DBHelper.TABLE_TAG_NAME,
                                         DBHelper.TABLE_COLUMN_NAME, DBTag.getDbIndexById(item.getTag()), DLG_ID_TAG);
                         mSelectionDialog.show();
-                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+                        mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
+                                .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
                     } catch (Exception e) {
                     }
                     break;
@@ -516,7 +530,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     selection = DBAccount.getDbIndexById(DBAccount.getIdByName(name));
                     break;
                 case DLG_ID_CATEGORY:
-                    selection = DBCategory.getDbIndexById(DBCategory.getIdByName(name));
+                    selection = DBCategory.getInstance().getDbIndexById(DBCategory.getInstance().getIdByName(name));
                     break;
                 case DLG_ID_VENDOR:
                     selection = item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
@@ -565,7 +579,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 type = LNewEntryDialog.TYPE_TAG;
                 break;
         }
-        LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, dlgId, type, TransactionEdit.this, title, null, attr1, attr2);
+        LNewEntryDialog newEntryDialog = new LNewEntryDialog(activity, dlgId, type, TransactionEdit.this, title,
+                null, attr1, attr2);
         newEntryDialog.show();
     }
 
@@ -574,7 +589,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))
             return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
-            return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME)) {
             if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME)
                 return DBVendor.getPayerCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
@@ -680,7 +695,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private void hideIME() {
         if (!bScheduleMode) {
             try {
-                InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager inputManager = (InputMethodManager) activity.getSystemService(Context
+                        .INPUT_METHOD_SERVICE);
                 inputManager.hideSoftInputFromWindow(noteET.getWindowToken(), 0);
                 noteET.setCursorVisible(false);
             } catch (Exception e) {

@@ -264,9 +264,10 @@ public class DBPorter {
                     else {
                         ll = categoryMap.get(category);
                         if (null == ll) {
-                            categoryId = DBCategory.getIdByName(category);
+                            //TODO: categoryId = DBCategory.getIdByName(category);
+                            categoryId = 0; //TODO
                             if (categoryId != 0) {
-                                DBCategory.updateColumnById(categoryId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                                //TODO: DBCategory.updateColumnById(categoryId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 //TODO: categoryId = DBCategory.add(new LCategory(category, ss[ii]));
                             }

@@ -280,7 +280,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                     journal.addAccount(account);
                 }
             }
-            HashSet<Long> catIds = DBCategory.getAllActiveIds();
+            HashSet<Long> catIds = DBCategory.getInstance().getAllActiveIds();
             for (long id: catIds) {
                 LCategory category = DBCategory.getInstance().getById(id);
                 if (null != category) {

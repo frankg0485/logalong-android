@@ -378,14 +378,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     id = intent.getIntExtra("id", 0);
                                     gid = intent.getIntExtra("gid", 0);
 
-                                    LCategory category = DBCategory.getInstance().getByGid(gid);
+                                    DBCategory dbCategory = DBCategory.getInstance();
+                                    LCategory category = dbCategory.getByGid(gid);
                                     if (null != category) {
                                         if (category.getId() != id) {
                                             LLog.e(TAG, "unexpected error, category GID: " + gid + " already taken " +
                                                     "by " + category.getName());
                                         }
                                     }
-                                    DBCategory.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    dbCategory.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
                                 case LProtocol.JRQST_ADD_TAG:
                                     id = intent.getIntExtra("id", 0);
@@ -442,7 +443,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_GET_CATEGORIES:
                                     gid = intent.getIntExtra("gid", 0);
                                     name = intent.getStringExtra("name");
-                                    DBCategory dbCategory = DBCategory.getInstance();
+                                    dbCategory = DBCategory.getInstance();
                                     category = dbCategory.getByGid(gid);
                                     if (null != category) {
                                         category.setName(name);
@@ -510,7 +511,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     transaction.setGid(lgid);
                                     transaction.setAccount(DBAccount.getIdByGid(aid));
                                     transaction.setAccount2(DBAccount.getIdByGid(aid2));
-                                    transaction.setCategory(DBCategory.getIdByGid(cid));
+                                    transaction.setCategory(DBCategory.getInstance().getIdByGid(cid));
                                     transaction.setTag(DBTag.getIdByGid(tid));
                                     transaction.setVendor(DBVendor.getIdByGid(vid));
                                     transaction.setType(type);

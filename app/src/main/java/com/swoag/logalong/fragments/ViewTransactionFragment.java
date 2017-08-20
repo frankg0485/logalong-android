@@ -280,7 +280,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
-                            summary.setName(DBCategory.getNameById(lastId));
+                            summary.setName(DBCategory.getInstance().getNameById(lastId));
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
                             summary.setName(DBTag.getNameById(lastId));
@@ -324,7 +324,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     if (LPreferences.getSearchAllTime()) setAccountSummary(summary, id);
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
-                    summary.setName(DBCategory.getNameById(id));
+                    summary.setName(DBCategory.getInstance().getNameById(id));
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
                     summary.setName(DBTag.getNameById(id));
@@ -586,7 +586,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
-            String category = DBCategory.getNameById(categoryId);
+            String category = DBCategory.getInstance().getNameById(categoryId);
             String tag = DBTag.getNameById(tagId);
 
             if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {

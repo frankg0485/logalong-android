@@ -100,7 +100,7 @@ public class TransactionSearchDialog extends Dialog implements
         categorySelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
-                return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
             }
 
             @Override
@@ -285,7 +285,7 @@ public class TransactionSearchDialog extends Dialog implements
             for (int ii = 0; ii < vals.length; ii++) {
                 LCategory category = DBCategory.getInstance().getById(vals[ii]);
                 if ((category != null) && (category.getState() == DBHelper.STATE_ACTIVE)) {
-                    str += DBCategory.getNameById(vals[ii]) + ", ";
+                    str += DBCategory.getInstance().getNameById(vals[ii]) + ", ";
                     ok = true;
                 }
             }

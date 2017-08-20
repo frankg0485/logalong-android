@@ -83,7 +83,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 csr = DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.categories:
-                csr = DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                csr = DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.vendors:
                 csr = DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
@@ -643,7 +643,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
 
         @Override
         public Cursor onMultiSelectionGetCursor(String column) {
-            return DBCategory.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         }
 
         private class VTag {

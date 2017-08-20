@@ -256,7 +256,7 @@ public class ScheduleActivity extends LFragmentActivity implements
             int state = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE));
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
-            String category = DBCategory.getNameById(categoryId);
+            String category = DBCategory.getInstance().getNameById(categoryId);
             String tag = DBTag.getNameById(tagId);
 
             String str = "";
