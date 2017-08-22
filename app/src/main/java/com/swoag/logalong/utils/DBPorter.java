@@ -31,11 +31,12 @@ public class DBPorter {
     }
 
     private static String exportTransactionItem(Cursor cursor) {
-        LAccount lAccount = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
-        LAccount lAccount2 = DBAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
+        DBAccount dbAccount = DBAccount.getInstance();
+        LAccount lAccount = dbAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
+        LAccount lAccount2 = dbAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
         LCategory lCategory = DBCategory.getInstance().getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY)));
-        LVendor lVendor = DBVendor.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
-        LTag lTag = DBTag.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
+        LVendor lVendor = DBVendor.getInstance().getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR)));
+        LTag lTag = DBTag.getInstance().getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
 
         String row = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT)) + ",";
 
@@ -284,11 +285,11 @@ public class DBPorter {
                     else {
                         ll = accountMap.get(account);
                         if (null == ll) {
-                            accountId = DBAccount.getIdByName(account);
+                            accountId = DBAccount.getInstance().getIdByName(account);
                             if (accountId != 0) {
-                                DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                                //DBAccount.updateColumnById(accountId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
-                                accountId = DBAccount.add(new LAccount(account, ss[ii]));
+                                //accountId = DBAccount.getInstance().add(new LAccount(account, ss[ii]));
                             }
                             accountMap.put(account, accountId);
                         } else {
@@ -303,11 +304,11 @@ public class DBPorter {
                     else {
                         ll = accountMap.get(account2);
                         if (null == ll) {
-                            account2Id = DBAccount.getIdByName(account2);
+                            account2Id = DBAccount.getInstance().getIdByName(account2);
                             if (account2Id != 0) {
-                                DBAccount.updateColumnById(account2Id, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                                //DBAccount.updateColumnById(account2Id, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
-                                account2Id = DBAccount.add(new LAccount(account2, ss[ii]));
+                                //account2Id = DBAccount.add(new LAccount(account2, ss[ii]));
                             }
                             accountMap.put(account2, account2Id);
                         } else {
@@ -322,9 +323,9 @@ public class DBPorter {
                     else {
                         ll = tagMap.get(tag);
                         if (null == ll) {
-                            tagId = DBTag.getIdByName(tag);
+                            tagId = DBTag.getInstance().getIdByName(tag);
                             if (tagId != 0) {
-                                DBTag.updateColumnById(tagId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                                //DBTag.getInstance().updateColumnById(tagId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 //TODO: tagId = DBTag.add(new LTag(tag, ss[ii]));
                             }
@@ -341,9 +342,9 @@ public class DBPorter {
                     else {
                         ll = vendorMap.get(vendor);
                         if (null == ll) {
-                            vendorId = DBVendor.getIdByName(vendor);
+                            vendorId = DBVendor.getInstance().getIdByName(vendor);
                             if (vendorId != 0) {
-                                DBVendor.updateColumnById(vendorId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
+                                //DBVendor.getInstance().updateColumnById(vendorId, DBHelper.TABLE_COLUMN_RID, ss[ii]);
                             } else {
                                 //TODO: vendorId = DBVendor.add(new LVendor(vendor, ss[ii], Integer.valueOf(ss[ii + 1])));
                             }

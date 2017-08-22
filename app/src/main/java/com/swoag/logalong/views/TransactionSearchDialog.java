@@ -72,7 +72,7 @@ public class TransactionSearchDialog extends Dialog implements
         accountSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
-                return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return DBAccount.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
             }
 
             @Override
@@ -84,7 +84,7 @@ public class TransactionSearchDialog extends Dialog implements
                         accounts = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            LAccount account = DBAccount.getById(ll);
+                            LAccount account = DBAccount.getInstance().getById(ll);
                             if ((account != null) && (account.getState() == DBHelper.STATE_ACTIVE)) {
                                 accounts[ii++] = ll;
                                 ok = true;
@@ -128,7 +128,7 @@ public class TransactionSearchDialog extends Dialog implements
         vendorSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
-                return DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return DBVendor.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
             }
 
             @Override
@@ -140,7 +140,7 @@ public class TransactionSearchDialog extends Dialog implements
                         vendors = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            LVendor vendor = DBVendor.getById(ll);
+                            LVendor vendor = DBVendor.getInstance().getById(ll);
                             if ((vendor != null) && (vendor.getState() == DBHelper.STATE_ACTIVE)) {
                                 vendors[ii++] = ll;
                                 ok = true;
@@ -156,7 +156,7 @@ public class TransactionSearchDialog extends Dialog implements
         tagSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
-                return DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return DBTag.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
             }
 
             @Override
@@ -168,7 +168,7 @@ public class TransactionSearchDialog extends Dialog implements
                         tags = new long[selections.size()];
                         int ii = 0;
                         for (Long ll : selections) {
-                            LTag tag = DBTag.getById(ll);
+                            LTag tag = DBTag.getInstance().getById(ll);
                             if ((tag != null) && (tag.getState() == DBHelper.STATE_ACTIVE)) {
                                 tags[ii++] = ll;
                                 ok = true;
@@ -259,10 +259,11 @@ public class TransactionSearchDialog extends Dialog implements
         String str = "";
         boolean ok = false;
         if (null != vals) {
+            DBAccount dbAccount = DBAccount.getInstance();
             for (int ii = 0; ii < vals.length; ii++) {
-                LAccount account = DBAccount.getById(vals[ii]);
+                LAccount account = dbAccount.getById(vals[ii]);
                 if ((account != null) && (account.getState() == DBHelper.STATE_ACTIVE)) {
-                    str += DBAccount.getNameById(vals[ii]) + ", ";
+                    str += dbAccount.getNameById(vals[ii]) + ", ";
                     ok = true;
                 }
             }
@@ -305,9 +306,10 @@ public class TransactionSearchDialog extends Dialog implements
         boolean ok = false;
         if (null != vals) {
             for (int ii = 0; ii < vals.length; ii++) {
-                LVendor vendor = DBVendor.getById(vals[ii]);
+                DBVendor dbVendor = DBVendor.getInstance();
+                LVendor vendor = dbVendor.getById(vals[ii]);
                 if ((vendor != null) && (vendor.getState() == DBHelper.STATE_ACTIVE)) {
-                    str += DBVendor.getNameById(vals[ii]) + ", ";
+                    str += dbVendor.getNameById(vals[ii]) + ", ";
                     ok = true;
                 }
             }
@@ -327,9 +329,10 @@ public class TransactionSearchDialog extends Dialog implements
         boolean ok = false;
         if (null != vals) {
             for (int ii = 0; ii < vals.length; ii++) {
-                LTag tag = DBTag.getById(vals[ii]);
+                DBTag dbTag = DBTag.getInstance();
+                LTag tag = dbTag.getById(vals[ii]);
                 if ((tag != null) && (tag.getState() == DBHelper.STATE_ACTIVE)) {
-                    str += DBTag.getNameById(vals[ii]) + ", ";
+                    str += dbTag.getNameById(vals[ii]) + ", ";
                     ok = true;
                 }
             }

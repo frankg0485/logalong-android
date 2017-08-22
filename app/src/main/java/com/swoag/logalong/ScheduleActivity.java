@@ -257,14 +257,14 @@ public class ScheduleActivity extends LFragmentActivity implements
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
             String category = DBCategory.getInstance().getNameById(categoryId);
-            String tag = DBTag.getNameById(tagId);
+            String tag = DBTag.getInstance().getNameById(tagId);
 
             String str = "";
             if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                 int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                 int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                String account = DBAccount.getNameById(accountId);
-                String account2 = DBAccount.getNameById(account2Id);
+                String account = DBAccount.getInstance().getNameById(accountId);
+                String account2 = DBAccount.getInstance().getNameById(account2Id);
                 str = account + " --> " + account2;
             } else {
                 if (!TextUtils.isEmpty(tag)) str = tag + ":";
@@ -274,7 +274,7 @@ public class ScheduleActivity extends LFragmentActivity implements
 
             tv = (TextView) mainView.findViewById(R.id.note);
             int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
-            String vendor = DBVendor.getNameById(vendorId);
+            String vendor = DBVendor.getInstance().getNameById(vendorId);
             String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
 
             if (TextUtils.isEmpty(vendor)) {

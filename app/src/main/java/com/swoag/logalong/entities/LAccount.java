@@ -1,16 +1,11 @@
 package com.swoag.logalong.entities;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.text.TextUtils;
 
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.LPreferences;
-
 import java.util.ArrayList;
 
-public class LAccount {
-    private static final String TAG = LAccount.class.getSimpleName();
-
+public class LAccount extends LDbBase {
     public static final int ACCOUNT_SHARE_NA = 0;
     public static final int ACCOUNT_SHARE_INVITED = 1;
     public static final int ACCOUNT_SHARE_CONFIRMED = 2;
@@ -20,13 +15,9 @@ public class LAccount {
     //added to local database, but not yet invited, this is for GUI update only
     public static final int ACCOUNT_SHARE_PREPARED = 5;
 
-    private int state;
-    private String name;
     private String rid;
-    private int gid;
     private boolean showBalance;
 
-    private long timeStampLast;
     private long shareTimeStampLast;
 
     private ArrayList<Integer> shareIds;
@@ -34,41 +25,32 @@ public class LAccount {
     private long id;
 
     private void init() {
-        this.state = DBHelper.STATE_ACTIVE;
-        this.timeStampLast = LPreferences.getServerUtc();
         this.shareTimeStampLast = 0;
-        this.rid = "";
         this.showBalance = true;
-        this.name = "";
         this.shareIds = new ArrayList<Integer>();
         this.shareStates = new ArrayList<Integer>();
     }
 
-    public LAccount() {
+    public LAccount()
+    {
+        super();
         init();
     }
 
     public LAccount(String name) {
+        super(name);
         init();
         this.name = name;
-    }
-
-    public LAccount(String name, String rid) {
-        init();
-        this.name = name;
-        this.rid = rid;
     }
 
     public LAccount(int state, String name) {
+        super(state, name);
         init();
-        this.state = state;
-        this.name = name;
     }
 
     public LAccount(int state, String name, ArrayList<Integer> shareIds, ArrayList<Integer> shareStates) {
+        super(state, name);
         init();
-        this.state = state;
-        this.name = name;
         this.shareIds = shareIds;
         this.shareStates = shareStates;
     }
@@ -95,22 +77,6 @@ public class LAccount {
         return false;
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
-
     public ArrayList<Integer> getShareIds() {
         return shareIds;
     }
@@ -125,14 +91,6 @@ public class LAccount {
 
     public void setShareStates(ArrayList<Integer> shareStates) {
         this.shareStates = shareStates;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getShareIdsString() {
@@ -219,28 +177,12 @@ public class LAccount {
         this.rid = rid;
     }
 
-    public long getTimeStampLast() {
-        return timeStampLast;
-    }
-
-    public void setTimeStampLast(long timeStampLast) {
-        this.timeStampLast = timeStampLast;
-    }
-
     public long getShareTimeStampLast() {
         return shareTimeStampLast;
     }
 
     public void setShareTimeStampLast(long shareTimeStampLast) {
         this.shareTimeStampLast = shareTimeStampLast;
-    }
-
-    public int getGid() {
-        return gid;
-    }
-
-    public void setGid(int gid) {
-        this.gid = gid;
     }
 
     public boolean isShowBalance() {

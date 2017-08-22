@@ -79,7 +79,7 @@ public class LShareAccountDialog extends Dialog
         this.selectedIds = new HashSet<Integer>(selectedIds);
         this.users = users;
         this.accountId = accountId;
-        this.account = DBAccount.getById(accountId);
+        this.account = DBAccount.getInstance().getById(accountId);
     }
 
     public interface LShareAccountDialogItf {
@@ -108,7 +108,7 @@ public class LShareAccountDialog extends Dialog
                 LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME}, this);
 
         TextView tv = (TextView)findViewById(R.id.shareAccountName);
-        tv.setText(DBAccount.getNameById(accountId));
+        tv.setText(DBAccount.getInstance().getNameById(accountId));
 
         findViewById(R.id.save).setOnClickListener(this);
         findViewById(R.id.cancel).setOnClickListener(this);
@@ -171,9 +171,10 @@ public class LShareAccountDialog extends Dialog
                     selectedIds.add(id);
                     myArrayAdapter.notifyDataSetChanged();
 
-                    account = DBAccount.getById(accountId);
+                    DBAccount dbAccount = DBAccount.getInstance();
+                    account = dbAccount.getById(accountId);
                     account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
-                    DBAccount.update(account);
+                    dbAccount.update(account);
                     LPreferences.setShareUserName(id, name);
                     LPreferences.setShareUserFullName(id, fullName);
 

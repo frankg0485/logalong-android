@@ -96,12 +96,13 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStamp()));
 
         accountTV.setTypeface(null, item.getAccount() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-        accountTV.setText(DBAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
+        DBAccount dbAccount = DBAccount.getInstance();
+        accountTV.setText(dbAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) ?
                 item.getAccount2() : item.getAccount()));
         if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER ||
                 item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY) {
             account2TV.setTypeface(null, item.getAccount2() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            account2TV.setText(DBAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
+            account2TV.setText(dbAccount.getNameById((item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) ?
                     item.getAccount2() : item.getAccount()));
         } else {
             categoryTV.setTypeface(null, item.getCategory() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
@@ -113,10 +114,10 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             } else if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME) {
                 vendorTV.setHint(activity.getString(R.string.hint_payer_not_specified));
             }
-            vendorTV.setText(DBVendor.getNameById(item.getVendor()));
+            vendorTV.setText(DBVendor.getInstance().getNameById(item.getVendor()));
 
             tagTV.setTypeface(null, item.getTag() <= 0 ? Typeface.NORMAL : Typeface.BOLD);
-            tagTV.setText(DBTag.getNameById(item.getTag()));
+            tagTV.setText(DBTag.getInstance().getNameById(item.getTag()));
         }
         updateOkDisplay();
     }
@@ -410,7 +411,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount2()),
+                                        DBHelper.TABLE_COLUMN_NAME,
+                                        DBAccount.getInstance().getDbIndexById(item.getAccount2()),
                                         DLG_ID_ACCOUNT2);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
@@ -425,7 +427,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_ACCOUNT_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBAccount.getDbIndexById(item.getAccount()),
+                                        DBHelper.TABLE_COLUMN_NAME,
+                                        DBAccount.getInstance().getDbIndexById(item.getAccount()),
                                         DLG_ID_ACCOUNT);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
@@ -451,12 +454,13 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 case R.id.vendorRow:
                     try {
                         ids[9] = R.string.select_vendor;
+                        DBVendor dbVendor = DBVendor.getInstance();
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_VENDOR_NAME,
                                         DBHelper.TABLE_COLUMN_NAME, item.getType() == LTransaction
                                         .TRANSACTION_TYPE_INCOME ?
-                                        DBVendor.getPayerIndexById(item.getVendor()) : DBVendor.getPayeeIndexById
+                                        dbVendor.getPayerIndexById(item.getVendor()) : dbVendor.getPayeeIndexById
                                         (item.getVendor()), DLG_ID_VENDOR);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
@@ -470,7 +474,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_TAG_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBTag.getDbIndexById(item.getTag()), DLG_ID_TAG);
+                                        DBHelper.TABLE_COLUMN_NAME, DBTag.getInstance().getDbIndexById(item.getTag()), DLG_ID_TAG);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
                                 .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -524,21 +528,22 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             int selection = -1;
             switch (id) {
                 case DLG_ID_ACCOUNT:
-                    selection = DBAccount.getDbIndexById(DBAccount.getIdByName(name));
+                    selection = DBAccount.getInstance().getDbIndexById(DBAccount.getInstance().getIdByName(name));
                     break;
                 case DLG_ID_ACCOUNT2:
-                    selection = DBAccount.getDbIndexById(DBAccount.getIdByName(name));
+                    selection = DBAccount.getInstance().getDbIndexById(DBAccount.getInstance().getIdByName(name));
                     break;
                 case DLG_ID_CATEGORY:
                     selection = DBCategory.getInstance().getDbIndexById(DBCategory.getInstance().getIdByName(name));
                     break;
                 case DLG_ID_VENDOR:
+                    DBVendor dbVendor = DBVendor.getInstance();
                     selection = item.getType() == LTransaction.TRANSACTION_TYPE_INCOME ?
-                            DBVendor.getPayerIndexById(DBVendor.getIdByName(name))
-                            : DBVendor.getPayeeIndexById(DBVendor.getIdByName(name));
+                            dbVendor.getPayerIndexById(dbVendor.getIdByName(name))
+                            : dbVendor.getPayeeIndexById(dbVendor.getIdByName(name));
                     break;
                 case DLG_ID_TAG:
-                    selection = DBTag.getDbIndexById(DBTag.getIdByName(name));
+                    selection = DBTag.getInstance().getDbIndexById(DBTag.getInstance().getIdByName(name));
                     break;
             }
             mSelectionDialog.refresh(selection);
@@ -587,16 +592,17 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     @Override
     public Cursor onSelectionGetCursor(String table, String column) {
         if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME))
-            return DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            return DBAccount.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME))
             return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME)) {
+            DBVendor dbVendor = DBVendor.getInstance();
             if (item.getType() == LTransaction.TRANSACTION_TYPE_INCOME)
-                return DBVendor.getPayerCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return dbVendor.getPayerCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
             else
-                return DBVendor.getPayeeCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                return dbVendor.getPayeeCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         } else if (table.contentEquals(DBHelper.TABLE_TAG_NAME))
-            return DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            return DBTag.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         return null;
     }
 
@@ -685,7 +691,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         boolean changed = !item.isEqual(savedItem);
         if (changed) {
             item.setTimeStampLast(LPreferences.getServerUtc());
-            item.setChangeBy(LPreferences.getUserIdNum());
+            item.setChangeBy((int)LPreferences.getUserIdNum());
         }
         myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);

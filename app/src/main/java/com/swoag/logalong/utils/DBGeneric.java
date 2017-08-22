@@ -89,11 +89,11 @@ public abstract class DBGeneric<T> {
         return getByIdGid(LApp.ctx, id, true, true);
     }
 
-    public T getByGidAll(int gid) {
+    public T getByGidAll(long gid) {
         return getByIdGid(LApp.ctx, gid, false, false);
     }
 
-    public T getByGid(int gid) {
+    public T getByGid(long gid) {
         return getByIdGid(LApp.ctx, gid, false, true);
     }
 
@@ -232,7 +232,7 @@ public abstract class DBGeneric<T> {
         return true;
     }
 
-    public boolean updateColumnById(long id, String column, int value) {
+    public boolean updateColumnById(long id, String column, long value) {
         try {
             ContentValues cv = new ContentValues();
             cv.put(column, value);

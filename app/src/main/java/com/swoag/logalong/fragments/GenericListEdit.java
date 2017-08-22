@@ -80,16 +80,16 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         Cursor csr = null;
         switch (listId) {
             case R.id.accounts:
-                csr = DBAccount.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                csr = DBAccount.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.categories:
                 csr = DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.vendors:
-                csr = DBVendor.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                csr = DBVendor.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
             case R.id.tags:
-                csr = DBTag.getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+                csr = DBTag.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
                 break;
         }
         return csr;
@@ -112,7 +112,9 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT,
-                LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY}, this);
+                LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY,
+                LBroadcastReceiver.ACTION_UI_UPDATE_TAG,
+                LBroadcastReceiver.ACTION_UI_UPDATE_VENDOR}, this);
 
     }
 
@@ -169,6 +171,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         switch (action) {
             case LBroadcastReceiver.ACTION_UI_UPDATE_ACCOUNT:
             case LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY:
+            case LBroadcastReceiver.ACTION_UI_UPDATE_TAG:
+            case LBroadcastReceiver.ACTION_UI_UPDATE_VENDOR:
                 Cursor cursor = getMyCursor();
                 if (null == cursor) {
                     LLog.e(TAG, "fatal: unable to open database");
@@ -233,7 +237,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             String name;
             LAccount account = null;
             if (listId == R.id.accounts) {
-                account = DBAccount.getByCursor(cursor);
+                account = DBAccount.getInstance().getByCursor(cursor);
                 name = account.getName();
             } else {
                 name = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME));
@@ -292,14 +296,14 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                     case R.id.option:
                         boolean attr1 = false, attr2 = false;
                         if (listId == R.id.vendors) {
-                            LVendor vendor = DBVendor.getById(tag.id);
+                            LVendor vendor = DBVendor.getInstance().getById(tag.id);
                             if (vendor.getType() == LVendor.TYPE_PAYEE) attr1 = true;
                             else if (vendor.getType() == LVendor.TYPE_PAYER) attr2 = true;
                             else {
                                 attr1 = attr2 = true;
                             }
                         } else if (listId == R.id.accounts) {
-                            LAccount account = DBAccount.getById(tag.id);
+                            LAccount account = DBAccount.getInstance().getById(tag.id);
                             attr1 = account.isShowBalance();
                         }
                         optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
@@ -324,7 +328,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                             }
                         }
 
-                        LAccount account = DBAccount.getById(tag.id);
+                        LAccount account = DBAccount.getInstance().getById(tag.id);
                         HashSet<Integer> selectedUsers = getAccountCurrentShares(account);
 
                         LShareAccountDialog shareAccountDialog = new LShareAccountDialog
@@ -336,17 +340,19 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         }
 
         private void unshareMyselfFromAccount(long accountId) {
-            LAccount account = DBAccount.getById(accountId);
+            DBAccount dbAccount = DBAccount.getInstance();
+            LAccount account = dbAccount.getById(accountId);
             account.removeAllShareUsers();
-            DBAccount.update(account);
+            dbAccount.update(account);
 
             //racing: before the following actually get posted and acked by server,
             //        if this account is 'shared' by peer, the following would happen,
             // - account is first backed to shared to state, then go to unshared state
             //   when ack comes back.
-            LJournal journal = new LJournal();
-            journal.unshareAccount(/*LPreferences.getUserId()*/0, (int) account.getId(), account.getGid(), account
-                    .getName());
+            //TODO:
+            //LJournal journal = new LJournal();
+            //journal.unshareAccount(/*LPreferences.getUserId()*/0, (int) account.getId(), account.getGid(), account
+            //        .getName());
         }
 
         @Override
@@ -355,7 +361,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             if (!ok) return;
 
             HashSet<Long> set;
-            if (applyToAllAccounts) set = DBAccount.getAllActiveIds();
+            if (applyToAllAccounts) set = DBAccount.getInstance().getAllActiveIds();
             else {
                 set = new HashSet<Long>();
                 set.add(accountId);
@@ -368,15 +374,16 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             }
 
             for (long aid : set) {
-                LAccount account = DBAccount.getById(aid);
+                LAccount account = DBAccount.getInstance().getById(aid);
                 origSelections = getAccountCurrentShares(account);
 
                 //first update all existing users if there's any removal
                 for (Integer ii : origSelections) {
                     if (!selections.contains(ii)) {
                         account.removeShareUser(ii);
-                        LJournal journal = new LJournal();
-                        journal.unshareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
+                        //TODO:
+                        //LJournal journal = new LJournal();
+                        //journal.unshareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
                     }
                 }
 
@@ -389,11 +396,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                     if (newShare) {
                         // new share request: new memeber is added to group
                         account.addShareUser(ii, LAccount.ACCOUNT_SHARE_INVITED);
-                        LJournal journal = new LJournal();
-                        journal.shareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
+                        //LJournal journal = new LJournal();
+                        //journal.shareAccount(ii, (int) account.getId(), account.getGid(), account.getName());
                     }
                 }
-                DBAccount.update(account);
+                DBAccount.getInstance().update(account);
             }
             adapter.swapCursor(getMyCursor());
             adapter.notifyDataSetChanged();
@@ -406,16 +413,16 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 VTag tag = (VTag) id;
                 switch (listId) {
                     case R.id.accounts:
-                        LAccount naccount = DBAccount.getByName(newName);
-                        LAccount account = DBAccount.getById(tag.id);
+                        DBAccount dbAccount = DBAccount.getInstance();
+                        LAccount naccount = dbAccount.getByName(newName);
+                        LAccount account = dbAccount.getById(tag.id);
                         if ((naccount != null) && (!account.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
                             account.setName(newName);
                             account.setTimeStampLast(LPreferences.getServerUtc());
-                            DBAccount.update(account);
-
-                            journal.updateAccount((int) account.getId());
+                            dbAccount.update(account);
+                            journal.updateAccount(account.getId());
                         }
                         break;
 
@@ -429,36 +436,37 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                             category.setName(newName);
                             category.setTimeStampLast(LPreferences.getServerUtc());
                             dbCategory.update(category);
-                            journal.updateCategory((int)category.getId());
+                            journal.updateCategory(category.getId());
                         }
                         break;
 
                     case R.id.vendors:
-                        LVendor nvendor = DBVendor.getByName(newName);
-                        LVendor vendor = DBVendor.getById(tag.id);
+                        DBVendor dbVendor = DBVendor.getInstance();
+                        LVendor nvendor = dbVendor.getByName(newName);
+                        LVendor vendor = dbVendor.getById(tag.id);
                         if ((nvendor != null) && (!vendor.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
                             String oldName = vendor.getName();
                             vendor.setName(newName);
                             vendor.setTimeStampLast(LPreferences.getServerUtc());
-                            DBVendor.update(vendor);
-
-                            journal.updateVendor(vendor, oldName);
+                            dbVendor.update(vendor);
+                            journal.updateVendor(vendor.getId());
                         }
                         break;
+
                     case R.id.tags:
-                        LTag ntag = DBTag.getByName(newName);
-                        LTag tag1 = DBTag.getById(tag.id);
+                        DBTag dbTag = DBTag.getInstance();
+                        LTag ntag = dbTag.getByName(newName);
+                        LTag tag1 = dbTag.getById(tag.id);
                         if ((ntag != null) && (!tag1.getName().equalsIgnoreCase(newName))) {
                             //TODO: prompt user for name duplicate
                         } else {
                             String oldName = tag1.getName();
                             tag1.setName(newName);
                             tag1.setTimeStampLast(LPreferences.getServerUtc());
-                            DBTag.update(tag1);
-
-                            journal.updateTag(tag1, oldName);
+                            dbTag.update(tag1);
+                            journal.updateTag(tag1.getId());
                         }
                         break;
                 }
@@ -479,22 +487,24 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             VTag tag = (VTag) context;
             LJournal journal = new LJournal();
             if (listId == R.id.vendors) {
-                LVendor vendor = DBVendor.getById(tag.id);
+                DBVendor dbVendor = DBVendor.getInstance();
+                LVendor vendor = dbVendor.getById(tag.id);
                 if (null != vendor) {
                     int type = LVendor.TYPE_PAYEE;
                     if (attr1 && attr2) type = LVendor.TYPE_PAYEE_PAYER;
                     else if (attr1) type = LVendor.TYPE_PAYEE;
                     else type = LVendor.TYPE_PAYER;
                     vendor.setType(type);
-                    DBVendor.update(vendor);
-                    //journal.updateVendor(vendor.getId());
+                    dbVendor.update(vendor);
+                    journal.updateVendor(vendor.getId());
                 }
             } else if (listId == R.id.accounts) {
-                LAccount account = DBAccount.getById(tag.id);
+                DBAccount dbAccount = DBAccount.getInstance();
+                LAccount account = dbAccount.getById(tag.id);
                 if (null != account) {
                     account.setShowBalance(attr1);
-                    DBAccount.update(account);
-                    journal.updateAccount((int) account.getId());
+                    dbAccount.update(account);
+                    journal.updateAccount(account.getId());
                 }
             }
         }
@@ -509,12 +519,13 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                     case R.id.accounts:
                         LTask.start(new MyAccountDeleteTask(), tag.id);
 
-                        LAccount account = DBAccount.getById(tag.id);
+                        DBAccount dbAccount = DBAccount.getInstance();
+                        LAccount account = dbAccount.getById(tag.id);
                         account.setState(DBHelper.STATE_DELETED);
                         account.setTimeStampLast(LPreferences.getServerUtc());
-                        DBAccount.update(account);
+                        dbAccount.update(account);
 
-                        journal.deleteAccount((int) account.getId());
+                        journal.deleteAccount(account.getId());
                         break;
 
                     case R.id.categories:
@@ -524,27 +535,27 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         category.setTimeStampLast(LPreferences.getServerUtc());
                         dbCategory.update(category);
 
-                        journal.deleteCategory((int)category.getId());
+                        journal.deleteCategory(category.getId());
                         break;
 
                     case R.id.vendors:
-                        LVendor vendor = DBVendor.getById(tag.id);
+                        DBVendor dbVendor = DBVendor.getInstance();
+                        LVendor vendor = dbVendor.getById(tag.id);
                         vendor.setState(DBHelper.STATE_DELETED);
                         vendor.setTimeStampLast(LPreferences.getServerUtc());
-                        DBVendor.update(vendor);
+                        dbVendor.update(vendor);
 
-                        journal = new LJournal();
-                        journal.updateVendor(vendor, DBHelper.STATE_ACTIVE);
+                        journal.deleteVendor(vendor.getId());
                         break;
 
                     case R.id.tags:
-                        LTag tag1 = DBTag.getById(tag.id);
+                        DBTag dbTag = DBTag.getInstance();
+                        LTag tag1 = dbTag.getById(tag.id);
                         tag1.setState(DBHelper.STATE_DELETED);
                         tag1.setTimeStampLast(LPreferences.getServerUtc());
-                        DBTag.update(tag1);
+                        dbTag.update(tag1);
 
-                        journal = new LJournal();
-                        journal.updateTag(tag1, DBHelper.STATE_ACTIVE);
+                        journal.deleteTag(tag1.getId());
                         break;
                 }
 
@@ -623,7 +634,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                             DBHelper.TABLE_COLUMN_NAME
                     };
 
-                    HashSet<Long> selectedIds = DBVendor.getCategories(tag.id);
+                    HashSet<Long> selectedIds = DBVendor.getInstance().getCategories(tag.id);
                     LMultiSelectionDialog dialog = new LMultiSelectionDialog
                             (activity, context, selectedIds, this, ids, columns);
                     dialog.show();
@@ -637,7 +648,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
             VTag tag = (VTag) obj;
 
-            DBVendor.setCategories(tag.id, selections);
+            DBVendor.getInstance().setCategories(tag.id, selections);
             optionDialog.dismiss();
         }
 

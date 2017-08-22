@@ -272,36 +272,43 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             LJournal journal = new LJournal();
 
             // send over all account/category/tag/vendor
-            HashSet<Long> accountIds = DBAccount.getAllActiveIds();
+            DBAccount dbAccount = DBAccount.getInstance();
+            HashSet<Long> accountIds = dbAccount.getAllActiveIds();
             for (long id: accountIds) {
-                LAccount account = DBAccount.getById(id);
+                LAccount account = dbAccount.getById(id);
                 if (null != account) {
                     publishProgress(account.getName());
-                    journal.addAccount(account);
+                    journal.addAccount(account.getId());
                 }
             }
-            HashSet<Long> catIds = DBCategory.getInstance().getAllActiveIds();
+
+            DBCategory dbCategory = DBCategory.getInstance();
+            HashSet<Long> catIds = dbCategory.getAllActiveIds();
             for (long id: catIds) {
-                LCategory category = DBCategory.getInstance().getById(id);
+                LCategory category = dbCategory.getInstance().getById(id);
                 if (null != category) {
                     publishProgress(category.getName());
-                    journal.addCategory(category);
+                    journal.addCategory(category.getId());
                 }
             }
-            HashSet<Long> vendorIds = DBVendor.getAllActiveIds();
+
+            DBVendor dbVendor = DBVendor.getInstance();
+            HashSet<Long> vendorIds = dbVendor.getAllActiveIds();
             for (long id: vendorIds) {
-                LVendor vendor = DBVendor.getById(id);
+                LVendor vendor = dbVendor.getById(id);
                 if (null != vendor) {
                     publishProgress(vendor.getName());
-                    journal.addVendor(vendor);
+                    journal.addVendor(vendor.getId());
                 }
             }
-            HashSet<Long> tagIds = DBTag.getAllActiveIds();
+
+            DBTag dbTag = DBTag.getInstance();
+            HashSet<Long> tagIds = dbTag.getAllActiveIds();
             for (long id: tagIds) {
-                LTag tag = DBTag.getById(id);
+                LTag tag = dbTag.getById(id);
                 if (null != tag) {
                     publishProgress(tag.getName());
-                    journal.addTag(tag);
+                    journal.addTag(tag.getId());
                 }
             }
 
@@ -319,7 +326,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 do {
                     DBTransaction.getValues(cursor, transaction);
                     journal.addRecord(transaction.getId());
-                    publishProgress(DBAccount.getNameById(transaction.getAccount()) + " : " + transaction.getValue());
+                    publishProgress(DBAccount.getInstance().getNameById(transaction.getAccount()) + " : " + transaction.getValue());
                 } while (cursor.moveToNext());
                 cursor.close();
             }

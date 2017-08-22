@@ -145,19 +145,19 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_ID, userId);
     }
 
-    public static int getUserIdNum() {
-        return getPreference(LApp.ctx, USER_ID_NUM, 0);
+    public static long getUserIdNum() {
+        return getPreference(LApp.ctx, USER_ID_NUM, 0L);
     }
 
-    public static void setUserIdNum(int num) {
+    public static void setUserIdNum(long num) {
         savePreference(LApp.ctx, USER_ID_NUM, num);
     }
 
-    public static int getUserLoginNum() {
-        return getPreference(LApp.ctx, USER_LOGIN_NUM, 0);
+    public static long getUserLoginNum() {
+        return getPreference(LApp.ctx, USER_LOGIN_NUM, 0L);
     }
 
-    public static void setUserLoginNum(int num) {
+    public static void setUserLoginNum(long num) {
         savePreference(LApp.ctx, USER_LOGIN_NUM, num);
     }
 

@@ -70,20 +70,27 @@ public class LProtocol {
     public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x20c;
 
     public static final short JRQST_ADD_ACCOUNT = 0x001;
-    public static final short JRQST_ADD_CATEGORY = 0x002;
-    public static final short JRQST_ADD_TAG = 0x003;
-    public static final short JRQST_ADD_VENDOR = 0x004;
+    public static final short JRQST_UPDATE_ACCOUNT = 0x002;
+    public static final short JRQST_DELETE_ACCOUNT = 0x003;
+
+    public static final short JRQST_ADD_CATEGORY = 0x011;
+    public static final short JRQST_UPDATE_CATEGORY = 0x012;
+    public static final short JRQST_DELETE_CATEGORY = 0x013;
+
+    public static final short JRQST_ADD_TAG = 0x021;
+    public static final short JRQST_UPDATE_TAG = 0x022;
+    public static final short JRQST_DELETE_TAG = 0x023;
+
+    public static final short JRQST_ADD_VENDOR = 0x031;
+    public static final short JRQST_UPDATE_VENDOR = 0x032;
+    public static final short JRQST_DELETE_VENDOR = 0x033;
+
     public static final short JRQST_ADD_RECORD = 0x005;
     public static final short JRQST_GET_ACCOUNTS = 0x101;
     public static final short JRQST_GET_CATEGORIES = 0x102;
     public static final short JRQST_GET_TAGS = 0x103;
     public static final short JRQST_GET_VENDORS = 0x104;
     public static final short JRQST_GET_RECORDS = 0x105;
-
-    public static final short JRQST_UPDATE_ACCOUNT = 0x201;
-    public static final short JRQST_DELETE_ACCOUNT = 0x202;
-    public static final short JRQST_UPDATE_CATEGORY = 0x211;
-    public static final short JRQST_DELETE_CATEGORY = 0x212;
 
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -92,12 +99,6 @@ public class LProtocol {
     public static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
     public static final short RQST_PING = RQST_SYS | 0x7ff;
 
-    private static final short CMD_SYSTEM_MSG_BROADCAST = 0x7373;
-    private static final short CMD_SET_ACCOUNT_GID = 0x0104;
-    private static final short CMD_REQUEST_ACCOUNT_SHARE = 0x0105;
-    private static final short CMD_UPDATE_ACCOUNT_SHARE = 0x0106;
-    private static final short CMD_UPDATE_ACCOUNT_INFO = 0x0107;
-    private static final short CMD_UPDATE_SHARE_USER_PROFILE = 0x120;
 
     private static final short CMD_JRQST_MASK = (short) 0x8000;
     private static final short CMD_SHARE_TRANSITION_RECORD = (short) (CMD_JRQST_MASK | LJournal
@@ -433,8 +434,8 @@ public class LProtocol {
                     case RSPS | RQST_LOG_IN:
                         if (RSPS_OK == status) {
                             LPreferences.setLoginError(false);
-                            LPreferences.setUserIdNum(pkt.getIntAutoInc());
-                            LPreferences.setUserLoginNum(pkt.getIntAutoInc());
+                            LPreferences.setUserIdNum(pkt.getLongAutoInc());
+                            LPreferences.setUserLoginNum(pkt.getLongAutoInc());
 
                             synchronized (stateLock) {
                                 state = STATE_LOGGED_IN;
@@ -479,54 +480,51 @@ public class LProtocol {
                             if (RSPS_OK == jret) {
                                 switch (jrqstId) {
                                     case JRQST_ADD_ACCOUNT:
-                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("id", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("uid", pkt.getLongAutoInc());
                                         break;
                                     case JRQST_ADD_CATEGORY:
                                     case JRQST_ADD_VENDOR:
                                     case JRQST_ADD_TAG:
-                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
-                                        break;
                                     case JRQST_ADD_RECORD:
-                                        rspsIntent.putExtra("id", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("id", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         break;
                                     case JRQST_GET_ACCOUNTS:
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("uid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("uid", pkt.getLongAutoInc());
                                         int bytes = pkt.getShortAutoInc();
                                         String name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
                                         break;
                                     case JRQST_GET_CATEGORIES:
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("pgid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("pgid", pkt.getLongAutoInc());
                                         bytes = pkt.getShortAutoInc();
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
                                         break;
                                     case JRQST_GET_VENDORS:
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("type", (int) pkt.getByteAutoInc());
                                         bytes = pkt.getShortAutoInc();
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
                                         break;
                                     case JRQST_GET_TAGS:
-                                        rspsIntent.putExtra("gid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         bytes = pkt.getShortAutoInc();
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
                                         break;
                                     case JRQST_GET_RECORDS:
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
-                                        rspsIntent.putExtra("aid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("aid2", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("cid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("tid", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("vid", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("aid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("aid2", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("cid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("tid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("vid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("type", pkt.getByteAutoInc());
                                         rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
                                         rspsIntent.putExtra("createBy", pkt.getIntAutoInc());
@@ -553,8 +551,8 @@ public class LProtocol {
                         if (status == RSPS_OK) {
                             rspsIntent.putExtra("id", pkt.getLongAutoInc());
                             rspsIntent.putExtra("nid", pkt.getShortAutoInc());
-                            rspsIntent.putExtra("int1", pkt.getIntAutoInc());
-                            rspsIntent.putExtra("int2", pkt.getIntAutoInc());
+                            rspsIntent.putExtra("int1", pkt.getLongAutoInc());
+                            rspsIntent.putExtra("int2", pkt.getLongAutoInc());
                             rspsIntent.putExtra("int3", pkt.getIntAutoInc());
                             rspsIntent.putExtra("int4", pkt.getIntAutoInc());
                             int bytes = pkt.getShortAutoInc();

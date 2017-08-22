@@ -1,9 +1,7 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
-import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -12,8 +10,9 @@ import com.swoag.logalong.entities.LVendor;
 
 import java.util.HashSet;
 
-public class DBVendor {
-    private static final String TAG = DBVendor.class.getSimpleName();
+public class DBVendor extends DBGeneric<LVendor> {
+    private static final String tag = DBVendor.class.getSimpleName();
+    private static DBVendor instance;
 
     private static final String[] vendor_columns = new String[]{
             "_id",
@@ -23,178 +22,65 @@ public class DBVendor {
             DBHelper.TABLE_COLUMN_TYPE,
             DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE};
 
-    private static ContentValues setValues(LVendor vendor) {
+    public DBVendor() {
+    }
+
+    public static DBVendor getInstance() {
+        if (null == instance) {
+            instance = new DBVendor();
+        }
+        return instance;
+    }
+
+    @Override
+    LVendor getValues(Cursor cur, LVendor vendor) {
+        if (null == vendor) vendor = new LVendor();
+        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
+        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
+        vendor.setType(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)));
+        vendor.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
+        vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
+        vendor.setId(cur.getLong(0));
+        return vendor;
+    }
+
+    @Override
+    ContentValues setValues(LVendor vendor) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
         cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
         cv.put(DBHelper.TABLE_COLUMN_TYPE, vendor.getType());
-        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
         cv.put(DBHelper.TABLE_COLUMN_GID, vendor.getGid());
+        cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());
         return cv;
     }
 
-    private static void getValues(Cursor cur, LVendor vendor) {
-        vendor.setName(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NAME)));
-        vendor.setState(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE)));
-        vendor.setType(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE)));
-        vendor.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        vendor.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
-        vendor.setId(cur.getLong(0));
+    @Override
+    String[] getColumns() {
+        return vendor_columns;
     }
 
-    public static long add(LVendor vendor) {
-        return add(LApp.ctx, vendor);
+    @Override
+    Uri getUri() {
+        return DBProvider.URI_VENDORS;
     }
 
-    public static long add(Context context, LVendor vendor) {
-        long id = -1;
-        try {
-            ContentValues cv = setValues(vendor);
-            Uri uri = context.getContentResolver().insert(DBProvider.URI_VENDORS, cv);
-            id = ContentUris.parseId(uri);
-        } catch (Exception e) {
-        }
-        return id;
+    @Override
+    long getId(LVendor vendor) {
+        return vendor.getId();
     }
 
-    public static boolean update(LVendor vendor) {
-        return update(LApp.ctx, vendor);
+    @Override
+    void setId(LVendor vendor, long id) {
+        vendor.setId(id);
     }
 
-    public static boolean update(Context context, LVendor vendor) {
-        try {
-            ContentValues cv = setValues(vendor);
-            context.getContentResolver().update(DBProvider.URI_VENDORS, cv, "_id=?", new String[]{"" + vendor.getId()});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
-    public static void deleteById(long id) {
-        updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-    }
-
-    public static LVendor getById(long id) {
-        return getById(LApp.ctx, id);
-    }
-
-    public static LVendor getById(Context context, long id) {
-        if (id <= 0) return null;
-
-        LVendor vendor = new LVendor();
-
-        try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    "_id=?", new String[]{"" + id}, null);
-
-            if (csr != null) {
-                if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find vendor with id: " + id);
-                    csr.close();
-                    return null;
-                }
-
-                csr.moveToFirst();
-                getValues(csr, vendor);
-                csr.close();
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with id: " + id + ":" + e.getMessage());
-            vendor = null;
-        }
-        return vendor;
-    }
-
-    public static LVendor getByGid(int gid) {
-        return getByGid(LApp.ctx, gid);
-    }
-
-    public static LVendor getByGid(Context context, int gid) {
-        LVendor vendor = new LVendor();
-
-        try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, vendor_columns,
-                    DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
-
-            if (csr != null) {
-                if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find vendor with rid: " + gid + " count: " + csr.getCount());
-                    csr.close();
-                    return null;
-                }
-
-                csr.moveToFirst();
-                getValues(csr, vendor);
-                csr.close();
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with RID: " + gid + ":" + e.getMessage());
-            vendor = null;
-        }
-        return vendor;
-    }
-
-    public static LVendor getByName(String name) {
-        return getByName(LApp.ctx, name);
-    }
-
-    private static LVendor getByName(Context context, String name) {
-        LVendor vendor = new LVendor();
-
-        try {
-            Cursor csr = context.getContentResolver().query(DBProvider.URI_VENDORS, vendor_columns,
-                    DBHelper.TABLE_COLUMN_NAME + "=? COLLATE NOCASE AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                    new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
-
-            if (csr != null) {
-                if (csr.getCount() > 1 || csr.getCount() < 1) {
-                    LLog.w(TAG, "unable to find vendor with name: " + name + " count: " + csr.getCount());
-                    csr.close();
-                    return null;
-                }
-
-                csr.moveToFirst();
-                getValues(csr, vendor);
-                csr.close();
-            }
-        } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor with name: " + name + ":" + e.getMessage());
-            vendor = null;
-        }
-        return vendor;
-    }
-
-    public static long getIdByGid(long gid) {
-        return DBAccess.getIdByGid(DBProvider.URI_VENDORS, gid);
-    }
-
-    public static String getNameById(long id) {
-        return DBAccess.getStringFromDbById(DBProvider.URI_VENDORS, DBHelper.TABLE_COLUMN_NAME, id);
-    }
-
-    public static boolean updateColumnById(long id, String column, String value) {
-        return DBAccess.updateColumnById(DBProvider.URI_VENDORS, id, column, value);
-    }
-
-    public static boolean updateColumnById(long id, String column, int value) {
-        return DBAccess.updateColumnById(DBProvider.URI_VENDORS, id, column, value);
-    }
-
-    public static long getIdByName(String name) {
-        return DBAccess.getIdByName(DBProvider.URI_VENDORS, name);
-    }
-
-    private static int getDbIndexById(int type, long id) {
-        return getDbIndexById(LApp.ctx, type, id);
-    }
-
-    private static int getDbIndexById(Context context, int type, long id) {
+    private int getDbIndexById(int type, long id) {
         Cursor csr = null;
         int index = 0;
         int ret = -1;
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS, new String[]{"_id"},
+            csr = LApp.ctx.getContentResolver().query(DBProvider.URI_VENDORS, new String[]{"_id"},
                     DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
                             + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
                             + DBHelper.TABLE_COLUMN_TYPE + "=? )",
@@ -211,89 +97,55 @@ public class DBVendor {
                 index++;
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
+            LLog.w(tag, "unable to get with id: " + id + ":" + e.getMessage());
         }
         if (csr != null) csr.close();
         return ret;
     }
 
-    public static int getPayerIndexById(long id) {
+    public int getPayerIndexById(long id) {
         return getDbIndexById(LVendor.TYPE_PAYER, id);
     }
 
-    public static int getPayeeIndexById(long id) {
+    public int getPayeeIndexById(long id) {
         return getDbIndexById(LVendor.TYPE_PAYEE, id);
     }
 
-    public static Cursor getCursorSortedBy(String sortColumn) {
-        return getCursorSortedBy(LApp.ctx, sortColumn);
-    }
-
-    public static Cursor getCursorSortedBy(Context context, String sortColumn) {
+    public Cursor getPayerPayeeCursorSortedBy(String sortColumn, boolean payer) {
         Cursor cur;
         if (sortColumn != null)
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE},
+            cur = LApp.ctx.getContentResolver().query(DBProvider.URI_VENDORS, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
+                    new String[]{"" + DBHelper.STATE_ACTIVE,
+                            payer? "" + LVendor.TYPE_PAYER : "" + LVendor.TYPE_PAYEE,
+                            "" + LVendor.TYPE_PAYEE_PAYER},
                     sortColumn + " ASC");
         else
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
+            cur = LApp.ctx.getContentResolver().query(DBProvider.URI_VENDORS, null,
+                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
+                    new String[]{"" + DBHelper.STATE_ACTIVE,
+                            payer? "" + LVendor.TYPE_PAYER : "" + LVendor.TYPE_PAYEE,
+                            "" + LVendor.TYPE_PAYEE_PAYER}, null);
         return cur;
     }
 
-    public static Cursor getPayerCursorSortedBy(String sortColumn) {
-        return getPayerCursorSortedBy(LApp.ctx, sortColumn);
+    public Cursor getPayerCursorSortedBy(String sortColumn) {
+        return getPayerPayeeCursorSortedBy(sortColumn, true);
     }
 
-    public static Cursor getPayerCursorSortedBy(Context context, String sortColumn) {
-        Cursor cur;
-        if (sortColumn != null)
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYER, "" + LVendor.TYPE_PAYEE_PAYER},
-                    sortColumn + " ASC");
-        else
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYER, "" + LVendor.TYPE_PAYEE_PAYER}, null);
-        return cur;
-    }
-
-    public static Cursor getPayeeCursorSortedBy(String sortColumn) {
-        return getPayeeCursorSortedBy(LApp.ctx, sortColumn);
-    }
-
-    public static Cursor getPayeeCursorSortedBy(Context context, String sortColumn) {
-        Cursor cur;
-        if (sortColumn != null)
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYEE, "" + LVendor.TYPE_PAYEE_PAYER},
-                    sortColumn + " ASC");
-        else
-            cur = context.getContentResolver().query(DBProvider.URI_VENDORS, null,
-                    DBHelper.TABLE_COLUMN_STATE + "=? AND ( "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
-                            + DBHelper.TABLE_COLUMN_TYPE + "=? )",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LVendor.TYPE_PAYEE, "" + LVendor.TYPE_PAYEE_PAYER}, null);
-        return cur;
+    public Cursor getPayeeCursorSortedBy(String sortColumn) {
+        return getPayerPayeeCursorSortedBy(sortColumn, false);
     }
 
     public static HashSet<Long> getCategories(long vendor) {
-        return getCategories(LApp.ctx, vendor);
-    }
-
-    public static HashSet<Long> getCategories(Context context, long vendor) {
         Cursor csr = null;
         HashSet<Long> cats = new HashSet<Long>();
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
+            csr = LApp.ctx.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
                     DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_VENDOR + "=?",
                     new String[]{"" + DBHelper.STATE_ACTIVE, "" + vendor}, null);
@@ -308,43 +160,36 @@ public class DBVendor {
                 csr.close();
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get vendor categories: " + e.getMessage());
+            LLog.w(tag, "unable to get vendor categories: " + e.getMessage());
         }
         return cats;
     }
 
-    public static void setCategories(long vendor, HashSet<Long> categories) {
-        setCategories(LApp.ctx, vendor, categories);
-    }
-
-    public static void setCategories(Context context, long vendor, HashSet<Long> categories) {
-        boolean exists = false;
-        HashSet<Long> oldCategories = getCategories(context, vendor);
+    public void setCategories(long vendor, HashSet<Long> categories) {
+        HashSet<Long> oldCategories = getCategories(vendor);
         HashSet<Long> and = new HashSet<Long>(oldCategories);
         and.retainAll(categories);
 
         for (Long ll : oldCategories) {
             if (!and.contains(ll)) {
-                do_updateCategory(context, vendor, ll, false, true);
+                do_updateCategory(vendor, ll, false);
             }
         }
 
         for (Long ll : categories) {
             if (!and.contains(ll)) {
-                do_updateCategory(context, vendor, ll, true, true);
+                do_updateCategory(vendor, ll, true);
             }
         }
     }
 
-    private static void do_updateCategory(Context context, long vendor, long category, boolean add, boolean writeJournal) {
-        /*
+    private void do_updateCategory(long vendor, long category, boolean add) {
         boolean exists = false;
         Cursor csr = null;
         long id = 0;
-        boolean changed = false;
 
         try {
-            csr = context.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
+            csr = LApp.ctx.getContentResolver().query(DBProvider.URI_VENDORS_CATEGORY, null,
                     DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_VENDOR + "=? AND "
                             + DBHelper.TABLE_COLUMN_CATEGORY + "=?",
@@ -364,44 +209,14 @@ public class DBVendor {
                 cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_ACTIVE);
                 cv.put(DBHelper.TABLE_COLUMN_VENDOR, vendor);
                 cv.put(DBHelper.TABLE_COLUMN_CATEGORY, category);
-                context.getContentResolver().insert(DBProvider.URI_VENDORS_CATEGORY, cv);
-                changed = true;
+                LApp.ctx.getContentResolver().insert(DBProvider.URI_VENDORS_CATEGORY, cv);
             } else if (exists && !add) {
                 ContentValues cv = new ContentValues();
                 cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-                context.getContentResolver().update(DBProvider.URI_VENDORS_CATEGORY, cv, "_id=?", new String[]{"" + id});
-                changed = true;
+                LApp.ctx.getContentResolver().update(DBProvider.URI_VENDORS_CATEGORY, cv, "_id=?", new String[]{"" + id});
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to update vendor category: " + e.getMessage());
+            LLog.w(tag, "unable to update vendor category: " + e.getMessage());
         }
-
-        if (changed && writeJournal) {
-            LVendor vend = getById(vendor);
-            LCategory cat = DBCategory.getById(category);
-
-            LJournal journal = new LJournal();
-            journal.updateVendorCategory(add, vend.getRid(), cat.getRid());
-        }
-        */
     }
-
-    public static void updateCategory(long vendor, long category, boolean add) {
-        do_updateCategory(LApp.ctx, vendor, category, add, false);
-    }
-
-    public static HashSet<Long> getAllActiveIds() {
-        HashSet<Long> set = new HashSet<Long>();
-        Cursor cur = getCursorSortedBy(null);
-        if (cur != null && cur.getCount() > 0) {
-
-            cur.moveToFirst();
-            do {
-                set.add(cur.getLong(0));
-            } while (cur.moveToNext());
-        }
-        if (cur != null) cur.close();
-        return set;
-    }
-
 }

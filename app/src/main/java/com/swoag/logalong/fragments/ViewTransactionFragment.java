@@ -276,17 +276,17 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                     switch (filterId) {
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
-                            summary.setName(DBAccount.getNameById(lastId));
+                            summary.setName(DBAccount.getInstance().getNameById(lastId));
                             if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                             summary.setName(DBCategory.getInstance().getNameById(lastId));
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
-                            summary.setName(DBTag.getNameById(lastId));
+                            summary.setName(DBTag.getInstance().getNameById(lastId));
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR:
-                            summary.setName(DBVendor.getNameById(lastId));
+                            summary.setName(DBVendor.getInstance().getNameById(lastId));
                             break;
                     }
                     sectionSummary.addSummary(lastIndex, summary);
@@ -320,17 +320,17 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
             switch (filterId) {
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
-                    summary.setName(DBAccount.getNameById(id));
+                    summary.setName(DBAccount.getInstance().getNameById(id));
                     if (LPreferences.getSearchAllTime()) setAccountSummary(summary, id);
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                     summary.setName(DBCategory.getInstance().getNameById(id));
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_TAG:
-                    summary.setName(DBTag.getNameById(id));
+                    summary.setName(DBTag.getInstance().getNameById(id));
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_VENDOR:
-                    summary.setName(DBVendor.getNameById(id));
+                    summary.setName(DBVendor.getInstance().getNameById(id));
                     break;
             }
             sectionSummary.addSummary(lastIndex, summary);
@@ -587,7 +587,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
             String category = DBCategory.getInstance().getNameById(categoryId);
-            String tag = DBTag.getNameById(tagId);
+            String tag = DBTag.getInstance().getNameById(tagId);
 
             if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
                 if (!sectionSummary.isVisible(id)) {
@@ -597,8 +597,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                     int accountId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
                     int account2Id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    String account = DBAccount.getNameById(accountId);
-                    String account2 = DBAccount.getNameById(account2Id);
+                    DBAccount dbAccount = DBAccount.getInstance();
+                    String account = dbAccount.getNameById(accountId);
+                    String account2 = dbAccount.getNameById(account2Id);
                     if (AppPersistency.TRANSACTION_FILTER_BY_ACCOUNT != AppPersistency.viewTransactionFilter) {
                         if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                             vTag.categoryTV.setText(account + " --> " + account2);
@@ -624,7 +625,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 vTag.categoryTV.setText(str);
 
                 int vendorId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_VENDOR));
-                String vendor = DBVendor.getNameById(vendorId);
+                String vendor = DBVendor.getInstance().getNameById(vendorId);
                 String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
 
                 if (TextUtils.isEmpty(vendor)) {

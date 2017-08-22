@@ -64,16 +64,16 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
         if (name != null && (!TextUtils.isEmpty(name))) {
             switch (type) {
                 case TYPE_ACCOUNT:
-                    ret = (null == DBAccount.getByName(name));
+                    ret = (null == DBAccount.getInstance().getByName(name));
                     break;
                 case TYPE_CATEGORY:
                     ret = (null == DBCategory.getInstance().getByName(name));
                     break;
                 case TYPE_TAG:
-                    ret = (null == DBTag.getByName(name));
+                    ret = (null == DBTag.getInstance().getByName(name));
                     break;
                 case TYPE_VENDOR:
-                    ret = (null == DBVendor.getByName(name));
+                    ret = (null == DBVendor.getInstance().getByName(name));
                     break;
             }
         }
@@ -86,21 +86,23 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
 
             switch (type) {
                 case TYPE_ACCOUNT:
-                    if (null == DBAccount.getByName(name)) {
+                    DBAccount dbAccount = DBAccount.getInstance();
+                    if (null == dbAccount.getByName(name)) {
                         LAccount account = new LAccount(name);
                         account.setShowBalance(attr1);
-                        DBAccount.add(account);
-                        journal.addAccount(account);
+                        dbAccount.add(account);
+                        journal.addAccount(account.getId());
                     } else {
                         LLog.w(TAG, "account already exists");
                     }
                     break;
 
                 case TYPE_CATEGORY:
-                    if (null == DBCategory.getInstance().getByName(name)) {
+                    DBCategory dbCategory = DBCategory.getInstance();
+                    if (null == dbCategory.getByName(name)) {
                         LCategory category = new LCategory(name);
-                        DBCategory.getInstance().add(category);
-                        journal.addCategory(category);
+                        dbCategory.add(category);
+                        journal.addCategory(category.getId());
                     }
                     break;
 
@@ -109,18 +111,20 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                     if (attr1 && attr2) vtype = LVendor.TYPE_PAYEE_PAYER;
                     else if (attr1) vtype = LVendor.TYPE_PAYEE;
                     else vtype = LVendor.TYPE_PAYER;
-                    if (null == DBVendor.getByName(name)) {
+                    DBVendor dbVendor = DBVendor.getInstance();
+                    if (null == dbVendor.getByName(name)) {
                         LVendor vendor = new LVendor(name, vtype);
-                        DBVendor.add(vendor);
-                        journal.addVendor(vendor);
+                        dbVendor.add(vendor);
+                        journal.addVendor(vendor.getId());
                     }
                     break;
 
                 case TYPE_TAG:
-                    if (null == DBTag.getByName(name)) {
+                    DBTag dbTag = DBTag.getInstance();
+                    if (null == dbTag.getByName(name)) {
                         LTag tag = new LTag(name);
-                        DBTag.add(tag);
-                        journal.addTag(tag);
+                        dbTag.add(tag);
+                        journal.addTag(tag.getId());
                     }
                     break;
 

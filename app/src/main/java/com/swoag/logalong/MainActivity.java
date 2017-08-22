@@ -322,7 +322,7 @@ public class MainActivity extends LFragmentActivity
         LAccount account = new LAccount();
         for (int ii = 0; ii < accounts.length; ii++) {
             account.setName(accounts[ii]);
-            DBAccount.add(account);
+            DBAccount.getInstance().add(account);
         }
     }
 
@@ -354,7 +354,7 @@ public class MainActivity extends LFragmentActivity
     }*/
 
     private void initDb() {
-        if (TextUtils.isEmpty(DBAccount.getNameById(1))) {
+        if (TextUtils.isEmpty(DBAccount.getInstance().getNameById(1))) {
             addAccounts();
         }
 
@@ -405,30 +405,32 @@ public class MainActivity extends LFragmentActivity
         int accountGid = request.getAccountGid();
         int shareAccountGid = request.getShareAccountGid();
 
+        DBAccount dbAccount = DBAccount.getInstance();
         if (ok) {
             LPreferences.setShareUserName(userId, userName);
             LPreferences.setShareUserFullName(userId, userFullName);
-            LAccount account = DBAccount.getByName(accountName);
+
+            LAccount account = dbAccount.getByName(accountName);
             if (account == null) {
                 account = new LAccount();
                 account.setName(accountName);
-                DBAccount.resetGidIfNotUnique(accountGid);
+                //TODO: dbAccount.resetGidIfNotUnique(accountGid);
                 account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                DBAccount.add(account);
+                dbAccount.add(account);
             } else {
                 if ((account.getGid() != 0) && account.getGid() != shareAccountGid) {
                     LLog.w(TAG, "unexpected: account " + account.getName() + " GID changed? " + shareAccountGid + " -> " + account.getGid());
                 }
 
-                DBAccount.resetGidIfNotUnique(shareAccountGid);
+                //DBAccount.resetGidIfNotUnique(shareAccountGid);
                 account.setGid(shareAccountGid);
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                DBAccount.update(account);
+                dbAccount.update(account);
             }
             journal.confirmAccountShare(true, shareAccountGid, userId, accountGid);
         } else {
-            LAccount account = DBAccount.getByName(accountName);
+            LAccount account = dbAccount.getByName(accountName);
             if (account == null) {
                 //do nothing if account does not yet exist
                 LLog.w(TAG, "cancelled share request for non-existing account: " + accountName);
@@ -439,9 +441,9 @@ public class MainActivity extends LFragmentActivity
                         LLog.w(TAG, "ignored GID change: account " + account.getName() + " GID: " + shareAccountGid + " -> " + account.getGid());
                     }
                 } else {
-                    DBAccount.resetGidIfNotUnique(shareAccountGid);
+                    //DBAccount.resetGidIfNotUnique(shareAccountGid);
                     account.setGid(shareAccountGid);
-                    DBAccount.update(account);
+                    dbAccount.update(account);
                 }
             }
 
