@@ -20,6 +20,7 @@ import com.swoag.logalong.LFragment;
 import com.swoag.logalong.R;
 import com.swoag.logalong.ScheduleActivity;
 import com.swoag.logalong.entities.LAllBalances;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBHelper;
@@ -194,7 +195,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 int month2 = calendar.get(Calendar.MONTH);
                 int day2 = calendar.get(Calendar.DAY_OF_MONTH);
                 if ((year != year2) || (month != month2) || (day != day2)) {
-                    LTransaction transaction = DBTransaction.getLastItemOfTheDay(year2, month2, day2);
+                    LTransaction transaction = DBTransaction.getInstance().getLastItemOfTheDay(year2, month2, day2);
                     if (null == transaction) {
                         calendar.set(year2, month2, day2, 0, 0, 1);
                         item.setTimeStamp(calendar.getTimeInMillis());
@@ -217,7 +218,9 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 lastTransactionTimestamp = item.getTimeStamp();
                 lastTransactionEditTimestamp = System.currentTimeMillis();
 
-                DBTransaction.add(item, true, true);
+                DBTransaction.getInstance().add(item);
+                LJournal journal = new LJournal();
+                journal.addRecord(item.getId());
                 break;
             case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
                 break;

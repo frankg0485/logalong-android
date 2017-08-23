@@ -185,11 +185,11 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             if (item.getChangeBy() == LPreferences.getUserIdNum()) {
                 uname = "myself";
             } else {
-                String fname = LPreferences.getShareUserFullName(item.getChangeBy());
-                String id = LPreferences.getShareUserName(item.getChangeBy());
-                if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
-                    uname = fname + " (" + id + ")";
-                }
+                //TODO: String fname = LPreferences.getShareUserFullName(item.getChangeBy());
+                //String id = LPreferences.getShareUserName(item.getChangeBy());
+                //if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
+                //    uname = fname + " (" + id + ")";
+                //}
             }
             if (!TextUtils.isEmpty(uname)) name = " by " + uname;
             lastChangeTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStampLast()) + name);

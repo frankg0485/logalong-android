@@ -1,7 +1,7 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2017 SWOAG Technology <www.swoag.com> */
 
-public class LTransactionDetails {
+public class LTransactionDetails extends LDbBase {
 
     private LTransaction transaction;
     private LCategory category;
@@ -65,5 +65,29 @@ public class LTransactionDetails {
 
     public void setVendor(LVendor vendor) {
         this.vendor = vendor;
+    }
+
+    public long getId() {
+        return transaction.getId();
+    }
+
+    public void setId(long id) {
+        transaction.setId(id);
+    }
+
+    public long getGid() {
+        return transaction.getGid();
+    }
+
+    public void setGid(long gid) {
+        transaction.setGid(gid);
+    }
+
+    public int getState() {
+        return transaction.getState();
+    }
+
+    public void setState(int state) {
+        transaction.setState(state);
     }
 }

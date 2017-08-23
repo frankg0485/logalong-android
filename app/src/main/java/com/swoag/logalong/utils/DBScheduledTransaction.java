@@ -14,9 +14,7 @@ public class DBScheduledTransaction {
     private static final String TAG = DBScheduledTransaction.class.getSimpleName();
 
     private static ContentValues setValues(LScheduledTransaction sch) {
-        ContentValues cv = new ContentValues();
-
-        DBTransaction.setValues(cv, sch.getItem());
+        ContentValues cv = DBTransaction.getInstance().setValues(sch.getItem());
 
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_COUNT, sch.getRepeatCount());
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_UNIT, sch.getRepeatUnit());
@@ -26,7 +24,7 @@ public class DBScheduledTransaction {
     }
 
     public static void getValues(Cursor cur, LScheduledTransaction sch) {
-        DBTransaction.getValues(cur, sch.getItem());
+        DBTransaction.getInstance().getValues(cur, sch.getItem());
 
         sch.setRepeatCount(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_COUNT)));
         sch.setRepeatUnit(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_UNIT)));

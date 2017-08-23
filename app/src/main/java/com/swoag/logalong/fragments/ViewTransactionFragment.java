@@ -716,7 +716,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             public void onClicked(View v) {
                 VTag tag = (VTag) v.getTag();
 
-                item = DBTransaction.getById(tag.id);
+                item = DBTransaction.getInstance().getById(tag.id);
 
                 //handle edit of transfer: require both records to be present, and only edit
                 //the original record (not the duplicate)
@@ -759,7 +759,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             LTransaction oldItem = new LTransaction(itemOrig);
                             oldItem.setTimeStampLast(LPreferences.getServerUtc());
                             oldItem.setState(DBHelper.STATE_DELETED);
-                            DBTransaction.update(oldItem, false);
+                            DBTransaction.getInstance().update(oldItem);
                             journal.updateItem(oldItem, DBHelper.STATE_ACTIVE);
 
                             //delete the duplicate record for transfer
@@ -781,14 +781,14 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                             AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
                             AppPersistency.lastTransactionChangeTimeMsHonored = false;
-                            DBTransaction.add(item, true, true);
+                            DBTransaction.getInstance().add(item);
                         } else {
                             item.setTimeStampLast(LPreferences.getServerUtc());
 
                             AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
                             AppPersistency.lastTransactionChangeTimeMsHonored = false;
 
-                            DBTransaction.update(item, false);
+                            DBTransaction.getInstance().update(item);
                             journal.updateItem(item, itemOrig);
 
                             //update also transfer copy
@@ -818,7 +818,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                     itemOrig.setTimeStampLast(LPreferences.getServerUtc());
                     itemOrig.setState(DBHelper.STATE_DELETED);
-                    DBTransaction.update(itemOrig, false);
+                    DBTransaction.getInstance().update(itemOrig);
 
                     LJournal journal = new LJournal();
                     journal.updateItem(itemOrig, DBHelper.STATE_ACTIVE);

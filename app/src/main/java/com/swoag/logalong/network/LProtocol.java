@@ -85,12 +85,16 @@ public class LProtocol {
     public static final short JRQST_UPDATE_VENDOR = 0x032;
     public static final short JRQST_DELETE_VENDOR = 0x033;
 
-    public static final short JRQST_ADD_RECORD = 0x005;
+    public static final short JRQST_ADD_RECORD = 0x041;
+    public static final short JRQST_UPDATE_RECORD = 0x042;
+    public static final short JRQST_DELETE_RECORD = 0x043;
+
     public static final short JRQST_GET_ACCOUNTS = 0x101;
-    public static final short JRQST_GET_CATEGORIES = 0x102;
-    public static final short JRQST_GET_TAGS = 0x103;
-    public static final short JRQST_GET_VENDORS = 0x104;
-    public static final short JRQST_GET_RECORDS = 0x105;
+    public static final short JRQST_GET_CATEGORIES = 0x111;
+    public static final short JRQST_GET_TAGS = 0x121;
+    public static final short JRQST_GET_VENDORS = 0x131;
+    public static final short JRQST_GET_RECORD = 0x141;
+    public static final short JRQST_GET_RECORDS = 0x142;
 
     public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
@@ -518,6 +522,7 @@ public class LProtocol {
                                         name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
                                         break;
+                                    case JRQST_GET_RECORD:
                                     case JRQST_GET_RECORDS:
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("aid", pkt.getLongAutoInc());
@@ -527,8 +532,8 @@ public class LProtocol {
                                         rspsIntent.putExtra("vid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("type", pkt.getByteAutoInc());
                                         rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
-                                        rspsIntent.putExtra("createBy", pkt.getIntAutoInc());
-                                        rspsIntent.putExtra("changeBy", pkt.getIntAutoInc());
+                                        rspsIntent.putExtra("createBy", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("changeBy", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("timestamp", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("createTime", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("changeTime", pkt.getLongAutoInc());

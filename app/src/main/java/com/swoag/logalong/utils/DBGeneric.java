@@ -132,16 +132,16 @@ public abstract class DBGeneric<T> {
         return id;
     }
 
-    private long getIdByColumn(String column, long value) {
+    public long getIdByGid(long gid) {
         long id = 0;
 
         try {
             Cursor csr = null;
-            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, column + "=?",
-                    new String[]{"" + value}, null);
+            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, DBHelper.TABLE_COLUMN_GID + "=?",
+                    new String[]{"" + gid}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to get unique " + column + ": " + value + " in table: " + getUri());
+                    LLog.w(TAG, "unable to get unique GID: " + gid + " in table: " + getUri());
                     csr.close();
                     return 0;
                 }
@@ -151,13 +151,9 @@ public abstract class DBGeneric<T> {
                 csr.close();
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get " + column + ": " + value + " in table: " + getUri());
+            LLog.w(TAG, "unable to get GID: " + gid + " in table: " + getUri());
         }
         return id;
-    }
-
-    public long getIdByGid(long gid) {
-        return getIdByColumn(DBHelper.TABLE_COLUMN_GID, gid);
     }
 
     public long getIdByName(String name) {
@@ -165,6 +161,8 @@ public abstract class DBGeneric<T> {
     }
 
     public String getNameById(long id) {
+        if (id <= 0) return null;
+
         String str = "";
         try {
             Cursor csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{DBHelper.TABLE_COLUMN_NAME},
@@ -184,6 +182,8 @@ public abstract class DBGeneric<T> {
     }
 
     public int getDbIndexById(long id) {
+        if (id <= 0) return -1;
+
         Cursor csr = null;
         int index = 0;
         int ret = -1;
@@ -233,6 +233,8 @@ public abstract class DBGeneric<T> {
     }
 
     public boolean updateColumnById(long id, String column, long value) {
+        if (id <= 0) return false;
+
         try {
             ContentValues cv = new ContentValues();
             cv.put(column, value);
@@ -244,6 +246,8 @@ public abstract class DBGeneric<T> {
     }
 
     public void deleteById(long id) {
+        if (id <= 0) return;
+
         updateColumnById(id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
     }
 

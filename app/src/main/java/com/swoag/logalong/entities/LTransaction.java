@@ -2,12 +2,8 @@ package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import com.swoag.logalong.R;
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.LPreferences;
 
-public class LTransaction {
-    private static final String TAG = LTransaction.class.getSimpleName();
-
+public class LTransaction extends LDbBase {
     public static final int TRANSACTION_TYPE_EXPENSE = 10;
     public static final int TRANSACTION_TYPE_INCOME = 20;
     public static final int TRANSACTION_TYPE_TRANSFER = 30;
@@ -27,11 +23,8 @@ public class LTransaction {
 
     private double value;
     private int type;
-
-    private int changeBy;
-    private int createBy;
-    private int state;
-    private long id;
+    private long changeBy;
+    private long createBy;
     private long category;
     private long account;
     private long account2;
@@ -39,25 +32,18 @@ public class LTransaction {
     private long vendor;
     private long timeStamp;
     private long timeStampCreate;
-    private long timeStampLast;
-    private long gid;
     private String note;
 
     private void init() {
-        this.timeStampLast = LPreferences.getServerUtc();
         this.timeStamp = System.currentTimeMillis();
         this.value = 0;
         this.type = TRANSACTION_TYPE_EXPENSE;
         this.createBy = 0;
-        this.state = DBHelper.STATE_ACTIVE;
-        this.id = 0;
         this.category = 0;
         this.account = 0;
         this.account2 = 0;
         this.tag = 0;
         this.vendor = 0;
-        this.gid = 0;
-
         this.note = "";
     }
 
@@ -159,22 +145,6 @@ public class LTransaction {
         this.type = type;
     }
 
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public long getCategory() {
         return category;
     }
@@ -215,14 +185,6 @@ public class LTransaction {
         this.vendor = vendor;
     }
 
-    public long getTimeStampLast() {
-        return timeStampLast;
-    }
-
-    public void setTimeStampLast(long timeStampLast) {
-        this.timeStampLast = timeStampLast;
-    }
-
     public long getTimeStampCreate() {
         return timeStampCreate;
     }
@@ -239,19 +201,19 @@ public class LTransaction {
         this.timeStamp = timeStamp;
     }
 
-    public int getCreateBy() {
+    public long getCreateBy() {
         return createBy;
     }
 
-    public void setCreateBy(int createBy) {
+    public void setCreateBy(long createBy) {
         this.createBy = createBy;
     }
 
-    public int getChangeBy() {
+    public long getChangeBy() {
         return changeBy;
     }
 
-    public void setChangeBy(int changeBy) {
+    public void setChangeBy(long changeBy) {
         this.changeBy = changeBy;
     }
 
@@ -261,13 +223,5 @@ public class LTransaction {
 
     public void setNote(String note) {
         this.note = note;
-    }
-
-    public long getGid() {
-        return gid;
-    }
-
-    public void setGid(long gid) {
-        this.gid = gid;
     }
 }

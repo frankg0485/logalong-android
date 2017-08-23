@@ -674,7 +674,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         protected Boolean doInBackground(Long... params) {
             Long accountId = params[0];
 
-            DBTransaction.deleteByAccount(accountId);
+            DBTransaction.getInstance().deleteByAccount(accountId);
             DBScheduledTransaction.deleteByAccount(accountId);
 
             DBAccountBalance.deleteByAccountId(accountId);

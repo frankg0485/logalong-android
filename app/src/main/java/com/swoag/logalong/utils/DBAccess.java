@@ -1,7 +1,6 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -10,7 +9,6 @@ import android.net.Uri;
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountSummary;
-import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
 
 import java.util.HashSet;
@@ -132,96 +130,8 @@ public class DBAccess {
         summary.setExpense(expense);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    // Journal support
-    private static ContentValues setJournalValues(LJournal journal) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.TABLE_COLUMN_STATE, journal.getState());
-        cv.put(DBHelper.TABLE_COLUMN_TO_USER, journal.getUserId());
-        cv.put(DBHelper.TABLE_COLUMN_RECORD, journal.getRecord());
-        return cv;
-    }
-
-    private static void getJournalValues(Cursor cur, LJournal journal) {
-        journal.setState(cur.getInt(cur.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
-        journal.setUserId(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TO_USER)));
-        journal.setRecord(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RECORD)));
-    }
-
-    public static long addJournal(LJournal journal) {
-        return addJournal(LApp.ctx, journal);
-    }
-
-    public static long addJournal(Context context, LJournal journal) {
-        long id = -1;
-        try {
-            ContentValues cv = setJournalValues(journal);
-            Uri uri = context.getContentResolver().insert(DBProvider.URI_JOURNALS, cv);
-            id = ContentUris.parseId(uri);
-        } catch (Exception e) {
-        }
-        return id;
-    }
-
-    /*public static boolean updateJournal(LJournal journal) {
-        return updateJournal(LApp.ctx, journal);
-    }
-
-    public static boolean updateJournal(Context context, LJournal journal) {
-        try {
-            ContentValues cv = setJournalValues(journal);
-            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv, "_id=?", new String[]{"" + journal.getId
-            ()});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-    */
-
-    /*public static boolean deleteJournalAll() {
-        return deleteJournalAll(LApp.ctx);
-    }
-
-    public static boolean deleteJournalAll(Context context) {
-        try {
-            ContentValues cv = new ContentValues();
-            cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-            context.getContentResolver().update(DBProvider.URI_JOURNALS, cv,
-                    DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-    */
-
-    public static boolean deleteJournalById(long id) {
-        return updateColumnById(DBProvider.URI_JOURNALS, id, DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-    }
-
-    public static Cursor getAllActiveJournalCursor() {
-        return getAllActiveJournalCursor(LApp.ctx);
-    }
-
-    public static Cursor getAllActiveJournalCursor(Context context) {
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_JOURNALS, null,
-                DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
-        return cur;
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public static boolean updateColumnById(Uri uri, long id, String column, String value) {
-        try {
-            ContentValues cv = new ContentValues();
-            cv.put(column, value);
-            LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
     public static boolean updateColumnById(Uri uri, long id, String column, int value) {
         try {
             ContentValues cv = new ContentValues();
@@ -232,34 +142,6 @@ public class DBAccess {
         }
         return true;
     }
-
-    public static boolean updateColumnById(Uri uri, long id, String column, long value) {
-        try {
-            ContentValues cv = new ContentValues();
-            cv.put(column, value);
-            LApp.ctx.getContentResolver().update(uri, cv, "_id=?", new String[]{"" + id});
-        } catch (Exception e) {
-            return false;
-        }
-        return true;
-    }
-
-    /*
-    private static Uri table2uri(String table) {
-        if (table.contentEquals(DBHelper.TABLE_TRANSACTION_NAME)) {
-            return DBProvider.URI_TRANSACTIONS;
-        } else if (table.contentEquals(DBHelper.TABLE_ACCOUNT_NAME)) {
-            return DBProvider.URI_ACCOUNTS;
-        } else if (table.contentEquals(DBHelper.TABLE_CATEGORY_NAME)) {
-            return DBProvider.URI_CATEGORIES;
-        } else if (table.contentEquals(DBHelper.TABLE_TAG_NAME)) {
-            return DBProvider.URI_TAGS;
-        } else if (table.contentEquals(DBHelper.TABLE_VENDOR_NAME)) {
-            return DBProvider.URI_VENDORS;
-        }
-        return null;
-    }
-    */
 
     private static long getIdByColumn(Context context, Uri uri, String column, String value, boolean caseSensitive) {
         long id = 0;

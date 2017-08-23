@@ -59,34 +59,6 @@ public class LJournal {
     private static long lastFlushMs;
     private static long lastFlushId;
 
-    private static boolean do_add_record(LBuffer jdata, LTransactionDetails details) {
-        jdata.clear();
-        jdata.putShortAutoInc(LProtocol.JRQST_ADD_RECORD);
-        jdata.putIntAutoInc((int) details.getTransaction().getId());
-        jdata.putIntAutoInc((int) details.getAccount().getGid());
-        jdata.putIntAutoInc((int) details.getAccount2().getGid());
-        jdata.putIntAutoInc((int) details.getCategory().getGid());
-        jdata.putIntAutoInc((int) details.getTag().getGid());
-        jdata.putIntAutoInc((int) details.getVendor().getGid());
-        jdata.putByteAutoInc((byte) details.getTransaction().getType());
-        jdata.putDoubleAutoInc(details.getTransaction().getValue());
-        jdata.putIntAutoInc(details.getTransaction().getChangeBy());
-        jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
-        jdata.putLongAutoInc(details.getTransaction().getTimeStampCreate());
-        jdata.putLongAutoInc(details.getTransaction().getTimeStampLast());
-        try {
-            byte[] note = details.getTransaction().getNote().getBytes("UTF-8");
-            jdata.putShortAutoInc((short) note.length);
-            jdata.putBytesAutoInc(note);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error when adding record " + e.getMessage());
-            return false;
-        }
-        jdata.setLen(jdata.getBufOffset());
-
-        return true;
-    }
-
     private abstract class GenericJournalFlushAction<D> {
         abstract D getById(long id);
 
@@ -177,6 +149,48 @@ public class LJournal {
                     newEntry = true;
                 }
             }
+            return true;
+        }
+    }
+
+    private class RecordJournalFlushAction extends GenericJournalFlushAction<LTransactionDetails> {
+        @Override
+        LTransactionDetails getById(long id) {
+            return DBTransaction.getInstance().getDetailsById(id);
+        }
+
+        @Override
+        LTransactionDetails getByIdAll(long id) {
+            return DBTransaction.getInstance().getDetailsByIdAll(id);
+        }
+
+        @Override
+        short getRequestCode() {
+            return LProtocol.JRQST_ADD_RECORD;
+        }
+
+        @Override
+        boolean add_data(LBuffer jdata, LTransactionDetails details) {
+            jdata.putLongAutoInc(details.getAccount().getGid());
+            jdata.putLongAutoInc(details.getAccount2().getGid());
+            jdata.putLongAutoInc(details.getCategory().getGid());
+            jdata.putLongAutoInc(details.getTag().getGid());
+            jdata.putLongAutoInc(details.getVendor().getGid());
+            jdata.putByteAutoInc((byte) details.getTransaction().getType());
+            jdata.putDoubleAutoInc(details.getTransaction().getValue());
+            jdata.putLongAutoInc(details.getTransaction().getChangeBy());
+            jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
+            jdata.putLongAutoInc(details.getTransaction().getTimeStampCreate());
+            jdata.putLongAutoInc(details.getTransaction().getTimeStampLast());
+            try {
+                byte[] note = details.getTransaction().getNote().getBytes("UTF-8");
+                jdata.putShortAutoInc((short) note.length);
+                jdata.putBytesAutoInc(note);
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected error when adding record " + e.getMessage());
+                return false;
+            }
+            jdata.setLen(jdata.getBufOffset());
             return true;
         }
     }
@@ -316,12 +330,16 @@ public class LJournal {
     private static boolean newEntry = false;
 
     private static final int MAX_ERROR_RETRIES = 10;
+    private static RecordJournalFlushAction recordJournalFlushAction;
     private static AccountJournalFlushAction accountJournalFlushAction;
     private static CategoryJournalFlushAction categoryJournalFlushAction;
     private static TagJournalFlushAction tagJournalFlushAction;
     private static VendorJournalFlushAction vendorJournalFlushAction;
 
     public boolean flush() {
+        if (recordJournalFlushAction == null) {
+            recordJournalFlushAction = new LJournal.RecordJournalFlushAction();
+        }
         if (accountJournalFlushAction == null) {
             accountJournalFlushAction = new LJournal.AccountJournalFlushAction();
         }
@@ -355,17 +373,14 @@ public class LJournal {
         LBuffer ndata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
         switch (jdata.getShortAutoInc()) {
             case LProtocol.JRQST_ADD_RECORD:
-                int id = jdata.getIntAutoInc();
-                LTransactionDetails details = DBTransaction.getDetailsById(id);
-                if (details == null) {
-                    LLog.e(TAG, "unable to fetch record with id: " + id);
-                    removeEntry = true;
-                } else {
-                    do_add_record(ndata, details);
-                    newEntry = true;
-                }
+                if (!recordJournalFlushAction.add(jdata, ndata)) return false;
                 break;
-
+            case LProtocol.JRQST_UPDATE_RECORD:
+                if (!recordJournalFlushAction.update(jdata, ndata)) return false;
+                break;
+            case LProtocol.JRQST_DELETE_RECORD:
+                if (!recordJournalFlushAction.delete(jdata, ndata)) return false;
+                break;
             case LProtocol.JRQST_ADD_ACCOUNT:
                 if (!accountJournalFlushAction.add(jdata, ndata)) return false;
                 break;
@@ -822,8 +837,20 @@ public class LJournal {
         return true;
     }
 
+    public boolean getRecord(long id) {
+        return postById(id, LProtocol.JRQST_GET_RECORD);
+    }
+
     public boolean addRecord(long id) {
         return postById(id, LProtocol.JRQST_ADD_RECORD);
+    }
+
+    public boolean updateRecord(long id) {
+        return postById(id, LProtocol.JRQST_UPDATE_RECORD);
+    }
+
+    public boolean deleteRecord(long id) {
+        return postById(id, LProtocol.JRQST_DELETE_RECORD);
     }
 
     public boolean addAccount(long id) {
@@ -951,104 +978,13 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateCategory(LCategory category, String oldName) {
-        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
-        return post_category_update(category);
-    }
-
-    public boolean updateCategory(LCategory category, int oldState) {
-        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
-        return post_category_update(category);
-    }
-
-    public boolean updateCategory(LCategory category) {
-        record = "";
-        return post_category_update(category);
-    }
-
-    private boolean post_vendor_update(LVendor vendor) {
-        /*
-        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
-        if (users.size() < 1) return false;
-
-        data.clear();
-        data.putShortAutoInc(JRQST_SHARE_TRANSITION_PAYER);
-
-        record += DBHelper.TABLE_COLUMN_STATE + "=" + vendor.getState() + ","
-                + DBHelper.TABLE_COLUMN_TYPE + "=" + vendor.getType() + ","
-                + DBHelper.TABLE_COLUMN_NAME + "=" + vendor.getName() + ","
-                + DBHelper.TABLE_COLUMN_RID + "=" + vendor.getRid() + ","
-                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + vendor.getTimeStampLast();
-        try {
-            byte[] rec = record.getBytes("UTF-8");
-            data.putShortAutoInc((short) rec.length);
-            data.putBytesAutoInc(rec);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
-        data.setLen(data.getBufOffset());
-
-        for (int user : users) post(user);
-        */
-        return true;
-
-    }
-
-    public boolean updateVendor(LVendor vendor, String oldName) {
-        record = DBHelper.TABLE_COLUMN_NAME + "old=" + oldName + ",";
-        return post_vendor_update(vendor);
-    }
-
-    public boolean updateVendor(LVendor vendor, int oldState) {
-        record = DBHelper.TABLE_COLUMN_STATE + "old=" + oldState + ",";
-        return post_vendor_update(vendor);
-    }
-
-    public boolean updateVendor(LVendor vendor) {
-        record = "";
-        return post_vendor_update(vendor);
-    }
-
-    private boolean post_tag_update(LTag tag) {
-        /*
-        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
-        if (users.size() < 1) return false;
-
-        data.clear();
-        data.putShortAutoInc(JRQST_SHARE_TRANSITION_TAG);
-
-        record += DBHelper.TABLE_COLUMN_STATE + "=" + tag.getState() + ","
-                + DBHelper.TABLE_COLUMN_NAME + "=" + tag.getName() + ","
-                + DBHelper.TABLE_COLUMN_RID + "=" + tag.getRid() + ","
-                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + tag.getTimeStampLast();
-        try {
-            byte[] rec = record.getBytes("UTF-8");
-            data.putShortAutoInc((short) rec.length);
-            data.putBytesAutoInc(rec);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
-        data.setLen(data.getBufOffset());
-
-        for (int user : users) post(user);
-        */
-        return true;
-    }
-
+/*
     public int getState() {
         return state;
     }
 
     public void setState(int state) {
         this.state = state;
-    }
-
-    public String getRecord() {
-        return record;
-    }
-
-    public void setRecord(String record) {
-        this.record = record;
     }
 
     public int getUserId() {
@@ -1058,7 +994,7 @@ public class LJournal {
     public void setUserId(int userId) {
         this.userId = userId;
     }
-
+*/
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private static class OldRecord {
         boolean oldState;

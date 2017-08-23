@@ -104,7 +104,7 @@ public class DBPorter {
 
             MyCSV myCSV = new MyCSV();
 
-            Cursor cursor = DBTransaction.getAllCursor();
+            Cursor cursor = DBTransaction.getInstance().getAllCursor();
             if (cursor == null || cursor.getCount() < 1) {
                 if (cursor != null) cursor.close();
                 return false;
@@ -378,12 +378,13 @@ public class DBPorter {
                             DBScheduledTransaction.add(lScheduledTransaction);
                         }
                     } else {
-                        long tid = DBTransaction.getIdByRid(rid);
+                        //long tid = DBTransaction.getInstance().getIdByRid(rid);
+                        long tid = 0;
                         if (tid != 0) {
                             trans.setId(tid);
-                            DBTransaction.update(trans, false);
+                            DBTransaction.getInstance().update(trans);
                         } else {
-                            DBTransaction.add(trans, false, false);
+                            DBTransaction.getInstance().add(trans);
                         }
                     }
                 }

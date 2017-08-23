@@ -63,6 +63,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_VENDOR = 0x040;
     private static final short NOTIFICATION_UPDATE_VENDOR = 0x041;
     private static final short NOTIFICATION_DELETE_VENDOR = 0x042;
+    private static final short NOTIFICATION_ADD_RECORD = 0x050;
+    private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
+    private static final short NOTIFICATION_DELETE_RECORD = 0x052;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -429,13 +432,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_ADD_RECORD:
                                     id = intent.getLongExtra("id", 0L);
                                     gid = intent.getLongExtra("gid", 0L);
-                                    LTransaction transaction = DBTransaction.getByGid(gid);
+                                    DBTransaction dbTransaction = DBTransaction.getInstance();
+                                    LTransaction transaction = dbTransaction.getByGid(gid);
                                     if (null != transaction) {
                                         if (transaction.getId() == id) {
                                             LLog.e(TAG, "unexpected error, record GID: " + gid + " already taken ");
                                         }
                                     }
-                                    DBTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    dbTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
                                 case LProtocol.JRQST_GET_ACCOUNTS:
                                     gid = intent.getLongExtra("gid", 0L);
@@ -502,22 +506,24 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         dbVendor.add(vendor);
                                     }
                                     break;
+                                case LProtocol.JRQST_GET_RECORD:
                                 case LProtocol.JRQST_GET_RECORDS:
                                     gid = intent.getLongExtra("gid", 0L);
-                                    int aid = intent.getIntExtra("aid", 0);
-                                    int aid2 = intent.getIntExtra("aid2", 0);
-                                    int cid = intent.getIntExtra("cid", 0);
-                                    int tid = intent.getIntExtra("tid", 0);
-                                    int vid = intent.getIntExtra("vid", 0);
+                                    long aid = intent.getLongExtra("aid", 0);
+                                    long aid2 = intent.getLongExtra("aid2", 0);
+                                    long cid = intent.getLongExtra("cid", 0);
+                                    long tid = intent.getLongExtra("tid", 0);
+                                    long vid = intent.getLongExtra("vid", 0);
                                     type = intent.getByteExtra("type", (byte) LTransaction.TRANSACTION_TYPE_EXPENSE);
                                     double amount = intent.getDoubleExtra("amount", 0);
                                     long timestamp = intent.getLongExtra("timestamp", 0L);
-                                    int createUid = intent.getIntExtra("createBy", 0);
-                                    int changeUid = intent.getIntExtra("changeBy", 0);
+                                    long createUid = intent.getLongExtra("createBy", 0);
+                                    long changeUid = intent.getLongExtra("changeBy", 0);
                                     long createTime = intent.getLongExtra("createTime", 0L);
                                     long changeTime = intent.getLongExtra("changeTime", 0L);
                                     String note = intent.getStringExtra("note");
-                                    transaction = DBTransaction.getByGid(gid);
+                                    dbTransaction = DBTransaction.getInstance();
+                                    transaction = dbTransaction.getByGid(gid);
                                     boolean create = true;
                                     if (null != transaction) {
                                         create = false;
@@ -540,8 +546,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     transaction.setTimeStampLast(changeTime);
                                     transaction.setNote(note);
 
-                                    if (create) DBTransaction.add(transaction);
-                                    else DBTransaction.update(transaction);
+                                    if (create) dbTransaction.add(transaction);
+                                    else dbTransaction.update(transaction);
 
                                     break;
 
@@ -553,6 +559,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_DELETE_TAG:
                                 case LProtocol.JRQST_UPDATE_VENDOR:
                                 case LProtocol.JRQST_DELETE_VENDOR:
+                                case LProtocol.JRQST_UPDATE_RECORD:
+                                case LProtocol.JRQST_DELETE_RECORD:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);
@@ -806,6 +814,21 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                             .ACTION_UI_UPDATE_VENDOR));
                                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_ADD_RECORD:
+                            case NOTIFICATION_UPDATE_RECORD:
+                                gid = intent.getLongExtra("int1", 0L);
+                                journal.getRecord(gid);
+                                break;
+
+                            case NOTIFICATION_DELETE_RECORD:
+                                gid = intent.getLongExtra("int1", 0L);
+                                DBTransaction dbTransaction = DBTransaction.getInstance();
+                                LTransaction transaction = dbTransaction.getByGid(gid);
+                                if (null != transaction) {
+                                    dbTransaction.deleteById(transaction.getId());
                                 }
                                 break;
 
@@ -1094,7 +1117,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         protected Boolean doInBackground(Long... params) {
             Long accountId = params[0];
 
-            DBTransaction.deleteByAccount(accountId);
+            DBTransaction.getInstance().deleteByAccount(accountId);
             DBScheduledTransaction.deleteByAccount(accountId);
 
             DBAccountBalance.deleteByAccountId(accountId);

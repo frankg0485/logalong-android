@@ -319,12 +319,13 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             journal.getAllVendors();
 
             // send all records
-            Cursor cursor = DBTransaction.getAllCursor();
+            DBTransaction dbTransaction = DBTransaction.getInstance();
+            Cursor cursor = dbTransaction.getAllCursor();
             if (cursor != null) {
                 LTransaction transaction = new LTransaction();
                 cursor.moveToFirst();
                 do {
-                    DBTransaction.getValues(cursor, transaction);
+                    dbTransaction.getValues(cursor, transaction);
                     journal.addRecord(transaction.getId());
                     publishProgress(DBAccount.getInstance().getNameById(transaction.getAccount()) + " : " + transaction.getValue());
                 } while (cursor.moveToNext());
