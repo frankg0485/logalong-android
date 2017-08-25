@@ -11,7 +11,6 @@ public class LAccount extends LDbBase {
     public static final int ACCOUNT_SHARE_CONFIRMED = 2;
     public static final int ACCOUNT_SHARE_DECLINED = 3;
     public static final int ACCOUNT_SHARE_CONFIRMED_SYNCED = 4;
-
     //added to local database, but not yet invited, this is for GUI update only
     public static final int ACCOUNT_SHARE_PREPARED = 5;
 
@@ -20,19 +19,18 @@ public class LAccount extends LDbBase {
 
     private long shareTimeStampLast;
 
-    private ArrayList<Integer> shareIds;
+    private ArrayList<Long> shareIds;
     private ArrayList<Integer> shareStates;
     private long id;
 
     private void init() {
         this.shareTimeStampLast = 0;
         this.showBalance = true;
-        this.shareIds = new ArrayList<Integer>();
+        this.shareIds = new ArrayList<Long>();
         this.shareStates = new ArrayList<Integer>();
     }
 
-    public LAccount()
-    {
+    public LAccount() {
         super();
         init();
     }
@@ -48,7 +46,7 @@ public class LAccount extends LDbBase {
         init();
     }
 
-    public LAccount(int state, String name, ArrayList<Integer> shareIds, ArrayList<Integer> shareStates) {
+    public LAccount(int state, String name, ArrayList<Long> shareIds, ArrayList<Integer> shareStates) {
         super(state, name);
         init();
         this.shareIds = shareIds;
@@ -77,11 +75,11 @@ public class LAccount extends LDbBase {
         return false;
     }
 
-    public ArrayList<Integer> getShareIds() {
+    public ArrayList<Long> getShareIds() {
         return shareIds;
     }
 
-    public void setShareIds(ArrayList<Integer> shareIds) {
+    public void setShareIds(ArrayList<Long> shareIds) {
         this.shareIds = shareIds;
     }
 
@@ -112,7 +110,7 @@ public class LAccount extends LDbBase {
             shareStates.clear();
             for (int ii = 0; ii < sb.length / 2; ii++) {
                 shareStates.add(Integer.parseInt(sb[2 * ii]));
-                shareIds.add(Integer.parseInt(sb[2 * ii + 1]));
+                shareIds.add(Long.parseLong(sb[2 * ii + 1]));
             }
             if ((sb.length % 2) == 0) {
                 shareTimeStampLast = 0;
@@ -122,9 +120,23 @@ public class LAccount extends LDbBase {
         }
     }
 
-    public void addShareUser(int id, int state) {
+    public long getOwner() {
+        if (shareIds == null || shareStates == null) return 0;
+        if (shareIds.size() == 0 || shareStates.size() == 0) return 0;
+        else return shareIds.get(0);
+    }
+
+    public void setOwner(long id) {
+        if (shareIds == null || shareStates == null) addShareUser(id, ACCOUNT_SHARE_CONFIRMED);
+        if (shareIds.get(0) != id) {
+            shareIds.add(0, id);
+            shareStates.add(0, ACCOUNT_SHARE_CONFIRMED);
+        }
+    }
+
+    public void addShareUser(long id, int state) {
         if (shareIds == null || shareStates == null) {
-            shareIds = new ArrayList<Integer>();
+            shareIds = new ArrayList<Long>();
             shareStates = new ArrayList<Integer>();
         }
 
@@ -139,7 +151,7 @@ public class LAccount extends LDbBase {
         shareIds.add(id);
     }
 
-    public void removeShareUser(int id) {
+    public void removeShareUser(long id) {
         if (shareIds == null || shareStates == null) {
             return;
         }
@@ -157,7 +169,7 @@ public class LAccount extends LDbBase {
         shareStates.clear();
     }
 
-    public int getShareUserState(int id) {
+    public int getShareUserState(long id) {
         if (shareIds == null || shareStates == null) {
             return ACCOUNT_SHARE_NA;
         }

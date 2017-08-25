@@ -87,7 +87,7 @@ public class LShareAccountConfirmDialog extends Dialog implements
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
-            case LBroadcastReceiver.ACTION_GET_SHARE_USER_BY_NAME:
+            case LBroadcastReceiver.ACTION_GET_USER_BY_NAME:
                 if (countDownTimer != null) countDownTimer.cancel();
                 if (ret == LProtocol.RSPS_OK) {
 

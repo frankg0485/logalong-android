@@ -2,7 +2,6 @@ package com.swoag.logalong.utils;
 /* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
@@ -84,15 +83,11 @@ public class DBAccount extends DBGeneric<LAccount> {
         return getValues(cur, null);
     }
 
-    public static HashSet<Integer> getAllShareUser() {
-        return getAllShareUser(LApp.ctx);
-    }
-
-    public static HashSet<Integer> getAllShareUser(Context context) {
+    public HashSet<Long> getAllShareUser() {
         LAccount account = new LAccount();
-        HashSet<Integer> set = new HashSet<Integer>();
+        HashSet<Long> set = new HashSet<>();
 
-        Cursor cur = context.getContentResolver().query(DBProvider.URI_ACCOUNTS, new String[]{DBHelper
+        Cursor cur = LApp.ctx.getContentResolver().query(DBProvider.URI_ACCOUNTS, new String[]{DBHelper
                         .TABLE_COLUMN_SHARE},
                 DBHelper.TABLE_COLUMN_STATE + "=?", new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         if (cur != null && cur.getCount() > 0) {
@@ -103,7 +98,7 @@ public class DBAccount extends DBGeneric<LAccount> {
                 if (str != null) {
                     account.setSharedIdsString(str);
                     if (account.getShareIds() != null) {
-                        for (int ii : account.getShareIds()) {
+                        for (long ii : account.getShareIds()) {
                             set.add(ii);
                         }
                     }

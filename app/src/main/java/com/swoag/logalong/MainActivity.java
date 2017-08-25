@@ -407,8 +407,8 @@ public class MainActivity extends LFragmentActivity
 
         DBAccount dbAccount = DBAccount.getInstance();
         if (ok) {
-            LPreferences.setShareUserName(userId, userName);
-            LPreferences.setShareUserFullName(userId, userFullName);
+            LPreferences.setShareUserId(userId, userName);
+            LPreferences.setShareUserName(userId, userFullName);
 
             LAccount account = dbAccount.getByName(accountName);
             if (account == null) {

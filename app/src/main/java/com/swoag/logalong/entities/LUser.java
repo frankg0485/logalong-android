@@ -1,10 +1,10 @@
 package com.swoag.logalong.entities;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 public class LUser {
     private String name;
     private String fullName;
-    private int id;
+    private long id;
 
     public LUser() {
         name = "";
@@ -12,7 +12,7 @@ public class LUser {
         id = 0;
     }
 
-    public LUser(String name, String fullName, int id) {
+    public LUser(String name, String fullName, long id) {
         this.name = name;
         this.fullName = fullName;
         this.id = id;
@@ -34,11 +34,11 @@ public class LUser {
         this.fullName = fullName;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 }

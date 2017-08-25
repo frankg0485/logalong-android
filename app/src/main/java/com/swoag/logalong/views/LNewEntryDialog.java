@@ -197,6 +197,11 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
         text.setHint((hint != null) ? hint : (type == TYPE_CATEGORY) ?
                 LApp.ctx.getResources().getString(R.string.hint_primary_category_sub_category) : "");
         text.addTextChangedListener(this);
+
+        showIME();
+
+
+        qqqqq
     }
 
     @Override
@@ -242,6 +247,16 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
                     .INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
             text.setCursorVisible(false);
+        } catch (Exception e) {
+        }
+    }
+
+    private void showIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context
+                    .INPUT_METHOD_SERVICE);
+            inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            text.setCursorVisible(true);
         } catch (Exception e) {
         }
     }

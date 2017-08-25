@@ -384,7 +384,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         }
 
                                     }
-                                    dbAccount.updateColumnById((int) id, DBHelper.TABLE_COLUMN_GID, gid);
+
+                                    account = dbAccount.getById(id);
+                                    if (null != account) {
+                                        account.setOwner(uid);
+                                        account.setGid(gid);
+                                        dbAccount.update(account);
+                                    }
                                     break;
 
                                 case LProtocol.JRQST_ADD_CATEGORY:
@@ -449,10 +455,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     dbAccount = DBAccount.getInstance();
                                     account = dbAccount.getByGid(gid);
                                     if (null != account) {
+                                        account.setOwner(uid);
                                         account.setName(name);
                                         dbAccount.update(account);
                                     } else {
                                         account = new LAccount();
+                                        account.setOwner(uid);
                                         account.setGid(gid);
                                         account.setName(name);
                                         dbAccount.add(account);
@@ -606,15 +614,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 DBAccount dbAccount = DBAccount.getInstance();
                                 LAccount account = dbAccount.getByGid(gid);
                                 if (null != account) {
+                                    account.setOwner(uid);
                                     account.setName(name);
                                     dbAccount.update(account);
                                 } else {
                                     account = dbAccount.getByName(name);
                                     if (null != account) {
+                                        account.setOwner(uid);
                                         account.setGid(gid);
                                         dbAccount.update(account);
                                     } else {
                                         account = new LAccount();
+                                        account.setOwner(uid);
                                         account.setGid(gid);
                                         account.setName(name);
                                         dbAccount.add(account);

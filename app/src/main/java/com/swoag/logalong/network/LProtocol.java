@@ -96,7 +96,6 @@ public class LProtocol {
     public static final short JRQST_GET_RECORD = 0x141;
     public static final short JRQST_GET_RECORDS = 0x142;
 
-    public static final short RQST_GET_SHARE_USER_BY_NAME = RQST_SYS | 0x109;
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     public static final short RQST_POLL = RQST_SYS | 0x777;
     public static final short RQST_POLL_ACK = RQST_SYS | 0x778;
@@ -403,11 +402,13 @@ public class LProtocol {
 
                         if (RSPS_OK == status) {
                             String name, fullName;
+                            long gid = pkt.getLongAutoInc();
                             int bytes = pkt.getShortAutoInc();
                             name = pkt.getStringAutoInc(bytes);
                             bytes = pkt.getShortAutoInc();
                             fullName = pkt.getStringAutoInc(bytes);
 
+                            rspsIntent.putExtra("id", gid);
                             rspsIntent.putExtra("name", name);
                             rspsIntent.putExtra("fullName", fullName);
                         }
@@ -469,6 +470,29 @@ public class LProtocol {
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
+
+                    case RSPS | RQST_GET_USER_BY_NAME: {
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_GET_USER_BY_NAME));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+
+                        if (RSPS_OK == status) {
+                            String name, fullName;
+                            long gid = pkt.getLongAutoInc();
+                            int bytes = pkt.getShortAutoInc();
+                            name = pkt.getStringAutoInc(bytes);
+                            bytes = pkt.getShortAutoInc();
+                            fullName = pkt.getStringAutoInc(bytes);
+
+                            rspsIntent.putExtra("id", gid);
+                            rspsIntent.putExtra("name", name);
+                            rspsIntent.putExtra("fullName", fullName);
+                            LPreferences.setShareUserId(gid, name);
+                            LPreferences.setShareUserName(gid, fullName);
+                        }
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+                    }
 
                     case RSPS | RQST_POST_JOURNAL:
                         packetConsumptionStatus.isResponseCompleted = (status != RSPS_MORE);

@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
 
 import com.swoag.logalong.BuildConfig;
 import com.swoag.logalong.LApp;
@@ -414,18 +413,6 @@ public class LAppServer {
         strings.add(pass);
         strings.add(LPreferences.getDeviceId());
         return LTransport.send_rqst(this, LProtocol.RQST_LOG_IN, strings, scrambler);
-    }
-
-    public boolean UiRequestUserName() {
-        if(!TextUtils.isEmpty(LPreferences.getUserName())) {
-            LLog.w(TAG, "user name request ignored, name already assigned: " + LPreferences.getUserName());
-            return true;
-        }
-        return LTransport.send_rqst(this, LProtocol.RQST_CREATE_USER, 0);
-    }
-
-    public boolean UiGetShareUserByName(String name) {
-        return LTransport.send_rqst(this, LProtocol.RQST_GET_SHARE_USER_BY_NAME, name, scrambler);
     }
 
     public boolean UiPoll() {

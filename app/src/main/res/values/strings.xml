@@ -61,7 +61,7 @@
     <string name="payee">Payee</string>
     <string name="payee_payers">Payee/Payers</string>
     <string name="payer">Payer</string>
-    <string name="please_complete_your_profile">Please set your name in profile settings then come back.</string>
+    <string name="please_complete_your_profile">Please complete your profile settings then come back.</string>
     <string name="profile">Profile</string>
     <string name="profile_edit">Profile Edit</string>
     <string name="quarterly">quarterly</string>
@@ -108,6 +108,7 @@
     <string name="transfer_to_report_view">to:</string>
     <string name="undo">Undo</string>
     <string name="unlimited">unlimited</string>
+    <string name="unshare">Unshare</string>
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="updating_profile">Updating profile ...</string>

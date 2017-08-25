@@ -161,21 +161,19 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_LOGIN_NUM, num);
     }
 
-    public static String getShareUserName(int userId) {
-        return getPreference(LApp.ctx, USER_NAME + "." + userId, "");
+    public static String getShareUserId(long gid) {
+        return getPreference(LApp.ctx, USER_ID + "." + gid, "");
     }
 
-    public static void setShareUserName(int userId, String name) {
-        savePreference(LApp.ctx, USER_NAME + "." + userId, name);
+    public static void setShareUserId(long gid, String name) {
+        savePreference(LApp.ctx, USER_ID + "." + gid, name);
+    }
+    public static String getShareUserName(long gid) {
+        return getPreference(LApp.ctx, USER_NAME + "." + gid, "");
     }
 
-    public static String getShareUserFullName(int userId) {
-        //return getPreference(LApp.ctx, USER_FULL_NAME + "." + userId, "");
-        return "";
-    }
-
-    public static void setShareUserFullName(int userId, String name) {
-        //savePreference(LApp.ctx, USER_FULL_NAME + "." + userId, name);
+    public static void setShareUserName(long gid, String name) {
+        savePreference(LApp.ctx, USER_NAME + "." + gid, name);
     }
 
     private static int getEmptyAccountShareRequest() {

@@ -1,12 +1,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/dialog_bg_color"
-    android:gravity="center">
+              android:id="@+id/catchAll"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/dialog_bg_color"
+              android:gravity="center"
+              android:orientation="horizontal"
+              android:weightSum="100">
 
     <LinearLayout
-        android:layout_width="300dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="90"
         android:background="#a4a6a8"
         android:gravity="center_horizontal"
         android:orientation="vertical"
@@ -30,7 +34,7 @@
                 android:text="@string/reminder"
                 android:textColor="@color/base_text_color"
                 android:textSize="@dimen/settings_option_text_size"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
         </LinearLayout>
 
@@ -69,7 +73,7 @@
                         android:paddingTop="10dp"
                         android:singleLine="false"
                         android:textColor="@color/base_text_color"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"/>
 
                     <LinearLayout
                         android:id="@+id/buttons"
@@ -85,7 +89,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@android:string/ok" />
+                            android:text="@android:string/ok"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

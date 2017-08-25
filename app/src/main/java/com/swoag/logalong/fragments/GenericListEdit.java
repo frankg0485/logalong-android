@@ -41,6 +41,7 @@ import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.GenericListOptionDialog;
 import com.swoag.logalong.views.LMultiSelectionDialog;
 import com.swoag.logalong.views.LNewEntryDialog;
+import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LRenameDialog;
 import com.swoag.logalong.views.LShareAccountDialog;
 import com.swoag.logalong.views.LWarnDialog;
@@ -273,10 +274,10 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             return newView;
         }
 
-        private HashSet<Integer> getAccountCurrentShares(LAccount account) {
-            HashSet<Integer> selectedUsers = new HashSet<Integer>();
+        private HashSet<Long> getAccountCurrentShares(LAccount account) {
+            HashSet<Long> selectedUsers = new HashSet<>();
             if (account.getShareIds() != null) {
-                for (int ii : account.getShareIds()) {
+                for (long ii : account.getShareIds()) {
                     if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
                         selectedUsers.add(ii);
                     } else {
@@ -312,24 +313,24 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         break;
 
                     case R.id.share:
-                        //if ((TextUtils.isEmpty(LPreferences.getUserFullName())) || (TextUtils.isEmpty(LPreferences
-                        // .getUserName()))) {
-                        //    new LReminderDialog(activity, activity.getResources().getString(R.string
-                        // .please_complete_your_profile)).show();
-                        //    break;
-                        //}
+                        if (TextUtils.isEmpty(LPreferences.getUserId())) {
+                            new LReminderDialog(activity, activity.getResources().getString(R.string
+                                    .please_complete_your_profile)).show();
+                            break;
+                        }
 
+                        DBAccount dbAccount = DBAccount.getInstance();
                         ArrayList<LUser> users = new ArrayList<LUser>();
-                        HashSet<Integer> userSet = DBAccount.getAllShareUser();
-                        for (int ii : userSet) {
-                            if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
-                                users.add(new LUser(LPreferences.getShareUserName(ii), LPreferences
-                                        .getShareUserFullName(ii), ii));
+                        HashSet<Long> userSet = dbAccount.getAllShareUser();
+                        for (long ii : userSet) {
+                            if (!TextUtils.isEmpty(LPreferences.getShareUserId(ii))) {
+                                users.add(new LUser(LPreferences.getShareUserId(ii),
+                                        LPreferences.getShareUserName(ii), ii));
                             }
                         }
 
                         LAccount account = DBAccount.getInstance().getById(tag.id);
-                        HashSet<Integer> selectedUsers = getAccountCurrentShares(account);
+                        HashSet<Long> selectedUsers = getAccountCurrentShares(account);
 
                         LShareAccountDialog shareAccountDialog = new LShareAccountDialog
                                 (activity, account.getId(), selectedUsers, MyCursorAdapter.this, users);
@@ -357,7 +358,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
 
         @Override
         public void onShareAccountDialogExit(boolean ok, boolean applyToAllAccounts, long accountId,
-                                             HashSet<Integer> selections, HashSet<Integer> origSelections) {
+                                             HashSet<Long> selections, HashSet<Long> origSelections) {
             if (!ok) return;
 
             HashSet<Long> set;
@@ -378,7 +379,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 origSelections = getAccountCurrentShares(account);
 
                 //first update all existing users if there's any removal
-                for (Integer ii : origSelections) {
+                for (Long ii : origSelections) {
                     if (!selections.contains(ii)) {
                         account.removeShareUser(ii);
                         //TODO:
@@ -388,7 +389,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 }
 
                 //now request for new share
-                for (Integer ii : selections) {
+                for (Long ii : selections) {
                     boolean newShare = false;
                     if (!origSelections.contains(ii)) newShare = true;
                     else if (account.getShareUserState(ii) != LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED)

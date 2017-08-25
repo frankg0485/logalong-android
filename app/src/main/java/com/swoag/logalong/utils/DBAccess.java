@@ -7,11 +7,8 @@ import android.database.Cursor;
 import android.net.Uri;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LTransaction;
-
-import java.util.HashSet;
 
 public class DBAccess {
     private static final String TAG = DBAccess.class.getSimpleName();
@@ -38,7 +35,7 @@ public class DBAccess {
         return str;
     }
 
-    public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
+    /*public static HashSet<Integer> getAllAccountsConfirmedShareUser() {
         return getAllAccountsConfirmedShareUser(LApp.ctx);
     }
 
@@ -67,7 +64,7 @@ public class DBAccess {
         }
         if (cur != null) cur.close();
         return set;
-    }
+    }*/
 
     public static int getDbIndexById(Context context, Uri uri, long id) {
         Cursor csr = null;

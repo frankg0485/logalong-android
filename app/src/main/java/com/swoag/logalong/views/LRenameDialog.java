@@ -78,6 +78,8 @@ public class LRenameDialog extends Dialog implements TextWatcher {
         isNameAvailable = false;
         okView.setEnabled(false);
         LViewUtils.setAlpha(okView, 0.5f);
+
+        showIME();
     }
 
 
@@ -132,6 +134,16 @@ public class LRenameDialog extends Dialog implements TextWatcher {
                     .INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(text.getWindowToken(), 0);
             text.setCursorVisible(false);
+        } catch (Exception e) {
+        }
+    }
+
+    private void showIME() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context
+                    .INPUT_METHOD_SERVICE);
+            inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            text.setCursorVisible(true);
         } catch (Exception e) {
         }
     }
