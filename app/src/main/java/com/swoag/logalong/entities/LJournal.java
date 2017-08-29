@@ -308,7 +308,7 @@ public class LJournal {
 
         @Override
         boolean add_data(LBuffer jdata, LVendor vendor) {
-            jdata.putByteAutoInc((byte)vendor.getType());
+            jdata.putByteAutoInc((byte) vendor.getType());
             try {
                 byte[] name = vendor.getName().getBytes("UTF-8");
                 jdata.putShortAutoInc((short) name.length);
@@ -779,10 +779,6 @@ public class LJournal {
         return post_schedule_item_update(sch);
     }
 
-    private boolean post_account_update(LAccount account) {
-        return true;
-    }
-
     public boolean getAllAccounts() {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_GET_ACCOUNTS);
@@ -901,100 +897,34 @@ public class LJournal {
         return postById(id, LProtocol.JRQST_DELETE_VENDOR);
     }
 
-
-    public boolean unshareAccount(int userId, int accountId, int accountGid, String accountName) {
+    private boolean postLongLong(long long1, long long2, short jrqst) {
         data.clear();
-        data.putShortAutoInc(JRQST_UNSHARE_ACCOUNT);
-        data.putIntAutoInc(accountId);
-        data.putIntAutoInc(accountGid);
-        try {
-            byte[] name = accountName.getBytes("UTF-8");
-            data.putByteAutoInc((byte) name.length);
-            data.putBytesAutoInc(name);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
+        data.putShortAutoInc(jrqst);
+        data.putLongAutoInc(long1);
+        data.putLongAutoInc(long2);
         data.setLen(data.getBufOffset());
-        post(userId);
+        post();
         return true;
     }
 
-    public boolean shareAccount(int userId, int accountId, int accountGid, String accountName) {
+    public boolean addUserToAccount(long uid, long aid) {
+        return postLongLong(uid, aid, LProtocol.JRQST_ADD_USER_TO_ACCOUNT);
+    }
+
+    public boolean removeUserFromAccount(long uid, long aid) {
+        return postLongLong(uid, aid, LProtocol.JRQST_REMOVE_USER_FROM_ACCOUNT);
+    }
+
+    public boolean confirmAccountShare(long aid, boolean yes) {
         data.clear();
-        data.putShortAutoInc(JRQST_SHARE_ACCOUNT);
-        data.putIntAutoInc(accountId);
-        data.putIntAutoInc(accountGid);
-        try {
-            byte[] name = accountName.getBytes("UTF-8");
-            data.putByteAutoInc((byte) name.length);
-            data.putBytesAutoInc(name);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
+        data.putShortAutoInc(LProtocol.JRQST_CONFIRM_ACCOUNT_SHARE);
+        data.putLongAutoInc(aid);
+        data.putByteAutoInc((byte) (yes ? 1 : 0));
         data.setLen(data.getBufOffset());
-        post(userId);
+        post();
         return true;
     }
 
-    public boolean confirmAccountShare(boolean confirmed, int accountGid, int shareWithUserId, int
-            shareWithAccountGid) {
-        data.clear();
-        data.putShortAutoInc(JRQST_CONFIRM_ACCOUNT_SHARE);
-        data.putByteAutoInc((byte) (confirmed ? 1 : 0));
-        data.putIntAutoInc(accountGid);
-        data.putIntAutoInc(shareWithUserId);
-        data.putIntAutoInc(shareWithAccountGid);
-        data.setLen(data.getBufOffset());
-        //post(LPreferences.getUserId());
-        LLog.d(TAG, "confirm account: " + accountGid + " <--> " + shareWithAccountGid + " with user: "
-                + shareWithUserId + " confirmed: " + confirmed);
-        return true;
-    }
-
-    private boolean post_category_update(LCategory category) {
-        /*
-        HashSet<Integer> users = DBAccess.getAllAccountsConfirmedShareUser();
-        if (users.size() < 1) return false;
-
-        data.clear();
-        data.putShortAutoInc(JRQST_SHARE_TRANSITION_CATEGORY);
-
-        LLog.d(TAG, "updating category: " + category.getName() + " UUID: " + category.getRid());
-        record += DBHelper.TABLE_COLUMN_STATE + "=" + category.getState() + ","
-                + DBHelper.TABLE_COLUMN_NAME + "=" + category.getName() + ","
-                + DBHelper.TABLE_COLUMN_RID + "=" + category.getRid() + ","
-                + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "=" + category.getTimeStampLast();
-        try {
-            byte[] rec = record.getBytes("UTF-8");
-            data.putShortAutoInc((short) rec.length);
-            data.putBytesAutoInc(rec);
-        } catch (Exception e) {
-            LLog.e(TAG, "unexpected error: " + e.getMessage());
-        }
-        data.setLen(data.getBufOffset());
-
-        for (int user : users) post(user);
-        */
-        return true;
-    }
-
-/*
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-*/
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private static class OldRecord {
         boolean oldState;

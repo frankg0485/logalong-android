@@ -6,7 +6,6 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
-import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
@@ -62,6 +61,7 @@ public class LProtocol {
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
 
+
     public static final short RQST_SCRAMBLER_SEED = RQST_SYS | 0x100;
     public static final short RQST_GET_USER_BY_NAME = RQST_SYS | 0x200;
     public static final short RQST_CREATE_USER = RQST_SYS | 0x204;
@@ -96,28 +96,15 @@ public class LProtocol {
     public static final short JRQST_GET_RECORD = 0x141;
     public static final short JRQST_GET_RECORDS = 0x142;
 
+    public static final short JRQST_ADD_USER_TO_ACCOUNT = 0x301;
+    public static final short JRQST_REMOVE_USER_FROM_ACCOUNT = 0x302;
+    public static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x303;
+
     public static final short RQST_POST_JOURNAL = RQST_SYS | 0x555;
     public static final short RQST_POLL = RQST_SYS | 0x777;
     public static final short RQST_POLL_ACK = RQST_SYS | 0x778;
     public static final short RQST_UTC_SYNC = RQST_SYS | 0x7f0;
     public static final short RQST_PING = RQST_SYS | 0x7ff;
-
-
-    private static final short CMD_JRQST_MASK = (short) 0x8000;
-    private static final short CMD_SHARE_TRANSITION_RECORD = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_TRANSITION_RECORD);
-    private static final short CMD_SHARE_TRANSITION_RECORDS = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_TRANSITION_RECORDS);
-    private static final short CMD_SHARE_TRANSITION_CATEGORY = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_TRANSITION_CATEGORY);
-    private static final short CMD_SHARE_TRANSITION_PAYER = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_TRANSITION_PAYER);
-    private static final short CMD_SHARE_TRANSITION_TAG = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_TRANSITION_TAG);
-    private static final short CMD_SHARE_PAYER_CATEGORY = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_PAYER_CATEGORY);
-    private static final short CMD_SHARE_SCHEDULE = (short) (CMD_JRQST_MASK | LJournal
-            .JRQST_SHARE_SCHEDULE);
 
     private LBuffer pktBuf;
     private LBuffer pkt;
@@ -292,18 +279,6 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
-    private void handleCategoryPayerTagShare(LBuffer pkt, int status, int action, int cacheId) {
-        Intent rspsIntent;
-        int bytes = pkt.getShortAutoInc();
-        String record = pkt.getStringAutoInc(bytes);
-
-        rspsIntent = new Intent(LBroadcastReceiver.action(action));
-        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-        rspsIntent.putExtra("cacheId", cacheId);
-        rspsIntent.putExtra("record", record);
-        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-    }
-
     private void handleSystemMsgBroadcast(LBuffer pkt, int status, int action, int cacheId) {
         Intent rspsIntent;
 
@@ -318,18 +293,10 @@ public class LProtocol {
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
     }
 
-    private void handlerUnknownMsg(LBuffer pkt, int status, int action, int cacheId) {
-        Intent rspsIntent = new Intent(LBroadcastReceiver.action(action));
-        rspsIntent.putExtra("cacheId", cacheId);
-        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
-    }
-
     private class PacketConsumptionStatus {
         int bytesConsumed;
         boolean isResponseCompleted;
     }
-
-    ;
 
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
     private PacketConsumptionStatus consumePacket(LBuffer pkt, short requestCode, int scrambler) {

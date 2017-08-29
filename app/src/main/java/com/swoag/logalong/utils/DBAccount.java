@@ -4,6 +4,7 @@ package com.swoag.logalong.utils;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccount;
@@ -107,5 +108,26 @@ public class DBAccount extends DBGeneric<LAccount> {
         }
         if (cur != null) cur.close();
         return set;
+    }
+
+    public static class MyAccountDeleteTask extends AsyncTask<Long, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Long... params) {
+            Long accountId = params[0];
+
+            DBTransaction.getInstance().deleteByAccount(accountId);
+            DBScheduledTransaction.deleteByAccount(accountId);
+
+            DBAccountBalance.deleteByAccountId(accountId);
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+        }
+
+        @Override
+        protected void onPreExecute() {
+        }
     }
 }

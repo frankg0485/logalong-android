@@ -9,10 +9,11 @@ public class LAccount extends LDbBase {
     public static final int ACCOUNT_SHARE_NA = 0;
     public static final int ACCOUNT_SHARE_INVITED = 1;
     public static final int ACCOUNT_SHARE_CONFIRMED = 2;
-    public static final int ACCOUNT_SHARE_DECLINED = 3;
-    public static final int ACCOUNT_SHARE_CONFIRMED_SYNCED = 4;
+    //public static final int ACCOUNT_SHARE_DECLINED = 3;
+    //public static final int ACCOUNT_SHARE_CONFIRMED_SYNCED = 4;
     //added to local database, but not yet invited, this is for GUI update only
-    public static final int ACCOUNT_SHARE_PREPARED = 5;
+    //public static final int ACCOUNT_SHARE_PREPARED = 5;
+    public static final int ACCOUNT_SHARE_OWNER = 99;
 
     private String rid;
     private boolean showBalance;
@@ -68,7 +69,7 @@ public class LAccount extends LDbBase {
         if (shareIds == null || shareStates == null || shareIds.size() < 1 || shareStates.size() < 1)
             return false;
         for (int ii = 0; ii < shareStates.size(); ii++) {
-            if (shareStates.get(ii) == ACCOUNT_SHARE_CONFIRMED_SYNCED) {
+            if (shareStates.get(ii) == ACCOUNT_SHARE_CONFIRMED) {
                 return true;
             }
         }
@@ -122,16 +123,17 @@ public class LAccount extends LDbBase {
 
     public long getOwner() {
         if (shareIds == null || shareStates == null) return 0;
-        if (shareIds.size() == 0 || shareStates.size() == 0) return 0;
-        else return shareIds.get(0);
+
+        for (int ii = 0; ii < shareStates.size(); ii++) {
+            if (shareStates.get(ii) == ACCOUNT_SHARE_OWNER) {
+                return shareIds.get(ii);
+            }
+        }
+        return 0;
     }
 
     public void setOwner(long id) {
-        if (shareIds == null || shareStates == null) addShareUser(id, ACCOUNT_SHARE_CONFIRMED);
-        if (shareIds.get(0) != id) {
-            shareIds.add(0, id);
-            shareStates.add(0, ACCOUNT_SHARE_CONFIRMED);
-        }
+        addShareUser(id, ACCOUNT_SHARE_OWNER);
     }
 
     public void addShareUser(long id, int state) {

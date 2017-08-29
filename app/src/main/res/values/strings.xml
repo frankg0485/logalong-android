@@ -109,6 +109,7 @@
     <string name="undo">Undo</string>
     <string name="unlimited">unlimited</string>
     <string name="unshare">Unshare</string>
+    <string name="unshare_and_delete">Unshare and delete</string>
     <string name="unspecified_tag">Tag not specified</string>
     <string name="unspecified_vendor">Vendor not specified</string>
     <string name="updating_profile">Updating profile ...</string>
@@ -126,6 +127,7 @@
     <string name="warning_unable_to_find_share_user">Unable to find user</string>
     <string name="warning_unable_to_connect">Unable to connect to server, please try later.</string>
     <string name="warning_unable_to_create_update_profile">Unable to create/update user profile, please try later.</string>
+    <string name="warning_unshare_and_delete_account">Account and all its records will be removed.</string>
     <string name="warning_user_id_taken">User ID already taken by someone else</string>
     <string name="warning_user_id_available">User ID available</string>
     <string name="warning_user_id_invalid">Invalid user ID</string>

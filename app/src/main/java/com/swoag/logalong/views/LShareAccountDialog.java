@@ -48,7 +48,7 @@ import java.util.HashSet;
 
 public class LShareAccountDialog extends Dialog
         implements AdapterView.OnItemClickListener, View.OnClickListener, TextWatcher,
-        LBroadcastReceiver.BroadcastReceiverListener, DialogInterface.OnDismissListener {
+        LBroadcastReceiver.BroadcastReceiverListener, DialogInterface.OnDismissListener, LWarnDialog.LWarnDialogItf {
     private static final String TAG = LShareAccountDialog.class.getSimpleName();
     public Context context;
     private ListView mList;
@@ -68,6 +68,7 @@ public class LShareAccountDialog extends Dialog
     private CheckBox checkBoxAllAccounts;
     private View userCtrlView;
     private View selectAllView;
+    private Button saveButton;
     private LAccount account;
     private long accountId;
     private boolean ownAccount;
@@ -113,9 +114,11 @@ public class LShareAccountDialog extends Dialog
         TextView tv = (TextView) findViewById(R.id.shareAccountName);
         tv.setText(account.getName());
 
-        findViewById(R.id.save).setOnClickListener(this);
+        saveButton = (Button) findViewById(R.id.save);
+        saveButton.setOnClickListener(this);
         findViewById(R.id.cancel).setOnClickListener(this);
         checkBoxAllAccounts = (CheckBox) findViewById(R.id.checkBoxShareAllAccounts);
+        checkBoxAllAccounts.setOnClickListener(this);
         userCtrlView = findViewById(R.id.userCtrlView);
 
         selectAllView = findViewById(R.id.selectall);
@@ -149,12 +152,12 @@ public class LShareAccountDialog extends Dialog
         checkBoxAllAccounts.setChecked(false);
 
         if (ownAccount) {
+            enableSave();
             enableShare(true);
         } else {
             userCtrlView.setVisibility(View.GONE);
             findViewById(R.id.shareAllAccounts).setVisibility(View.GONE);
-            Button cancelBtn = (Button) findViewById(R.id.save);
-            cancelBtn.setText(R.string.unshare);
+            saveButton.setText(R.string.unshare);
         }
         this.setOnDismissListener(this);
     }
@@ -173,7 +176,7 @@ public class LShareAccountDialog extends Dialog
             case LBroadcastReceiver.ACTION_GET_USER_BY_NAME:
                 if (countDownTimer != null) countDownTimer.cancel();
                 if (ret == LProtocol.RSPS_OK) {
-                    long id = intent.getIntExtra("id", 0);
+                    long id = intent.getLongExtra("id", 0);
                     String name = intent.getStringExtra("name");
                     String fullName = intent.getStringExtra("fullName");
 
@@ -184,15 +187,17 @@ public class LShareAccountDialog extends Dialog
                     selectedIds.add(id);
                     myArrayAdapter.notifyDataSetChanged();
 
-                    DBAccount dbAccount = DBAccount.getInstance();
-                    account = dbAccount.getById(accountId);
-                    account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
-                    dbAccount.update(account);
+                    //DBAccount dbAccount = DBAccount.getInstance();
+                    //account = dbAccount.getById(accountId);
+                    //account.addShareUser(id, LAccount.ACCOUNT_SHARE_PREPARED);
+                    //dbAccount.update(account);
                     LPreferences.setShareUserId(id, name);
                     LPreferences.setShareUserName(id, fullName);
 
                     editText.setText("");
                     hideIME();
+
+                    enableSave();
                 } else {
                     displayErrorMsg(LShareAccountDialog.this.getContext().getString(R.string
                             .warning_unable_to_find_share_user));
@@ -301,6 +306,10 @@ public class LShareAccountDialog extends Dialog
         int id = v.getId();
 
         switch (id) {
+            case R.id.checkBoxShareAllAccounts:
+                enableSave();
+                break;
+
             case R.id.selectall:
                 try {
                     CheckBox cb = (CheckBox) v.findViewById(R.id.checkBox1);
@@ -314,18 +323,30 @@ public class LShareAccountDialog extends Dialog
                             selectedIds.remove(users.get(ii).getId());
                         }
                     }
+
+                    enableSave();
                     mList.invalidateViews();
                 } catch (Exception e) {
                     LLog.e(TAG, "unexpected error: " + e.getMessage());
                 }
                 break;
             case R.id.save:
-                String str = "";
-                if (editText.getText() != null) {
-                    str = editText.getText().toString().trim();
+                if (!ownAccount) {
+                    LWarnDialog warnDialog = new LWarnDialog(context, this, this,
+                            context.getString(R.string.unshare),
+                            context.getString(R.string.warning_unshare_and_delete_account),
+                            context.getString(R.string.unshare_and_delete),
+                            true);
+                    warnDialog.show();
+                    LViewUtils.smoothFade(findViewById(android.R.id.content), true, 1000);
+                } else {
+                    String str = "";
+                    if (editText.getText() != null) {
+                        str = editText.getText().toString().trim();
+                    }
+                    if (!TextUtils.isEmpty(str)) do_add_share_user(editText.getText().toString().trim());
+                    else leave(true);
                 }
-                if (!TextUtils.isEmpty(str)) do_add_share_user(editText.getText().toString().trim());
-                else leave(true);
                 break;
             case R.id.cancel:
                 leave(false);
@@ -345,6 +366,7 @@ public class LShareAccountDialog extends Dialog
         } else {
             selectedIds.remove(id);
         }
+        enableSave();
 
         CheckBox cb = (CheckBox) arg1.findViewById(R.id.checkBox1);
         cb.setChecked(checked);
@@ -364,6 +386,21 @@ public class LShareAccountDialog extends Dialog
         hideIME();
         callback.onShareAccountDialogExit(ok, checkBoxAllAccounts.isChecked(), accountId, selectedIds, origSelectedIds);
         dismiss();
+    }
+
+    @Override
+    public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
+        if (confirm && ok) {
+            selectedIds.clear(); //this triggers an unshare action
+            callback.onShareAccountDialogExit(true, false, accountId, selectedIds, origSelectedIds);
+        }
+        dismiss();
+    }
+
+    private void enableSave() {
+        boolean enabled = checkBoxAllAccounts.isChecked() || (!origSelectedIds.equals(selectedIds));
+        LViewUtils.setAlpha(saveButton, enabled ? 1.0f : 0.5f);
+        saveButton.setEnabled(enabled);
     }
 
     private void enableShare(boolean enabled) {
@@ -387,16 +424,6 @@ public class LShareAccountDialog extends Dialog
         int textId1;
         int checkboxId;
 
-        /*public boolean areAllItemsEnabled()
-        {
-            return ownAccount;
-        }
-
-        public boolean isEnabled(int position)
-        {
-            return ownAccount;
-        }*/
-
         public MyArrayAdapter(Context context, ArrayList<LUser> users, int layoutId, int textId1, int checkboxId) {
             super(context, 0, users);
             inflater = LayoutInflater.from(context);
@@ -406,10 +433,18 @@ public class LShareAccountDialog extends Dialog
         }
 
         @Override
+        public boolean isEnabled(int position) {
+            return ownAccount;
+        }
+
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             LUser user = getItem(position);
             if (null == convertView) {
                 convertView = inflater.inflate(layoutId, null);
+                if (!ownAccount) {
+                    LViewUtils.setAlpha(convertView, 0.6f);
+                }
             }
 
             TextView txtView = (TextView) convertView.findViewById(textId1);
@@ -422,11 +457,14 @@ public class LShareAccountDialog extends Dialog
             CheckBox cb = (CheckBox) convertView.findViewById(checkboxId);
             cb.setChecked(selectedIds.contains(user.getId()));
 
+            View ownerV = convertView.findViewById(R.id.owner);
+            ownerV.setVisibility((user.getId() == account.getOwner()) ? View.VISIBLE : View.INVISIBLE);
+
             ImageView imageView = (ImageView) convertView.findViewById(R.id.share);
             int share = account.getShareUserState(user.getId());
             switch (share) {
                 case LAccount.ACCOUNT_SHARE_CONFIRMED:
-                case LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED:
+                    //case LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED:
                     imageView.setImageResource(R.drawable.ic_action_share_green);
                     break;
                 case LAccount.ACCOUNT_SHARE_INVITED:
@@ -437,9 +475,6 @@ public class LShareAccountDialog extends Dialog
                     break;
             }
 
-            if (!ownAccount) {
-                LViewUtils.setAlpha(convertView, 0.6f);
-            }
             return convertView;
         }
     }

@@ -199,9 +199,6 @@ public class LNewEntryDialog extends Dialog implements TextWatcher {
         text.addTextChangedListener(this);
 
         showIME();
-
-
-        qqqqq
     }
 
     @Override

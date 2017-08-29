@@ -428,7 +428,7 @@ public class MainActivity extends LFragmentActivity
                 account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
                 dbAccount.update(account);
             }
-            journal.confirmAccountShare(true, shareAccountGid, userId, accountGid);
+            //journal.confirmAccountShare(true, shareAccountGid, userId, accountGid);
         } else {
             LAccount account = dbAccount.getByName(accountName);
             if (account == null) {
@@ -447,7 +447,7 @@ public class MainActivity extends LFragmentActivity
                 }
             }
 
-            journal.confirmAccountShare(false, shareAccountGid, userId, accountGid);
+            //journal.confirmAccountShare(false, shareAccountGid, userId, accountGid);
         }
         shareAccountConfirmDialogOpened = false;
         LPreferences.deleteAccountShareRequest(request);

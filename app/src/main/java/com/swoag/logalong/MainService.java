@@ -51,6 +51,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final int CMD_SCAN_BALANCE = 50;
 
     private static final short NOTIFICATION_UPDATE_USER_PROFILE = 0x001;
+    private static final short NOTIFICATION_ADD_SHARE_USER = 0x002;
     private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
     private static final short NOTIFICATION_UPDATE_ACCOUNT = 0x011;
     private static final short NOTIFICATION_DELETE_ACCOUNT = 0x012;
@@ -66,6 +67,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_RECORD = 0x050;
     private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
     private static final short NOTIFICATION_DELETE_RECORD = 0x052;
+    private static final short NOTIFICATION_SHARE_ACCOUNT = 0x101;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -848,6 +850,18 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                         .ACTION_UI_UPDATE_USER_PROFILE));
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                break;
+
+                            case NOTIFICATION_ADD_SHARE_USER:
+                                uid = intent.getLongExtra("int1", 0L);
+                                LPreferences.setShareUserId(uid, intent.getStringExtra("txt1"));
+                                LPreferences.setShareUserName(uid, intent.getStringExtra("txt2"));
+                                break;
+
+                            case NOTIFICATION_SHARE_ACCOUNT:
+                                long aid = intent.getLongExtra("int1", 0L);
+                                uid = intent.getLongExtra("int2", 0L);
+                                name = intent.getStringExtra("txt1");
                                 break;
 
                             default:

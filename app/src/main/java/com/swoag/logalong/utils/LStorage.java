@@ -14,7 +14,7 @@ public class LStorage {
     private static final int MAX_CACHE_LENGTH = (16 * 1024 * 1024);
     private static LStorage instance = null;
     private static int runningId = (new Random()).nextInt();
-    private static int SIGNATURE = 0xa55a55ab;
+    private static int SIGNATURE = 0xa55a55aa;
 
     private RandomAccessFile file;
     private static final Object lock = new Object();

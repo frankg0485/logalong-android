@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_height"
-    android:background="@drawable/dialog_row_bgd"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingBottom="5dp"
-    android:paddingLeft="5dp"
-    android:paddingRight="12dp"
-    android:paddingTop="5dp">
+              android:layout_width="match_parent"
+              android:layout_height="@dimen/list_item_height"
+              android:background="@drawable/dialog_row_bgd"
+              android:gravity="center_vertical"
+              android:orientation="horizontal"
+              android:paddingBottom="5dp"
+              android:paddingLeft="5dp"
+              android:paddingRight="12dp"
+              android:paddingTop="5dp">
 
     <CheckBox
         android:id="@+id/checkBox1"
@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:button="@drawable/btn_check_holo_dark"
         android:clickable="false"
-        android:focusable="false" />
+        android:focusable="false"/>
 
     <TextView
         android:id="@+id/name"
@@ -31,7 +31,15 @@
         android:singleLine="true"
         android:text=""
         android:textColor="@color/base_text_color"
-        android:textSize="@dimen/settings_option_text_size" />
+        android:textSize="@dimen/settings_option_text_size"/>
+
+    <ImageView
+        android:id="@+id/owner"
+        android:layout_width="30dp"
+        android:layout_height="@dimen/list_item_height"
+        android:paddingBottom="18dp"
+        android:paddingTop="18dp"
+        android:src="@drawable/preferences_system"/>
 
     <ImageView
         android:id="@+id/share"
@@ -39,5 +47,5 @@
         android:layout_height="@dimen/list_item_height"
         android:paddingBottom="16dp"
         android:paddingTop="16dp"
-        android:src="@drawable/ic_action_share" />
+        android:src="@drawable/ic_action_share"/>
 </LinearLayout>
