@@ -780,57 +780,27 @@ public class LJournal {
     }
 
     public boolean getAllAccounts() {
-        data.clear();
-        data.putShortAutoInc(LProtocol.JRQST_GET_ACCOUNTS);
-        data.setLen(data.getBufOffset());
-        post();
-
-        return true;
+        return post(LProtocol.JRQST_GET_ACCOUNTS);
     }
 
     public boolean getAllCategories() {
-        data.clear();
-        data.putShortAutoInc(LProtocol.JRQST_GET_CATEGORIES);
-        data.setLen(data.getBufOffset());
-        post();
-
-        return true;
+        return post(LProtocol.JRQST_GET_CATEGORIES);
     }
 
     public boolean getAllTags() {
-        data.clear();
-        data.putShortAutoInc(LProtocol.JRQST_GET_TAGS);
-        data.setLen(data.getBufOffset());
-        post();
-
-        return true;
+        return post(LProtocol.JRQST_GET_TAGS);
     }
 
     public boolean getAllVendors() {
-        data.clear();
-        data.putShortAutoInc(LProtocol.JRQST_GET_VENDORS);
-        data.setLen(data.getBufOffset());
-        post();
-
-        return true;
+        return post(LProtocol.JRQST_GET_VENDORS);
     }
 
     public boolean getAllRecords() {
-        data.clear();
-        data.putShortAutoInc(LProtocol.JRQST_GET_RECORDS);
-        data.setLen(data.getBufOffset());
-        post();
-
-        return true;
+        return post(LProtocol.JRQST_GET_RECORDS);
     }
 
-    private boolean postById(long id, short jrqst) {
-        data.clear();
-        data.putShortAutoInc(jrqst);
-        data.putLongAutoInc(id);
-        data.setLen(data.getBufOffset());
-        post();
-        return true;
+    public boolean getAccountRecords(long aid) {
+        return postById(aid, LProtocol.JRQST_GET_ACCOUNT_RECORDS);
     }
 
     public boolean getRecord(long id) {
@@ -897,16 +867,6 @@ public class LJournal {
         return postById(id, LProtocol.JRQST_DELETE_VENDOR);
     }
 
-    private boolean postLongLong(long long1, long long2, short jrqst) {
-        data.clear();
-        data.putShortAutoInc(jrqst);
-        data.putLongAutoInc(long1);
-        data.putLongAutoInc(long2);
-        data.setLen(data.getBufOffset());
-        post();
-        return true;
-    }
-
     public boolean addUserToAccount(long uid, long aid) {
         return postLongLong(uid, aid, LProtocol.JRQST_ADD_USER_TO_ACCOUNT);
     }
@@ -915,11 +875,39 @@ public class LJournal {
         return postLongLong(uid, aid, LProtocol.JRQST_REMOVE_USER_FROM_ACCOUNT);
     }
 
-    public boolean confirmAccountShare(long aid, boolean yes) {
+    public boolean confirmAccountShare(long aid, long uid, boolean yes) {
         data.clear();
         data.putShortAutoInc(LProtocol.JRQST_CONFIRM_ACCOUNT_SHARE);
         data.putLongAutoInc(aid);
+        data.putLongAutoInc(uid);
         data.putByteAutoInc((byte) (yes ? 1 : 0));
+        data.setLen(data.getBufOffset());
+        post();
+        return true;
+    }
+
+    private boolean post(short jrqst) {
+        data.clear();
+        data.putShortAutoInc(jrqst);
+        data.setLen(data.getBufOffset());
+        post();
+        return true;
+    }
+
+    private boolean postById(long id, short jrqst) {
+        data.clear();
+        data.putShortAutoInc(jrqst);
+        data.putLongAutoInc(id);
+        data.setLen(data.getBufOffset());
+        post();
+        return true;
+    }
+
+    private boolean postLongLong(long long1, long long2, short jrqst) {
+        data.clear();
+        data.putShortAutoInc(jrqst);
+        data.putLongAutoInc(long1);
+        data.putLongAutoInc(long2);
         data.setLen(data.getBufOffset());
         post();
         return true;

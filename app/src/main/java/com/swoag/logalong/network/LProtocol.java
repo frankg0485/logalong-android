@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.swoag.logalong.LApp;
-import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
@@ -95,7 +94,8 @@ public class LProtocol {
     public static final short JRQST_GET_VENDORS = 0x131;
     public static final short JRQST_GET_RECORD = 0x141;
     public static final short JRQST_GET_RECORDS = 0x142;
-
+    public static final short JRQST_GET_ACCOUNT_RECORDS = 0x143;
+    public static final short JRQST_GET_ACCOUNT_USERS = 0x151;
     public static final short JRQST_ADD_USER_TO_ACCOUNT = 0x301;
     public static final short JRQST_REMOVE_USER_FROM_ACCOUNT = 0x302;
     public static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x303;
@@ -124,6 +124,7 @@ public class LProtocol {
     }
 
     private void handleAccountShareRequest(LBuffer pkt, int status, int action, int cacheId) {
+        /*
         Intent rspsIntent;
         int userId = pkt.getIntAutoInc();
         byte bytes = pkt.getByteAutoInc();
@@ -144,6 +145,7 @@ public class LProtocol {
         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
         rspsIntent.putExtra("cacheId", cacheId);
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+        */
     }
 
     private void handleAccountShareUpdate(LBuffer pkt, int status, int action, int cacheId) {
@@ -515,6 +517,7 @@ public class LProtocol {
                                         break;
                                     case JRQST_GET_RECORD:
                                     case JRQST_GET_RECORDS:
+                                    case JRQST_GET_ACCOUNT_RECORDS:
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("aid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("aid2", pkt.getLongAutoInc());

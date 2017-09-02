@@ -279,9 +279,9 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             if (account.getShareIds() != null) {
                 for (long ii : account.getShareIds()) {
                     if (ii == LPreferences.getUserIdNum()) continue;
-                    if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
+                    if (!TextUtils.isEmpty(LPreferences.getShareUserId(ii))) {
                         int shareState = account.getShareUserState(ii);
-                        if (LAccount.ACCOUNT_SHARE_CONFIRMED == shareState
+                        if (LAccount.ACCOUNT_SHARE_PERMISSION_OWNER >= shareState
                                 || LAccount.ACCOUNT_SHARE_INVITED == shareState) {
                             selectedUsers.add(ii);
                         }
@@ -329,7 +329,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         HashSet<Long> userSet = dbAccount.getAllShareUser();
                         for (long ii : userSet) {
                             if (ii == LPreferences.getUserIdNum()) continue;
-                            if (!TextUtils.isEmpty(LPreferences.getShareUserName(ii))) {
+                            if (!TextUtils.isEmpty(LPreferences.getShareUserId(ii))) {
                                 users.add(new LUser(LPreferences.getShareUserId(ii),
                                         LPreferences.getShareUserName(ii), ii));
                             }
@@ -415,7 +415,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 for (Long ii : selections) {
                     boolean newShare = false;
                     if (!origSelections.contains(ii)) newShare = true;
-                    else if (account.getShareUserState(ii) != LAccount.ACCOUNT_SHARE_CONFIRMED)
+                    else if (account.getShareUserState(ii) > LAccount.ACCOUNT_SHARE_PERMISSION_OWNER)
                         newShare = true;
                     if (newShare) {
                         // new share request: new memeber is added to group

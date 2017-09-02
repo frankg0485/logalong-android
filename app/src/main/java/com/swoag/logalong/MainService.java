@@ -16,6 +16,7 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountBalance;
+import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTag;
@@ -67,7 +68,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_RECORD = 0x050;
     private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
     private static final short NOTIFICATION_DELETE_RECORD = 0x052;
-    private static final short NOTIFICATION_SHARE_ACCOUNT = 0x101;
+    private static final short NOTIFICATION_GET_ACCOUNT_RECORDS = 0x053;
+    private static final short NOTIFICATION_REQUEST_ACCOUNT_SHARE = 0x101;
+    private static final short NOTIFICATION_DECLINE_ACCOUNT_SHARE = 0x102;
+    private static final short NOTIFICATION_UPDATE_ACCOUNT_USER = 0x103;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -180,7 +184,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY,
                 LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_SCHEDULE,
-                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
                 LBroadcastReceiver.ACTION_POST_JOURNAL,
                 LBroadcastReceiver.ACTION_POLL,
                 LBroadcastReceiver.ACTION_POLL_ACK,
@@ -518,6 +521,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     break;
                                 case LProtocol.JRQST_GET_RECORD:
                                 case LProtocol.JRQST_GET_RECORDS:
+                                case LProtocol.JRQST_GET_ACCOUNT_RECORDS:
                                     gid = intent.getLongExtra("gid", 0L);
                                     long aid = intent.getLongExtra("aid", 0);
                                     long aid2 = intent.getLongExtra("aid2", 0);
@@ -845,6 +849,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 }
                                 break;
 
+                            case NOTIFICATION_GET_ACCOUNT_RECORDS:
+                                long aid = intent.getLongExtra("int1", 0L);
+
+                                break;
+
                             case NOTIFICATION_UPDATE_USER_PROFILE:
                                 LPreferences.setUserName(intent.getStringExtra("txt1"));
                                 uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
@@ -858,10 +867,52 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 LPreferences.setShareUserName(uid, intent.getStringExtra("txt2"));
                                 break;
 
-                            case NOTIFICATION_SHARE_ACCOUNT:
-                                long aid = intent.getLongExtra("int1", 0L);
+                            case NOTIFICATION_REQUEST_ACCOUNT_SHARE:
+                                aid = intent.getLongExtra("int1", 0L);
                                 uid = intent.getLongExtra("int2", 0L);
-                                name = intent.getStringExtra("txt1");
+
+                                if (LPreferences.getShareAccept(uid)) {
+                                    LJournal journal = new LJournal();
+                                    journal.confirmAccountShare(aid, uid, true);
+                                } else {
+                                    name = intent.getStringExtra("txt1");
+                                    LAccountShareRequest shareRequest = new LAccountShareRequest(uid, LPreferences
+                                            .getShareUserId(uid), LPreferences.getShareUserName(uid), name, aid);
+                                    LPreferences.addAccountShareRequest(shareRequest);
+
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_SHARE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_DECLINE_ACCOUNT_SHARE:
+                                aid = intent.getLongExtra("int1", 0L);
+                                uid = intent.getLongExtra("int2", 0L);
+                                dbAccount = DBAccount.getInstance();
+                                account = dbAccount.getByGid(aid);
+                                if (null != account) {
+                                    account.removeShareUser(uid);
+                                    dbAccount.update(account);
+
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_UPDATE_ACCOUNT_USER:
+                                aid = intent.getLongExtra("int1", 0L);
+                                dbAccount = DBAccount.getInstance();
+                                account = dbAccount.getByGid(aid);
+                                if (null != account) {
+                                    account.setSharedIdsString(intent.getStringExtra("txt1"));
+                                    dbAccount.update(account);
+
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
                                 break;
 
                             default:

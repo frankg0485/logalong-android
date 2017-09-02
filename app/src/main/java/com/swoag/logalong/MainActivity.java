@@ -1,5 +1,5 @@
 package com.swoag.logalong;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -90,19 +90,31 @@ public class MainActivity extends LFragmentActivity
             @Override
             public void run() {
                 accountShareRequest = LPreferences.getAccountShareRequest();
-                if ((accountShareRequest != null) && (!shareAccountConfirmDialogOpened)) {
-                    shareAccountConfirmDialogOpened = true;
-                    LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this,
-                            accountShareRequest, MainActivity.this);
-                    dialog.show();
+
+                if (accountShareRequest != null) {
+                    if (LPreferences.getShareAccept(accountShareRequest.getUserId())) {
+                        LJournal journal = new LJournal();
+                        journal.confirmAccountShare(accountShareRequest.getAccountGid(),
+                                accountShareRequest.getUserId(), true);
+                        LPreferences.deleteAccountShareRequest(accountShareRequest);
+
+                        handler.post(confirmAccountShare);
+                    } else if (!shareAccountConfirmDialogOpened) {
+                        shareAccountConfirmDialogOpened = true;
+
+                        LShareAccountConfirmDialog dialog = new LShareAccountConfirmDialog(MainActivity.this,
+                                accountShareRequest, MainActivity.this);
+                        dialog.show();
+                    }
                 } else if (!TextUtils.isEmpty(LPreferences.getServerMsg())) {
                     new LReminderDialog(MainActivity.this, LPreferences.getServerMsg()).show();
                     LPreferences.setServerMsg("");
                 }
             }
         };
+
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
-                LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH,
+                LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT,
                 LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED
         }, this);
 
@@ -121,7 +133,8 @@ public class MainActivity extends LFragmentActivity
 
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                //LLog.d(TAG, "position: " + position + " offset: " + positionOffset + " pixels: " + positionOffsetPixels);
+                //LLog.d(TAG, "position: " + position + " offset: " + positionOffset + " pixels: " +
+                // positionOffsetPixels);
                 if (positionOffset == 0 && positionOffsetPixels == 0) {
                     outOfBoundCount++;
                     this.position = position;
@@ -388,7 +401,7 @@ public class MainActivity extends LFragmentActivity
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
-            case LBroadcastReceiver.ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+            case LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT:
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
                 handler.post(confirmAccountShare);
                 break;
@@ -398,60 +411,11 @@ public class MainActivity extends LFragmentActivity
     @Override
     public void onShareAccountConfirmDialogExit(boolean ok, LAccountShareRequest request) {
         LJournal journal = new LJournal();
-        int userId = request.getUserId();
-        String userName = request.getUserName();
-        String userFullName = request.getUserFullName();
-        String accountName = request.getAccountName();
-        int accountGid = request.getAccountGid();
-        int shareAccountGid = request.getShareAccountGid();
+        journal.confirmAccountShare(request.getAccountGid(), request.getUserId(), ok);
 
-        DBAccount dbAccount = DBAccount.getInstance();
-        if (ok) {
-            LPreferences.setShareUserId(userId, userName);
-            LPreferences.setShareUserName(userId, userFullName);
-
-            LAccount account = dbAccount.getByName(accountName);
-            if (account == null) {
-                account = new LAccount();
-                account.setName(accountName);
-                //TODO: dbAccount.resetGidIfNotUnique(accountGid);
-                account.setGid(shareAccountGid);
-                account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                dbAccount.add(account);
-            } else {
-                if ((account.getGid() != 0) && account.getGid() != shareAccountGid) {
-                    LLog.w(TAG, "unexpected: account " + account.getName() + " GID changed? " + shareAccountGid + " -> " + account.getGid());
-                }
-
-                //DBAccount.resetGidIfNotUnique(shareAccountGid);
-                account.setGid(shareAccountGid);
-                account.addShareUser(userId, LAccount.ACCOUNT_SHARE_CONFIRMED);
-                dbAccount.update(account);
-            }
-            //journal.confirmAccountShare(true, shareAccountGid, userId, accountGid);
-        } else {
-            LAccount account = dbAccount.getByName(accountName);
-            if (account == null) {
-                //do nothing if account does not yet exist
-                LLog.w(TAG, "cancelled share request for non-existing account: " + accountName);
-            } else {
-                //otherwise try to set GID
-                if (account.getGid() != 0) {
-                    if (account.getGid() != shareAccountGid) {
-                        LLog.w(TAG, "ignored GID change: account " + account.getName() + " GID: " + shareAccountGid + " -> " + account.getGid());
-                    }
-                } else {
-                    //DBAccount.resetGidIfNotUnique(shareAccountGid);
-                    account.setGid(shareAccountGid);
-                    dbAccount.update(account);
-                }
-            }
-
-            //journal.confirmAccountShare(false, shareAccountGid, userId, accountGid);
-        }
         shareAccountConfirmDialogOpened = false;
         LPreferences.deleteAccountShareRequest(request);
 
-        handler.post(confirmAccountShare);
+        handler.postDelayed(confirmAccountShare, 1500);
     }
 }

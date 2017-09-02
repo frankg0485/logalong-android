@@ -1,5 +1,6 @@
 <resources>
     <string name="accept">Accept</string>
+    <string name="accept_all_from_this_user">Accept all from this user</string>
     <string name="accounts">Accounts</string>
     <string name="account_share_request">Account Share Request</string>
     <string name="action_settings">settings</string>
@@ -19,6 +20,7 @@
     <string name="create_new_user_id">Create new user ID</string>
     <string name="creating_user">Creating user ...</string>
     <string name="data_backup">Data Backup</string>
+    <string name="decline">Decline</string>
     <string name="delete">Delete</string>
     <string name="delete_now">Delete now</string>
     <string name="done">Done</string>
@@ -27,7 +29,7 @@
     <string name="enter_current_password">Enter current password</string>
     <string name="expense">Expense</string>
     <string name="filter_by">Filter by</string>
-    <string name="hint_account_share_accept">Once accepted, all local data under given account are shared with the requester, and users the requester already shared this account with.</string>
+    <string name="hint_account_share_accept">Once accepted, all account data are shared with the requester, and users the requester already shared this account with.</string>
     <string name="hint_additional_note">Additional note here</string>
     <string name="hint_category_not_specified">Category not specified</string>
     <string name="hint_data_backup_to_sd_card_done">Data successfully backed up to SD card</string>

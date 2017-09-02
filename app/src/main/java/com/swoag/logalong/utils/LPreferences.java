@@ -32,7 +32,8 @@ public class LPreferences {
     private static final String SEARCH_FILTER_BY_EDIT_TIME = "SearchFilterByEditTime";
     private static final String SEARCH_FILTER_BY_VALUE = "SearchFilterByValue";
     private static final String SEARCH_VALUE = "SearchValue";
-    private static final String SHARE_ACCOUNT_REQUEST = "ShareAcntRqst";
+    private static final String SHARE_ACCEPT = "ShareAccept";
+    private static final String SHARE_ACCOUNT_REQUEST = "ShareAccountRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
     private static final String SERVER_MSG_BROADCAST = "SrvMsgBroadcast";
     private static final String USER_ID = "MyUserId";
@@ -176,6 +177,14 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME + "." + gid, name);
     }
 
+    public static boolean getShareAccept(long uid) {
+        return getPreference(LApp.ctx, SHARE_ACCEPT + "." + uid, false);
+    }
+
+    public static void setShareAccept(long uid, boolean accept) {
+        savePreference(LApp.ctx, SHARE_ACCEPT + "." + uid, accept);
+    }
+
     private static int getEmptyAccountShareRequest() {
         int shares = getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ".total", 0);
 
@@ -191,7 +200,6 @@ public class LPreferences {
         int share = getEmptyAccountShareRequest();
         savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".accountName", request.getAccountName());
         savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".accountGid", request.getAccountGid());
-        savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".shareAccountGid", request.getShareAccountGid());
         savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".userId", request.getUserId());
         savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".userName", request.getUserName());
         savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + share + ".userFullName", request.getUserFullName());
@@ -203,12 +211,11 @@ public class LPreferences {
 
         for (int ii = 0; ii < shares; ii++) {
             if (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".state", 0) == 1) {
-                if ((getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userId", 0) == request.getUserId())
+                if ((getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userId", 0L) == request.getUserId())
                         && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userName", "").contentEquals(request.getUserName()))
                         && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userFullName", "").contentEquals(request.getUserFullName()))
                         && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountName", "").contentEquals(request.getAccountName()))
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".shareAccountGid", 0) == request.getShareAccountGid())
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0) == request.getAccountGid())) {
+                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0L) == request.getAccountGid())) {
                     savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".state", 0);
                 }
             }
@@ -222,13 +229,11 @@ public class LPreferences {
         for (int ii = 0; ii < shares; ii++) {
             if (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".state", 0) == 1) {
                 request = new LAccountShareRequest(
-                        getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userId", 0),
+                        getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userId", 0L),
                         getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userName", ""),
                         getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userFullName", ""),
                         getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountName", ""),
-                        getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0),
-                        getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".shareAccountGid", 0)
-                );
+                        getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0L));
                 break;
             }
         }

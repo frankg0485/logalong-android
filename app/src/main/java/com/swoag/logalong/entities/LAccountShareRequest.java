@@ -1,28 +1,27 @@
 package com.swoag.logalong.entities;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 public class LAccountShareRequest {
-    private int userId;
+    private long userId;
     private String userName;
     private String userFullName;
     private String accountName;
-    private int accountGid;
-    private int shareAccountGid;
+    private long accountGid;
 
-    public LAccountShareRequest(int userId, String userName, String userFullName, String accountName, int accountGid, int shareAccountGid) {
+    public LAccountShareRequest(long userId, String userName, String userFullName, String accountName, long
+            accountGid) {
         this.userId = userId;
         this.userName = userName;
         this.userFullName = userFullName;
         this.accountName = accountName;
         this.accountGid = accountGid;
-        this.shareAccountGid = shareAccountGid;
     }
 
-    public int getUserId() {
+    public long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(long userId) {
         this.userId = userId;
     }
 
@@ -50,19 +49,11 @@ public class LAccountShareRequest {
         this.accountName = accountName;
     }
 
-    public int getAccountGid() {
+    public long getAccountGid() {
         return accountGid;
     }
 
-    public void setAccountUuid(int accountGid) {
+    public void setAccountGid(long accountGid) {
         this.accountGid = accountGid;
-    }
-
-    public int getShareAccountGid() {
-        return shareAccountGid;
-    }
-
-    public void setShareAccountGid(int shareAccountGid) {
-        this.shareAccountGid = shareAccountGid;
     }
 }

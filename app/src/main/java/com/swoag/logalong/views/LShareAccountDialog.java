@@ -463,8 +463,9 @@ public class LShareAccountDialog extends Dialog
             ImageView imageView = (ImageView) convertView.findViewById(R.id.share);
             int share = account.getShareUserState(user.getId());
             switch (share) {
-                case LAccount.ACCOUNT_SHARE_CONFIRMED:
-                    //case LAccount.ACCOUNT_SHARE_CONFIRMED_SYNCED:
+                case LAccount.ACCOUNT_SHARE_PERMISSION_READ_ONLY:
+                case LAccount.ACCOUNT_SHARE_PERMISSION_READ_WRITE:
+                case LAccount.ACCOUNT_SHARE_PERMISSION_OWNER:
                     imageView.setImageResource(R.drawable.ic_action_share_green);
                     break;
                 case LAccount.ACCOUNT_SHARE_INVITED:
