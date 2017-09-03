@@ -174,13 +174,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             case LBroadcastReceiver.ACTION_UI_UPDATE_CATEGORY:
             case LBroadcastReceiver.ACTION_UI_UPDATE_TAG:
             case LBroadcastReceiver.ACTION_UI_UPDATE_VENDOR:
-                Cursor cursor = getMyCursor();
-                if (null == cursor) {
-                    LLog.e(TAG, "fatal: unable to open database");
-                } else {
-                    adapter.swapCursor(cursor);
-                    adapter.notifyDataSetChanged();
-                }
+                updateCursor();
                 break;
         }
     }
@@ -188,13 +182,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
     @Override
     public boolean onNewEntryDialogExit(int id, int type, boolean created, String name, boolean attr1, boolean attr2) {
         if (created && name != null && !TextUtils.isEmpty(name)) {
-            Cursor cursor = getMyCursor();
-            if (null == cursor) {
-                LLog.e(TAG, "fatal: unable to open database");
-            } else {
-                adapter.swapCursor(cursor);
-                adapter.notifyDataSetChanged();
-            }
+            updateCursor();
         }
         return true;
     }
@@ -204,6 +192,17 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         adapter.clickListener.disableEnable(false);
         callback.onGenericListEditExit();
         destroy();
+    }
+
+    private void updateCursor()
+    {
+        Cursor cursor = getMyCursor();
+        if (null == cursor) {
+            LLog.e(TAG, "fatal: unable to open database");
+        } else {
+            adapter.swapCursor(cursor);
+            adapter.notifyDataSetChanged();
+        }
     }
 
     private View setViewListener(View v, int id) {
@@ -365,6 +364,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
 
             LJournal journal = new LJournal();
             journal.removeUserFromAccount(LPreferences.getUserIdNum(), account.getGid());
+            updateCursor();
         }
 
         @Override
@@ -581,14 +581,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         journal.deleteTag(tag1.getId());
                         break;
                 }
-
-                Cursor cursor = getMyCursor();
-                if (null == cursor) {
-                    LLog.e(TAG, "fatal: unable to open database");
-                } else {
-                    adapter.swapCursor(cursor);
-                    adapter.notifyDataSetChanged();
-                }
+                updateCursor();
             }
             optionDialog.dismiss();
         }

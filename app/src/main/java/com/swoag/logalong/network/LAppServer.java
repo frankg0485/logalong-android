@@ -141,10 +141,9 @@ public class LAppServer {
                                 Thread netThread = new Thread(new NetThread());
                                 netThread.start();
                                 tried = 0;
-
+                                LLog.e(TAG, "network connected");
                                 Intent intent;
                                 intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
-                                intent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, (int) LProtocol.RSPS_OK);
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
                             } catch (Exception e) {
                                 LLog.e(TAG, "connection error: " + e.getMessage());
@@ -221,13 +220,14 @@ public class LAppServer {
             // protocol behaviour:
             // client (App) sends request to server, then wait for response. If response does not
             // come as expected, networks thread bails to restart.
-            LLog.d(TAG, "net thread running ...");
+            //LLog.d(TAG, "net thread running ...");
             while (loop) {
                 synchronized (netLock) {
                     fail = false;
                     while (netThreadState != STATE_READY) {
                         if (netThreadState == STATE_OFF) {
                             netThreadState = STATE_EXIT;
+                            LLog.d(TAG, "net thread socket closing ...");
                             loop = false;
                             closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
                             break;
@@ -236,6 +236,7 @@ public class LAppServer {
                             UiPing(); //flush socket
                         }
                         try {
+                            //LLog.d(TAG, "net thread waiting to start...");
                             netLock.wait();
                         } catch (Exception e) {
                         }
@@ -243,15 +244,18 @@ public class LAppServer {
 
                     while (!netThreadEnabled) {
                         try {
+                            //LLog.d(TAG, "net thread waiting to enable...");
                             netLock.wait();
                         } catch (Exception e) {
                         }
                     }
                 }
 
+                //LLog.d(TAG, "net thread protocol start... " + protocolState);
                 switch (protocolState) {
                     case SEND_REQUEST:
                         if (!hasBuf) {
+                            //LLog.d(TAG, "net thread protocol get request...");
                             buf = netTxBufPool.getReadBuffer();
                             if (buf == null) {
                                 LLog.w(TAG, "network thread: interrupted unable to get read buffer");
@@ -271,6 +275,7 @@ public class LAppServer {
                         }
 
                         protocolState = WAIT_FOR_RESPONSE;
+                        //LLog.d(TAG, "net thread request sent");
                         //fall through
 
                     case WAIT_FOR_RESPONSE:
@@ -305,9 +310,11 @@ public class LAppServer {
                         }
                         break;
                 }
+                //LLog.d(TAG, "net thread protocol end...");
 
                 if (fail) {
                     synchronized (netLock) {
+                        LLog.d(TAG, "net thread failed");
                         closeSockets(AUTO_RECONNECT_RETRY_TIME_SECONDS);
                         //network layer broken in the middle of transfer, teardown server and restart
                         break;
@@ -322,6 +329,10 @@ public class LAppServer {
                 netThreadState = STATE_EXIT;
                 netLock.notifyAll();
             }
+
+            Intent intent;
+            intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED));
+            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
         }
     }
 

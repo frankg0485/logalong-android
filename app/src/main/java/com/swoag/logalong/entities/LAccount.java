@@ -3,6 +3,8 @@ package com.swoag.logalong.entities;
 
 import android.text.TextUtils;
 
+import com.swoag.logalong.utils.LPreferences;
+
 import java.util.ArrayList;
 
 public class LAccount extends LDbBase {
@@ -66,6 +68,7 @@ public class LAccount extends LDbBase {
         if (shareIds == null || shareStates == null || shareIds.size() < 1 || shareStates.size() < 1)
             return false;
         for (int ii = 0; ii < shareStates.size(); ii++) {
+            if (shareIds.get(ii) == LPreferences.getUserIdNum()) continue;
             if (shareStates.get(ii) <= ACCOUNT_SHARE_PERMISSION_OWNER) {
                 return true;
             }

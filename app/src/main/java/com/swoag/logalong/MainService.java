@@ -170,6 +170,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_NETWORK_CONNECTED,
+                LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED,
                 LBroadcastReceiver.ACTION_USER_CREATED,
                 LBroadcastReceiver.ACTION_LOG_IN,
                 LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
@@ -338,6 +339,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         //default polling policy: active, with longer period
         //serviceHandler.removeCallbacks(pollRunnable);
         //serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
+        LLog.d(TAG, "action: " + action + " logged in: " + loggedIn);
+        if (action == LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED) {
+            loggedIn = false;
+            return;
+        }
+
         if (!loggedIn) {
             switch (action) {
                 case LBroadcastReceiver.ACTION_NETWORK_CONNECTED:

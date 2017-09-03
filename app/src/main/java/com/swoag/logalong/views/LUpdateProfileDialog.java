@@ -32,6 +32,7 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -128,6 +129,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
         }.start();
 
         if (!LAppServer.getInstance().UiIsConnected()) {
+            LLog.d(TAG, "restarting service ...");
             LAppServer.getInstance().connect();
             MainService.start(context);
         }
