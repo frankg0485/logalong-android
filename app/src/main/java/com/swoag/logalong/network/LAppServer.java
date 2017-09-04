@@ -161,6 +161,7 @@ public class LAppServer {
                     LLog.e(TAG, "network not available?");
                 }
             }
+            LLog.d(TAG, "server connected");
             return connected;
         }
     }

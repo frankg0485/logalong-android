@@ -68,10 +68,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_RECORD = 0x050;
     private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
     private static final short NOTIFICATION_DELETE_RECORD = 0x052;
-    private static final short NOTIFICATION_GET_ACCOUNT_RECORDS = 0x053;
     private static final short NOTIFICATION_REQUEST_ACCOUNT_SHARE = 0x101;
     private static final short NOTIFICATION_DECLINE_ACCOUNT_SHARE = 0x102;
     private static final short NOTIFICATION_UPDATE_ACCOUNT_USER = 0x103;
+    private static final short NOTIFICATION_GET_ACCOUNT_RECORDS = 0x201;
+    private static final short NOTIFICATION_GET_ACCOUNTS = 0x202;
+    private static final short NOTIFICATION_GET_CATEGORIES = 0x203;
+    private static final short NOTIFICATION_GET_VENDORS = 0x204;
+    private static final short NOTIFICATION_GET_TAGS = 0x205;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -856,11 +860,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 }
                                 break;
 
-                            case NOTIFICATION_GET_ACCOUNT_RECORDS:
-                                long aid = intent.getLongExtra("int1", 0L);
-
-                                break;
-
                             case NOTIFICATION_UPDATE_USER_PROFILE:
                                 LPreferences.setUserName(intent.getStringExtra("txt1"));
                                 uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
@@ -875,7 +874,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 break;
 
                             case NOTIFICATION_REQUEST_ACCOUNT_SHARE:
-                                aid = intent.getLongExtra("int1", 0L);
+                                long aid = intent.getLongExtra("int1", 0L);
                                 uid = intent.getLongExtra("int2", 0L);
 
                                 if (LPreferences.getShareAccept(uid)) {
@@ -920,6 +919,27 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                             .ACTION_UI_UPDATE_ACCOUNT));
                                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                                 }
+                                break;
+
+                            case NOTIFICATION_GET_ACCOUNT_RECORDS:
+                                aid = intent.getLongExtra("int1", 0L);
+                                journal.getAccountRecords(aid);
+                                break;
+
+                            case NOTIFICATION_GET_ACCOUNTS:
+                                journal.getAllAccounts();
+                                break;
+
+                            case NOTIFICATION_GET_CATEGORIES:
+                                journal.getAllCategories();
+                                break;
+
+                            case NOTIFICATION_GET_VENDORS:
+                                journal.getAllVendors();
+                                break;
+
+                            case NOTIFICATION_GET_TAGS:
+                                journal.getAllTags();
                                 break;
 
                             default:
