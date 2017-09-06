@@ -98,7 +98,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     boolean search = false;
                     boolean ascend = LPreferences.getQueryOrderAscend();
                     data.moveToFirst();
-                    long ms =  data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    long ms = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
                     if (AppPersistency.lastTransactionChangeTimeMs == ms) {
                         nextIndex = 0;
                     } else if (count > 1) {
@@ -187,10 +187,12 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ANNUALLY) {
             summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, 11));
         } else if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_MONTHLY) {
-            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
+            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency
+                    .viewTransactionMonth));
         } else {
             //quarterly
-            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
+            summary.setBalance(allBalances.getBalance(id, AppPersistency.viewTransactionYear, AppPersistency
+                    .viewTransactionQuarter * 3 + 2));
         }
     }
 
@@ -422,7 +424,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         View tmp = listViewFlipper.findViewById(R.id.logs);
         tmp.setOnClickListener(myClickListener);
         queryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
-        queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+        queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable
+                .ic_action_collapse);
         dispV = tmp.findViewById(R.id.display);
         monthTV = (TextView) tmp.findViewById(R.id.month);
         balanceTV = (TextView) dispV.findViewById(R.id.balance);
@@ -432,7 +435,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         tmp = listViewFlipper.findViewById(R.id.logsAlt);
         tmp.setOnClickListener(myClickListener);
         altQueryOrderIV = (ImageView) tmp.findViewById(R.id.ascend);
-        altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+        altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R
+                .drawable.ic_action_collapse);
         altDispV = tmp.findViewById(R.id.display);
         altMonthTV = (TextView) tmp.findViewById(R.id.month);
         altBalanceTV = (TextView) altDispV.findViewById(R.id.balance);
@@ -531,8 +535,10 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 case R.id.logs:
                 case R.id.logsAlt:
                     LPreferences.setQueryOrderAscend(!LPreferences.getQueryOrderAscend());
-                    queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
-                    altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand : R.drawable.ic_action_collapse);
+                    queryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand :
+                            R.drawable.ic_action_collapse);
+                    altQueryOrderIV.setImageResource(LPreferences.getQueryOrderAscend() ? R.drawable.ic_action_expand
+                            : R.drawable.ic_action_collapse);
                     initDbLoader();
                     break;
                 default:
@@ -589,7 +595,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             String category = DBCategory.getInstance().getNameById(categoryId);
             String tag = DBTag.getInstance().getNameById(tagId);
 
-            if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)) {
+            if ((type == LTransaction.TRANSACTION_TYPE_TRANSFER) || (type == LTransaction
+                    .TRANSACTION_TYPE_TRANSFER_COPY)) {
                 if (!sectionSummary.isVisible(id)) {
                     mainView.setVisibility(View.GONE);
                 } else {
@@ -608,9 +615,11 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                         }
                     } else {
                         if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_to_report_view) + " " + account2);
+                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string
+                                    .transfer_to_report_view) + " " + account2);
                         } else {
-                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string.transfer_from_report_view) + " " + account2);
+                            vTag.categoryTV.setText(getActivity().getResources().getString(R.string
+                                    .transfer_from_report_view) + " " + account2);
                         }
                     }
                     String note = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)).trim();
@@ -737,7 +746,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                 itemOrig = new LTransaction(item);
 
-                edit = new TransactionEdit(getActivity(), rootView, item, false, false, allowEdit, MyCursorAdapter.this);
+                edit = new TransactionEdit(getActivity(), rootView, item, false, false, allowEdit, MyCursorAdapter
+                        .this);
 
                 viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                 viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
@@ -753,46 +763,17 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     AppPersistency.transactionChanged = changed;
                     if (changed) {
                         LJournal journal = new LJournal();
-                        if ((item.getAccount() != itemOrig.getAccount()) ||
-                                (item.getAccount2() != itemOrig.getAccount2())) {
-                            LLog.d(TAG, "account changed, recreate record");
-                            LTransaction oldItem = new LTransaction(itemOrig);
-                            oldItem.setTimeStampLast(LPreferences.getServerUtc());
-                            oldItem.setState(DBHelper.STATE_DELETED);
-                            DBTransaction.getInstance().update(oldItem);
-                            journal.updateItem(oldItem, DBHelper.STATE_ACTIVE);
 
-                            //delete the duplicate record for transfer
-                            //TODO:
-                            /*
-                            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                                LTransaction copy = DBTransaction.getByRid(oldItem.getRid() + "2");
-                                if (copy == null) {
-                                    LLog.w(TAG, "warn, unable to locate duplicate transfer record?");
-                                } else {
-                                    journal.updateItem(copy, DBHelper.STATE_ACTIVE);
-                                }
-                            }
+                        item.setTimeStampLast(LPreferences.getServerUtc());
 
-                            //reset UUID of existing record and treat it as new
-                            item.setRid(UUID.randomUUID().toString());
-                            */
-                            item.setTimeStampLast(LPreferences.getServerUtc());
+                        AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
+                        AppPersistency.lastTransactionChangeTimeMsHonored = false;
 
-                            AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
-                            AppPersistency.lastTransactionChangeTimeMsHonored = false;
-                            DBTransaction.getInstance().add(item);
-                        } else {
-                            item.setTimeStampLast(LPreferences.getServerUtc());
+                        DBTransaction.getInstance().update(item);
+                        journal.updateRecord(item.getId());
 
-                            AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
-                            AppPersistency.lastTransactionChangeTimeMsHonored = false;
-
-                            DBTransaction.getInstance().update(item);
-                            journal.updateItem(item, itemOrig);
-
-                            //update also transfer copy
-                            //TODO:
+                        //update also transfer copy
+                        //TODO:
                             /*
                             if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                                 LTransaction copy = DBTransaction.getByRid(item.getRid() + "2");
@@ -807,7 +788,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                                 }
                             }
                             */
-                        }
+
                         onSelected(true);
                     }
                     break;
@@ -821,7 +802,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     DBTransaction.getInstance().update(itemOrig);
 
                     LJournal journal = new LJournal();
-                    journal.updateItem(itemOrig, DBHelper.STATE_ACTIVE);
+                    journal.deleteRecord(itemOrig.getId());
 
                     //TODO
                     /*
@@ -882,7 +863,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             //dispv = dispV;
         }
 
-        if ((!LPreferences.getSearchFilterByValue()) && (LPreferences.getSearchAll() || (LPreferences.getSearchCategories() == null &&
+        if ((!LPreferences.getSearchFilterByValue()) && (LPreferences.getSearchAll() || (LPreferences
+                .getSearchCategories() == null &&
                 LPreferences.getSearchTags() == null &&
                 LPreferences.getSearchVendors() == null))) {
             //dispv.setVisibility(View.VISIBLE);
@@ -891,7 +873,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             //dispv.setVisibility(View.INVISIBLE);
             btv.setVisibility(View.INVISIBLE);
         }
-        mtv.setVisibility(LPreferences.getSearchFilterByValue()? View.INVISIBLE : View.VISIBLE);
+        mtv.setVisibility(LPreferences.getSearchFilterByValue() ? View.INVISIBLE : View.VISIBLE);
 
         LAccountSummary summary = new LAccountSummary();
         getBalance(summary, data);
@@ -915,7 +897,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     mtv.setText(new DateFormatSymbols().getMonths()[AppPersistency.viewTransactionMonth]);
                     break;
                 case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                    mtv.setText("Q" + (AppPersistency.viewTransactionQuarter + 1) + " " + AppPersistency.viewTransactionYear);
+                    mtv.setText("Q" + (AppPersistency.viewTransactionQuarter + 1) + " " + AppPersistency
+                            .viewTransactionYear);
                     break;
 
                 case AppPersistency.TRANSACTION_TIME_ANNUALLY:
@@ -931,7 +914,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private void getBalance(LAccountSummary summary, Cursor data) {
         if (data == null || data.getCount() < 1) return;
 
-        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll()? null : LPreferences.getSearchAccounts());
+        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll() ? null : LPreferences
+                .getSearchAccounts());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
@@ -968,7 +952,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
                     summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
                 else
-                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(), AppPersistency.viewTransactionYear, 11));
+                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(), AppPersistency
+                            .viewTransactionYear, 11));
                 break;
         }
     }
@@ -1171,10 +1156,12 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             nextView.setVisibility(View.GONE);
 
             if (LPreferences.getSearchFilterByEditTIme()) {
-                customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
+                customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences
+                        .getSearchAllTimeFrom()) + " - " +
                         new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo())));
             } else {
-                customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()) + " - " +
+                customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom())
+                        + " - " +
                         new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
             }
             prevView.setEnabled(false);

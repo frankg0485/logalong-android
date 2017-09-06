@@ -1,5 +1,5 @@
 package com.swoag.logalong.fragments;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 
 import android.content.Context;
