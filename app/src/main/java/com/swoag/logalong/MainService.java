@@ -56,6 +56,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_ACCOUNT = 0x010;
     private static final short NOTIFICATION_UPDATE_ACCOUNT = 0x011;
     private static final short NOTIFICATION_DELETE_ACCOUNT = 0x012;
+    private static final short NOTIFICATION_UPDATE_ACCOUNT_GID = 0x013;
     private static final short NOTIFICATION_ADD_CATEGORY = 0x020;
     private static final short NOTIFICATION_UPDATE_CATEGORY = 0x021;
     private static final short NOTIFICATION_DELETE_CATEGORY = 0x022;
@@ -675,6 +676,21 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 if (null != account) {
                                     LTask.start(new MyAccountDeleteTask(), account.getId());
                                     dbAccount.deleteById(account.getId());
+                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                            .ACTION_UI_UPDATE_ACCOUNT));
+                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                }
+                                break;
+
+                            case NOTIFICATION_UPDATE_ACCOUNT_GID:
+                                gid = intent.getLongExtra("int1", 0L);
+                                long gid2 = intent.getLongExtra("int2", 0L);
+
+                                dbAccount = DBAccount.getInstance();
+                                account = dbAccount.getByGid(gid);
+                                if (null != account) {
+                                    account.setGid(gid2);
+                                    dbAccount.update(account);
                                     uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                             .ACTION_UI_UPDATE_ACCOUNT));
                                     LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);

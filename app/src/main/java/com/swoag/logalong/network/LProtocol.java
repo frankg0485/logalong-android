@@ -552,14 +552,15 @@ public class LProtocol {
                             rspsIntent.putExtra("nid", pkt.getShortAutoInc());
                             rspsIntent.putExtra("int1", pkt.getLongAutoInc());
                             rspsIntent.putExtra("int2", pkt.getLongAutoInc());
-                            rspsIntent.putExtra("int3", pkt.getIntAutoInc());
-                            rspsIntent.putExtra("int4", pkt.getIntAutoInc());
                             int bytes = pkt.getShortAutoInc();
                             String txt = pkt.getStringAutoInc(bytes);
                             rspsIntent.putExtra("txt1", txt);
                             bytes = pkt.getShortAutoInc();
                             txt = pkt.getStringAutoInc(bytes);
                             rspsIntent.putExtra("txt2", txt);
+
+                            bytes = pkt.getShortAutoInc();
+                            rspsIntent.putExtra("blob", pkt.getBytesAutoInc(bytes));
                         }
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;

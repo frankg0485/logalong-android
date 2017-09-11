@@ -141,7 +141,7 @@ public class LAppServer {
                                 Thread netThread = new Thread(new NetThread());
                                 netThread.start();
                                 tried = 0;
-                                LLog.e(TAG, "network connected");
+                                LLog.d(TAG, "network connected");
                                 Intent intent;
                                 intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
@@ -160,8 +160,8 @@ public class LAppServer {
                     autoReconnect(AUTO_RECONNECT_RETRY_TIME_SECONDS);
                     LLog.e(TAG, "network not available?");
                 }
-            }
-            LLog.d(TAG, "server connected");
+            } else
+                LLog.d(TAG, "server already connected");
             return connected;
         }
     }
@@ -221,7 +221,7 @@ public class LAppServer {
             // protocol behaviour:
             // client (App) sends request to server, then wait for response. If response does not
             // come as expected, networks thread bails to restart.
-            //LLog.d(TAG, "net thread running ...");
+            LLog.d(TAG, "net thread running ...");
             while (loop) {
                 synchronized (netLock) {
                     fail = false;
