@@ -1,5 +1,5 @@
 package com.swoag.logalong;
-    /* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+    /* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -399,7 +399,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                             //this is an unrecoverable error, we'll delete the dangling account
                                             dbAccount.deleteById(account.getId());
                                         }
-
                                     }
 
                                     account = dbAccount.getById(id);
@@ -420,6 +419,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         if (category.getId() != id) {
                                             LLog.e(TAG, "unexpected error, category GID: " + gid + " already taken " +
                                                     "by " + category.getName());
+                                            dbCategory.deleteById(category.getId());
                                         }
                                     }
                                     dbCategory.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
@@ -434,6 +434,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         if (tag.getId() != id) {
                                             LLog.e(TAG, "unexpected error, tag GID: " + gid + " already taken " +
                                                     "by " + tag.getName());
+                                            dbTag.deleteById(tag.getId());
                                         }
                                     }
                                     dbTag.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
@@ -448,6 +449,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         if (vendor.getId() != id) {
                                             LLog.e(TAG, "unexpected error, vendor GID: " + gid + " already taken " +
                                                     "by " + vendor.getName());
+                                            dbVendor.deleteById(vendor.getId());
                                         }
                                     }
                                     dbVendor.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
@@ -461,6 +463,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         if (transaction.getId() == id) {
                                             LLog.e(TAG, "unexpected error, record GID: " + gid + " already taken ");
                                         }
+                                        dbTransaction.deleteById(transaction.getId());
                                     }
                                     dbTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;

@@ -12,7 +12,7 @@ import com.swoag.logalong.LApp;
 import java.util.HashSet;
 
 public abstract class DBGeneric<T> {
-    private static final String TAG = DBAccess.class.getSimpleName();
+    private static final String TAG = DBGeneric.class.getSimpleName();
 
     abstract Uri getUri();
 
@@ -65,7 +65,8 @@ public abstract class DBGeneric<T> {
                         id_str + "=?", new String[]{"" + id}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find entry with id: " + id);
+                    LLog.w(TAG, "unable to find entry with " + (byId ? "id" : "gid") + ": " + id + "@" + getUri() + "" +
+                            " count: " + csr.getCount());
                     csr.close();
                     return null;
                 }
@@ -137,11 +138,13 @@ public abstract class DBGeneric<T> {
 
         try {
             Cursor csr = null;
-            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, DBHelper.TABLE_COLUMN_GID + "=?",
-                    new String[]{"" + gid}, null);
+            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, DBHelper.TABLE_COLUMN_GID + "=? " +
+                            "AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + gid, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to get unique GID: " + gid + " in table: " + getUri());
+                    LLog.w(TAG, "unable to get unique gid: " + gid + " in table: " + getUri() + " count: " + csr
+                            .getCount());
                     csr.close();
                     return 0;
                 }
