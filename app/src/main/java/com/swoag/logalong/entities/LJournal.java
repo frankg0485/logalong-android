@@ -179,6 +179,7 @@ public class LJournal {
             jdata.putByteAutoInc((byte) details.getTransaction().getType());
             jdata.putDoubleAutoInc(details.getTransaction().getValue());
             jdata.putLongAutoInc(details.getTransaction().getChangeBy());
+            jdata.putLongAutoInc(details.getTransaction().getRid());
             jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
             jdata.putLongAutoInc(details.getTransaction().getTimeStampCreate());
             jdata.putLongAutoInc(details.getTransaction().getTimeStampLast());

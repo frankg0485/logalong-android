@@ -370,6 +370,7 @@ public class LProtocol {
                                         rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
                                         rspsIntent.putExtra("createBy", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("changeBy", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("recordId", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("timestamp", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("createTime", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("changeTime", pkt.getLongAutoInc());

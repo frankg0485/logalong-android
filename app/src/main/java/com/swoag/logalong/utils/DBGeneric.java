@@ -33,7 +33,7 @@ public abstract class DBGeneric<T> {
                     new String[]{name, "" + DBHelper.STATE_ACTIVE}, null);
             if (csr != null) {
                 if (csr.getCount() != 1) {
-                    LLog.w(TAG, "unable to find entry with name: " + name + " count: " + csr.getCount());
+                    //LLog.w(TAG, "unable to find entry with name: " + name + " count: " + csr.getCount());
                     csr.close();
                     return null;
                 }
@@ -164,7 +164,7 @@ public abstract class DBGeneric<T> {
     }
 
     public String getNameById(long id) {
-        if (id <= 0) return null;
+        if (id <= 0) return "";
 
         String str = "";
         try {

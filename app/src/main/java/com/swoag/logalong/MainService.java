@@ -545,6 +545,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     long vid = intent.getLongExtra("vid", 0);
                                     type = intent.getByteExtra("type", (byte) LTransaction.TRANSACTION_TYPE_EXPENSE);
                                     double amount = intent.getDoubleExtra("amount", 0);
+                                    long rid = intent.getLongExtra("recordId", 0L);
                                     long timestamp = intent.getLongExtra("timestamp", 0L);
                                     long createUid = intent.getLongExtra("createBy", 0);
                                     long changeUid = intent.getLongExtra("changeBy", 0);
@@ -557,7 +558,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     if (null != transaction) {
                                         create = false;
                                     } else {
-                                        transaction = new LTransaction();
+                                        if (type == LTransaction.TRANSACTION_TYPE_TRANSFER)
+                                            transaction = dbTransaction.getByRid(rid, true);
+                                        else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)
+                                            transaction = dbTransaction.getByRid(rid, false);
+                                        if (null != transaction)
+                                        {
+                                            create = false;
+                                        } else
+                                            transaction = new LTransaction();
                                     }
                                     dbAccount = DBAccount.getInstance();
                                     transaction.setGid(gid);
@@ -570,6 +579,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     transaction.setValue(amount);
                                     transaction.setCreateBy(createUid);
                                     transaction.setChangeBy(changeUid);
+                                    transaction.setRid(rid);
                                     transaction.setTimeStamp(timestamp);
                                     transaction.setTimeStampCreate(createTime);
                                     transaction.setTimeStampLast(changeTime);

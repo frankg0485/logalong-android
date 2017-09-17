@@ -1,6 +1,7 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
@@ -26,6 +27,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             DBHelper.TABLE_COLUMN_MADEBY,
             DBHelper.TABLE_COLUMN_CHANGEBY,
             DBHelper.TABLE_COLUMN_AMOUNT,
+            DBHelper.TABLE_COLUMN_RID,
             DBHelper.TABLE_COLUMN_TIMESTAMP,
             DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE,
             DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE,
@@ -45,7 +47,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
     }
 
     @Override
-    public  LTransaction getValues(Cursor cursor, LTransaction trans) {
+    public LTransaction getValues(Cursor cursor, LTransaction trans) {
         if (null == trans) trans = new LTransaction();
         trans.setType(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
         trans.setState(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
@@ -58,6 +60,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         trans.setNote(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
         trans.setCreateBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         trans.setChangeBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CHANGEBY)));
+        trans.setRid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
         trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
         trans.setTimeStampCreate(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE)));
         trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
@@ -78,6 +81,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getCreateBy());
         cv.put(DBHelper.TABLE_COLUMN_CHANGEBY, trans.getChangeBy());
         cv.put(DBHelper.TABLE_COLUMN_AMOUNT, trans.getValue());
+        cv.put(DBHelper.TABLE_COLUMN_RID, trans.getRid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, trans.getTimeStamp());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE, trans.getTimeStampCreate());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, trans.getTimeStampLast());
@@ -108,202 +112,101 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         trans.setId(id);
     }
 
-
-    /*
-
-        public static void setValues(ContentValues cv, LTransaction trans) {
-            cv.put(DBHelper.TABLE_COLUMN_TYPE, trans.getType());
-            cv.put(DBHelper.TABLE_COLUMN_STATE, trans.getState());
-            cv.put(DBHelper.TABLE_COLUMN_CATEGORY, trans.getCategory());
-            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, trans.getAccount());
-            cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, trans.getAccount2());
-            cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getCreateBy());
-            cv.put(DBHelper.TABLE_COLUMN_CHANGEBY, trans.getChangeBy());
-            cv.put(DBHelper.TABLE_COLUMN_AMOUNT, trans.getValue());
-            cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, trans.getTimeStamp());
-            cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE, trans.getTimeStampCreate());
-            cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, trans.getTimeStampLast());
-            cv.put(DBHelper.TABLE_COLUMN_NOTE, trans.getNote());
-            cv.put(DBHelper.TABLE_COLUMN_TAG, trans.getTag());
-            cv.put(DBHelper.TABLE_COLUMN_VENDOR, trans.getVendor());
-            cv.put(DBHelper.TABLE_COLUMN_GID, trans.getGid());
+    public long add2(LTransaction t) {
+        if (t.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            LLog.e(TAG, "unexpected error, wrong add API called for invalid transaction type");
+            return 0;
         }
 
-        public static void getValues(Cursor cursor, LTransaction trans) {
-            trans.setType(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_TYPE)));
-            trans.setState(cursor.getInt(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_STATE)));
-            trans.setAccount(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT)));
-            trans.setAccount2(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_ACCOUNT2)));
-            trans.setCategory(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_CATEGORY)));
-            trans.setTag(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG)));
-            trans.setVendor(cursor.getLong(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_VENDOR)));
-            trans.setValue(cursor.getDouble(cursor.getColumnIndex(DBHelper.TABLE_COLUMN_AMOUNT)));
-            trans.setNote(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
-            trans.setCreateBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
-            trans.setChangeBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CHANGEBY)));
-            trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
-            trans.setTimeStampCreate(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
-            .TABLE_COLUMN_TIMESTAMP_CREATE)));
-            trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
-                    .TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-            trans.setGid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
-            trans.setId(cursor.getLong(0));
-        }
+        ContentValues cv = setValues(t);
+        long id = -1;
+        try {
+            Uri uri = LApp.ctx.getContentResolver().insert(getUri(), cv);
+            id = ContentUris.parseId(uri);
+            setId(t, id);
 
-        private static ContentValues setValues(LTransaction trans) {
+            LTransaction t2 = new LTransaction(t);
+            t2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+            t2.setAccount(t.getAccount2());
+            t2.setAccount2(t.getAccount());
+            cv = setValues(t2);
+            LApp.ctx.getContentResolver().insert(getUri(), cv);
+
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to add entry: " + e.getMessage());
+        }
+        return id;
+    }
+
+    public boolean update2(LTransaction t) {
+        if (t.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER) {
+            LLog.e(TAG, "unexpected error, wrong update API called for invalid transaction type");
+            return false;
+        }
+        try {
+            ContentValues cv = setValues(t);
+            LApp.ctx.getContentResolver().update(getUri(), cv, "_id=?", new String[]{"" + t.getId()});
+
+            LTransaction t2 = new LTransaction(t);
+            t2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
+            t2.setAccount(t.getAccount2());
+            t2.setAccount2(t.getAccount());
+            cv = setValues(t2);
+
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+                    + DBHelper.TABLE_COLUMN_TYPE + "=?", new String[]{"" + t2.getRid(),
+                    "" + LTransaction.TRANSACTION_TYPE_TRANSFER_COPY});
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to update entry: " + e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    public LTransaction getByRid(long rid, boolean copy) {
+        if (rid == 0) return null;
+
+        try {
+            Cursor csr;
+
+            csr = LApp.ctx.getContentResolver().query(getUri(), getColumns(),
+                    DBHelper.TABLE_COLUMN_RID + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=?",
+                    new String[]{"" + rid, "" + DBHelper.STATE_ACTIVE,
+                            "" + (copy ? LTransaction.TRANSACTION_TYPE_TRANSFER_COPY : LTransaction
+                                    .TRANSACTION_TYPE_TRANSFER),}, null);
+
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to find entry with rid: " + rid + "@" + getUri());
+                    return null;
+                }
+
+                csr.moveToFirst();
+                LTransaction t = getValues(csr, null);
+                csr.close();
+                return t;
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get entry with rid: " + rid + ":" + e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean deleteByRid(long rid) {
+        if (rid <= 0) return false;
+
+        try {
             ContentValues cv = new ContentValues();
-            setValues(cv, trans);
-            return cv;
+            cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=?",
+                    new String[]{"" + rid});
+        } catch (Exception e) {
+            return false;
         }
+        return true;
+    }
 
-        public static void add(LTransaction item) {
-            add(LApp.ctx, item);
-        }
-
-        private static void add(Context context, LTransaction item) {
-            ContentValues cv = setValues(item);
-            context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
-        }
-
-        public static void add(LTransaction item, boolean duplicateTransfer, boolean postJournal) {
-            add(LApp.ctx, item, duplicateTransfer, postJournal);
-        }
-
-        private static void add(Context context, LTransaction item, boolean duplicateTransfer, boolean postJournal) {
-            ContentValues cv = setValues(item);
-            //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
-
-            context.getContentResolver().insert(DBProvider.URI_TRANSACTIONS, cv);
-
-            LJournal journal = null;
-            if (postJournal) {
-                journal = new LJournal();
-                journal.updateItem(item);
-            }
-
-            if (duplicateTransfer) {
-                //duplicate record for transfer
-                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                    item.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                    //TODO: item.setGid(item.getGid() + "2");
-                    long accountId = item.getAccount();
-                    item.setAccount(item.getAccount2());
-                    item.setAccount2(accountId);
-                    DBTransaction.add(context, item);
-                    if (postJournal) {
-                        journal.updateItem(item);
-                    }
-                }
-            }
-            //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
-        }
-
-        public static void update(LTransaction item) {
-            update(LApp.ctx, item);
-        }
-
-        private static void update(Context context, LTransaction item) {
-            ContentValues cv = setValues(item);
-            context.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv, "_id=?", new String[]{"" + item
-            .getId()});
-        }
-
-        public static void update(LTransaction item, boolean postJournal) {
-            update(LApp.ctx, item, postJournal);
-        }
-
-        public static void update(Context context, LTransaction item, boolean postJournal) {
-            //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(true);
-            update(context, item);
-
-            LJournal journal = null;
-            if (postJournal) {
-                journal = new LJournal();
-                journal.updateItem(item);
-            }
-
-            //duplicate record for transfer
-            if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                long dbid = 0;
-                //TODO: dbid = DBAccess.getIdByRid(context, DBProvider.URI_TRANSACTIONS, item.getRid() + "2");
-
-                if (dbid > 0) {
-                    LTransaction item2 = new LTransaction(item);
-                    item2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
-                    //TODO: item2.setRid(item.getRid() + "2");
-                    item2.setId(dbid);
-                    item2.setAccount(item.getAccount2());
-                    item2.setAccount2(item.getAccount());
-                    update(context, item2);
-                    if (postJournal) {
-                        journal.updateItem(item2);
-                    }
-                }
-            }
-            //if (postJournal) DBAccountBalance.setAutoBalanceUpdateEnabled(false);
-        }
-
-        public static boolean updateColumnById(long id, String column, long value) {
-            return DBAccess.updateColumnById(DBProvider.URI_TRANSACTIONS, id, column, value);
-        }
-
-        public static LTransaction getById(long id) {
-            return getById(LApp.ctx, id);
-        }
-
-        public static LTransaction getById(Context context, long id) {
-            if (id <= 0) return null;
-
-            Cursor csr = null;
-            String str = "";
-            LTransaction item = new LTransaction();
-            try {
-                csr = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
-                        "_id=?", new String[]{"" + id}, null);
-                if (csr != null) {
-                    if (csr.getCount() != 1) {
-                        LLog.w(TAG, "unable to find id: " + id + " from log table");
-                        csr.close();
-                        return null;
-                    }
-
-                    csr.moveToFirst();
-                    getValues(csr, item);
-                    item.setId(id);
-                }
-            } catch (Exception e) {
-                LLog.w(TAG, "unable to get with id: " + id + ":" + e.getMessage());
-                item = null;
-            }
-            if (csr != null) csr.close();
-            return item;
-        }
-
-        public static long getIdByRid(String rid) {
-            return DBAccess.getIdByRid(DBProvider.URI_TRANSACTIONS, rid);
-        }
-
-        public static LTransaction getByGid(long gid) {
-            return getByGid(LApp.ctx, gid);
-        }
-
-        public static LTransaction getByGid(Context context, long gid) {
-            Cursor cur = context.getContentResolver().query(DBProvider.URI_TRANSACTIONS, null,
-                    DBHelper.TABLE_COLUMN_GID + "=?", new String[]{"" + gid}, null);
-            if (cur != null && cur.getCount() > 0) {
-                if (cur.getCount() != 1) {
-                    LLog.e(TAG, "unexpected error: duplicated record");
-                }
-                cur.moveToFirst();
-                LTransaction item = new LTransaction();
-                getValues(cur, item);
-                cur.close();
-                return item;
-            }
-            if (cur != null) cur.close();
-            return null;
-        }
-    */
     public void deleteByAccount(long accountId) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
@@ -373,6 +276,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
                         "s." + DBHelper.TABLE_COLUMN_TYPE + " AS s_type",
                         "s." + DBHelper.TABLE_COLUMN_MADEBY + " AS s_by",
                         "s." + DBHelper.TABLE_COLUMN_CHANGEBY + " AS s_cby",
+                        "s." + DBHelper.TABLE_COLUMN_RID + " AS s_rid",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP + " AS s_timestamp",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE + " AS s_timestamp_create",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " AS s_timestamp_last",
@@ -409,6 +313,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             details.getTransaction().setType(cursor.getInt(cursor.getColumnIndex("s_type")));
             details.getTransaction().setCreateBy(cursor.getLong(cursor.getColumnIndex("s_by")));
             details.getTransaction().setChangeBy(cursor.getLong(cursor.getColumnIndex("s_cby")));
+            details.getTransaction().setRid(cursor.getLong(cursor.getColumnIndex("s_rid")));
             details.getTransaction().setTimeStamp(cursor.getLong(cursor.getColumnIndex("s_timestamp")));
             details.getTransaction().setTimeStampCreate(cursor.getLong(cursor.getColumnIndex("s_timestamp_create")));
             details.getTransaction().setTimeStampLast(cursor.getLong(cursor.getColumnIndex("s_timestamp_last")));

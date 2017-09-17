@@ -3,11 +3,27 @@ package com.swoag.logalong.entities;
 
 import com.swoag.logalong.R;
 
+import java.nio.ByteBuffer;
+import java.util.UUID;
+import java.util.zip.CRC32;
+
 public class LTransaction extends LDbBase {
     public static final int TRANSACTION_TYPE_EXPENSE = 10;
     public static final int TRANSACTION_TYPE_INCOME = 20;
     public static final int TRANSACTION_TYPE_TRANSFER = 30;
     public static final int TRANSACTION_TYPE_TRANSFER_COPY = 31;
+
+    private static CRC32 crc32 = new CRC32();
+    private static long crc32(byte[] buf) {
+        crc32.reset();
+        crc32.update(buf);
+        return crc32.getValue();
+    }
+    private static ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    private static byte[] longToBytes(long x) {
+        buffer.putLong(0, x);
+        return buffer.array();
+    }
 
     public static int getTypeStringId(int type) {
         switch (type) {
@@ -28,6 +44,7 @@ public class LTransaction extends LDbBase {
     private long category;
     private long account;
     private long account2;
+    private long rid;
     private long tag;
     private long vendor;
     private long timeStamp;
@@ -44,6 +61,7 @@ public class LTransaction extends LDbBase {
         this.account2 = 0;
         this.tag = 0;
         this.vendor = 0;
+        this.rid = 0;
         this.note = "";
     }
 
@@ -66,6 +84,7 @@ public class LTransaction extends LDbBase {
         this.vendor = item.vendor;
         this.note = item.note;
         this.gid = item.gid;
+        this.rid = item.rid;
     }
 
     public LTransaction(LTransaction item) {
@@ -82,19 +101,7 @@ public class LTransaction extends LDbBase {
                 this.account2 == item.account2 &&
                 this.tag == item.tag &&
                 this.vendor == item.vendor &&
-                this.note.contentEquals(item.note));
-    }
-
-    public boolean isPrimaryAccountEqual(LTransaction item) {
-        return (this.timeStamp == item.timeStamp &&
-                this.value == item.value &&
-                this.type == item.type &&
-                this.createBy == item.createBy &&
-                this.category == item.category &&
-                this.account == item.account &&
-                /*this.account2 == item.account2 &&*/
-                this.tag == item.tag &&
-                this.vendor == item.vendor &&
+                this.rid == item.rid &&
                 this.note.contentEquals(item.note));
     }
 
@@ -217,11 +224,24 @@ public class LTransaction extends LDbBase {
         this.changeBy = changeBy;
     }
 
+    public long getRid() {
+        return rid;
+    }
+
+    public void setRid(long rid) {
+        this.rid = rid;
+    }
+
     public String getNote() {
         return note;
     }
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public void generateRid()
+    {
+        rid = crc32(UUID.randomUUID().toString().getBytes()) | crc32(longToBytes(System.currentTimeMillis())) << 32;
     }
 }
