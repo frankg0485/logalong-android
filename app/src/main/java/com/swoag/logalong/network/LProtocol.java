@@ -182,6 +182,10 @@ public class LProtocol {
             return packetConsumptionStatus;
         }
 
+        //if (status != LProtocol.RSPS_OK && status != LProtocol.RSPS_MORE) {
+        //    LLog.w(TAG, "protocol request code: " + requestCode + " error status := " + status);
+        //}
+
         // 'state' is updated only this thread, hence safe to read without lock
         switch (state) {
             case STATE_DISCONNECTED:
@@ -316,50 +320,63 @@ public class LProtocol {
                             rspsIntent.putExtra("jrqstId", jrqstId);
                             short jret = pkt.getShortAutoInc();
                             rspsIntent.putExtra("jret", jret);
-                            if (RSPS_OK == jret) {
-                                switch (jrqstId) {
-                                    case JRQST_ADD_ACCOUNT:
+
+                            switch (jrqstId) {
+                                case JRQST_ADD_ACCOUNT:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("id", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("uid", pkt.getLongAutoInc());
-                                        break;
-                                    case JRQST_ADD_CATEGORY:
-                                    case JRQST_ADD_VENDOR:
-                                    case JRQST_ADD_TAG:
-                                    case JRQST_ADD_RECORD:
+                                    }
+                                    break;
+                                case JRQST_ADD_CATEGORY:
+                                case JRQST_ADD_VENDOR:
+                                case JRQST_ADD_TAG:
+                                case JRQST_ADD_RECORD:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("id", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
-                                        break;
-                                    case JRQST_GET_ACCOUNTS:
+                                    }
+                                    break;
+                                case JRQST_GET_ACCOUNTS:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("uid", pkt.getLongAutoInc());
                                         int bytes = pkt.getShortAutoInc();
                                         String name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
-                                        break;
-                                    case JRQST_GET_CATEGORIES:
+                                    }
+                                    break;
+                                case JRQST_GET_CATEGORIES:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("pgid", pkt.getLongAutoInc());
-                                        bytes = pkt.getShortAutoInc();
-                                        name = pkt.getStringAutoInc(bytes);
+                                        short bytes = pkt.getShortAutoInc();
+                                        String name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
-                                        break;
-                                    case JRQST_GET_VENDORS:
+                                    }
+                                    break;
+                                case JRQST_GET_VENDORS:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("type", (int) pkt.getByteAutoInc());
-                                        bytes = pkt.getShortAutoInc();
-                                        name = pkt.getStringAutoInc(bytes);
+                                        short bytes = pkt.getShortAutoInc();
+                                        String name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
-                                        break;
-                                    case JRQST_GET_TAGS:
+                                    }
+                                    break;
+                                case JRQST_GET_TAGS:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
-                                        bytes = pkt.getShortAutoInc();
-                                        name = pkt.getStringAutoInc(bytes);
+                                        short bytes = pkt.getShortAutoInc();
+                                        String name = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("name", name);
-                                        break;
-                                    case JRQST_GET_RECORD:
-                                    case JRQST_GET_RECORDS:
-                                    case JRQST_GET_ACCOUNT_RECORDS:
+                                    }
+                                    break;
+                                case JRQST_GET_RECORD:
+                                case JRQST_GET_RECORDS:
+                                case JRQST_GET_ACCOUNT_RECORDS:
+                                    if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("aid", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("aid2", pkt.getLongAutoInc());
@@ -375,11 +392,11 @@ public class LProtocol {
                                         rspsIntent.putExtra("createTime", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("changeTime", pkt.getLongAutoInc());
 
-                                        bytes = pkt.getShortAutoInc();
+                                        short bytes = pkt.getShortAutoInc();
                                         String note = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("note", note);
-                                        break;
-                                }
+                                    }
+                                    break;
                             }
                         }
 

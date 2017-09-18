@@ -372,6 +372,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         } else {
             switch (action) {
                 case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
+                    LLog.d(TAG, "flushing journal upon creation ...");
                     if (!journal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
@@ -455,9 +456,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     dbVendor.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
                                 case LProtocol.JRQST_ADD_RECORD:
+                                    DBTransaction dbTransaction = DBTransaction.getInstance();
                                     id = intent.getLongExtra("id", 0L);
                                     gid = intent.getLongExtra("gid", 0L);
-                                    DBTransaction dbTransaction = DBTransaction.getInstance();
+
                                     LTransaction transaction = dbTransaction.getByGid(gid);
                                     if (null != transaction) {
                                         if (transaction.getId() == id) {
@@ -559,11 +561,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         create = false;
                                     } else {
                                         if (type == LTransaction.TRANSACTION_TYPE_TRANSFER)
-                                            transaction = dbTransaction.getByRid(rid, true);
-                                        else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)
                                             transaction = dbTransaction.getByRid(rid, false);
-                                        if (null != transaction)
-                                        {
+                                        else if (type == LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)
+                                            transaction = dbTransaction.getByRid(rid, true);
+                                        if (null != transaction) {
                                             create = false;
                                         } else
                                             transaction = new LTransaction();
@@ -608,6 +609,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         }
                         if (LProtocol.RSPS_OK == ret) {
                             journal.deleteById(journalId);
+                            LLog.d(TAG, "flushing journal upon completion ...");
                             moreJournal = journal.flush();
                         }
                     } else {
@@ -978,6 +980,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         server.UiPollAck(id);
                     } else {
                         //no more
+                        LLog.d(TAG, "flushing journal upon polling ends ...");
                         if (!journal.flush()) {
                             if (LFragmentActivity.upRunning) {
                                 //server.UiUtcSync();
@@ -992,6 +995,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
 
                 case LBroadcastReceiver.ACTION_POLL_ACK:
+                    LLog.d(TAG, "poll ack journal flushing");
                     if (!journal.flush()) {
                         server.UiPoll();
                     }

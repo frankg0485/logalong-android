@@ -193,14 +193,26 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         return null;
     }
 
-    public boolean deleteByRid(long rid) {
+    public boolean deleteTransferByRid(long rid) {
         if (rid <= 0) return false;
 
         try {
             ContentValues cv = new ContentValues();
             cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=?",
-                    new String[]{"" + rid});
+            /*LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND ("
+                    + DBHelper.TABLE_COLUMN_TYPE + "=? OR "
+                    + DBHelper.TABLE_COLUMN_TYPE + "=?)",
+                    new String[]{"" + rid, "" + LTransaction.TRANSACTION_TYPE_TRANSFER_COPY,
+                    "" + LTransaction.TRANSACTION_TYPE_TRANSFER});
+            */
+            // sucks that we have to delete twice, due to the way account balance is updated in DBProvider.
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=?",
+                    new String[]{"" + rid,
+                            "" + LTransaction.TRANSACTION_TYPE_TRANSFER});
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+                            + DBHelper.TABLE_COLUMN_TYPE + "=?",
+                    new String[]{"" + rid, "" + LTransaction.TRANSACTION_TYPE_TRANSFER_COPY});
         } catch (Exception e) {
             return false;
         }

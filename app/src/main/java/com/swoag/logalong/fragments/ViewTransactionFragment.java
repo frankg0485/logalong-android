@@ -791,7 +791,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
                     DBTransaction dbTransaction = DBTransaction.getInstance();
                     if (itemOrig.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER)
-                        dbTransaction.deleteByRid(itemOrig.getRid());
+                        dbTransaction.deleteTransferByRid(itemOrig.getRid());
                     else
                         dbTransaction.deleteById(itemOrig.getId());
 

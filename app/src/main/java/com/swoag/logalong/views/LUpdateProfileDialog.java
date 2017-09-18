@@ -234,6 +234,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                         LPreferences.setUserPass(userPass);
                         LPreferences.setUserId(userId);
                         LPreferences.setUserName(intent.getStringExtra("userName"));
+
                         LAppServer.getInstance().UiLogIn(userId, userPass);
                         displayMsg(false, context.getString(R.string.synchronizing_database));
 
@@ -328,7 +329,9 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                 cursor.moveToFirst();
                 do {
                     dbTransaction.getValues(cursor, transaction);
-                    journal.addRecord(transaction.getId());
+                    if (transaction.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)
+                        journal.addRecord(transaction.getId());
+                    LLog.d(TAG, "adding record: " + transaction.getId());
                     publishProgress(DBAccount.getInstance().getNameById(transaction.getAccount()) + " : " + transaction.getValue());
                 } while (cursor.moveToNext());
                 cursor.close();
