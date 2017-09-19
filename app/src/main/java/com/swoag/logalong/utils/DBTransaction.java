@@ -194,7 +194,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
     }
 
     public boolean deleteTransferByRid(long rid) {
-        if (rid <= 0) return false;
+        if (rid == 0) return false;
 
         try {
             ContentValues cv = new ContentValues();

@@ -218,8 +218,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                 lastTransactionTimestamp = item.getTimeStamp();
                 lastTransactionEditTimestamp = System.currentTimeMillis();
 
+                item.generateRid();
                 if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                    item.generateRid();
                     DBTransaction.getInstance().add2(item);
                 } else
                     DBTransaction.getInstance().add(item);
