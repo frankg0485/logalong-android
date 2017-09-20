@@ -13,8 +13,8 @@ import com.swoag.logalong.entities.LScheduledTransaction;
 public class DBScheduledTransaction {
     private static final String TAG = DBScheduledTransaction.class.getSimpleName();
 
-    private static ContentValues setValues(LScheduledTransaction sch) {
-        ContentValues cv = DBTransaction.getInstance().setValues(sch.getItem());
+    private static ContentValues setValues(LScheduledTransaction sch, boolean update) {
+        ContentValues cv = DBTransaction.getInstance().setValues(sch.getItem(), update);
 
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_COUNT, sch.getRepeatCount());
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_UNIT, sch.getRepeatUnit());
@@ -59,7 +59,7 @@ public class DBScheduledTransaction {
     public static long add(Context context, LScheduledTransaction sch) {
         long id = 0;
         try {
-            ContentValues cv = setValues(sch);
+            ContentValues cv = setValues(sch, false);
             Uri uri = context.getContentResolver().insert(DBProvider.URI_SCHEDULED_TRANSACTIONS, cv);
             id = ContentUris.parseId(uri);
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class DBScheduledTransaction {
 
     public static boolean update(Context context, LScheduledTransaction sch) {
         try {
-            ContentValues cv = setValues(sch);
+            ContentValues cv = setValues(sch, true);
             context.getContentResolver().update(DBProvider.URI_SCHEDULED_TRANSACTIONS,
                     cv, "_id=?", new String[]{"" + sch.getItem().getId()});
         } catch (Exception e) {

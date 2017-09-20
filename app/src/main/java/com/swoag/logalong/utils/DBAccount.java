@@ -49,10 +49,11 @@ public class DBAccount extends DBGeneric<LAccount> {
     }
 
     @Override
-    ContentValues setValues(LAccount account) {
+    ContentValues setValues(LAccount account, boolean update) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, account.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
+        if (!update)
+            cv.put(DBHelper.TABLE_COLUMN_STATE, account.getState());
         cv.put(DBHelper.TABLE_COLUMN_GID, account.getGid());
         cv.put(DBHelper.TABLE_COLUMN_SHARE, account.getShareIdsString());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, account.getTimeStampLast());

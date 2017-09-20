@@ -40,10 +40,11 @@ public class DBTag extends DBGeneric<LTag> {
     }
 
     @Override
-    ContentValues setValues(LTag tag) {
+    ContentValues setValues(LTag tag, boolean update) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, tag.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
+        if (!update)
+            cv.put(DBHelper.TABLE_COLUMN_STATE, tag.getState());
         cv.put(DBHelper.TABLE_COLUMN_GID, tag.getGid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, tag.getTimeStampLast());
         return cv;

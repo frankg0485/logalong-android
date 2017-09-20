@@ -71,10 +71,11 @@ public class DBTransaction extends DBGeneric<LTransaction> {
     }
 
     @Override
-    ContentValues setValues(LTransaction trans) {
+    ContentValues setValues(LTransaction trans, boolean update) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_TYPE, trans.getType());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, trans.getState());
+        if (!update)
+            cv.put(DBHelper.TABLE_COLUMN_STATE, trans.getState());
         cv.put(DBHelper.TABLE_COLUMN_CATEGORY, trans.getCategory());
         cv.put(DBHelper.TABLE_COLUMN_ACCOUNT, trans.getAccount());
         cv.put(DBHelper.TABLE_COLUMN_ACCOUNT2, trans.getAccount2());
@@ -118,7 +119,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             return 0;
         }
 
-        ContentValues cv = setValues(t);
+        ContentValues cv = setValues(t, false);
         long id = -1;
         try {
             Uri uri = LApp.ctx.getContentResolver().insert(getUri(), cv);
@@ -129,7 +130,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             t2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
             t2.setAccount(t.getAccount2());
             t2.setAccount2(t.getAccount());
-            cv = setValues(t2);
+            cv = setValues(t2, false);
             LApp.ctx.getContentResolver().insert(getUri(), cv);
 
         } catch (Exception e) {
@@ -144,14 +145,14 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             return false;
         }
         try {
-            ContentValues cv = setValues(t);
+            ContentValues cv = setValues(t, true);
             LApp.ctx.getContentResolver().update(getUri(), cv, "_id=?", new String[]{"" + t.getId()});
 
             LTransaction t2 = new LTransaction(t);
             t2.setType(LTransaction.TRANSACTION_TYPE_TRANSFER_COPY);
             t2.setAccount(t.getAccount2());
             t2.setAccount2(t.getAccount());
-            cv = setValues(t2);
+            cv = setValues(t2, true);
 
             LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
                     + DBHelper.TABLE_COLUMN_TYPE + "=?", new String[]{"" + t2.getRid(),

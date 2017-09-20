@@ -214,6 +214,8 @@ public class DBProvider extends ContentProvider {
                                 updateAccountBalance(values);
                                 done = true;
                             }
+                        } else if (oldState == DBHelper.STATE_DELETED) {
+                            done = true; //ignore updating to already deleted record
                         }
 
                         if (!done) {
@@ -534,7 +536,7 @@ public class DBProvider extends ContentProvider {
         switch (trans.getAsInteger(DBHelper.TABLE_COLUMN_TYPE)) {
             case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
                 updateAccountBalance(accountId, amount, timeStamp);
-                return;
+                break;
             case LTransaction.TRANSACTION_TYPE_TRANSFER:
                 updateAccountBalance(accountId, -amount, timeStamp);
                 break;

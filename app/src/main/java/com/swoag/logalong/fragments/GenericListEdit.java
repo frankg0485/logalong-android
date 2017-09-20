@@ -194,8 +194,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
         destroy();
     }
 
-    private void updateCursor()
-    {
+    private void updateCursor() {
         Cursor cursor = getMyCursor();
         if (null == cursor) {
             LLog.e(TAG, "fatal: unable to open database");
@@ -355,6 +354,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             LJournal journal = new LJournal();
             journal.removeUserFromAccount(0, account.getGid());
         }
+
         private void unshareMyselfFromAccount(long accountId) {
             DBAccount dbAccount = DBAccount.getInstance();
             LAccount account = dbAccount.getById(accountId);
@@ -376,13 +376,12 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             DBAccount dbAccount = DBAccount.getInstance();
             if (applyToAllAccounts) {
                 set = dbAccount.getAllActiveIds();
-                for (long id: set) {
+                for (long id : set) {
                     if (dbAccount.getById(id).getOwner() != LPreferences.getUserIdNum()) {
                         set.remove(id);
                     }
                 }
-            }
-            else {
+            } else {
                 set = new HashSet<Long>();
                 set.add(accountId);
             }
@@ -541,44 +540,23 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 switch (listId) {
                     case R.id.accounts:
                         LTask.start(new MyAccountDeleteTask(), tag.id);
-
-                        DBAccount dbAccount = DBAccount.getInstance();
-                        LAccount account = dbAccount.getById(tag.id);
-                        account.setState(DBHelper.STATE_DELETED);
-                        account.setTimeStampLast(LPreferences.getServerUtc());
-                        dbAccount.update(account);
-
-                        journal.deleteAccount(account.getId());
+                        DBAccount.getInstance().deleteById(tag.id);
+                        journal.deleteAccount(tag.id);
                         break;
 
                     case R.id.categories:
-                        DBCategory dbCategory = DBCategory.getInstance();
-                        LCategory category = dbCategory.getById(tag.id);
-                        category.setState(DBHelper.STATE_DELETED);
-                        category.setTimeStampLast(LPreferences.getServerUtc());
-                        dbCategory.update(category);
-
-                        journal.deleteCategory(category.getId());
+                        DBCategory.getInstance().deleteById(tag.id);
+                        journal.deleteCategory(tag.id);
                         break;
 
                     case R.id.vendors:
-                        DBVendor dbVendor = DBVendor.getInstance();
-                        LVendor vendor = dbVendor.getById(tag.id);
-                        vendor.setState(DBHelper.STATE_DELETED);
-                        vendor.setTimeStampLast(LPreferences.getServerUtc());
-                        dbVendor.update(vendor);
-
-                        journal.deleteVendor(vendor.getId());
+                        DBVendor.getInstance().deleteById(tag.id);
+                        journal.deleteVendor(tag.id);
                         break;
 
                     case R.id.tags:
-                        DBTag dbTag = DBTag.getInstance();
-                        LTag tag1 = dbTag.getById(tag.id);
-                        tag1.setState(DBHelper.STATE_DELETED);
-                        tag1.setTimeStampLast(LPreferences.getServerUtc());
-                        dbTag.update(tag1);
-
-                        journal.deleteTag(tag1.getId());
+                        DBTag.getInstance().deleteById(tag.id);
+                        journal.deleteTag(tag.id);
                         break;
                 }
                 updateCursor();
@@ -692,7 +670,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
 
             DBTransaction.getInstance().deleteByAccount(accountId);
             DBScheduledTransaction.deleteByAccount(accountId);
-
             DBAccountBalance.deleteByAccountId(accountId);
             return true;
         }

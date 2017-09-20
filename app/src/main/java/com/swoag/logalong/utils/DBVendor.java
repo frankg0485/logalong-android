@@ -45,10 +45,11 @@ public class DBVendor extends DBGeneric<LVendor> {
     }
 
     @Override
-    ContentValues setValues(LVendor vendor) {
+    ContentValues setValues(LVendor vendor, boolean update) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, vendor.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
+        if (!update)
+            cv.put(DBHelper.TABLE_COLUMN_STATE, vendor.getState());
         cv.put(DBHelper.TABLE_COLUMN_TYPE, vendor.getType());
         cv.put(DBHelper.TABLE_COLUMN_GID, vendor.getGid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, vendor.getTimeStampLast());

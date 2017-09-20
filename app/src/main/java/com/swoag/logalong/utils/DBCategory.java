@@ -40,10 +40,11 @@ public class DBCategory extends DBGeneric<LCategory> {
     }
 
     @Override
-    ContentValues setValues(LCategory category) {
+    ContentValues setValues(LCategory category, boolean update) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_NAME, category.getName());
-        cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
+        if (!update)
+            cv.put(DBHelper.TABLE_COLUMN_STATE, category.getState());
         cv.put(DBHelper.TABLE_COLUMN_GID, category.getGid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, category.getTimeStampLast());
         return cv;

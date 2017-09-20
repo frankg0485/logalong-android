@@ -20,7 +20,7 @@ public abstract class DBGeneric<T> {
 
     abstract T getValues(Cursor cursor, T t);
 
-    abstract ContentValues setValues(T t);
+    abstract ContentValues setValues(T t, boolean update);
 
     abstract long getId(T t);
 
@@ -212,7 +212,7 @@ public abstract class DBGeneric<T> {
     }
 
     public long add(T t) {
-        ContentValues cv = setValues(t);
+        ContentValues cv = setValues(t, false);
         long id = -1;
         try {
             Uri uri = LApp.ctx.getContentResolver().insert(getUri(), cv);
@@ -226,7 +226,7 @@ public abstract class DBGeneric<T> {
 
     public boolean update(T t) {
         try {
-            ContentValues cv = setValues(t);
+            ContentValues cv = setValues(t, true);
             LApp.ctx.getContentResolver().update(getUri(), cv, "_id=?", new String[]{"" + getId(t)});
         } catch (Exception e) {
             LLog.w(TAG, "unable to update entry: " + e.getMessage());
