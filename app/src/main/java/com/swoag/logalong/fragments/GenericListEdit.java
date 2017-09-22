@@ -299,6 +299,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 switch (v.getId()) {
                     case R.id.option:
                         boolean attr1 = false, attr2 = false;
+                        boolean allowDelete = true;
                         if (listId == R.id.vendors) {
                             LVendor vendor = DBVendor.getInstance().getById(tag.id);
                             if (vendor.getType() == LVendor.TYPE_PAYEE) attr1 = true;
@@ -309,9 +310,10 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         } else if (listId == R.id.accounts) {
                             LAccount account = DBAccount.getInstance().getById(tag.id);
                             attr1 = account.isShowBalance();
+                            if (account.getOwner() != LPreferences.getUserIdNum()) allowDelete = false;
                         }
                         optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
-                                listId, MyCursorAdapter.this, attr1, attr2);
+                                listId, MyCursorAdapter.this, attr1, attr2, allowDelete);
                         optionDialog.show();
                         break;
 
@@ -539,9 +541,15 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 LJournal journal = new LJournal();
                 switch (listId) {
                     case R.id.accounts:
-                        LTask.start(new MyAccountDeleteTask(), tag.id);
-                        DBAccount.getInstance().deleteById(tag.id);
-                        journal.deleteAccount(tag.id);
+                        //check to make sure we still own account
+                        LAccount account = DBAccount.getInstance().getById(tag.id);
+                        if (null != account) {
+                            if (account.getOwner() == LPreferences.getUserIdNum()) {
+                                LTask.start(new MyAccountDeleteTask(), tag.id);
+                                DBAccount.getInstance().deleteById(tag.id);
+                                journal.deleteAccount(tag.id);
+                            }
+                        }
                         break;
 
                     case R.id.categories:

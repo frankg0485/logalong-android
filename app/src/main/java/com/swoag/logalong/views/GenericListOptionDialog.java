@@ -23,7 +23,7 @@ public class GenericListOptionDialog extends Dialog implements
     private GenericListOptionDialogItf callback;
     private CheckBox checkBoxPayee, checkBoxPayer, checkBoxAccountShowBalance;
     private View payeePayerView, accountShowBalanceView;
-    private boolean attr1, attr2;
+    private boolean attr1, attr2, allowDelete;
     private MyClickListener myClickListener;
 
     public interface GenericListOptionDialogItf {
@@ -33,7 +33,8 @@ public class GenericListOptionDialog extends Dialog implements
     }
 
     public GenericListOptionDialog(Context parent, final Object context, String title, int listId,
-                                   GenericListOptionDialogItf callback, boolean attr1, boolean attr2) {
+                                   GenericListOptionDialogItf callback, boolean attr1, boolean attr2, boolean
+                                           allowDelete) {
         super(parent, android.R.style.Theme_Translucent_NoTitleBar);
         this.context = context;
         this.title = title;
@@ -41,6 +42,7 @@ public class GenericListOptionDialog extends Dialog implements
         this.listId = listId;
         this.attr1 = attr1;
         this.attr2 = attr2;
+        this.allowDelete = allowDelete;
         myClickListener = new MyClickListener();
     }
 
@@ -68,7 +70,14 @@ public class GenericListOptionDialog extends Dialog implements
         tv.setText(title);
 
         findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
-        findViewById(R.id.remove).setOnClickListener(myClickListener);
+        View v = findViewById(R.id.remove);
+        if (allowDelete)
+            v.setOnClickListener(myClickListener);
+        else {
+            //LViewUtils.setAlpha(v, 0.90f);
+            //v.setEnabled(false);
+            v.setVisibility(View.GONE);
+        }
         findViewById(R.id.rename).setOnClickListener(myClickListener);
 
         payeePayerView = findViewById(R.id.payeePayerType);
