@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -25,12 +24,9 @@ import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LUser;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.DBAccount;
-import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
-import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
@@ -545,7 +541,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         LAccount account = DBAccount.getInstance().getById(tag.id);
                         if (null != account) {
                             if (account.getOwner() == LPreferences.getUserIdNum()) {
-                                LTask.start(new MyAccountDeleteTask(), tag.id);
+                                LTask.start(new DBAccount.MyAccountDeleteTask(), tag.id);
                                 DBAccount.getInstance().deleteById(tag.id);
                                 journal.deleteAccount(tag.id);
                             }
@@ -667,27 +663,6 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 this.id = id;
                 this.name = name;
             }
-        }
-    }
-
-    private class MyAccountDeleteTask extends AsyncTask<Long, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Long... params) {
-            Long accountId = params[0];
-
-            DBTransaction.getInstance().deleteByAccount(accountId);
-            DBScheduledTransaction.deleteByAccount(accountId);
-            DBAccountBalance.deleteByAccountId(accountId);
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
-        }
-
-        @Override
-        protected void onPreExecute() {
         }
     }
 }

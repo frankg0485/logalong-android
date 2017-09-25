@@ -117,8 +117,7 @@ public class DBAccount extends DBGeneric<LAccount> {
             Long accountId = params[0];
 
             DBTransaction.getInstance().deleteByAccount(accountId);
-            DBScheduledTransaction.deleteByAccount(accountId);
-
+            DBScheduledTransaction.getInstance().deleteByAccount(accountId);
             DBAccountBalance.deleteByAccountId(accountId);
             return true;
         }

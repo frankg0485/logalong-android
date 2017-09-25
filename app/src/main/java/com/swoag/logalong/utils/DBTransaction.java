@@ -66,7 +66,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
                 .TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
         trans.setGid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
-        trans.setId(cursor.getLong(0));
+        trans.setId(cursor.getLong(cursor.getColumnIndexOrThrow("_id")));
         return trans;
     }
 

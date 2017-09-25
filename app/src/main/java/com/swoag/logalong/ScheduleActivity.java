@@ -1,5 +1,5 @@
 package com.swoag.logalong;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 2017 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -157,13 +157,14 @@ public class ScheduleActivity extends LFragmentActivity implements
                     calendar.set(Calendar.SECOND, 0);
                     scheduledItem.getItem().setTimeStamp(calendar.getTimeInMillis());
                     scheduledItem.getItem().setState(DBHelper.STATE_ACTIVE);
-                    scheduledItem.initNextTimeMs();
+                    //scheduledItem.initNextTimeMs();
 
                     scheduledItem.getItem().setTimeStampLast(LPreferences.getServerUtc());
-                    if (createNew) DBScheduledTransaction.add(scheduledItem);
-                    else DBScheduledTransaction.update(scheduledItem);
+                    DBScheduledTransaction dbScheduledTransaction = DBScheduledTransaction.getInstance();
+                    if (createNew) dbScheduledTransaction.add(scheduledItem);
+                    else dbScheduledTransaction.update(scheduledItem);
 
-                    scheduledItem.setAlarm();
+                    //scheduledItem.setAlarm();
 
                     LJournal journal = new LJournal();
                     if (createNew) {
@@ -179,8 +180,8 @@ public class ScheduleActivity extends LFragmentActivity implements
                 return;
 
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
-                scheduledItem.cancelAlarm();
-                DBScheduledTransaction.deleteById(scheduledItem.getItem().getId());
+                //scheduledItem.cancelAlarm();
+                DBScheduledTransaction.getInstance().deleteById(scheduledItem.getItem().getId());
 
                 LJournal journal = new LJournal();
                 scheduledItem.getItem().setState(DBHelper.STATE_DELETED);
@@ -188,7 +189,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                 break;
         }
 
-        Cursor cursor = DBScheduledTransaction.getCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
+        Cursor cursor = DBScheduledTransaction.getInstance().getCursor(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP);
         Cursor oldCursor = adapter.swapCursor(cursor);
         adapter.notifyDataSetChanged();
         oldCursor.close();
@@ -330,7 +331,7 @@ public class ScheduleActivity extends LFragmentActivity implements
             @Override
             public void onClicked(View v) {
                 VTag tag = (VTag) v.getTag();
-                scheduledItem = DBScheduledTransaction.getById(tag.id);
+                scheduledItem = DBScheduledTransaction.getInstance().getById(tag.id);
                 openSchedule(scheduledItem, false);
             }
         }

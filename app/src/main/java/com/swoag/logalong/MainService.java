@@ -29,7 +29,6 @@ import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBProvider;
-import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -142,7 +141,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         super.onCreate();
         server = LAppServer.getInstance();
 
-        DBScheduledTransaction.scanAlarm();
+        //DBScheduledTransaction.scanAlarm();
         journal = new LJournal();
 
         serviceHandler = new Handler() {
@@ -689,7 +688,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 dbAccount = DBAccount.getInstance();
                                 account = dbAccount.getByGid(gid);
                                 if (null != account) {
-                                    LTask.start(new MyAccountDeleteTask(), account.getId());
+                                    LTask.start(new DBAccount.MyAccountDeleteTask(), account.getId());
                                     dbAccount.deleteById(account.getId());
                                     uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                             .ACTION_UI_UPDATE_ACCOUNT));
@@ -1101,27 +1100,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             LLog.d(TAG, "account balance synchronized");
             serviceHandler.removeCallbacks(serviceShutdownRunnable);
             serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
-        }
-
-        @Override
-        protected void onPreExecute() {
-        }
-    }
-
-    private class MyAccountDeleteTask extends AsyncTask<Long, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Long... params) {
-            Long accountId = params[0];
-
-            DBTransaction.getInstance().deleteByAccount(accountId);
-            DBScheduledTransaction.deleteByAccount(accountId);
-
-            DBAccountBalance.deleteByAccountId(accountId);
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result) {
         }
 
         @Override

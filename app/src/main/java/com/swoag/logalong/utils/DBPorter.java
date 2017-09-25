@@ -8,7 +8,6 @@ import com.swoag.logalong.LApp;
 import com.swoag.logalong.MainService;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LVendor;
@@ -77,7 +76,7 @@ public class DBPorter {
 
     private static void exportSchedules(MyCSV myCSV) {
         myCSV.add("---");
-        Cursor cursor = DBScheduledTransaction.getCursor(null);
+        Cursor cursor = DBScheduledTransaction.getInstance().getCursor(null);
 
         if (cursor == null || cursor.getCount() < 1) return;
 
@@ -365,7 +364,7 @@ public class DBPorter {
 
                     LTransaction trans = new LTransaction(0, amount, type, categoryId, vendorId, tagId,
                             accountId, account2Id, madeby, timestamp, timestampLast, note);
-
+/*
                     if (schedule) {
                         long sid = DBScheduledTransaction.getIdByRid(rid);
                         trans.setId(sid);
@@ -387,9 +386,10 @@ public class DBPorter {
                             DBTransaction.getInstance().add(trans);
                         }
                     }
+*/
                 }
             }
-            if (schedule) DBScheduledTransaction.scanAlarm();
+            //if (schedule) DBScheduledTransaction.scanAlarm();
 
             ois.close();
 
