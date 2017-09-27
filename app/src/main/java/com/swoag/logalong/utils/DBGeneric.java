@@ -154,9 +154,35 @@ public abstract class DBGeneric<T> {
                 csr.close();
             }
         } catch (Exception e) {
-            LLog.w(TAG, "unable to get GID: " + gid + " in table: " + getUri());
+            LLog.w(TAG, "unable to get ID by GID: " + gid + " in table: " + getUri());
         }
         return id;
+    }
+
+    public long getGidById(long id) {
+        long gid = 0;
+
+        try {
+            Cursor csr = null;
+            csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{DBHelper.TABLE_COLUMN_GID}, "_id=? " +
+                            "AND " + DBHelper.TABLE_COLUMN_STATE + "=?",
+                    new String[]{"" + id, "" + DBHelper.STATE_ACTIVE}, null);
+            if (csr != null) {
+                if (csr.getCount() != 1) {
+                    LLog.w(TAG, "unable to get unique id: " + id + " in table: " + getUri() + " count: " + csr
+                            .getCount());
+                    csr.close();
+                    return 0;
+                }
+
+                csr.moveToFirst();
+                gid = csr.getLong(csr.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID));
+                csr.close();
+            }
+        } catch (Exception e) {
+            LLog.w(TAG, "unable to get GID by ID: " + id + " in table: " + getUri());
+        }
+        return gid;
     }
 
     public long getIdByName(String name) {

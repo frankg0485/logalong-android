@@ -19,6 +19,7 @@ import com.swoag.logalong.entities.LAccountBalance;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.entities.LVendor;
@@ -29,6 +30,7 @@ import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBProvider;
+import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -68,6 +70,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_RECORD = 0x050;
     private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
     private static final short NOTIFICATION_DELETE_RECORD = 0x052;
+    private static final short NOTIFICATION_ADD_SCHEDULE = 0x060;
+    private static final short NOTIFICATION_UPDATE_SCHEDULE = 0x061;
+    private static final short NOTIFICATION_DELETE_SCHEDULE = 0x062;
     private static final short NOTIFICATION_REQUEST_ACCOUNT_SHARE = 0x101;
     private static final short NOTIFICATION_DECLINE_ACCOUNT_SHARE = 0x102;
     private static final short NOTIFICATION_UPDATE_ACCOUNT_USER = 0x103;
@@ -590,6 +595,66 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                                     break;
 
+                                case LProtocol.JRQST_GET_SCHEDULE:
+                                case LProtocol.JRQST_GET_SCHEDULES:
+                                case LProtocol.JRQST_GET_ACCOUNT_SCHEDULES:
+                                    gid = intent.getLongExtra("gid", 0L);
+                                    aid = intent.getLongExtra("aid", 0);
+                                    aid2 = intent.getLongExtra("aid2", 0);
+                                    cid = intent.getLongExtra("cid", 0);
+                                    tid = intent.getLongExtra("tid", 0);
+                                    vid = intent.getLongExtra("vid", 0);
+                                    type = intent.getByteExtra("type", (byte) LTransaction.TRANSACTION_TYPE_EXPENSE);
+                                    amount = intent.getDoubleExtra("amount", 0);
+                                    rid = intent.getLongExtra("recordId", 0L);
+                                    timestamp = intent.getLongExtra("timestamp", 0L);
+                                    createUid = intent.getLongExtra("createBy", 0);
+                                    changeUid = intent.getLongExtra("changeBy", 0);
+                                    createTime = intent.getLongExtra("createTime", 0L);
+                                    changeTime = intent.getLongExtra("changeTime", 0L);
+                                    note = intent.getStringExtra("note");
+
+                                    long nextTime = intent.getLongExtra("nextTime", 0L);
+                                    short interval = intent.getShortExtra("interval", (short) 0);
+                                    short unit = intent.getShortExtra("unit", (short) 0);
+                                    short count = intent.getShortExtra("count", (short) 0);
+
+                                    DBScheduledTransaction dbSchTransaction = DBScheduledTransaction.getInstance();
+                                    LScheduledTransaction scheduledTransaction = dbSchTransaction.getByGid(gid);
+
+                                    create = true;
+                                    if (null != scheduledTransaction) {
+                                        create = false;
+                                    } else {
+                                        scheduledTransaction = new LScheduledTransaction();
+                                    }
+                                    dbAccount = DBAccount.getInstance();
+                                    scheduledTransaction.setGid(gid);
+                                    scheduledTransaction.setAccount(dbAccount.getIdByGid(aid));
+                                    scheduledTransaction.setAccount2(dbAccount.getIdByGid(aid2));
+                                    scheduledTransaction.setCategory(DBCategory.getInstance().getIdByGid(cid));
+                                    scheduledTransaction.setTag(DBTag.getInstance().getIdByGid(tid));
+                                    scheduledTransaction.setVendor(DBVendor.getInstance().getIdByGid(vid));
+                                    scheduledTransaction.setType(type);
+                                    scheduledTransaction.setValue(amount);
+                                    scheduledTransaction.setCreateBy(createUid);
+                                    scheduledTransaction.setChangeBy(changeUid);
+                                    scheduledTransaction.setRid(rid);
+                                    scheduledTransaction.setTimeStamp(timestamp);
+                                    scheduledTransaction.setTimeStampCreate(createTime);
+                                    scheduledTransaction.setTimeStampLast(changeTime);
+                                    scheduledTransaction.setNote(note);
+
+                                    scheduledTransaction.setNextTime(nextTime);
+                                    scheduledTransaction.setRepeatInterval(interval);
+                                    scheduledTransaction.setRepeatUnit(unit);
+                                    scheduledTransaction.setRepeatCount(count);
+
+                                    if (create) dbSchTransaction.add(scheduledTransaction);
+                                    else dbSchTransaction.update(scheduledTransaction);
+
+                                    break;
+
                                 case LProtocol.JRQST_UPDATE_ACCOUNT:
                                 case LProtocol.JRQST_DELETE_ACCOUNT:
                                 case LProtocol.JRQST_UPDATE_CATEGORY:
@@ -887,6 +952,21 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 LTransaction transaction = dbTransaction.getByGid(gid);
                                 if (null != transaction) {
                                     dbTransaction.deleteById(transaction.getId());
+                                }
+                                break;
+
+                            case NOTIFICATION_ADD_SCHEDULE:
+                            case NOTIFICATION_UPDATE_SCHEDULE:
+                                gid = intent.getLongExtra("int1", 0L);
+                                journal.getSchedule(gid);
+                                break;
+
+                            case NOTIFICATION_DELETE_SCHEDULE:
+                                gid = intent.getLongExtra("int1", 0L);
+                                DBScheduledTransaction dbScheduledTransaction = DBScheduledTransaction.getInstance();
+                                LScheduledTransaction scheduledTransaction = dbScheduledTransaction.getByGid(gid);
+                                if (null != scheduledTransaction) {
+                                    dbScheduledTransaction.deleteById(scheduledTransaction.getId());
                                 }
                                 break;
 

@@ -11,6 +11,7 @@ import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
+import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
@@ -180,6 +181,61 @@ public class LJournal {
         }
     }
 
+    private class ScheduleJournalFlushAction extends GenericJournalFlushAction<LScheduledTransaction> {
+
+        @Override
+        LScheduledTransaction getById(long id) {
+            return DBScheduledTransaction.getInstance().getById(id);
+        }
+
+        @Override
+        LScheduledTransaction getByIdAll(long id) {
+            return DBScheduledTransaction.getInstance().getByIdAll(id);
+        }
+
+        @Override
+        boolean isGidAssigned(LScheduledTransaction lScheduledTransaction) {
+            return lScheduledTransaction.getGid() != 0;
+        }
+
+        @Override
+        short getRequestCode() {
+            return LProtocol.JRQST_ADD_SCHEDULE;
+        }
+
+        @Override
+        boolean add_data(LBuffer jdata, LScheduledTransaction lScheduledTransaction) {
+            jdata.putLongAutoInc(DBAccount.getInstance().getGidById(lScheduledTransaction.getAccount()));
+            jdata.putLongAutoInc(DBAccount.getInstance().getGidById(lScheduledTransaction.getAccount2()));
+            jdata.putLongAutoInc(DBCategory.getInstance().getGidById(lScheduledTransaction.getCategory()));
+            jdata.putLongAutoInc(DBTag.getInstance().getGidById(lScheduledTransaction.getTag()));
+            jdata.putLongAutoInc(DBVendor.getInstance().getGidById(lScheduledTransaction.getVendor()));
+            jdata.putByteAutoInc((byte) lScheduledTransaction.getType());
+            jdata.putDoubleAutoInc(lScheduledTransaction.getValue());
+            jdata.putLongAutoInc(lScheduledTransaction.getChangeBy());
+            jdata.putLongAutoInc(lScheduledTransaction.getRid());
+            jdata.putLongAutoInc(lScheduledTransaction.getTimeStamp());
+            jdata.putLongAutoInc(lScheduledTransaction.getTimeStampCreate());
+            jdata.putLongAutoInc(lScheduledTransaction.getTimeStampLast());
+            try {
+                byte[] note = lScheduledTransaction.getNote().getBytes("UTF-8");
+                jdata.putShortAutoInc((short) note.length);
+                jdata.putBytesAutoInc(note);
+            } catch (Exception e) {
+                LLog.e(TAG, "unexpected error when adding schedule " + e.getMessage());
+                return false;
+            }
+
+            jdata.putLongAutoInc(lScheduledTransaction.getNextTime());
+            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatInterval());
+            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatUnit());
+            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatCount());
+
+            jdata.setLen(jdata.getBufOffset());
+            return true;
+        }
+    }
+
     private class AccountJournalFlushAction extends GenericJournalFlushAction<LAccount> {
         @Override
         LAccount getById(long id) {
@@ -336,6 +392,7 @@ public class LJournal {
 
     private static final int MAX_ERROR_RETRIES = 10;
     private static RecordJournalFlushAction recordJournalFlushAction;
+    private static ScheduleJournalFlushAction scheduleJournalFlushAction;
     private static AccountJournalFlushAction accountJournalFlushAction;
     private static CategoryJournalFlushAction categoryJournalFlushAction;
     private static TagJournalFlushAction tagJournalFlushAction;
@@ -344,6 +401,9 @@ public class LJournal {
     public boolean flush() {
         if (recordJournalFlushAction == null) {
             recordJournalFlushAction = new LJournal.RecordJournalFlushAction();
+        }
+        if (scheduleJournalFlushAction == null) {
+            scheduleJournalFlushAction = new LJournal.ScheduleJournalFlushAction();
         }
         if (accountJournalFlushAction == null) {
             accountJournalFlushAction = new LJournal.AccountJournalFlushAction();
@@ -386,6 +446,15 @@ public class LJournal {
                 break;
             case LProtocol.JRQST_DELETE_RECORD:
                 if (!recordJournalFlushAction.delete(jdata, ndata)) return false;
+                break;
+            case LProtocol.JRQST_ADD_SCHEDULE:
+                if (!scheduleJournalFlushAction.add(jdata, ndata)) return false;
+                break;
+            case LProtocol.JRQST_UPDATE_SCHEDULE:
+                if (!scheduleJournalFlushAction.update(jdata, ndata)) return false;
+                break;
+            case LProtocol.JRQST_DELETE_SCHEDULE:
+                if (!scheduleJournalFlushAction.delete(jdata, ndata)) return false;
                 break;
             case LProtocol.JRQST_ADD_ACCOUNT:
                 if (!accountJournalFlushAction.add(jdata, ndata)) return false;
@@ -473,14 +542,6 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateScheduledItem(LScheduledTransaction sch, int oldState) {
-        return false;
-    }
-
-    public boolean updateScheduledItem(LScheduledTransaction sch, LScheduledTransaction oldSch) {
-        return false;
-    }
-
     public boolean updateScheduledItem(LScheduledTransaction sch) {
         return false;
     }
@@ -505,6 +566,10 @@ public class LJournal {
         return post(LProtocol.JRQST_GET_RECORDS);
     }
 
+    public boolean getAllSchedules() {
+        return post(LProtocol.JRQST_GET_SCHEDULES);
+    }
+
     public boolean getAccountRecords(long aid) {
         return postById(aid, LProtocol.JRQST_GET_ACCOUNT_RECORDS);
     }
@@ -523,6 +588,22 @@ public class LJournal {
 
     public boolean deleteRecord(long id) {
         return postById(id, LProtocol.JRQST_DELETE_RECORD);
+    }
+
+    public boolean getSchedule(long id) {
+        return postById(id, LProtocol.JRQST_GET_SCHEDULE);
+    }
+
+    public boolean addSchedule(long id) {
+        return postById(id, LProtocol.JRQST_ADD_SCHEDULE);
+    }
+
+    public boolean updateSchedule(long id) {
+        return postById(id, LProtocol.JRQST_UPDATE_SCHEDULE);
+    }
+
+    public boolean deleteSchedule(long id) {
+        return postById(id, LProtocol.JRQST_DELETE_SCHEDULE);
     }
 
     public boolean addAccount(long id) {

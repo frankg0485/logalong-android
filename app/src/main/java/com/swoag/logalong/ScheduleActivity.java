@@ -151,15 +151,15 @@ public class ScheduleActivity extends LFragmentActivity implements
             case TransactionEdit.TransitionEditItf.EXIT_OK:
                 if (changed) {
                     Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeInMillis(scheduledItem.getItem().getTimeStamp());
+                    calendar.setTimeInMillis(scheduledItem.getTimeStamp());
                     calendar.set(Calendar.HOUR_OF_DAY, 0);
                     calendar.set(Calendar.MINUTE, 0);
                     calendar.set(Calendar.SECOND, 0);
-                    scheduledItem.getItem().setTimeStamp(calendar.getTimeInMillis());
-                    scheduledItem.getItem().setState(DBHelper.STATE_ACTIVE);
+                    scheduledItem.setTimeStamp(calendar.getTimeInMillis());
+                    scheduledItem.setState(DBHelper.STATE_ACTIVE);
                     //scheduledItem.initNextTimeMs();
 
-                    scheduledItem.getItem().setTimeStampLast(LPreferences.getServerUtc());
+                    scheduledItem.setTimeStampLast(LPreferences.getServerUtc());
                     DBScheduledTransaction dbScheduledTransaction = DBScheduledTransaction.getInstance();
                     if (createNew) dbScheduledTransaction.add(scheduledItem);
                     else dbScheduledTransaction.update(scheduledItem);
@@ -168,10 +168,9 @@ public class ScheduleActivity extends LFragmentActivity implements
 
                     LJournal journal = new LJournal();
                     if (createNew) {
-                        journal.updateScheduledItem(scheduledItem);
+                        journal.addSchedule(scheduledItem.getId());
                     } else {
-
-                        journal.updateScheduledItem(scheduledItem, itemOrig);
+                        journal.updateSchedule(scheduledItem.getId());
                     }
                 }
                 break;
@@ -181,11 +180,9 @@ public class ScheduleActivity extends LFragmentActivity implements
 
             case TransactionEdit.TransitionEditItf.EXIT_DELETE:
                 //scheduledItem.cancelAlarm();
-                DBScheduledTransaction.getInstance().deleteById(scheduledItem.getItem().getId());
-
+                DBScheduledTransaction.getInstance().deleteById(scheduledItem.getId());
                 LJournal journal = new LJournal();
-                scheduledItem.getItem().setState(DBHelper.STATE_DELETED);
-                journal.updateScheduledItem(scheduledItem, DBHelper.STATE_ACTIVE);
+                journal.deleteSchedule(scheduledItem.getId());
                 break;
         }
 
@@ -213,13 +210,13 @@ public class ScheduleActivity extends LFragmentActivity implements
 
         switch (id) {
             case R.id.expense:
-                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_EXPENSE);
+                scheduledItem.setType(LTransaction.TRANSACTION_TYPE_EXPENSE);
                 break;
             case R.id.income:
-                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_INCOME);
+                scheduledItem.setType(LTransaction.TRANSACTION_TYPE_INCOME);
                 break;
             case R.id.transaction:
-                scheduledItem.getItem().setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                scheduledItem.setType(LTransaction.TRANSACTION_TYPE_TRANSFER);
                 break;
         }
 

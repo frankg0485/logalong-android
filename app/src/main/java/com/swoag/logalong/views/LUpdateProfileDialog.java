@@ -338,7 +338,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             }
 
             journal.getAllRecords();
-
+            journal.getAllSchedules();
             return true;
         }
 

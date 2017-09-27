@@ -1,75 +1,49 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
-import com.swoag.logalong.utils.DBHelper;
-import com.swoag.logalong.utils.LAlarm;
-import com.swoag.logalong.utils.LLog;
-
-import java.util.Calendar;
-import java.util.Date;
-
-public class LScheduledTransaction {
+public class LScheduledTransaction extends LTransaction {
     private static final String TAG = LScheduledTransaction.class.getSimpleName();
 
     public static final int REPEAT_UNIT_WEEK = 10;
     public static final int REPEAT_UNIT_MONTH = 20;
     private static boolean TEST_SCAN_LOGIC = false;
 
-    private LTransaction item;
+    //private LTransaction item;
     private int repeatCount;
     private int repeatUnit;
     private int repeatInterval;
-    private long timestamp; //next alarm time
+    private long nextTime; //next alarm time
 
-    private void init() {
-        this.item = new LTransaction();
+    public LScheduledTransaction() {
         this.repeatCount = 0;
         this.repeatInterval = 1;
         this.repeatUnit = REPEAT_UNIT_MONTH;
-        this.timestamp = 0;
-    }
-
-    public LScheduledTransaction() {
-        init();
-    }
-
-    /*public LScheduledTransaction(LTransaction item) {
-        init();
-        this.item = item;
-    }
-    */
-
-    public LScheduledTransaction(int repeatInterval, int repeatUnit, int repeatCount, long timestamp, LTransaction item) {
-        this.repeatInterval = repeatInterval;
-        this.repeatUnit = repeatUnit;
-        this.repeatCount = repeatCount;
-        this.timestamp = timestamp;
-        this.item = item;
+        this.nextTime = 0;
     }
 
     public LScheduledTransaction(LScheduledTransaction sch) {
+        super(sch);
         this.repeatUnit = sch.getRepeatUnit();
         this.repeatInterval = sch.getRepeatInterval();
         this.repeatCount = sch.getRepeatCount();
-        this.timestamp = sch.getTimestamp();
-
-        this.item = new LTransaction(sch.getItem());
+        this.nextTime = sch.getNextTime();
     }
 
     public boolean isEqual(LScheduledTransaction sch) {
         return (this.repeatCount == sch.getRepeatCount() &&
                 this.repeatInterval == sch.getRepeatInterval() &&
                 this.repeatUnit == sch.getRepeatUnit() &&
-                this.timestamp == sch.getTimestamp() &&
-                this.item.isEqual(sch.getItem()));
+                this.nextTime == sch.getNextTime() &&
+                super.isEqual(sch));
     }
 
+    /*
     public void calculateNextTimeMs() {
         nextTimeMs();
     }
 
     public void initNextTimeMs() {
-        long baseTimeMs = item.getTimeStamp();
+        long baseTimeMs = getTimeStamp();
 
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
@@ -83,12 +57,12 @@ public class LScheduledTransaction {
 
         if (baseTimeMs <= curTimeMs) {
             if (curTimeMs - baseTimeMs < (long) 24 * 3600 * 1000) {
-                timestamp = baseTimeMs;
+                nextTime = baseTimeMs;
                 return;
             }
         }
         if (TEST_SCAN_LOGIC)
-            timestamp = baseTimeMs;
+            nextTime = baseTimeMs;
         else
             nextTimeMs();
     }
@@ -96,7 +70,7 @@ public class LScheduledTransaction {
     private long getEndMs() {
         if (repeatCount == 0) return Long.MAX_VALUE;
 
-        long ms = item.getTimeStamp();
+        long ms = getTimeStamp();
 
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
@@ -113,15 +87,15 @@ public class LScheduledTransaction {
             ms += (long) repeatInterval * 7 * 24 * 3600 * 1000 * repeatCount;
         }
         return ms;
-    }
+    }*/
 
     public void scanNextTimeMs() {
         return;
         //TODO
         /*
-        if (timestamp >= System.currentTimeMillis()) return;
+        if (nextTime >= System.currentTimeMillis()) return;
 
-        if (timestamp == 0) {
+        if (nextTime == 0) {
             //special case, this must be a schedule that is just imported.
             nextTimeMs();
             DBScheduledTransaction.update(this);
@@ -129,7 +103,7 @@ public class LScheduledTransaction {
         }
 
         //we missed the alarm, let's check to populate the DB
-        long baseTimeMs = timestamp;
+        long baseTimeMs = nextTime;
         long endTimeMs = getEndMs();
 
         // always align time to 00:00:00 of the day
@@ -144,7 +118,7 @@ public class LScheduledTransaction {
             //check to update DB
             String ymd = "" + calendar.get(Calendar.YEAR) + (calendar.get(Calendar.MONTH) + 1) + calendar.get(Calendar.DAY_OF_MONTH);
 
-            LTransaction transaction = DBTransaction.getByRid(item.getRid() + ymd);
+            LTransaction transaction = DBTransaction.getByRid(getRid() + ymd);
             if (transaction == null) {
                 transaction = new LTransaction(item);
 
@@ -166,23 +140,24 @@ public class LScheduledTransaction {
             }
         }
 
-        timestamp = baseTimeMs;
+        nextTime = baseTimeMs;
 
         if (repeatCount > 0) {
             if (baseTimeMs >= endTimeMs) {
-                item.setState(DBHelper.STATE_DISABLED);
-                timestamp = item.getTimeStamp();
+                setState(DBHelper.STATE_DISABLED);
+                nextTime = getTimeStamp();
             }
         }
         DBScheduledTransaction.update(this);
         */
     }
 
+    /*
     private void nextTimeMs() {
         if (TEST_SCAN_LOGIC)
             return;
         else {
-            long baseTimeMs = item.getTimeStamp();
+            long baseTimeMs = getTimeStamp();
             int count = 1;
 
             // always align time to 00:00:00 of the day
@@ -205,37 +180,28 @@ public class LScheduledTransaction {
                 count++;
             }
 
-            timestamp = baseTimeMs;
+            nextTime = baseTimeMs;
 
             if (repeatCount == 0) return;
 
             if (repeatCount < count) {
-                item.setState(DBHelper.STATE_DISABLED);
-                timestamp = item.getTimeStamp();
+                setState(DBHelper.STATE_DISABLED);
+                nextTime = getTimeStamp();
             }
         }
     }
 
     public void cancelAlarm() {
-        LAlarm.cancelAlarm((int) item.getId());
+        LAlarm.cancelAlarm((int) getId());
     }
 
     public void setAlarm() {
         cancelAlarm();
-        if (item.getState() == DBHelper.STATE_ACTIVE) {
-            LLog.d(TAG, "alarm " + item.getId() + " set: " + (new Date(timestamp)));
-            LAlarm.setAlarm((int) item.getId(), timestamp);
+        if (getState() == DBHelper.STATE_ACTIVE) {
+            LLog.d(TAG, "alarm " + getId() + " set: " + (new Date(nextTime)));
+            LAlarm.setAlarm((int) getId(), nextTime);
         }
-    }
-
-    public LTransaction getItem() {
-        return item;
-    }
-
-    /*public void setItem(LTransaction item) {
-        this.item = item;
-    }
-    */
+    }*/
 
     public int getRepeatCount() {
         return repeatCount;
@@ -261,11 +227,11 @@ public class LScheduledTransaction {
         this.repeatInterval = repeatInterval;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getNextTime() {
+        return nextTime;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public void setNextTime(long nextTime) {
+        this.nextTime = nextTime;
     }
 }

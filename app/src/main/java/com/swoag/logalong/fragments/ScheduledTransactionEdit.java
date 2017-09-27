@@ -68,7 +68,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.savedScheduledItem = new LScheduledTransaction(item);
         this.bCreate = bCreate;
 
-        this.transactionEdit = new TransactionEdit(activity, rootView, item.getItem(), bCreate, true, true, this);
+        this.transactionEdit = new TransactionEdit(activity, rootView, item, bCreate, true, true, this);
         create();
     }
 
@@ -142,7 +142,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
 
     private void saveLog() {
         boolean changed = !scheduledItem.isEqual(savedScheduledItem);
-        if (changed) scheduledItem.getItem().setTimeStampLast(LPreferences.getServerUtc());
+        if (changed) scheduledItem.setTimeStampLast(LPreferences.getServerUtc());
         clickDisabled = true;
         callback.onScheduledTransactionEditExit(ScheduledTransitionEditItf.EXIT_OK, changed);
         destroy();

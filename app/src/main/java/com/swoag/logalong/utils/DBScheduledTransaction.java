@@ -33,24 +33,24 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
     LScheduledTransaction getValues(Cursor cur, LScheduledTransaction sch) {
         if (null == sch) sch = new LScheduledTransaction();
 
-        DBTransaction.getInstance().getValues(cur, sch.getItem());
+        DBTransaction.getInstance().getValues(cur, sch);
 
         sch.setRepeatCount(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_COUNT)));
         sch.setRepeatUnit(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_UNIT)));
         sch.setRepeatInterval(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL)));
-        sch.setTimestamp(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)));
+        sch.setNextTime(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)));
 
         return sch;
     }
 
     @Override
     ContentValues setValues(LScheduledTransaction sch, boolean update) {
-        ContentValues cv = DBTransaction.getInstance().setValues(sch.getItem(), update);
+        ContentValues cv = DBTransaction.getInstance().setValues(sch, update);
 
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_COUNT, sch.getRepeatCount());
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_UNIT, sch.getRepeatUnit());
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL, sch.getRepeatInterval());
-        cv.put(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP, sch.getTimestamp());
+        cv.put(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP, sch.getNextTime());
         return cv;
     }
 
@@ -66,12 +66,12 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
 
     @Override
     long getId(LScheduledTransaction sch) {
-        return sch.getItem().getId();
+        return sch.getId();
     }
 
     @Override
     void setId(LScheduledTransaction sch, long id) {
-        sch.getItem().setId(id);
+        sch.setId(id);
     }
 
     private String[] concat(String[] a, String[] b) {

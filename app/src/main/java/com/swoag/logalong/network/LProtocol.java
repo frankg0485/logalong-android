@@ -88,6 +88,10 @@ public class LProtocol {
     public static final short JRQST_UPDATE_RECORD = 0x042;
     public static final short JRQST_DELETE_RECORD = 0x043;
 
+    public static final short JRQST_ADD_SCHEDULE = 0x051;
+    public static final short JRQST_UPDATE_SCHEDULE = 0x052;
+    public static final short JRQST_DELETE_SCHEDULE = 0x053;
+
     public static final short JRQST_GET_ACCOUNTS = 0x101;
     public static final short JRQST_GET_CATEGORIES = 0x111;
     public static final short JRQST_GET_TAGS = 0x121;
@@ -96,6 +100,10 @@ public class LProtocol {
     public static final short JRQST_GET_RECORDS = 0x142;
     public static final short JRQST_GET_ACCOUNT_RECORDS = 0x143;
     public static final short JRQST_GET_ACCOUNT_USERS = 0x151;
+    public static final short JRQST_GET_SCHEDULE = 0x161;
+    public static final short JRQST_GET_SCHEDULES = 0x162;
+    public static final short JRQST_GET_ACCOUNT_SCHEDULES = 0x163;
+
     public static final short JRQST_ADD_USER_TO_ACCOUNT = 0x301;
     public static final short JRQST_REMOVE_USER_FROM_ACCOUNT = 0x302;
     public static final short JRQST_CONFIRM_ACCOUNT_SHARE = 0x303;
@@ -395,6 +403,36 @@ public class LProtocol {
                                         short bytes = pkt.getShortAutoInc();
                                         String note = pkt.getStringAutoInc(bytes);
                                         rspsIntent.putExtra("note", note);
+                                    }
+                                    break;
+
+                                case JRQST_GET_SCHEDULE:
+                                case JRQST_GET_SCHEDULES:
+                                case JRQST_GET_ACCOUNT_SCHEDULES:
+                                    if (RSPS_OK == jret) {
+                                        rspsIntent.putExtra("gid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("aid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("aid2", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("cid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("tid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("vid", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("type", pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("amount", pkt.getDoubleAutoInc());
+                                        rspsIntent.putExtra("createBy", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("changeBy", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("recordId", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("timestamp", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("createTime", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("changeTime", pkt.getLongAutoInc());
+
+                                        short bytes = pkt.getShortAutoInc();
+                                        String note = pkt.getStringAutoInc(bytes);
+                                        rspsIntent.putExtra("note", note);
+
+                                        rspsIntent.putExtra("nextTime", pkt.getLongAutoInc());
+                                        rspsIntent.putExtra("interval", pkt.getShortAutoInc());
+                                        rspsIntent.putExtra("unit", pkt.getShortAutoInc());
+                                        rspsIntent.putExtra("count", pkt.getShortAutoInc());
                                     }
                                     break;
                             }
