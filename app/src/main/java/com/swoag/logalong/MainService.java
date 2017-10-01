@@ -615,9 +615,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     note = intent.getStringExtra("note");
 
                                     long nextTime = intent.getLongExtra("nextTime", 0L);
-                                    short interval = intent.getShortExtra("interval", (short) 0);
-                                    short unit = intent.getShortExtra("unit", (short) 0);
-                                    short count = intent.getShortExtra("count", (short) 0);
+                                    byte interval = intent.getByteExtra("interval", (byte) 0);
+                                    byte unit = intent.getByteExtra("unit", (byte) 0);
+                                    byte count = intent.getByteExtra("count", (byte) 0);
+                                    boolean enabled = intent.getByteExtra("count", (byte) 0) == 0 ? false : true;
 
                                     DBScheduledTransaction dbSchTransaction = DBScheduledTransaction.getInstance();
                                     LScheduledTransaction scheduledTransaction = dbSchTransaction.getByGid(gid);
@@ -649,6 +650,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     scheduledTransaction.setRepeatInterval(interval);
                                     scheduledTransaction.setRepeatUnit(unit);
                                     scheduledTransaction.setRepeatCount(count);
+                                    scheduledTransaction.setEnabled(enabled);
 
                                     if (create) dbSchTransaction.add(scheduledTransaction);
                                     else dbSchTransaction.update(scheduledTransaction);

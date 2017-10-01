@@ -227,9 +227,10 @@ public class LJournal {
             }
 
             jdata.putLongAutoInc(lScheduledTransaction.getNextTime());
-            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatInterval());
-            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatUnit());
-            jdata.putShortAutoInc((short)lScheduledTransaction.getRepeatCount());
+            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatInterval());
+            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatUnit());
+            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatCount());
+            jdata.putByteAutoInc((byte)(lScheduledTransaction.isEnabled()? 1: 0));
 
             jdata.setLen(jdata.getBufOffset());
             return true;

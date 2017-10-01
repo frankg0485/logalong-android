@@ -16,7 +16,8 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
             DBHelper.TABLE_COLUMN_REPEAT_COUNT,
             DBHelper.TABLE_COLUMN_REPEAT_UNIT,
             DBHelper.TABLE_COLUMN_REPEAT_INTERVAL,
-            DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP
+            DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP,
+            DBHelper.TABLE_COLUMN_ENABLED
     };
 
     public DBScheduledTransaction() {
@@ -39,6 +40,7 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
         sch.setRepeatUnit(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_UNIT)));
         sch.setRepeatInterval(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL)));
         sch.setNextTime(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)));
+        sch.setEnabled(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)) == 0? false : true);
 
         return sch;
     }
@@ -51,6 +53,7 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_UNIT, sch.getRepeatUnit());
         cv.put(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL, sch.getRepeatInterval());
         cv.put(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP, sch.getNextTime());
+        cv.put(DBHelper.TABLE_COLUMN_ENABLED, sch.isEnabled()? 1 : 0);
         return cv;
     }
 
@@ -88,12 +91,12 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
         try {
             if (sortColumn != null)
                 cur = LApp.ctx.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
-                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED}, sortColumn + " ASC");
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, sortColumn + " ASC");
             else
                 cur = LApp.ctx.getContentResolver().query(DBProvider.URI_SCHEDULED_TRANSACTIONS, null,
-                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED}, null);
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE}, null);
         } catch (Exception e) {
         }
         return cur;

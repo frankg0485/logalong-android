@@ -430,9 +430,10 @@ public class LProtocol {
                                         rspsIntent.putExtra("note", note);
 
                                         rspsIntent.putExtra("nextTime", pkt.getLongAutoInc());
-                                        rspsIntent.putExtra("interval", pkt.getShortAutoInc());
-                                        rspsIntent.putExtra("unit", pkt.getShortAutoInc());
-                                        rspsIntent.putExtra("count", pkt.getShortAutoInc());
+                                        rspsIntent.putExtra("interval", pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("unit", pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("count", pkt.getByteAutoInc());
+                                        rspsIntent.putExtra("enabled", pkt.getByteAutoInc());
                                     }
                                     break;
                             }

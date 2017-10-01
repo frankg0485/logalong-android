@@ -1,5 +1,5 @@
 package com.swoag.logalong.entities;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 public class LScheduledTransaction extends LTransaction {
     private static final String TAG = LScheduledTransaction.class.getSimpleName();
@@ -9,12 +9,14 @@ public class LScheduledTransaction extends LTransaction {
     private static boolean TEST_SCAN_LOGIC = false;
 
     //private LTransaction item;
+    private boolean enabled;
     private int repeatCount;
     private int repeatUnit;
     private int repeatInterval;
     private long nextTime; //next alarm time
 
     public LScheduledTransaction() {
+        this.enabled = true;
         this.repeatCount = 0;
         this.repeatInterval = 1;
         this.repeatUnit = REPEAT_UNIT_MONTH;
@@ -23,6 +25,7 @@ public class LScheduledTransaction extends LTransaction {
 
     public LScheduledTransaction(LScheduledTransaction sch) {
         super(sch);
+        this.enabled = sch.isEnabled();
         this.repeatUnit = sch.getRepeatUnit();
         this.repeatInterval = sch.getRepeatInterval();
         this.repeatCount = sch.getRepeatCount();
@@ -30,7 +33,8 @@ public class LScheduledTransaction extends LTransaction {
     }
 
     public boolean isEqual(LScheduledTransaction sch) {
-        return (this.repeatCount == sch.getRepeatCount() &&
+        return (this.enabled == sch.isEnabled() &&
+                this.repeatCount == sch.getRepeatCount() &&
                 this.repeatInterval == sch.getRepeatInterval() &&
                 this.repeatUnit == sch.getRepeatUnit() &&
                 this.nextTime == sch.getNextTime() &&
@@ -202,6 +206,14 @@ public class LScheduledTransaction extends LTransaction {
             LAlarm.setAlarm((int) getId(), nextTime);
         }
     }*/
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public int getRepeatCount() {
         return repeatCount;

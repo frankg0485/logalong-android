@@ -60,8 +60,8 @@ public class ScheduleActivity extends LFragmentActivity implements
                 return new CursorLoader(this,
                         uri,
                         null,
-                        DBHelper.TABLE_COLUMN_STATE + "=? OR " + DBHelper.TABLE_COLUMN_STATE + "=?",
-                        new String[]{"" + DBHelper.STATE_ACTIVE, "" + DBHelper.STATE_DISABLED},
+                        DBHelper.TABLE_COLUMN_STATE + "=?",
+                        new String[]{"" + DBHelper.STATE_ACTIVE},
                         DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP + " ASC");
         }
         return null;
@@ -157,6 +157,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     calendar.set(Calendar.SECOND, 0);
                     scheduledItem.setTimeStamp(calendar.getTimeInMillis());
                     scheduledItem.setState(DBHelper.STATE_ACTIVE);
+                    scheduledItem.setNextTime(scheduledItem.getTimeStamp());
                     //scheduledItem.initNextTimeMs();
 
                     scheduledItem.setTimeStampLast(LPreferences.getServerUtc());
@@ -207,6 +208,7 @@ public class ScheduleActivity extends LFragmentActivity implements
 
     private void addNewSchedule(int id) {
         scheduledItem = new LScheduledTransaction();
+        scheduledItem.generateRid();
 
         switch (id) {
             case R.id.expense:
@@ -251,7 +253,8 @@ public class ScheduleActivity extends LFragmentActivity implements
             TextView tv = (TextView) mainView.findViewById(R.id.category);
             int categoryId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
             int tagId = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TAG));
-            int state = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_STATE));
+            boolean enabled = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ENABLED)) == 0 ? false
+                    : true;
             int type = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
 
             String category = DBCategory.getInstance().getNameById(categoryId);
@@ -307,7 +310,7 @@ public class ScheduleActivity extends LFragmentActivity implements
             long id = cursor.getLong(0);
             mainView.setTag(new VTag(id));
 
-            if (state == DBHelper.STATE_DISABLED) {
+            if (!enabled) {
                 LViewUtils.setAlpha(mainView, 0.4f);
             } else {
                 LViewUtils.setAlpha(mainView, 1.0f);

@@ -10,16 +10,16 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static final int STATE_ACTIVE = 10;
     public static final int STATE_DELETED = 20;
-    public static final int STATE_DISABLED = 30;
 
     public static final String DATABASE_NAME = "LogAlongDB";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public static final String TABLE_COLUMN_ACCOUNT = "Account";
     public static final String TABLE_COLUMN_ACCOUNT2 = "Account2";
     public static final String TABLE_COLUMN_AMOUNT = "Amount";
     public static final String TABLE_COLUMN_BALANCE = "Balance";
     public static final String TABLE_COLUMN_CATEGORY = "Category";
+    public static final String TABLE_COLUMN_ENABLED = "Enabled";
     public static final String TABLE_COLUMN_ICON = "Icon";
     public static final String TABLE_COLUMN_SHARE = "Share";
     public static final String TABLE_COLUMN_MADEBY = "MadeBy";
@@ -83,7 +83,8 @@ public class DBHelper extends SQLiteOpenHelper {
             TABLE_COLUMN_REPEAT_INTERVAL + " INTEGER," +
             TABLE_COLUMN_REPEAT_UNIT + " INTEGER," +
             TABLE_COLUMN_REPEAT_COUNT + " INTEGER," +
-            TABLE_COLUMN_SCHEDULE_TIMESTAMP + " INTEGER,"
+            TABLE_COLUMN_SCHEDULE_TIMESTAMP + " INTEGER," +
+            TABLE_COLUMN_ENABLED + " INTEGER,"
             // plus TABLE_TRANSACTION columns
             + TABLE_TRANSACTION_ROWS + ");";
 
@@ -175,7 +176,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
-        if (oldVersion == 1 && newVersion == 2) {
+        /*if (oldVersion == 1 && newVersion == 2)*/ {
             String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
                     " ADD COLUMN " + TABLE_COLUMN_SHOW_BALANCE + " INTEGER;" +
@@ -190,7 +191,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE +  " INTEGER;" +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER";
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_ENABLED + "INTEGER";
             db.execSQL(sql);
         }
     }
