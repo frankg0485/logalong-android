@@ -40,7 +40,7 @@ public class DBScheduledTransaction extends DBGeneric<LScheduledTransaction> {
         sch.setRepeatUnit(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_UNIT)));
         sch.setRepeatInterval(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_REPEAT_INTERVAL)));
         sch.setNextTime(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)));
-        sch.setEnabled(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SCHEDULE_TIMESTAMP)) == 0? false : true);
+        sch.setEnabled(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ENABLED)) == 0? false : true);
 
         return sch;
     }

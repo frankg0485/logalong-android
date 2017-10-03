@@ -321,12 +321,29 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         }
     }
 
+    public void updateDateDisplay() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(item.getTimeStamp());
+        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
+    }
+
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, monthOfYear, dayOfMonth);
-        dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
         item.setTimeStamp(calendar.getTimeInMillis());
+
+        if (bScheduleMode) {
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            if (item.getTimeStamp() < calendar.getTimeInMillis()) {
+                item.setTimeStamp(calendar.getTimeInMillis());
+            }
+        }
+
+        updateDateDisplay();
     }
 
     @Override

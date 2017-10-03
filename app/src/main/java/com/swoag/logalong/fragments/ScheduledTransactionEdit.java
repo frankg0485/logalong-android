@@ -3,17 +3,22 @@ package com.swoag.logalong.fragments;
 
 import android.app.Activity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.utils.LPreferences;
+import com.swoag.logalong.utils.LViewUtils;
+
+import java.util.Calendar;
 
 public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditItf, View.OnClickListener {
     private static final String TAG = ScheduledTransactionEdit.class.getSimpleName();
 
     private Activity activity;
-    private View rootView;
+    private View rootView, repeatIntervalView, enableView, dateView;
+    private ViewGroup allItemsViewGroup;
     private boolean bCreate;
 
     private TransactionEdit transactionEdit;
@@ -59,11 +64,17 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.callback = callback;
         clickDisabled = false;
 
+        allItemsViewGroup = (ViewGroup)rootView.findViewById(R.id.allItems);
         rootView.findViewById(R.id.repeatInterval).setOnClickListener(this);
         rootView.findViewById(R.id.repeatIntervalH).setOnClickListener(this);
         rootView.findViewById(R.id.repeatWeekMonth).setOnClickListener(this);
         rootView.findViewById(R.id.repeatCount).setOnClickListener(this);
         rootView.findViewById(R.id.repeatCountH).setOnClickListener(this);
+
+        dateView = rootView.findViewById(R.id.tvDate);
+        repeatIntervalView = rootView.findViewById(R.id.repeatRow);
+        enableView = rootView.findViewById(R.id.enable);
+        enableView.setOnClickListener(this);
 
         this.savedScheduledItem = new LScheduledTransaction(item);
         this.bCreate = bCreate;
@@ -80,11 +91,20 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
             weekMonthTV.setText(activity.getString(scheduledItem.getRepeatUnit() == LScheduledTransaction.REPEAT_UNIT_WEEK ? R.string.week : R.string.month));
         }
         if (scheduledItem.getRepeatCount() == 0) {
-            countTV.setText(activity.getString(R.string.unlimited));
+            countTV.setText(activity.getString(R.string.disabled));
         } else if (scheduledItem.getRepeatCount() == 1) {
+            countTV.setText(activity.getString(R.string.unlimited));
+        } else if (scheduledItem.getRepeatCount() == 2) {
             countTV.setText("1 " + activity.getString(R.string.count_time));
         } else {
             countTV.setText(scheduledItem.getRepeatCount() + " " + activity.getString(R.string.count_times));
+        }
+        if ((scheduledItem.getRepeatCount() == 0)) {
+            LViewUtils.setAlpha(repeatIntervalView, 0.5f);
+            LViewUtils.disableEnableControls(false, (ViewGroup)repeatIntervalView);
+        } else {
+            LViewUtils.setAlpha(repeatIntervalView, 1.0f);
+            LViewUtils.disableEnableControls(true, (ViewGroup)repeatIntervalView);
         }
     }
 
@@ -94,6 +114,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         weekMonthTV = (TextView) rootView.findViewById(R.id.repeatWeekMonth);
 
         updateItemDisplay();
+        scheduleEnableDisplay();
     }
 
     private void destroy() {
@@ -104,11 +125,52 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         savedScheduledItem = null;
     }
 
+    private void scheduleEnableDisplay()
+    {
+        if (scheduledItem.isEnabled()) {
+            LViewUtils.setAlpha(enableView, 0.5f);
+            LViewUtils.disableEnableControls(true, allItemsViewGroup);
+            LViewUtils.setAlpha(allItemsViewGroup, 1.0f);
+
+            dateView.setClickable(true);
+            LViewUtils.setAlpha(dateView, 1.0f);
+
+            //transactionEdit.updateOkDisplay();
+        } else {
+            LViewUtils.setAlpha(enableView, 1.0f);
+            LViewUtils.disableEnableControls(false, allItemsViewGroup);
+            LViewUtils.setAlpha(allItemsViewGroup, 0.6f);
+
+            dateView.setClickable(false);
+            LViewUtils.setAlpha(dateView, 0.6f);
+
+            //transactionEdit.enableOk(false);
+        }
+    }
+
     @Override
     public void onClick(View v) {
         if (clickDisabled) return;
 
         switch (v.getId()) {
+            case R.id.enable:
+                scheduledItem.setEnabled(!scheduledItem.isEnabled());
+                if (scheduledItem.isEnabled()) {
+                    //reset to today if timestamp was past
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(System.currentTimeMillis());
+                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    if (scheduledItem.getTimeStamp() < calendar.getTimeInMillis()) {
+                        scheduledItem.setTimeStamp(calendar.getTimeInMillis());
+                    }
+
+                    scheduledItem.initNextTimeMs();
+                    transactionEdit.updateDateDisplay();
+                }
+                scheduleEnableDisplay();
+                break;
             case R.id.repeatInterval:
             case R.id.repeatIntervalH:
                 int interval = scheduledItem.getRepeatInterval();

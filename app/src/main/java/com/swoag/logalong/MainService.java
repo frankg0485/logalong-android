@@ -473,6 +473,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     }
                                     dbTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
+                                case LProtocol.JRQST_ADD_SCHEDULE:
+                                    DBScheduledTransaction dbSchTransaction = DBScheduledTransaction.getInstance();
+                                    id = intent.getLongExtra("id", 0L);
+                                    gid = intent.getLongExtra("gid", 0L);
+
+                                    LScheduledTransaction scheduledTransaction = dbSchTransaction.getByGid(gid);
+                                    if (null != scheduledTransaction) {
+                                        if (scheduledTransaction.getId() == id) {
+                                            LLog.e(TAG, "unexpected error, schedule GID: " + gid + " already taken ");
+                                        }
+                                        dbSchTransaction.deleteById(scheduledTransaction.getId());
+                                    }
+                                    dbSchTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
+                                    break;
                                 case LProtocol.JRQST_GET_ACCOUNTS:
                                     gid = intent.getLongExtra("gid", 0L);
                                     uid = intent.getLongExtra("uid", 0L);
@@ -620,8 +634,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     byte count = intent.getByteExtra("count", (byte) 0);
                                     boolean enabled = intent.getByteExtra("count", (byte) 0) == 0 ? false : true;
 
-                                    DBScheduledTransaction dbSchTransaction = DBScheduledTransaction.getInstance();
-                                    LScheduledTransaction scheduledTransaction = dbSchTransaction.getByGid(gid);
+                                    dbSchTransaction = DBScheduledTransaction.getInstance();
+                                    scheduledTransaction = dbSchTransaction.getByGid(gid);
 
                                     create = true;
                                     if (null != scheduledTransaction) {
@@ -667,6 +681,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_DELETE_VENDOR:
                                 case LProtocol.JRQST_UPDATE_RECORD:
                                 case LProtocol.JRQST_DELETE_RECORD:
+                                case LProtocol.JRQST_UPDATE_SCHEDULE:
+                                case LProtocol.JRQST_DELETE_SCHEDULE:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);

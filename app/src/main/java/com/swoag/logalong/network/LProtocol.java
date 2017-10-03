@@ -341,6 +341,7 @@ public class LProtocol {
                                 case JRQST_ADD_VENDOR:
                                 case JRQST_ADD_TAG:
                                 case JRQST_ADD_RECORD:
+                                case JRQST_ADD_SCHEDULE:
                                     if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("id", pkt.getLongAutoInc());
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());

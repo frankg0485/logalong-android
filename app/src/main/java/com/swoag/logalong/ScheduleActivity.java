@@ -157,8 +157,7 @@ public class ScheduleActivity extends LFragmentActivity implements
                     calendar.set(Calendar.SECOND, 0);
                     scheduledItem.setTimeStamp(calendar.getTimeInMillis());
                     scheduledItem.setState(DBHelper.STATE_ACTIVE);
-                    scheduledItem.setNextTime(scheduledItem.getTimeStamp());
-                    //scheduledItem.initNextTimeMs();
+                    scheduledItem.initNextTimeMs();
 
                     scheduledItem.setTimeStampLast(LPreferences.getServerUtc());
                     DBScheduledTransaction dbScheduledTransaction = DBScheduledTransaction.getInstance();

@@ -23,6 +23,7 @@
     <string name="decline">Decline</string>
     <string name="delete">Delete</string>
     <string name="delete_now">Delete now</string>
+    <string name="disabled">disabled</string>
     <string name="done">Done</string>
     <string name="edit">Edit</string>
     <string name="edit_time">Edit Time</string>
@@ -76,7 +77,7 @@
     <string name="rename_tag">Rename Tag</string>
     <string name="rename_vendor">Rename Vendor</string>
     <string name="repeat_every">Repeat every</string>
-    <string name="repeat_for">Repeat for</string>
+    <string name="repeat">Repeat</string>
     <string name="reports">Reports</string>
     <string name="restore_db">Restore data</string>
     <string name="restore_data_from_sd_card">Restore data from SD card</string>

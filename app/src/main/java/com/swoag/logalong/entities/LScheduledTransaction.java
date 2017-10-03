@@ -1,6 +1,8 @@
 package com.swoag.logalong.entities;
 /* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
+import java.util.Calendar;
+
 public class LScheduledTransaction extends LTransaction {
     private static final String TAG = LScheduledTransaction.class.getSimpleName();
 
@@ -45,7 +47,7 @@ public class LScheduledTransaction extends LTransaction {
     public void calculateNextTimeMs() {
         nextTimeMs();
     }
-
+    */
     public void initNextTimeMs() {
         long baseTimeMs = getTimeStamp();
 
@@ -58,19 +60,23 @@ public class LScheduledTransaction extends LTransaction {
         baseTimeMs = calendar.getTimeInMillis();
 
         long curTimeMs = System.currentTimeMillis();
+        if (baseTimeMs > curTimeMs || (curTimeMs - baseTimeMs < (long) 24 * 3600 * 1000)) nextTime = baseTimeMs;
+        else if (0 == repeatCount) {
+            //reset to today
+            calendar.setTimeInMillis(curTimeMs);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            baseTimeMs = calendar.getTimeInMillis();
 
-        if (baseTimeMs <= curTimeMs) {
-            if (curTimeMs - baseTimeMs < (long) 24 * 3600 * 1000) {
-                nextTime = baseTimeMs;
-                return;
-            }
-        }
-        if (TEST_SCAN_LOGIC)
+            setTimeStamp(baseTimeMs);
             nextTime = baseTimeMs;
-        else
+        } else {
             nextTimeMs();
+        }
     }
 
+    /*
     private long getEndMs() {
         if (repeatCount == 0) return Long.MAX_VALUE;
 
@@ -156,45 +162,32 @@ public class LScheduledTransaction extends LTransaction {
         */
     }
 
-    /*
     private void nextTimeMs() {
-        if (TEST_SCAN_LOGIC)
-            return;
-        else {
-            long baseTimeMs = getTimeStamp();
-            int count = 1;
+        long baseTimeMs = getTimeStamp();
 
-            // always align time to 00:00:00 of the day
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(baseTimeMs);
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
-            calendar.set(Calendar.MINUTE, 0);
-            calendar.set(Calendar.SECOND, 0);
-            baseTimeMs = calendar.getTimeInMillis();
+        // always align time to 00:00:00 of the day
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTimeMs);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        baseTimeMs = calendar.getTimeInMillis();
 
-            if (repeatInterval == 0) repeatInterval = 1; //JIC
+        if (repeatInterval == 0) repeatInterval = 1; //JIC
 
-            while (baseTimeMs <= System.currentTimeMillis()) {
-                if (repeatUnit == REPEAT_UNIT_MONTH) {
-                    calendar.add(Calendar.MONTH, repeatInterval);
-                    baseTimeMs = calendar.getTimeInMillis();
-                } else {
-                    baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
-                }
-                count++;
-            }
-
-            nextTime = baseTimeMs;
-
-            if (repeatCount == 0) return;
-
-            if (repeatCount < count) {
-                setState(DBHelper.STATE_DISABLED);
-                nextTime = getTimeStamp();
+        while (baseTimeMs <= System.currentTimeMillis()) {
+            if (repeatUnit == REPEAT_UNIT_MONTH) {
+                calendar.add(Calendar.MONTH, repeatInterval);
+                baseTimeMs = calendar.getTimeInMillis();
+            } else {
+                baseTimeMs += (long) repeatInterval * 7 * 24 * 3600 * 1000;
             }
         }
+
+        nextTime = baseTimeMs;
     }
 
+    /*
     public void cancelAlarm() {
         LAlarm.cancelAlarm((int) getId());
     }

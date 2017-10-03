@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -9,93 +9,62 @@
         android:background="@color/base_bgd_color"
         android:orientation="vertical">
 
+        <LinearLayout
+            android:id="@+id/editHeader"
+            android:layout_width="fill_parent"
+            android:layout_height="36dp"
+            android:background="#60ff0000"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp">
+
+            <ImageView
+                android:id="@+id/enable"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginRight="5dp"
+                android:padding="5dp"
+                android:src="@drawable/ic_action_accept"/>
+
+
+            <TextView
+                android:id="@+id/type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Expense"
+                android:textSize="18sp"/>
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="15dp"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <ImageView
+                android:id="@+id/discard"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/ic_action_discard"
+                android:visibility="gone"/>
+        </LinearLayout>
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
             <LinearLayout
+                android:id="@+id/allItems"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <LinearLayout
-                    android:id="@+id/editHeader"
-                    android:layout_width="fill_parent"
-                    android:layout_height="36dp"
-                    android:background="#60ff0000"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="42dp"
-                    android:paddingRight="5dp"
-                    android:paddingTop="5dp">
-
-                    <TextView
-                        android:id="@+id/type"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Expense"
-                        android:textSize="18sp" />
-
-                    <TextView
-                        android:id="@+id/tvDate"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="15dp"
-                        android:layout_weight="1"
-                        android:gravity="right"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <ImageView
-                        android:id="@+id/discard"
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/ic_action_discard"
-                        android:visibility="gone" />
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/repeatRow"
-                    android:layout_width="fill_parent"
-                    android:layout_height="@dimen/list_item_height"
-                    android:background="#e4e6e8"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="42dp"
-                    android:paddingRight="5dp">
-
-                    <TextView
-                        android:id="@+id/repeatIntervalH"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center_vertical"
-                        android:text="@string/repeat_every"
-                        android:textSize="16sp" />
-
-                    <TextView
-                        android:id="@+id/repeatInterval"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical|right"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="10dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/repeatWeekMonth"
-                        android:layout_width="85dp"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical|right"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="15dp"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/repeatForRow"
@@ -114,8 +83,8 @@
                         android:layout_height="match_parent"
                         android:layout_weight="1"
                         android:gravity="center_vertical"
-                        android:text="@string/repeat_for"
-                        android:textSize="16sp" />
+                        android:text="@string/repeat"
+                        android:textSize="16sp"/>
 
                     <TextView
                         android:id="@+id/repeatCount"
@@ -125,7 +94,48 @@
                         android:paddingLeft="30dp"
                         android:paddingRight="15dp"
                         android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/repeatRow"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/list_item_height"
+                    android:background="#e4e6e8"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="42dp"
+                    android:paddingRight="5dp">
+
+                    <TextView
+                        android:id="@+id/repeatIntervalH"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="@string/repeat_every"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/repeatInterval"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical|right"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/repeatWeekMonth"
+                        android:layout_width="85dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical|right"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="15dp"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -146,7 +156,7 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:text="$123.45"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -164,7 +174,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_from"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"/>
 
                     <TextView
                         android:id="@+id/tvAccount"
@@ -172,13 +182,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -198,7 +208,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_to"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"/>
 
                     <TextView
                         android:id="@+id/tvAccount2"
@@ -206,13 +216,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -233,13 +243,13 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_category_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -259,13 +269,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -286,13 +296,13 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_tag_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"/>
 
                     <ImageView
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right"/>
 
                 </LinearLayout>
 
@@ -304,7 +314,7 @@
                     android:paddingRight="15dp"
                     android:text="Jan 25, 2015 by Michael"
                     android:textColor="#aaa"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"/>
 
             </LinearLayout>
         </ScrollView>
@@ -315,7 +325,7 @@
             android:layout_weight="1"
             android:gravity="bottom">
 
-            <include layout="@layout/bottom" />
+            <include layout="@layout/bottom"/>
         </LinearLayout>
     </LinearLayout>
 
@@ -325,6 +335,6 @@
         android:layout_height="match_parent"
         android:clickable="true">
 
-        <include layout="@layout/dollar_amount_picker" />
+        <include layout="@layout/dollar_amount_picker"/>
     </LinearLayout>
 </FrameLayout>
