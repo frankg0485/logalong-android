@@ -253,8 +253,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         item = new LTransaction();
         item.setType(type);
 
-        if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis())
-        {
+        if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis()) {
             item.setTimeStamp(lastTransactionTimestamp + 1);
             if (lastTransactionAccountFrom != 0) {
                 item.setAccount(lastTransactionAccountFrom);
@@ -311,7 +310,8 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             View mainView = view.findViewById(R.id.mainView);
-            if (0 == cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE))) {
+            if ((!cursor.isNull(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE))) &&
+                    0 == cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE))) {
                 mainView.setVisibility(View.GONE);
             } else {
                 mainView.setVisibility(View.VISIBLE);
