@@ -182,25 +182,46 @@ public class DBHelper extends SQLiteOpenHelper {
         if (oldVersion == 1 && newVersion == 2) {
             String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+
+                    "ALTER TABLE " + TABLE_ACCOUNT_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_SHOW_BALANCE + " INTEGER;" +
+
                     "ALTER TABLE " + TABLE_CATEGORY_NAME +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+
                     "ALTER TABLE " + TABLE_TAG_NAME +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+
                     "ALTER TABLE " + TABLE_VENDOR_NAME +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+
                     "ALTER TABLE " + TABLE_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_IRID + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER;" +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
+                    "ALTER TABLE " + TABLE_TRANSACTION_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+
                     "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_IRID + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER;" +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
-                    " ADD COLUMN " + TABLE_COLUMN_ENABLED + "INTEGER";
-            db.execSQL(sql);
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+                    "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_ENABLED + " INTEGER";
+            try {
+                String[] queries = sql.split(";");
+                for (String query : queries) {
+                    db.execSQL(query);
+                }
+            } catch (Exception e) {
+                LLog.e(TAG, "unable to update database: " + e.getMessage());
+            }
         }
     }
 }
