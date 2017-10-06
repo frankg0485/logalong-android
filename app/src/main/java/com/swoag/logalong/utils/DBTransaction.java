@@ -27,7 +27,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             DBHelper.TABLE_COLUMN_MADEBY,
             DBHelper.TABLE_COLUMN_CHANGEBY,
             DBHelper.TABLE_COLUMN_AMOUNT,
-            DBHelper.TABLE_COLUMN_RID,
+            DBHelper.TABLE_COLUMN_IRID,
             DBHelper.TABLE_COLUMN_TIMESTAMP,
             DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE,
             DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE,
@@ -60,7 +60,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         trans.setNote(cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE)));
         trans.setCreateBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_MADEBY)));
         trans.setChangeBy(cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CHANGEBY)));
-        trans.setRid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)));
+        trans.setRid(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_IRID)));
         trans.setTimeStamp(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP)));
         trans.setTimeStampCreate(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE)));
         trans.setTimeStampLast(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper
@@ -82,7 +82,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         cv.put(DBHelper.TABLE_COLUMN_MADEBY, trans.getCreateBy());
         cv.put(DBHelper.TABLE_COLUMN_CHANGEBY, trans.getChangeBy());
         cv.put(DBHelper.TABLE_COLUMN_AMOUNT, trans.getValue());
-        cv.put(DBHelper.TABLE_COLUMN_RID, trans.getRid());
+        cv.put(DBHelper.TABLE_COLUMN_IRID, trans.getRid());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP, trans.getTimeStamp());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE, trans.getTimeStampCreate());
         cv.put(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE, trans.getTimeStampLast());
@@ -154,7 +154,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             t2.setAccount2(t.getAccount());
             cv = setValues(t2, true);
 
-            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_IRID + "=? AND "
                     + DBHelper.TABLE_COLUMN_TYPE + "=?", new String[]{"" + t2.getRid(),
                     "" + LTransaction.TRANSACTION_TYPE_TRANSFER_COPY});
         } catch (Exception e) {
@@ -171,7 +171,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
             Cursor csr;
 
             csr = LApp.ctx.getContentResolver().query(getUri(), getColumns(),
-                    DBHelper.TABLE_COLUMN_RID + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=? AND "
+                    DBHelper.TABLE_COLUMN_IRID + "=? AND " + DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_TYPE + "=?",
                     new String[]{"" + rid, "" + DBHelper.STATE_ACTIVE,
                             "" + (copy ? LTransaction.TRANSACTION_TYPE_TRANSFER_COPY : LTransaction
@@ -207,11 +207,11 @@ public class DBTransaction extends DBGeneric<LTransaction> {
                     "" + LTransaction.TRANSACTION_TYPE_TRANSFER});
             */
             // sucks that we have to delete twice, due to the way account balance is updated in DBProvider.
-            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_IRID + "=? AND "
                             + DBHelper.TABLE_COLUMN_TYPE + "=?",
                     new String[]{"" + rid,
                             "" + LTransaction.TRANSACTION_TYPE_TRANSFER});
-            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_RID + "=? AND "
+            LApp.ctx.getContentResolver().update(getUri(), cv, DBHelper.TABLE_COLUMN_IRID + "=? AND "
                             + DBHelper.TABLE_COLUMN_TYPE + "=?",
                     new String[]{"" + rid, "" + LTransaction.TRANSACTION_TYPE_TRANSFER_COPY});
         } catch (Exception e) {
@@ -223,7 +223,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
     public void deleteByAccount(long accountId) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
-        cv.put(DBHelper.TABLE_COLUMN_RID, "");
+        cv.put(DBHelper.TABLE_COLUMN_IRID, "");
         LApp.ctx.getContentResolver().update(DBProvider.URI_TRANSACTIONS, cv,
                 DBHelper.TABLE_COLUMN_STATE + "=? AND " +
                         DBHelper.TABLE_COLUMN_ACCOUNT + "=?",
@@ -289,7 +289,7 @@ public class DBTransaction extends DBGeneric<LTransaction> {
                         "s." + DBHelper.TABLE_COLUMN_TYPE + " AS s_type",
                         "s." + DBHelper.TABLE_COLUMN_MADEBY + " AS s_by",
                         "s." + DBHelper.TABLE_COLUMN_CHANGEBY + " AS s_cby",
-                        "s." + DBHelper.TABLE_COLUMN_RID + " AS s_rid",
+                        "s." + DBHelper.TABLE_COLUMN_IRID + " AS s_rid",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP + " AS s_timestamp",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_CREATE + " AS s_timestamp_create",
                         "s." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + " AS s_timestamp_last",

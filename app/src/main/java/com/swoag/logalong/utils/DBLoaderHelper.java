@@ -263,7 +263,7 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                 + "a." + DBHelper.TABLE_COLUMN_STATE + ","
                 + "a." + DBHelper.TABLE_COLUMN_MADEBY + ","
                 */
-                + "a." + DBHelper.TABLE_COLUMN_RID + ","
+                + "a." + DBHelper.TABLE_COLUMN_IRID + ","
                 + "a." + DBHelper.TABLE_COLUMN_NOTE + ","
                 + "b." + DBHelper.TABLE_COLUMN_NAME;
 

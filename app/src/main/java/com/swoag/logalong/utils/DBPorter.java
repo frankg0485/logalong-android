@@ -2,15 +2,6 @@ package com.swoag.logalong.utils;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.database.Cursor;
-import android.text.TextUtils;
-
-import com.swoag.logalong.LApp;
-import com.swoag.logalong.MainService;
-import com.swoag.logalong.entities.LAccount;
-import com.swoag.logalong.entities.LCategory;
-import com.swoag.logalong.entities.LTag;
-import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.entities.LVendor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,7 +12,6 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 
 public class DBPorter {
     private static final String TAG = DBPorter.class.getSimpleName();
@@ -30,6 +20,7 @@ public class DBPorter {
     }
 
     private static String exportTransactionItem(Cursor cursor) {
+        /*
         DBAccount dbAccount = DBAccount.getInstance();
         LAccount lAccount = dbAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT)));
         LAccount lAccount2 = dbAccount.getById(cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2)));
@@ -72,9 +63,12 @@ public class DBPorter {
                 + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID)) + ","
                 + cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_NOTE));
         return row;
+        */
+        return null;
     }
 
     private static void exportSchedules(MyCSV myCSV) {
+        /*
         myCSV.add("---");
         Cursor cursor = DBScheduledTransaction.getInstance().getCursor(null);
 
@@ -91,9 +85,11 @@ public class DBPorter {
         } while (cursor.moveToNext());
 
         cursor.close();
+        */
     }
 
     public static boolean exportDb(int dbVersion) {
+        /*
         if (!LStorage.isExternalStorageWritable()) return false;
 
         try {
@@ -145,7 +141,7 @@ public class DBPorter {
         } catch (Exception e) {
             LLog.e(TAG, "unable to export database version: " + dbVersion);
             return false;
-        }
+        }*/
         return true;
     }
 
@@ -209,6 +205,7 @@ public class DBPorter {
 
     public static boolean importDb(int dbVersion) {
         boolean ret = false;
+        /*
         try {
             File path = openDbDir();
             if (path == null) return false;
@@ -364,7 +361,6 @@ public class DBPorter {
 
                     LTransaction trans = new LTransaction(0, amount, type, categoryId, vendorId, tagId,
                             accountId, account2Id, madeby, timestamp, timestampLast, note);
-/*
                     if (schedule) {
                         long sid = DBScheduledTransaction.getIdByRid(rid);
                         trans.setId(sid);
@@ -386,7 +382,6 @@ public class DBPorter {
                             DBTransaction.getInstance().add(trans);
                         }
                     }
-*/
                 }
             }
             //if (schedule) DBScheduledTransaction.scanAlarm();
@@ -413,6 +408,7 @@ public class DBPorter {
             } catch (Exception e) {
             }
         }
+        */
 
         return ret;
     }

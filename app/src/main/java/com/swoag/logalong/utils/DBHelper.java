@@ -1,5 +1,5 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2017 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,7 +12,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final int STATE_DELETED = 20;
 
     public static final String DATABASE_NAME = "LogAlongDB";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 2;
 
     public static final String TABLE_COLUMN_ACCOUNT = "Account";
     public static final String TABLE_COLUMN_ACCOUNT2 = "Account2";
@@ -33,6 +33,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String TABLE_COLUMN_REPEAT_COUNT = "RptCount";
     public static final String TABLE_COLUMN_RID = "Rid";
     public static final String TABLE_COLUMN_GID = "Gid";
+    public static final String TABLE_COLUMN_IRID = "IRid";
     public static final String TABLE_COLUMN_SCHEDULE_TIMESTAMP = "SchTimeStmp";
     public static final String TABLE_COLUMN_SHOW_BALANCE = "ShowBalance";
     public static final String TABLE_COLUMN_STATE = "State";
@@ -67,18 +68,20 @@ public class DBHelper extends SQLiteOpenHelper {
                     TABLE_COLUMN_TYPE + " INTEGER," +
                     TABLE_COLUMN_STATE + " INTEGER," +
                     TABLE_COLUMN_MADEBY + " INTEGER," +
-                    TABLE_COLUMN_RID + " INTEGER," +
+                    TABLE_COLUMN_RID + " TEXT," +
                     TABLE_COLUMN_NOTE + " TEXT," +
                     TABLE_COLUMN_ICON + " BLOB," +
                     TABLE_COLUMN_CHANGEBY + " INTEGER," +
                     TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER," +
+                    TABLE_COLUMN_IRID + " INTEGER," +
                     TABLE_COLUMN_GID + " INTEGER";
 
     //transaction table: VENDOR carries to_account for transfer.
     private static final String CREATE_TABLE_TRANSACTION = "CREATE TABLE " + TABLE_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," + TABLE_TRANSACTION_ROWS + ");";
 
-    private static final String CREATE_TABLE_SCHEDULED_TRANSACTION = "CREATE TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
+    private static final String CREATE_TABLE_SCHEDULED_TRANSACTION = "CREATE TABLE " +
+            TABLE_SCHEDULED_TRANSACTION_NAME +
             "( _id integer primary key autoincrement," +
             TABLE_COLUMN_REPEAT_INTERVAL + " INTEGER," +
             TABLE_COLUMN_REPEAT_UNIT + " INTEGER," +
@@ -176,7 +179,7 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         //LLog.d(TAG, "upgrading Database from/to version: " + oldVersion + "/" + newVersion);
-        /*if (oldVersion == 1 && newVersion == 2)*/ {
+        if (oldVersion == 1 && newVersion == 2) {
             String sql = "ALTER TABLE " + TABLE_ACCOUNT_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
                     " ADD COLUMN " + TABLE_COLUMN_SHOW_BALANCE + " INTEGER;" +
@@ -187,11 +190,15 @@ public class DBHelper extends SQLiteOpenHelper {
                     "ALTER TABLE " + TABLE_VENDOR_NAME +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_TRANSACTION_NAME +
+                    " ADD COLUMN " + TABLE_COLUMN_IRID + " INTEGER;" +
                     " ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER;" +
-                    " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE +  " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER;" +
                     " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     "ALTER TABLE " + TABLE_SCHEDULED_TRANSACTION_NAME +
-                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_IRID + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_CHANGEBY + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_TIMESTAMP_CREATE + " INTEGER;" +
+                    " ADD COLUMN " + TABLE_COLUMN_GID + " INTEGER; " +
                     " ADD COLUMN " + TABLE_COLUMN_ENABLED + "INTEGER";
             db.execSQL(sql);
         }

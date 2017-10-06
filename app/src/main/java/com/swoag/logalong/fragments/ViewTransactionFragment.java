@@ -24,8 +24,8 @@ import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
-import com.swoag.logalong.utils.DBAccess;
 import com.swoag.logalong.utils.DBAccount;
+import com.swoag.logalong.utils.DBAccountBalance;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBLoaderHelper;
@@ -240,9 +240,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 if (0 == lastTransferId) {
                     sectionSummary.addVisible(indexId, true);
                     lastTransferId = indexId;
-                    lastTransferRid = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                    lastTransferRid = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_IRID));
                 } else {
-                    long rid = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_RID));
+                    long rid = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_IRID));
                     if (rid == lastTransferRid) {
                         if (type == LTransaction.TRANSACTION_TYPE_TRANSFER) {
                             sectionSummary.addVisible(lastTransferId, false);
@@ -896,7 +896,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private void getBalance(LAccountSummary summary, Cursor data) {
         if (data == null || data.getCount() < 1) return;
 
-        DBAccess.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll() ? null : LPreferences
+        DBAccountBalance.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll() ? null : LPreferences
                 .getSearchAccounts());
         if (!LPreferences.getSearchAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
