@@ -383,9 +383,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case LBroadcastReceiver.ACTION_POST_JOURNAL:
                     boolean moreJournal = true;
                     int journalId = intent.getIntExtra("journalId", 0);
+                    LLog.d(TAG, "post journal: " + journalId + " status: " + ret);
+
                     if (LProtocol.RSPS_OK == ret || LProtocol.RSPS_MORE == ret) {
                         short jrqstId = intent.getShortExtra("jrqstId", (short) 0);
                         short jret = intent.getShortExtra("jret", (short) 0);
+                        LLog.d(TAG, "post journal rsps ok, rqstId: " + jrqstId + " status: " + jret);
                         if (LProtocol.RSPS_OK != jret) {
                             LLog.w(TAG, "journal request " + jrqstId + " failed.");
                         } else {
@@ -683,6 +686,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_DELETE_RECORD:
                                 case LProtocol.JRQST_UPDATE_SCHEDULE:
                                 case LProtocol.JRQST_DELETE_SCHEDULE:
+                                case LProtocol.JRQST_CONFIRM_ACCOUNT_SHARE:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);

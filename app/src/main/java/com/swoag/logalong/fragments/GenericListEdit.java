@@ -365,6 +365,45 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             updateCursor();
         }
 
+        private void do_account_share_update(long accountId, HashSet<Long> selections, HashSet<Long> origSelections) {
+            DBAccount dbAccount = DBAccount.getInstance();
+
+            LAccount account = dbAccount.getById(accountId);
+            if (selections.isEmpty()) {
+                if (account.getOwner() == LPreferences.getUserIdNum()) {
+                    //removing everyone from shared group
+                    unshareAllFromAccount(accountId);
+                } else {
+                    //unshare myself
+                    unshareMyselfFromAccount(accountId);
+                }
+                return;
+            }
+
+            LJournal journal = new LJournal();
+            //first update all existing users if there's any removal
+            for (Long ii : origSelections) {
+                if (!selections.contains(ii)) {
+                    account.removeShareUser(ii);
+                    journal.removeUserFromAccount(ii, account.getGid());
+                }
+            }
+
+            //now request for new share
+            for (Long ii : selections) {
+                boolean newShare = false;
+                if (!origSelections.contains(ii)) newShare = true;
+                else if (account.getShareUserState(ii) > LAccount.ACCOUNT_SHARE_PERMISSION_OWNER)
+                    newShare = true;
+                if (newShare) {
+                    // new share request: new memeber is added to group
+                    account.addShareUser(ii, LAccount.ACCOUNT_SHARE_INVITED);
+                    journal.addUserToAccount(ii, account.getGid());
+                }
+            }
+            dbAccount.update(account);
+        }
+
         @Override
         public void onShareAccountDialogExit(boolean ok, boolean applyToAllAccounts, long accountId,
                                              HashSet<Long> selections, HashSet<Long> origSelections) {
@@ -375,52 +414,14 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             if (applyToAllAccounts) {
                 set = dbAccount.getAllActiveIds();
                 for (long id : set) {
-                    if (dbAccount.getById(id).getOwner() != LPreferences.getUserIdNum()) {
-                        set.remove(id);
+                    if (dbAccount.getById(id).getOwner() == LPreferences.getUserIdNum()) {
+                        LAccount account = dbAccount.getById(id);
+                        HashSet<Long> selectedUsers = getAccountCurrentShares(account);
+                        do_account_share_update(id, selections, selectedUsers);
                     }
                 }
             } else {
-                set = new HashSet<Long>();
-                set.add(accountId);
-            }
-
-            LAccount account = dbAccount.getById(accountId);
-            if (selections.isEmpty()) {
-                if (account.getOwner() == LPreferences.getUserIdNum()) {
-                    //removing everyone from shared group
-                    for (long id : set) unshareAllFromAccount(id);
-                } else {
-                    //unshare myself
-                    for (long id : set) unshareMyselfFromAccount(id);
-                }
-                return;
-            }
-
-            LJournal journal = new LJournal();
-            for (long aid : set) {
-                account = dbAccount.getById(aid);
-
-                //first update all existing users if there's any removal
-                for (Long ii : origSelections) {
-                    if (!selections.contains(ii)) {
-                        account.removeShareUser(ii);
-                        journal.removeUserFromAccount(ii, account.getGid());
-                    }
-                }
-
-                //now request for new share
-                for (Long ii : selections) {
-                    boolean newShare = false;
-                    if (!origSelections.contains(ii)) newShare = true;
-                    else if (account.getShareUserState(ii) > LAccount.ACCOUNT_SHARE_PERMISSION_OWNER)
-                        newShare = true;
-                    if (newShare) {
-                        // new share request: new memeber is added to group
-                        account.addShareUser(ii, LAccount.ACCOUNT_SHARE_INVITED);
-                        journal.addUserToAccount(ii, account.getGid());
-                    }
-                }
-                dbAccount.update(account);
+                do_account_share_update(accountId, selections, origSelections);
             }
             adapter.swapCursor(getMyCursor());
             adapter.notifyDataSetChanged();
