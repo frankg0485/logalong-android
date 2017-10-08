@@ -42,8 +42,15 @@ public class DBAccount extends DBGeneric<LAccount> {
         account.setGid(cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_GID)));
         account.setSharedIdsString(cur.getString(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHARE)));
         account.setTimeStampLast(cur.getLong(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE)));
-        account.setShowBalance((0 == cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE))) ?
-                false : true);
+        boolean show;
+        if (cur.isNull(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE)))
+            show = true;
+        else if (0 == cur.getInt(cur.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_SHOW_BALANCE)))
+            show = false;
+        else
+            show = true;
+
+        account.setShowBalance(show);
         account.setId(cur.getLong(0));
         return account;
     }

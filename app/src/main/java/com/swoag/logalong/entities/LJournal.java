@@ -11,6 +11,7 @@ import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
+import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBScheduledTransaction;
 import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
@@ -156,6 +157,8 @@ public class LJournal {
 
         @Override
         boolean add_data(LBuffer jdata, LTransactionDetails details) {
+            if (LTransaction.TRANSACTION_TYPE_TRANSFER_COPY == details.getTransaction().getType()) return false;
+
             jdata.putLongAutoInc(details.getAccount().getGid());
             jdata.putLongAutoInc(details.getAccount2().getGid());
             jdata.putLongAutoInc(details.getCategory().getGid());
@@ -164,6 +167,16 @@ public class LJournal {
             jdata.putByteAutoInc((byte) details.getTransaction().getType());
             jdata.putDoubleAutoInc(details.getTransaction().getValue());
             jdata.putLongAutoInc(details.getTransaction().getChangeBy());
+            if (0 == details.getTransaction().getRid()) {
+                //assign new record rid
+                details.getTransaction().generateRid();
+                DBTransaction.getInstance().updateColumnById(details.getId(), DBHelper.TABLE_COLUMN_IRID, details
+                        .getTransaction().getRid());
+
+                if (LTransaction.TRANSACTION_TYPE_TRANSFER == details.getTransaction().getType()) {
+                    DBTransaction.getInstance().updateTransferCopyRid(details.getTransaction());
+                }
+            }
             jdata.putLongAutoInc(details.getTransaction().getRid());
             jdata.putLongAutoInc(details.getTransaction().getTimeStamp());
             jdata.putLongAutoInc(details.getTransaction().getTimeStampCreate());
@@ -213,6 +226,11 @@ public class LJournal {
             jdata.putByteAutoInc((byte) lScheduledTransaction.getType());
             jdata.putDoubleAutoInc(lScheduledTransaction.getValue());
             jdata.putLongAutoInc(lScheduledTransaction.getChangeBy());
+            if (0 == lScheduledTransaction.getRid()) {
+                lScheduledTransaction.generateRid();
+                DBScheduledTransaction.getInstance().updateColumnById(lScheduledTransaction.getId(), DBHelper
+                        .TABLE_COLUMN_IRID, lScheduledTransaction.getRid());
+            }
             jdata.putLongAutoInc(lScheduledTransaction.getRid());
             jdata.putLongAutoInc(lScheduledTransaction.getTimeStamp());
             jdata.putLongAutoInc(lScheduledTransaction.getTimeStampCreate());
@@ -227,10 +245,10 @@ public class LJournal {
             }
 
             jdata.putLongAutoInc(lScheduledTransaction.getNextTime());
-            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatInterval());
-            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatUnit());
-            jdata.putByteAutoInc((byte)lScheduledTransaction.getRepeatCount());
-            jdata.putByteAutoInc((byte)(lScheduledTransaction.isEnabled()? 1: 0));
+            jdata.putByteAutoInc((byte) lScheduledTransaction.getRepeatInterval());
+            jdata.putByteAutoInc((byte) lScheduledTransaction.getRepeatUnit());
+            jdata.putByteAutoInc((byte) lScheduledTransaction.getRepeatCount());
+            jdata.putByteAutoInc((byte) (lScheduledTransaction.isEnabled() ? 1 : 0));
 
             jdata.setLen(jdata.getBufOffset());
             return true;

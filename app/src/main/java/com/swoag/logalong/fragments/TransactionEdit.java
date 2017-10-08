@@ -698,8 +698,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         if (!bScheduleMode) {
             String note = noteET.getText().toString();
             if (!TextUtils.isEmpty(note)) {
-                if (note.length() > 200) {
-                    note = note.substring(0, 200);
+                if (note.length() > LTransaction.MAX_NOTE_LENGTH) {
+                    note = note.substring(0, LTransaction.MAX_NOTE_LENGTH);
                 }
             }
             item.setNote(note);

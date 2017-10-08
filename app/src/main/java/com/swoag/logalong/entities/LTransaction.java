@@ -12,6 +12,7 @@ public class LTransaction extends LDbBase {
     public static final int TRANSACTION_TYPE_INCOME = 20;
     public static final int TRANSACTION_TYPE_TRANSFER = 30;
     public static final int TRANSACTION_TYPE_TRANSFER_COPY = 31;
+    public static final int MAX_NOTE_LENGTH = 63;
 
     private static CRC32 crc32 = new CRC32();
     private static long crc32(byte[] buf) {

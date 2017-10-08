@@ -85,6 +85,9 @@ public class MainActivity extends LFragmentActivity
         LLog.i(TAG, "VERSION=" + BuildConfig.VERSION_NAME + " DEVICE=" + getDeviceName());
         LViewUtils.screenInit();
 
+        //DEBUG: invalidate user
+        //LPreferences.setUserId("");
+
         handler = new Handler();
         confirmAccountShare = new Runnable() {
             @Override

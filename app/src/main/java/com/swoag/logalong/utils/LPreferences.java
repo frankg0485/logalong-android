@@ -19,7 +19,7 @@ public class LPreferences {
     private static final String FIRST_TRANSACTION_TIMESTAMP = "FirstDbTrans";
     private static final String LAST_TRANSACTION_TIMESTAMP = "LastDbTrans";
     private static final String LOGIN_ERROR = "LoginError";
-    private static final String ONE_TIME_INIT = "OneTimeInit";
+    private static final String ONE_TIME_INIT = "OneTimeInit2";
     private static final String QUERY_ORDER = "QueryOrder";
     private static final String SEARCH_ALLTIME = "SearchAllTime";
     private static final String SEARCH_ALLTIME_FROM = "SearchAllTimeFrom";

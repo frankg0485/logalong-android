@@ -220,6 +220,27 @@ public class DBTransaction extends DBGeneric<LTransaction> {
         return true;
     }
 
+    public boolean updateTransferCopyRid(LTransaction transaction) {
+        boolean ret = true;
+        if (transaction.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER) return false;
+
+        try {
+            ContentValues cv = new ContentValues();
+            cv.put(DBHelper.TABLE_COLUMN_IRID, transaction.getRid());
+            LApp.ctx.getContentResolver().update(getUri(), cv,
+                    DBHelper.TABLE_COLUMN_ACCOUNT + "=? AND " +
+                    DBHelper.TABLE_COLUMN_ACCOUNT2 + "=? AND " +
+                    DBHelper.TABLE_COLUMN_AMOUNT + "=? AND " +
+                    DBHelper.TABLE_COLUMN_TIMESTAMP + "=?",
+                    new String[]{"" + transaction.getAccount2(), "" + transaction.getAccount(),
+                            "" + transaction.getValue(), "" + transaction.getTimeStamp()});
+        } catch (Exception e) {
+            ret = false;
+            LLog.w(TAG, "unable to update transfer copy RID");
+        }
+        return ret;
+    }
+
     public void deleteByAccount(long accountId) {
         ContentValues cv = new ContentValues();
         cv.put(DBHelper.TABLE_COLUMN_STATE, DBHelper.STATE_DELETED);
