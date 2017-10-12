@@ -1030,12 +1030,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 dbAccount = DBAccount.getInstance();
                                 account = dbAccount.getByGid(aid);
                                 if (null != account) {
-                                    account.removeShareUser(uid);
-                                    dbAccount.update(account);
+                                    //only remove if share state is INVITED, in other words, do not
+                                    //unshare a previously confirmed share here
+                                    if (LAccount.ACCOUNT_SHARE_INVITED == account.getShareUserState(uid)) {
+                                        account.removeShareUser(uid);
+                                        dbAccount.update(account);
 
-                                    uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                                            .ACTION_UI_UPDATE_ACCOUNT));
-                                    LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                        uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                                .ACTION_UI_UPDATE_ACCOUNT));
+                                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+                                    }
                                 }
                                 break;
 
