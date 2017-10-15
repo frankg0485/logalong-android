@@ -593,6 +593,10 @@ public class LJournal {
         return postById(aid, LProtocol.JRQST_GET_ACCOUNT_RECORDS);
     }
 
+    public boolean getAccountUsers(long aid) {
+        return postById(aid, LProtocol.JRQST_GET_ACCOUNT_USERS);
+    }
+
     public boolean getRecord(long id) {
         return postById(id, LProtocol.JRQST_GET_RECORD);
     }

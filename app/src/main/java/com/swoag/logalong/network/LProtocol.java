@@ -356,6 +356,14 @@ public class LProtocol {
                                         rspsIntent.putExtra("name", name);
                                     }
                                     break;
+                                case JRQST_GET_ACCOUNT_USERS:
+                                    if (RSPS_OK == jret) {
+                                        rspsIntent.putExtra("aid", pkt.getLongAutoInc());
+                                        short length = pkt.getShortAutoInc();
+                                        String accountUsers = pkt.getStringAutoInc(length);
+                                        rspsIntent.putExtra("users", accountUsers);
+                                    }
+                                    break;
                                 case JRQST_GET_CATEGORIES:
                                     if (RSPS_OK == jret) {
                                         rspsIntent.putExtra("gid", pkt.getLongAutoInc());

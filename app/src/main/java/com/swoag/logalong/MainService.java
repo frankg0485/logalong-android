@@ -508,7 +508,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         account.setName(name);
                                         dbAccount.add(account);
                                     }
+                                    journal.getAccountUsers(gid);
                                     break;
+                                case LProtocol.JRQST_GET_ACCOUNT_USERS:
+                                    gid = intent.getLongExtra("aid", 0L);
+                                    dbAccount = DBAccount.getInstance();
+                                    account = dbAccount.getByGid(gid);
+                                    if (null != account) {
+                                        account.setSharedIdsString(intent.getStringExtra("users"));
+                                        dbAccount.update(account);
+                                    } else {
+                                        LLog.w(TAG, "account: "  + gid + " no longer exists");
+                                    }
+                                    break;
+
                                 case LProtocol.JRQST_GET_CATEGORIES:
                                     gid = intent.getLongExtra("gid", 0L);
                                     name = intent.getStringExtra("name");
@@ -687,6 +700,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_UPDATE_SCHEDULE:
                                 case LProtocol.JRQST_DELETE_SCHEDULE:
                                 case LProtocol.JRQST_CONFIRM_ACCOUNT_SHARE:
+                                case LProtocol.JRQST_ADD_USER_TO_ACCOUNT:
                                     break;
                                 default:
                                     LLog.w(TAG, "unknown journal request: " + jrqstId);
@@ -1080,7 +1094,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                             default:
                                 LLog.w(TAG, "unexpected notification id: " + nid);
-
                         }
                         server.UiPollAck(id);
                     } else {
