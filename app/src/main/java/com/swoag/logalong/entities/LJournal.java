@@ -582,7 +582,8 @@ public class LJournal {
     }
 
     public boolean getAllRecords() {
-        return post(LProtocol.JRQST_GET_RECORDS);
+        //return post(LProtocol.JRQST_GET_RECORDS);
+        return getRecords(null);
     }
 
     public boolean getAllSchedules() {
@@ -599,6 +600,21 @@ public class LJournal {
 
     public boolean getRecord(long id) {
         return postById(id, LProtocol.JRQST_GET_RECORD);
+    }
+
+    public boolean getRecords(long ids[]) {
+        data.clear();
+        data.putShortAutoInc(LProtocol.JRQST_GET_RECORDS);
+        if (null == ids) {
+            data.putShortAutoInc((short) 0); // get all records;
+        } else {
+            data.putShortAutoInc((short) ids.length);
+            for (long id : ids) {
+                data.putLongAutoInc(id);
+            }
+        }
+        data.setLen(data.getBufOffset());
+        return post();
     }
 
     public boolean addRecord(long id) {

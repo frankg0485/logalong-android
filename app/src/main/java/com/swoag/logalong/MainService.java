@@ -35,6 +35,7 @@ import com.swoag.logalong.utils.DBTag;
 import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
 import com.swoag.logalong.utils.LBroadcastReceiver;
+import com.swoag.logalong.utils.LBuffer;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LTask;
@@ -67,9 +68,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_ADD_VENDOR = 0x040;
     private static final short NOTIFICATION_UPDATE_VENDOR = 0x041;
     private static final short NOTIFICATION_DELETE_VENDOR = 0x042;
-    private static final short NOTIFICATION_ADD_RECORD = 0x050;
+    private static final short NOTIFICATION_GET_RECORD = 0x050;
     private static final short NOTIFICATION_UPDATE_RECORD = 0x051;
     private static final short NOTIFICATION_DELETE_RECORD = 0x052;
+    private static final short NOTIFICATION_GET_RECORDS = 0x053;
     private static final short NOTIFICATION_ADD_SCHEDULE = 0x060;
     private static final short NOTIFICATION_UPDATE_SCHEDULE = 0x061;
     private static final short NOTIFICATION_DELETE_SCHEDULE = 0x062;
@@ -976,7 +978,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 }
                                 break;
 
-                            case NOTIFICATION_ADD_RECORD:
+                            case NOTIFICATION_GET_RECORD:
                             case NOTIFICATION_UPDATE_RECORD:
                                 gid = intent.getLongExtra("int1", 0L);
                                 journal.getRecord(gid);
@@ -989,6 +991,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 if (null != transaction) {
                                     dbTransaction.deleteById(transaction.getId());
                                 }
+                                break;
+
+                            case NOTIFICATION_GET_RECORDS:
+                                byte[] blob = intent.getByteArrayExtra("blob");
+                                LBuffer data = new LBuffer(blob);
+                                long[] ids = new long[blob.length / Long.BYTES];
+                                for (int ii = 0; ii < ids.length; ii++) {
+                                    ids[ii] = data.getLongAutoInc();
+                                }
+                                journal.getRecords(ids);
                                 break;
 
                             case NOTIFICATION_ADD_SCHEDULE:
