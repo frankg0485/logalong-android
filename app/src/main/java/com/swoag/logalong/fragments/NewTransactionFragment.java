@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
+import com.swoag.logalong.views.LReminderDialog;
 
 import java.util.Calendar;
 
@@ -158,6 +160,11 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
                     break;
 
                 case R.id.exit:
+                    if (TextUtils.isEmpty(LPreferences.getUserId())) {
+                        new LReminderDialog(getActivity(), getActivity().getResources().getString(R.string
+                                .please_complete_your_profile)).show();
+                        break;
+                    }
                     startActivity(new Intent(getActivity(), ScheduleActivity.class));
                     break;
 

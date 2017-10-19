@@ -291,10 +291,14 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         } else {
             pickerV.setVisibility(View.GONE);
         }
+
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
         hideIME();
     }
 
     private void destroy() {
+        activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+
         viewSave = null;
         viewDiscard = null;
 
