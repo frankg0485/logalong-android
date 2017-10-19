@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.TextView;
 
 import com.swoag.logalong.adapters.LPagerAdapter;
 import com.swoag.logalong.entities.LAccount;
@@ -38,10 +39,12 @@ public class MainActivity extends LFragmentActivity
     FragmentManager fragmentManager;
     LPagerAdapter lPagerAdapter;
     LViewPager mViewPager;
+    TextView logalongTV;
 
     private BroadcastReceiver broadcastReceiver;
     private Handler handler;
     private Runnable confirmAccountShare;
+    private Runnable showBusySignal;
     private boolean shareAccountConfirmDialogOpened = false;
 
     public String getDeviceName() {
@@ -116,13 +119,31 @@ public class MainActivity extends LFragmentActivity
             }
         };
 
+
+        showBusySignal = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    logalongTV.setTextColor(getResources().getColor(R.color.base_light_green));
+                } catch (Exception e) {}
+            }
+        };
+
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
                 LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT,
-                LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED
+                LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED,
+                LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
+                LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED,
+                LBroadcastReceiver.ACTION_UI_NET_IDLE,
+                LBroadcastReceiver.ACTION_UI_NET_BUSY
         }, this);
 
         doOneTimeInit();
         setContentView(R.layout.top);
+
+        logalongTV = (TextView)findViewById(R.id.tab1);
+        if (!TextUtils.isEmpty(LPreferences.getUserId()))
+            logalongTV.setTextColor(getResources().getColor(R.color.base_orange));
 
         fragmentManager = getSupportFragmentManager();
         lPagerAdapter = new LPagerAdapter(fragmentManager);
@@ -294,6 +315,7 @@ public class MainActivity extends LFragmentActivity
             broadcastReceiver = null;
         }
         if (handler != null) {
+            handler.removeCallbacks(showBusySignal);
             handler.removeCallbacks(confirmAccountShare);
             handler = null;
         }
@@ -400,6 +422,7 @@ public class MainActivity extends LFragmentActivity
     }
 
     private LAccountShareRequest accountShareRequest;
+    private boolean isBusy;
 
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
@@ -407,6 +430,26 @@ public class MainActivity extends LFragmentActivity
             case LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT:
             case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
                 handler.post(confirmAccountShare);
+                break;
+            case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
+                handler.removeCallbacks(showBusySignal);
+                isBusy = false;
+                logalongTV.setTextColor(getResources().getColor(R.color.tab_text_color));
+                break;
+            case LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED:
+                handler.removeCallbacks(showBusySignal);
+                isBusy = false;
+                logalongTV.setTextColor(getResources().getColor(R.color.base_orange));
+                break;
+            case LBroadcastReceiver.ACTION_UI_NET_BUSY:
+                if (!isBusy) {
+                    handler.postDelayed(showBusySignal, 3000);
+                } else isBusy = true;
+                break;
+            case LBroadcastReceiver.ACTION_UI_NET_IDLE:
+                handler.removeCallbacks(showBusySignal);
+                isBusy = false;
+                logalongTV.setTextColor(getResources().getColor(R.color.tab_text_color));
                 break;
         }
     }

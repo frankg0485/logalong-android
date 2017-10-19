@@ -237,6 +237,13 @@ public class LViewUtils {
         v.startAnimation(anim);
     }
 
+    public static void smoothSetAlpha (View v, float from, float to, int duration) {
+        AlphaAnimation anim = new AlphaAnimation(from, to);
+        anim.setDuration(duration);
+        anim.setFillAfter(true);
+        v.startAnimation(anim);
+    }
+
     private static class MyAlphaAnimation extends AlphaAnimation {
         private View mView;
         private boolean mFadeOut;

@@ -36,6 +36,8 @@ public class LBroadcastReceiver {
     public static final int ACTION_UI_UPDATE_TAG = 503;
     public static final int ACTION_UI_UPDATE_VENDOR = 504;
     public static final int ACTION_UI_SHARE_ACCOUNT = 505;
+    public static final int ACTION_UI_NET_IDLE = 510;
+    public static final int ACTION_UI_NET_BUSY = 512;
 
     public static final int ACTION_REQUESTED_TO_SET_ACCOUNT_GID = 100;
     public static final int ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE = 101;

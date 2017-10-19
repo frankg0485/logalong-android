@@ -376,6 +376,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
             }
         } else {
+            if (!(action == LBroadcastReceiver.ACTION_POLL && LProtocol.RSPS_OK != ret)) {
+                Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UI_NET_BUSY));
+                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
+            }
+
             switch (action) {
                 case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
                     LLog.d(TAG, "flushing journal upon creation ...");
@@ -1115,6 +1120,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             if (LFragmentActivity.upRunning) {
                                 //server.UiUtcSync();
                                 serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+
+                                Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_UI_NET_IDLE));
+                                LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
                             } else {
                                 LLog.d(TAG, "no activity visible, shutdown now");
                                 serviceHandler.postDelayed(serviceShutdownRunnable,
