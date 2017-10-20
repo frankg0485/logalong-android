@@ -267,8 +267,12 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && (progressBar.getVisibility() == View.VISIBLE)) {
-            return true;
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (progressBar.getVisibility() == View.VISIBLE) {
+                return true;
+            } else {
+                destroy();
+            }
         }
         return super.onKeyDown(keyCode, event);
     }

@@ -17,6 +17,7 @@ import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
@@ -25,14 +26,15 @@ import com.swoag.logalong.utils.LBroadcastReceiver;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
+import com.swoag.logalong.views.LChangePassDialog;
 import com.swoag.logalong.views.LReminderDialog;
 import com.swoag.logalong.views.LShareAccountConfirmDialog;
 import com.swoag.logalong.views.LViewPager;
 
 import java.util.UUID;
 
-public class MainActivity extends LFragmentActivity
-        implements LBroadcastReceiver.BroadcastReceiverListener,
+public class MainActivity extends LFragmentActivity implements LChangePassDialog.LChangePassDialogItf,
+        LBroadcastReceiver.BroadcastReceiverListener,
         LShareAccountConfirmDialog.LShareAccountConfirmDialogItf {
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -125,11 +127,13 @@ public class MainActivity extends LFragmentActivity
             public void run() {
                 try {
                     logalongTV.setTextColor(getResources().getColor(R.color.base_light_green));
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                }
             }
         };
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_LOG_IN,
                 LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT,
                 LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED,
                 LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER,
@@ -141,7 +145,7 @@ public class MainActivity extends LFragmentActivity
         doOneTimeInit();
         setContentView(R.layout.top);
 
-        logalongTV = (TextView)findViewById(R.id.tab1);
+        logalongTV = (TextView) findViewById(R.id.tab1);
         if (!TextUtils.isEmpty(LPreferences.getUserId()))
             logalongTV.setTextColor(getResources().getColor(R.color.base_orange));
 
@@ -210,7 +214,10 @@ public class MainActivity extends LFragmentActivity
             }
         });
 
-        handler.post(confirmAccountShare);
+        passwordRequested = false;
+        if (!LPreferences.getLoginError()) {
+            handler.post(confirmAccountShare);
+        }
     }
 
     /*
@@ -285,6 +292,9 @@ public class MainActivity extends LFragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
+        if (LPreferences.getLoginError())
+            requestPassword();
+
         MainService.start(this);
     }
 
@@ -425,6 +435,23 @@ public class MainActivity extends LFragmentActivity
     private boolean isBusy;
 
     @Override
+    public void onChangePassDialogExit(boolean changed) {
+        if (!changed) finish();
+
+        passwordRequested = false;
+    }
+
+    private boolean passwordRequested;
+
+    private void requestPassword() {
+        if (!passwordRequested) {
+            passwordRequested = true;
+            LChangePassDialog changePassDialog = new LChangePassDialog(this, this);
+            changePassDialog.show();
+        }
+    }
+
+    @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
             case LBroadcastReceiver.ACTION_UI_SHARE_ACCOUNT:
@@ -450,6 +477,11 @@ public class MainActivity extends LFragmentActivity
                 handler.removeCallbacks(showBusySignal);
                 isBusy = false;
                 logalongTV.setTextColor(getResources().getColor(R.color.tab_text_color));
+                break;
+            case LBroadcastReceiver.ACTION_LOG_IN:
+                if (LProtocol.RSPS_OK != ret) {
+                    requestPassword();
+                }
                 break;
         }
     }

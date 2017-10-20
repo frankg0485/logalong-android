@@ -370,9 +370,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
 
                 case LBroadcastReceiver.ACTION_LOG_IN:
-                    loggedIn = true;
-                    //journal posting and polling start only upon successful login
-                    serviceHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
+                    if (LProtocol.RSPS_OK == ret) {
+                        loggedIn = true;
+                        //journal posting and polling start only upon successful login
+                        serviceHandler.postDelayed(pollRunnable, 1000); //poll shortly after login
+                    }
                     break;
             }
         } else {

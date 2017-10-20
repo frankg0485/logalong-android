@@ -40,6 +40,7 @@ public class LPreferences {
     private static final String USER_PASS = "MyUserPass";
     private static final String DEVICE_ID = "MyDeviceId";
     private static final String USER_NAME = "MyUserName";
+    private static final String USER_NUMBER = "MyUserNumber";
     private static final String USER_ID_NUM = "UserIdNum";
     private static final String USER_LOGIN_NUM = "UserLoginNum";
     private static final String UTC_DELTA = "UtcDelta";
@@ -138,6 +139,14 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME, userName);
     }
 
+    public static String getUserNumber() {
+        return getPreference(LApp.ctx, USER_NUMBER, "");
+    }
+
+    public static void setUserNumber(String userNumber) {
+        savePreference(LApp.ctx, USER_NUMBER, userNumber);
+    }
+
     public static String getUserId() {
         return getPreference(LApp.ctx, USER_ID, "");
     }
@@ -169,6 +178,7 @@ public class LPreferences {
     public static void setShareUserId(long gid, String name) {
         savePreference(LApp.ctx, USER_ID + "." + gid, name);
     }
+
     public static String getShareUserName(long gid) {
         return getPreference(LApp.ctx, USER_NAME + "." + gid, "");
     }
@@ -212,10 +222,14 @@ public class LPreferences {
         for (int ii = 0; ii < shares; ii++) {
             if (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".state", 0) == 1) {
                 if ((getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userId", 0L) == request.getUserId())
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userName", "").contentEquals(request.getUserName()))
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userFullName", "").contentEquals(request.getUserFullName()))
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountName", "").contentEquals(request.getAccountName()))
-                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0L) == request.getAccountGid())) {
+                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userName", "").contentEquals
+                        (request.getUserName()))
+                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".userFullName", "").contentEquals
+                        (request.getUserFullName()))
+                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountName", "").contentEquals
+                        (request.getAccountName()))
+                        && (getPreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".accountGid", 0L) == request
+                        .getAccountGid())) {
                     savePreference(LApp.ctx, SHARE_ACCOUNT_REQUEST + ii + ".state", 0);
                 }
             }

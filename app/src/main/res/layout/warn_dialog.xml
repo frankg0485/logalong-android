@@ -117,6 +117,7 @@
                         android:id="@+id/buttons"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dialog_btn_height"
+                        android:layout_marginBottom="1dp"
                         android:layout_marginLeft="1dp"
                         android:layout_marginRight="1dp"
                         android:layout_marginTop="20dp"
@@ -126,7 +127,7 @@
                             android:id="@+id/cancelDialog"
                             style="@style/dialogButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_marginRight="1dp"
                             android:layout_weight="1"
                             android:text="@android:string/cancel"/>
@@ -135,7 +136,7 @@
                             android:id="@+id/confirmDialog"
                             style="@style/dialogButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:text="@android:string/ok"/>
                     </LinearLayout>

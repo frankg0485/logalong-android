@@ -81,14 +81,16 @@
                         android:layout_height="@dimen/dialog_btn_height"
                         android:layout_marginLeft="1dp"
                         android:layout_marginRight="1dp"
+                        android:gravity="right"
+                        android:weightSum="1"
                         android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/confirmDialog"
                             style="@style/dialogButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:layout_height="match_parent"
+                            android:layout_weight="0.5"
                             android:text="@android:string/ok"/>
                     </LinearLayout>
                 </LinearLayout>

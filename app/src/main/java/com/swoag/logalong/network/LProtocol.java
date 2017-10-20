@@ -56,7 +56,7 @@ public class LProtocol {
     public static final short RSPS_OK = (short) 0x0010;
     public static final short RSPS_MORE = (short) 0x005a;
     public static final short RSPS_USER_NOT_FOUND = (short) 0xf000;
-    public static final short RSPS_WRONG_PASSWORD = (short) 0xf0001;
+    public static final short RSPS_WRONG_PASSWORD = (short) 0xf001;
     public static final short RSPS_ACCOUNT_NOT_FOUND = (short) 0xf010;
     public static final short RSPS_ERROR = (short) 0xffff;
 
@@ -268,15 +268,14 @@ public class LProtocol {
                             synchronized (stateLock) {
                                 state = STATE_LOGGED_IN;
                             }
-
-                            rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
-                                    .ACTION_LOG_IN));
-                            rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
-                            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         } else {
                             //login error, remember to force user to login
                             LPreferences.setLoginError(true);
                         }
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_LOG_IN));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
                     default:

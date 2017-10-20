@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clickable="true"
-    android:orientation="vertical">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:clickable="true"
+              android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/userIdView"
@@ -22,7 +22,7 @@
             android:gravity="center_vertical"
             android:text="@string/user_id"
             android:textColor="@color/gray_text_color"
-            android:textSize="16sp" />
+            android:textSize="16sp"/>
 
         <EditText
             android:id="@+id/userId"
@@ -38,14 +38,14 @@
             android:textColor="@color/base_text_color"
             android:textColorHint="#ddd"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleInverse"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:visibility="gone" />
+            android:visibility="gone"/>
 
         <ImageView
             android:id="@+id/checkUserIdAvailability"
@@ -53,7 +53,7 @@
             android:layout_height="match_parent"
             android:paddingBottom="16dp"
             android:paddingTop="16dp"
-            android:src="@drawable/ic_action_search" />
+            android:src="@drawable/ic_action_search"/>
 
         <ImageView
             android:id="@+id/changePassOption"
@@ -62,7 +62,7 @@
             android:paddingBottom="15dp"
             android:paddingLeft="15dp"
             android:paddingTop="15dp"
-            android:src="@drawable/ic_action_overflow" />
+            android:src="@drawable/ic_action_overflow"/>
 
         <ImageView
             android:id="@+id/userIdOk"
@@ -70,7 +70,7 @@
             android:layout_height="@dimen/list_item_height"
             android:paddingBottom="15dp"
             android:paddingTop="15dp"
-            android:src="@drawable/ic_action_accept" />
+            android:src="@drawable/ic_action_accept"/>
 
     </LinearLayout>
 
@@ -91,7 +91,7 @@
             android:gravity="center_vertical"
             android:text="@string/password"
             android:textColor="@color/gray_text_color"
-            android:textSize="16sp" />
+            android:textSize="16sp"/>
 
         <EditText
             android:id="@+id/userPass"
@@ -107,7 +107,7 @@
             android:maxLines="1"
             android:textColor="@color/base_text_color"
             android:textColorHint="#ddd"
-            android:textSize="18sp" />
+            android:textSize="18sp"/>
 
         <ImageView
             android:id="@+id/userPassOk"
@@ -115,7 +115,7 @@
             android:layout_height="@dimen/list_item_height"
             android:paddingBottom="15dp"
             android:paddingTop="15dp"
-            android:src="@drawable/ic_action_accept" />
+            android:src="@drawable/ic_action_accept"/>
 
     </LinearLayout>
 
@@ -133,7 +133,7 @@
             android:layout_height="wrap_content"
             android:button="@drawable/btn_check_holo_light"
             android:text="@string/show_password"
-            android:textColor="@color/light_gray_text_color" />
+            android:textColor="@color/light_gray_text_color"/>
     </LinearLayout>
 
     <LinearLayout
@@ -153,7 +153,7 @@
             android:gravity="center_vertical"
             android:text="@string/user_name"
             android:textColor="@color/gray_text_color"
-            android:textSize="16sp" />
+            android:textSize="16sp"/>
 
         <EditText
             android:id="@+id/userName"
@@ -169,9 +169,60 @@
             android:textColor="@color/base_text_color"
             android:textColorHint="#ddd"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
     </LinearLayout>
 
+    <!--
+    <LinearLayout
+        android:id="@+id/userNumberView"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="1dp"
+        android:background="@color/row_released_color"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="25dp">
+
+        <TextView
+            android:layout_width="90dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:text="@string/user_number"
+            android:textColor="@color/gray_text_color"
+            android:textSize="16sp"/>
+
+        <EditText
+            android:id="@+id/userNumber"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:digits="1234567890"
+            android:ellipsize="end"
+            android:gravity="center_vertical"
+            android:hint="@string/hint_user_number"
+            android:imeOptions="flagNoExtractUi"
+            android:inputType="phone"
+            android:maxLines="1"
+            android:textColor="@color/base_text_color"
+            android:textColorHint="#ddd"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/userNumberViewHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp"
+        android:text="@string/hint_user_number_full"
+        android:gravity="right"
+        android:paddingRight="20dp"
+        android:paddingTop="1dp"
+        android:textColor="#ccc"
+        android:textSize="14sp"/>
+    -->
     <TextView
         android:id="@+id/errorMsg"
         android:layout_width="match_parent"
@@ -181,13 +232,13 @@
         android:paddingRight="20dp"
         android:paddingTop="10dp"
         android:textColor="@color/red_text_color"
-        android:textSize="16sp" />
+        android:textSize="16sp"/>
 
     <View
         android:id="@+id/dummy"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"/>
 
     <RelativeLayout
         android:id="@+id/createUserView"
@@ -208,7 +259,7 @@
                 android:layout_height="wrap_content"
                 android:button="@drawable/btn_check_holo_light"
                 android:text="@string/create_new_user_id"
-                android:textColor="@color/light_gray_text_color" />
+                android:textColor="@color/light_gray_text_color"/>
 
             <RadioButton
                 android:id="@+id/loginUser"
@@ -216,7 +267,7 @@
                 android:layout_height="wrap_content"
                 android:button="@drawable/btn_check_holo_light"
                 android:text="@string/login_with_existing_user_id"
-                android:textColor="@color/light_gray_text_color" />
+                android:textColor="@color/light_gray_text_color"/>
         </RadioGroup>
     </RelativeLayout>
 </LinearLayout>

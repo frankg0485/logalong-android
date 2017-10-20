@@ -1,13 +1,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/dialog_bg_color"
-    android:gravity="center"
-    android:weightSum="100">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/dialog_bg_color"
+              android:gravity="center"
+              android:weightSum="100">
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="240dp"
+        android:layout_height="230dp"
         android:layout_weight="90"
         android:background="@drawable/dialog_row_bgd"
         android:gravity="center_horizontal"
@@ -32,7 +32,25 @@
                 android:text="@string/enter_current_password"
                 android:textColor="@color/base_text_color"
                 android:textSize="@dimen/settings_option_text_size"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/resetPass"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:padding="6dp"
+                android:text="@string/reset"
+                android:textColor="@color/base_text_color"
+                android:textSize="@dimen/settings_option_text_size"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleInverse"
+                android:layout_width="60dp"
+                android:layout_height="24dp"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
+                android:visibility="gone" />
 
             <ImageView
                 android:id="@+id/closeDialog"
@@ -45,7 +63,7 @@
                 android:layout_marginTop="2dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_action_cancel"
-                android:visibility="gone" />
+                android:visibility="gone"/>
         </LinearLayout>
 
         <LinearLayout
@@ -70,11 +88,11 @@
                     android:orientation="vertical"
                     android:paddingTop="5dp">
 
-
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
+                        android:orientation="vertical"
                         android:paddingLeft="10dp"
                         android:paddingRight="10dp">
 
@@ -97,7 +115,7 @@
                                 android:padding="10dp"
                                 android:textColor="@color/base_text_color"
                                 android:textColorHint="#aaa"
-                                android:textSize="18sp" />
+                                android:textSize="18sp"/>
                         </RelativeLayout>
                     </LinearLayout>
 
@@ -114,7 +132,7 @@
                             android:layout_height="wrap_content"
                             android:button="@drawable/btn_check_holo_light"
                             android:text="@string/show_password"
-                            android:textColor="@color/light_gray_text_color" />
+                            android:textColor="@color/light_gray_text_color"/>
                     </LinearLayout>
 
                     <TextView
@@ -124,21 +142,22 @@
                         android:paddingBottom="10dp"
                         android:paddingLeft="20dp"
                         android:paddingRight="20dp"
-                        android:paddingTop="10dp"
+                        android:paddingTop="5dp"
                         android:textColor="@color/red_text_color"
                         android:textSize="16sp"
-                        android:visibility="invisible" />
+                        android:visibility="invisible"/>
 
                     <View
                         android:id="@+id/dummy"
                         android:layout_width="wrap_content"
                         android:layout_height="0dp"
-                        android:layout_weight="1" />
+                        android:layout_weight="1"/>
 
                     <LinearLayout
                         android:id="@+id/buttons"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dialog_btn_height"
+                        android:layout_marginBottom="1dp"
                         android:layout_marginLeft="1dp"
                         android:layout_marginRight="1dp"
                         android:orientation="horizontal">
@@ -147,18 +166,18 @@
                             android:id="@+id/cancelDialog"
                             style="@style/dialogButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_marginRight="1dp"
                             android:layout_weight="1"
-                            android:text="@android:string/cancel" />
+                            android:text="@android:string/cancel"/>
 
                         <Button
                             android:id="@+id/confirmDialog"
                             style="@style/dialogButton"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:text="@android:string/ok" />
+                            android:text="@android:string/ok"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
