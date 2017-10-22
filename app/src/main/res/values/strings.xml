@@ -62,6 +62,8 @@
     <string name="new_tag">New Tag</string>
     <string name="new_user_name">New User Name</string>
     <string name="new_vendor">New Payee/Payer</string>
+    <string name="note_reset_password_email">Please follow instructions in email to reset password</string>
+    <string name="note_user_id_available">User ID available</string>
     <string name="password">Password</string>
     <string name="password_hint">password</string>
     <string name="payee">Payee</string>
@@ -138,7 +140,6 @@
     <string name="warning_unable_to_create_update_profile">Unable to create/update user profile, please try later.</string>
     <string name="warning_unshare_and_delete_account">Account and all its records will be removed.</string>
     <string name="warning_user_id_taken">User ID already taken by someone else</string>
-    <string name="warning_user_id_available">User ID available</string>
     <string name="warning_user_id_invalid">Invalid user ID</string>
     <string name="week">week</string>
     <string name="weeks">weeks</string>

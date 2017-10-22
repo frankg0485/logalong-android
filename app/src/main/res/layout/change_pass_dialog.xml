@@ -41,7 +41,8 @@
                 android:padding="6dp"
                 android:text="@string/reset"
                 android:textColor="@color/base_text_color"
-                android:textSize="@dimen/settings_option_text_size"/>
+                android:textSize="@dimen/settings_option_text_size"
+                android:visibility="gone"/>
 
             <ProgressBar
                 android:id="@+id/progressBar"
@@ -50,7 +51,7 @@
                 android:layout_height="24dp"
                 android:paddingLeft="18dp"
                 android:paddingRight="18dp"
-                android:visibility="gone" />
+                android:visibility="gone"/>
 
             <ImageView
                 android:id="@+id/closeDialog"

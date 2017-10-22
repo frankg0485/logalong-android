@@ -143,7 +143,8 @@ public class LAppServer {
                                 tried = 0;
                                 LLog.d(TAG, "network connected");
                                 Intent intent;
-                                intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_CONNECTED));
+                                intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                        .ACTION_NETWORK_CONNECTED));
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
                             } catch (Exception e) {
                                 LLog.e(TAG, "connection error: " + e.getMessage());
@@ -191,6 +192,7 @@ public class LAppServer {
     }
 
     private boolean netThreadEnabled = true;
+
     public void enable() {
         synchronized (netLock) {
             netThreadEnabled = true;
@@ -295,15 +297,15 @@ public class LAppServer {
                             //LLog.d(TAG, "waiting for response: returned");
                             int parseResult = lProtocol.parse(netRxBuf, requestCode, scrambler);
                             switch (parseResult) {
-                                case LProtocol.RESPONSE_PARSE_RESULT_DONE :
+                                case LProtocol.RESPONSE_PARSE_RESULT_DONE:
                                     netTxBufPool.putReadBuffer(buf);
                                     hasBuf = false;
                                     protocolState = SEND_REQUEST;
                                     break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_MORE2COME :
+                                case LProtocol.RESPONSE_PARSE_RESULT_MORE2COME:
                                     //continue to read more
                                     break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_ERROR :
+                                case LProtocol.RESPONSE_PARSE_RESULT_ERROR:
                                     LLog.e(TAG, "protocol broken, restart service");
                                     fail = true;
                                     break;
@@ -355,6 +357,7 @@ public class LAppServer {
 
     //all user interface calls
     private int scrambler;
+
     private int genScrambler() {
         Random rand = new Random(System.currentTimeMillis());
         int ss = 0;
@@ -384,7 +387,8 @@ public class LAppServer {
 
     public void UiInitScrambler() {
         scrambler = genScrambler();
-        LTransport.send_rqst(this, LProtocol.RQST_SCRAMBLER_SEED, scrambler, (short)BuildConfig.VERSION_CODE, (short)1, 0);
+        LTransport.send_rqst(this, LProtocol.RQST_SCRAMBLER_SEED, scrambler, (short) BuildConfig.VERSION_CODE,
+                (short) 1, 0);
     }
 
     public boolean UiPing() {
@@ -427,6 +431,13 @@ public class LAppServer {
         return LTransport.send_rqst(this, LProtocol.RQST_LOG_IN, strings, scrambler);
     }
 
+    public boolean UiResetPassword(String name, String email) {
+        List<String> strings = new ArrayList<>();
+        strings.add(name);
+        strings.add(email);
+        return LTransport.send_rqst(this, LProtocol.RQST_RESET_PASSWORD, strings, scrambler);
+    }
+
     public boolean UiPoll() {
         return LTransport.send_rqst(this, LProtocol.RQST_POLL, scrambler);
     }
@@ -446,7 +457,8 @@ public class LAppServer {
         short maxPayloadLen = LProtocol.PACKET_MAX_PAYLOAD_LEN - 2 - 4 - 4 - 2;
         //DATA_LENGTH = PAYLOAD_LENGTH - REQUEST_CODE - USER_ID - JOURNAL_ID - DATA_LENGTH_FIELD
         if (data.length <= maxPayloadLen) {
-            return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, (short)data.length, data, 0, (short)data.length, scrambler);
+            return LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, (short)data.length,
+            data, 0, (short)data.length, scrambler);
         } else {
             //jumbbo journal, split the transmit
             int offset = 0;
@@ -455,7 +467,8 @@ public class LAppServer {
             int totalBytes = data.length;
 
             do {
-                if (!LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, length, data, offset, bytes, scrambler)) return false;
+                if (!LTransport.send_rqst(this, LProtocol.RQST_POST_JOURNAL, userId, journalId, length, data, offset,
+                 bytes, scrambler)) return false;
 
                 offset += bytes;
                 totalBytes -= bytes;

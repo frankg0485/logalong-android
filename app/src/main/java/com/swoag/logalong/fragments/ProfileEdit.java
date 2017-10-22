@@ -410,8 +410,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 case R.id.userIdOk:
                 case R.id.userPassOk:
                 case R.id.dummy:
-                //case R.id.userNumberView:
-                //case R.id.userNumberViewHint:
+                    //case R.id.userNumberView:
+                    //case R.id.userNumberViewHint:
                 case R.id.nameView:
                 case R.id.passView:
                     hideIME();
@@ -452,7 +452,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     private void displayMsg(boolean error, String msg) {
         checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
         errorMsgV.setTextColor(error ? activity.getResources().getColor(R.color.red_text_color) :
-                activity.getResources().getColor(R.color.base_green));
+                activity.getResources().getColor(R.color.base_text_color));
         errorMsgV.setText(msg);
         errorMsgV.setVisibility(View.VISIBLE);
     }
@@ -576,7 +576,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 }
                 if (newUserBtn.isChecked()) {
                     if (ret != LProtocol.RSPS_OK) {
-                        displayMsg(false, activity.getResources().getString(R.string.warning_user_id_available));
+                        displayMsg(false, activity.getResources().getString(R.string.note_user_id_available));
                     } else {
                         LViewUtils.setAlpha(saveV, 0.5f);
                         saveV.setEnabled(false);

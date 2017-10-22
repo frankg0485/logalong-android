@@ -146,7 +146,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
     private void displayMsg(boolean error, String msg) {
         errorMsgV.setTextColor(error ? context.getResources().getColor(R.color.red_text_color) :
-                context.getResources().getColor(R.color.base_black_text_color));
+                context.getResources().getColor(R.color.base_text_color));
         errorMsgV.setText(msg);
         errorMsgV.setVisibility(View.VISIBLE);
 
@@ -173,7 +173,8 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             case UPDATE_USER:
                 if (LAppServer.getInstance().UiIsLoggedIn()) {
                     requestedOnce = true;
-                    LAppServer.getInstance().UiUpdateUserProfile(LPreferences.getUserId(), LPreferences.getUserPass(), userPass, userName);
+                    LAppServer.getInstance().UiUpdateUserProfile(LPreferences.getUserId(), LPreferences.getUserPass()
+                            , userPass, userName);
                 }
                 break;
         }
@@ -213,7 +214,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             case LBroadcastReceiver.ACTION_CREATE_USER:
                 if (ret == LProtocol.RSPS_OK) {
                     success = true;
-                    displayMsg(false, context.getString(R.string.user_id) + ": " + userId +"\n"
+                    displayMsg(false, context.getString(R.string.user_id) + ": " + userId + "\n"
                             + context.getString(R.string.password) + ": " + userPass + "\n\n"
                             + context.getString(R.string.synchronizing_database));
 
@@ -288,7 +289,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
             // send over all account/category/tag/vendor
             DBAccount dbAccount = DBAccount.getInstance();
             HashSet<Long> accountIds = dbAccount.getAllActiveIds();
-            for (long id: accountIds) {
+            for (long id : accountIds) {
                 LAccount account = dbAccount.getById(id);
                 if (null != account) {
                     publishProgress(account.getName());
@@ -298,7 +299,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
             DBCategory dbCategory = DBCategory.getInstance();
             HashSet<Long> catIds = dbCategory.getAllActiveIds();
-            for (long id: catIds) {
+            for (long id : catIds) {
                 LCategory category = dbCategory.getInstance().getById(id);
                 if (null != category) {
                     publishProgress(category.getName());
@@ -308,7 +309,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
             DBVendor dbVendor = DBVendor.getInstance();
             HashSet<Long> vendorIds = dbVendor.getAllActiveIds();
-            for (long id: vendorIds) {
+            for (long id : vendorIds) {
                 LVendor vendor = dbVendor.getById(id);
                 if (null != vendor) {
                     publishProgress(vendor.getName());
@@ -318,7 +319,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
             DBTag dbTag = DBTag.getInstance();
             HashSet<Long> tagIds = dbTag.getAllActiveIds();
-            for (long id: tagIds) {
+            for (long id : tagIds) {
                 LTag tag = dbTag.getById(id);
                 if (null != tag) {
                     publishProgress(tag.getName());
@@ -343,7 +344,8 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
                     if (transaction.getType() != LTransaction.TRANSACTION_TYPE_TRANSFER_COPY)
                         journal.addRecord(transaction.getId());
                     LLog.d(TAG, "adding record: " + transaction.getId());
-                    publishProgress(DBAccount.getInstance().getNameById(transaction.getAccount()) + " : " + transaction.getValue());
+                    publishProgress(DBAccount.getInstance().getNameById(transaction.getAccount()) + " : " +
+                            transaction.getValue());
                 } while (cursor.moveToNext());
                 cursor.close();
             }

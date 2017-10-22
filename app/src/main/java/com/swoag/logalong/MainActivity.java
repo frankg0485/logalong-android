@@ -480,6 +480,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
                 break;
             case LBroadcastReceiver.ACTION_LOG_IN:
                 if (LProtocol.RSPS_OK != ret) {
+                    LPreferences.setUserPass("");
                     requestPassword();
                 }
                 break;

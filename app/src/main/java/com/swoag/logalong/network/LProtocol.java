@@ -66,6 +66,7 @@ public class LProtocol {
     public static final short RQST_CREATE_USER = RQST_SYS | 0x204;
     public static final short RQST_SIGN_IN = RQST_SYS | 0x208;
     public static final short RQST_LOG_IN = RQST_SYS | 0x209;
+    public static final short RQST_RESET_PASSWORD = RQST_SYS | 0x20a;
     public static final short RQST_UPDATE_USER_PROFILE = RQST_SYS | 0x20c;
 
     public static final short JRQST_ADD_ACCOUNT = 0x001;
@@ -278,6 +279,12 @@ public class LProtocol {
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
+                    case RSPS | RQST_RESET_PASSWORD:
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UI_RESET_PASSWORD));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
                     default:
                         LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
                         break;
@@ -315,6 +322,12 @@ public class LProtocol {
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
                     }
+
+                    case RSPS | RQST_RESET_PASSWORD:
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_UI_RESET_PASSWORD));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
 
                     case RSPS | RQST_POST_JOURNAL:
                         packetConsumptionStatus.isResponseCompleted = (status != RSPS_MORE);

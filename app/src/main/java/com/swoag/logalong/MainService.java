@@ -527,7 +527,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                         account.setSharedIdsString(intent.getStringExtra("users"));
                                         dbAccount.update(account);
                                     } else {
-                                        LLog.w(TAG, "account: "  + gid + " no longer exists");
+                                        LLog.w(TAG, "account: " + gid + " no longer exists");
                                     }
                                     break;
 
