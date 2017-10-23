@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.swoag.logalong.MainService;
 import com.swoag.logalong.R;
 import com.swoag.logalong.fragments.ProfileEdit;
 import com.swoag.logalong.network.LAppServer;
@@ -97,9 +98,16 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
         isResetPass = false;
 
         broadcastReceiver = LBroadcastReceiver.getInstance().register(new int[]{
+                LBroadcastReceiver.ACTION_SIGN_IN,
                 LBroadcastReceiver.ACTION_UI_RESET_PASSWORD}, this);
 
         setupOkButton();
+
+        if (!LAppServer.getInstance().UiIsConnected()) {
+            LLog.d(TAG, "restarting service ...");
+            LAppServer.getInstance().connect();
+            MainService.start(context);
+        }
     }
 
 
@@ -141,6 +149,38 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
+            case LBroadcastReceiver.ACTION_SIGN_IN:
+                if (countDownTimer != null) {
+                    countDownTimer.cancel();
+                    countDownTimer = null;
+                    progressBar.setVisibility(View.GONE);
+                }
+
+                LViewUtils.setAlpha(okBTN, 1.0f);
+                okBTN.setEnabled(true);
+
+                userPassET.setEnabled(true);
+                userPassET.setCursorVisible(true);
+
+                switch (ret) {
+                    case LProtocol.RSPS_OK:
+                        LPreferences.setUserPass(userPass);
+                        callback.onChangePassDialogExit(true);
+                        destroy();
+                        break;
+                    case LProtocol.RSPS_WRONG_PASSWORD:
+                        displayMsg(true, context.getString(R.string.warning_password_mismatch));
+                        resetV.setVisibility(View.VISIBLE);
+                        break;
+                    case LProtocol.RSPS_USER_NOT_FOUND:
+                        displayMsg(true, context.getString(R.string.warning_user_id_invalid));
+                        break;
+                    default:
+                        displayMsg(true, context.getString(R.string.warning_unable_to_connect));
+                        break;
+                }
+                break;
+
             case LBroadcastReceiver.ACTION_UI_RESET_PASSWORD:
                 if (countDownTimer != null) {
                     countDownTimer.cancel();
@@ -260,15 +300,9 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
                                 if (userPass.length() <= 0) {
                                     callback.onChangePassDialogExit(false);
                                 } else {
-
-                                    if ((!TextUtils.isEmpty(LPreferences.getUserPass())) && userPass.contentEquals
-                                            (LPreferences.getUserPass())) {
-                                        callback.onChangePassDialogExit(true);
-                                    } else {
-                                        dismissMe = false;
-                                        displayErrorMsg(context.getString(R.string.warning_password_mismatch));
-                                        resetV.setVisibility(View.VISIBLE);
-                                    }
+                                    dismissMe = false;
+                                    startTimer();
+                                    LAppServer.getInstance().UiSignIn(LPreferences.getUserId(), userPass);
                                 }
                             }
                         } else {
@@ -295,36 +329,42 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
         dismiss();
     }
 
+    private void startTimer() {
+        countDownTimer = new CountDownTimer(16000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+            @Override
+            public void onFinish() {
+                displayErrorMsg(context.getString(R.string.warning_unable_to_connect));
+                progressBar.setVisibility(View.GONE);
+                LViewUtils.setAlpha(okBTN, 1.0f);
+                okBTN.setEnabled(true);
+
+                userPassET.setEnabled(true);
+                userPassET.setCursorVisible(true);
+
+                if (isResetPass)
+                    resetPassState = RESET_PASS_ERROR;
+            }
+        }.start();
+
+        hideErrorMsg();
+        LViewUtils.setAlpha(okBTN, 0.5f);
+        okBTN.setEnabled(false);
+
+        userPassET.setEnabled(false);
+        userPassET.setCursorVisible(false);
+
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
     private boolean doResetPass() {
         switch (resetPassState) {
             case RESET_PASS_INIT:
             case RESET_PASS_ERROR:
-                countDownTimer = new CountDownTimer(16000, 1000) {
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        displayErrorMsg(context.getString(R.string.warning_unable_to_connect));
-                        progressBar.setVisibility(View.GONE);
-                        LViewUtils.setAlpha(okBTN, 1.0f);
-                        okBTN.setEnabled(true);
-
-                        userPassET.setEnabled(true);
-                        userPassET.setCursorVisible(true);
-                        resetPassState = RESET_PASS_ERROR;
-                    }
-                }.start();
-
-                hideErrorMsg();
-                LViewUtils.setAlpha(okBTN, 0.5f);
-                okBTN.setEnabled(false);
-
-                userPassET.setEnabled(false);
-                userPassET.setCursorVisible(false);
-
-                progressBar.setVisibility(View.VISIBLE);
+                startTimer();
                 LAppServer.getInstance().UiResetPassword(LPreferences.getUserId(), userPassET.getText().toString());
                 break;
 

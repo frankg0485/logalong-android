@@ -300,6 +300,19 @@ public class LProtocol {
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
 
+                    case RSPS | RQST_SIGN_IN: {
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
+                                .ACTION_SIGN_IN));
+                        rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
+                        if (RSPS_OK == status) {
+                            int bytes = pkt.getShortAutoInc();
+                            String name = pkt.getStringAutoInc(bytes);
+                            rspsIntent.putExtra("userName", name);
+                        }
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+                    }
+
                     case RSPS | RQST_GET_USER_BY_NAME: {
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                 .ACTION_GET_USER_BY_NAME));
