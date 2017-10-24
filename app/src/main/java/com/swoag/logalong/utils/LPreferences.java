@@ -187,12 +187,12 @@ public class LPreferences {
         savePreference(LApp.ctx, USER_NAME + "." + gid, name);
     }
 
-    public static boolean getShareAccept(long uid) {
-        return getPreference(LApp.ctx, SHARE_ACCEPT + "." + uid, false);
+    public static long getShareAccept(long uid) {
+        return getPreference(LApp.ctx, SHARE_ACCEPT + "." + uid, 0L);
     }
 
-    public static void setShareAccept(long uid, boolean accept) {
-        savePreference(LApp.ctx, SHARE_ACCEPT + "." + uid, accept);
+    public static void setShareAccept(long uid, long acceptTimeMs) {
+        savePreference(LApp.ctx, SHARE_ACCEPT + "." + uid, acceptTimeMs);
     }
 
     private static int getEmptyAccountShareRequest() {

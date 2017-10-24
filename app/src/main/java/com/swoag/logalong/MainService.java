@@ -1042,7 +1042,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 long aid = intent.getLongExtra("int1", 0L);
                                 uid = intent.getLongExtra("int2", 0L);
 
-                                if (LPreferences.getShareAccept(uid)) {
+                                long shareAccept = LPreferences.getShareAccept(uid);
+                                if (shareAccept != 0 && (shareAccept + 24 * 3600 * 1000 > System.currentTimeMillis())) {
                                     LJournal journal = new LJournal();
                                     journal.confirmAccountShare(aid, uid, true);
                                 } else {

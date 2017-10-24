@@ -292,10 +292,10 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
     @Override
     protected void onResume() {
         super.onResume();
+        MainService.start(this);
+
         if (LPreferences.getLoginError())
             requestPassword();
-
-        MainService.start(this);
     }
 
     @Override

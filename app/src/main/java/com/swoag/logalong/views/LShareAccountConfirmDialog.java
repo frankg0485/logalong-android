@@ -120,7 +120,9 @@ public class LShareAccountConfirmDialog extends Dialog implements DialogInterfac
     private void leave(boolean ok) {
         if (ok) {
             CheckBox checkBox = (CheckBox) findViewById(R.id.checkboxAccept);
-            LPreferences.setShareAccept(request.getUserId(), checkBox.isChecked());
+            if (checkBox.isChecked()) {
+                LPreferences.setShareAccept(request.getUserId(), System.currentTimeMillis());
+            }
         }
 
         if (callback != null)
