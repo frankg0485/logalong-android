@@ -252,6 +252,7 @@ public class LProtocol {
                                 .ACTION_SIGN_IN));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         if (RSPS_OK == status) {
+                            LPreferences.setLoginError(false);
                             int bytes = pkt.getShortAutoInc();
                             String name = pkt.getStringAutoInc(bytes);
                             rspsIntent.putExtra("userName", name);
@@ -305,6 +306,7 @@ public class LProtocol {
                                 .ACTION_SIGN_IN));
                         rspsIntent.putExtra(LBroadcastReceiver.EXTRA_RET_CODE, status);
                         if (RSPS_OK == status) {
+                            LPreferences.setLoginError(false);
                             int bytes = pkt.getShortAutoInc();
                             String name = pkt.getStringAutoInc(bytes);
                             rspsIntent.putExtra("userName", name);

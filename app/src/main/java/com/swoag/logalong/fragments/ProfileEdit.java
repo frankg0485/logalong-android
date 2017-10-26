@@ -546,6 +546,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             changePassV.setVisibility(View.INVISIBLE);
             checkboxShowPass.setChecked(true);
             userPassTV.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            userPassTV.setText(LPreferences.getUserPass());
 
             //userNumberV.setVisibility(View.VISIBLE);
             //userNumberHintV.setVisibility(View.VISIBLE);

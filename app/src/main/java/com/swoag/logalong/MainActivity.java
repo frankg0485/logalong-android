@@ -17,6 +17,7 @@ import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LAccountShareRequest;
 import com.swoag.logalong.entities.LCategory;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.network.LAppServer;
 import com.swoag.logalong.network.LProtocol;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccount;
@@ -100,7 +101,8 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
                 accountShareRequest = LPreferences.getAccountShareRequest();
 
                 if (accountShareRequest != null) {
-                    if (LPreferences.getShareAccept(accountShareRequest.getUserId())) {
+                    long shareAccept = LPreferences.getShareAccept(accountShareRequest.getUserId());
+                    if (shareAccept != 0 && (shareAccept + 24 * 3600 * 1000 > System.currentTimeMillis())) {
                         LJournal journal = new LJournal();
                         journal.confirmAccountShare(accountShareRequest.getAccountGid(),
                                 accountShareRequest.getUserId(), true);
@@ -437,7 +439,9 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
     @Override
     public void onChangePassDialogExit(boolean changed) {
         if (!changed) finish();
-
+        else {
+            LAppServer.getInstance().UiLogIn(LPreferences.getUserId(), LPreferences.getUserPass());
+        }
         passwordRequested = false;
     }
 

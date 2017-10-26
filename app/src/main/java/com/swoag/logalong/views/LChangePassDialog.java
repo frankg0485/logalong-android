@@ -83,6 +83,7 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
         okBTN.setOnClickListener(myClickListener);
         findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
         findViewById(R.id.dummy).setOnClickListener(myClickListener);
+        findViewById(R.id.currentPass).setOnClickListener(myClickListener);
 
         userPassET = (EditText) findViewById(R.id.currentPass);
         userPassET.addTextChangedListener(this);
@@ -250,10 +251,25 @@ public class LChangePassDialog extends Dialog implements TextWatcher, LBroadcast
         displayMsg(true, msg);
     }
 
+    private void requestInputFocus(EditText etv) {
+        etv.setCursorVisible(true);
+        try {
+            if (etv.requestFocus()) {
+                InputMethodManager keyboard = (InputMethodManager) context.getSystemService(Context
+                        .INPUT_METHOD_SERVICE);
+                keyboard.showSoftInput(etv, 0);
+            }
+        } catch (Exception e) {
+        }
+    }
+
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
+                case R.id.currentPass:
+                    requestInputFocus(userPassET);
+                    break;
                 case R.id.resetPass:
                     isResetPass = true;
                     showPassV.setVisibility(View.GONE);
