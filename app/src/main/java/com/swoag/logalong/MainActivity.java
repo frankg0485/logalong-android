@@ -148,8 +148,11 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
         setContentView(R.layout.top);
 
         logalongTV = (TextView) findViewById(R.id.tab1);
-        if (!TextUtils.isEmpty(LPreferences.getUserId()))
+        if (!TextUtils.isEmpty(LPreferences.getUserId())) {
+            //LLog.d(TAG, "not yet logged in");
             logalongTV.setTextColor(getResources().getColor(R.color.base_orange));
+
+        }
 
         fragmentManager = getSupportFragmentManager();
         lPagerAdapter = new LPagerAdapter(fragmentManager);
@@ -335,7 +338,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             confirmAccountShare = null;
         }
 
-        LLog.d(TAG, "destroyed");
+        //LLog.d(TAG, "destroyed");
         super.onDestroy();
     }
 
@@ -465,11 +468,13 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             case LBroadcastReceiver.ACTION_CONNECTED_TO_SERVER:
                 handler.removeCallbacks(showBusySignal);
                 isBusy = false;
+                //LLog.d(TAG, "network connected");
                 logalongTV.setTextColor(getResources().getColor(R.color.tab_text_color));
                 break;
             case LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED:
                 handler.removeCallbacks(showBusySignal);
                 isBusy = false;
+                //LLog.d(TAG, "network disconnected");
                 logalongTV.setTextColor(getResources().getColor(R.color.base_orange));
                 break;
             case LBroadcastReceiver.ACTION_UI_NET_BUSY:
@@ -480,6 +485,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             case LBroadcastReceiver.ACTION_UI_NET_IDLE:
                 handler.removeCallbacks(showBusySignal);
                 isBusy = false;
+                //LLog.d(TAG, "network idle");
                 logalongTV.setTextColor(getResources().getColor(R.color.tab_text_color));
                 break;
             case LBroadcastReceiver.ACTION_LOG_IN:

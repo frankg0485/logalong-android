@@ -289,7 +289,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 case CMD_START:
                     serviceHandler.removeCallbacks(serviceShutdownRunnable);
                     if (!TextUtils.isEmpty(LPreferences.getUserId())) {
+                        //LLog.d(TAG, "connecting to server");
                         server.connect();
+                        //poll once shortly after connect: in case server is already connected
+                        serviceHandler.postDelayed(pollRunnable, 1000);
                     }
                     break;
 
