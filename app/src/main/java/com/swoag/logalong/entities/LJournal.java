@@ -561,10 +561,6 @@ public class LJournal {
         return true;
     }
 
-    public boolean updateScheduledItem(LScheduledTransaction sch) {
-        return false;
-    }
-
     public boolean getAllAccounts() {
         return post(LProtocol.JRQST_GET_ACCOUNTS);
     }
@@ -592,6 +588,10 @@ public class LJournal {
 
     public boolean getAccountRecords(long aid) {
         return postById(aid, LProtocol.JRQST_GET_ACCOUNT_RECORDS);
+    }
+
+    public boolean getAccountSchedules(long aid) {
+        return postById(aid, LProtocol.JRQST_GET_ACCOUNT_SCHEDULES);
     }
 
     public boolean getAccountUsers(long aid) {

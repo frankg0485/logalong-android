@@ -83,6 +83,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private static final short NOTIFICATION_GET_CATEGORIES = 0x203;
     private static final short NOTIFICATION_GET_VENDORS = 0x204;
     private static final short NOTIFICATION_GET_TAGS = 0x205;
+    private static final short NOTIFICATION_GET_ACCOUNT_SCHEDULES = 0x211;
 
     private boolean loggedIn = false;
     private Handler serviceHandler;
@@ -1094,6 +1095,11 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             case NOTIFICATION_GET_ACCOUNT_RECORDS:
                                 aid = intent.getLongExtra("int1", 0L);
                                 journal.getAccountRecords(aid);
+                                break;
+
+                            case NOTIFICATION_GET_ACCOUNT_SCHEDULES:
+                                aid = intent.getLongExtra("int1", 0L);
+                                journal.getAccountSchedules(aid);
                                 break;
 
                             case NOTIFICATION_GET_ACCOUNTS:
