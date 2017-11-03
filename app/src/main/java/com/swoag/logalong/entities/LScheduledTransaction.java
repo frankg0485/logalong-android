@@ -6,6 +6,7 @@ import java.util.Calendar;
 public class LScheduledTransaction extends LTransaction {
     private static final String TAG = LScheduledTransaction.class.getSimpleName();
 
+    public static final int START_HOUR_OF_DAY = 2; //align to 2am so not to worry about DTS
     public static final int REPEAT_UNIT_WEEK = 10;
     public static final int REPEAT_UNIT_MONTH = 20;
     private static boolean TEST_SCAN_LOGIC = false;
@@ -51,10 +52,9 @@ public class LScheduledTransaction extends LTransaction {
     public void initNextTimeMs() {
         long baseTimeMs = getTimeStamp();
 
-        // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, START_HOUR_OF_DAY);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         baseTimeMs = calendar.getTimeInMillis();
@@ -64,7 +64,7 @@ public class LScheduledTransaction extends LTransaction {
         else if (0 == repeatCount) {
             //reset to today
             calendar.setTimeInMillis(curTimeMs);
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.HOUR_OF_DAY, START_HOUR_OF_DAY);
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
             baseTimeMs = calendar.getTimeInMillis();
@@ -168,7 +168,7 @@ public class LScheduledTransaction extends LTransaction {
         // always align time to 00:00:00 of the day
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTimeMs);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, START_HOUR_OF_DAY);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         baseTimeMs = calendar.getTimeInMillis();

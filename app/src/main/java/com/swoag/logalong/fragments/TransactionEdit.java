@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
@@ -339,7 +340,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         if (bScheduleMode) {
             calendar.setTimeInMillis(System.currentTimeMillis());
-            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.HOUR_OF_DAY, LScheduledTransaction.START_HOUR_OF_DAY);
             calendar.set(Calendar.MINUTE, 0);
             calendar.set(Calendar.SECOND, 0);
             if (item.getTimeStamp() < calendar.getTimeInMillis()) {

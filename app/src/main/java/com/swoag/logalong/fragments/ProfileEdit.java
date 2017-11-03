@@ -441,8 +441,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
 
     public void dismiss() {
         myClickListener.disableEnable(false);
-        this.callback.onProfileEditExit();
         destroy();
+        this.callback.onProfileEditExit();
     }
 
     private void hideMsg() {

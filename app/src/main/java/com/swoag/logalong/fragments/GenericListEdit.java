@@ -186,8 +186,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
     public void dismiss() {
         myClickListener.disableEnable(false);
         adapter.clickListener.disableEnable(false);
-        callback.onGenericListEditExit();
         destroy();
+        callback.onGenericListEditExit();
     }
 
     private void updateCursor() {

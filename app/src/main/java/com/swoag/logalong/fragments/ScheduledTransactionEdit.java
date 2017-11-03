@@ -159,7 +159,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
                     //reset to today if timestamp was past
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis(System.currentTimeMillis());
-                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.HOUR_OF_DAY, LScheduledTransaction.START_HOUR_OF_DAY);
                     calendar.set(Calendar.MINUTE, 0);
                     calendar.set(Calendar.SECOND, 0);
                     if (scheduledItem.getTimeStamp() < calendar.getTimeInMillis()) {
