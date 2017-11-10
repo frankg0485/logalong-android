@@ -2,13 +2,9 @@ package com.swoag.logalong.views;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 
-import android.app.Dialog;
-import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -36,6 +32,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private TextView valueTV;
     private View pickerBgdView;
     private int colorCode;
+    private boolean pickerActive;
 
     private String inputString = "";
     private double lastValue;
@@ -122,9 +119,13 @@ public class LDollarAmountPickerView implements View.OnClickListener {
             enableDot(false);
             enableOk(true);
         }
+
+        pickerActive = true;
     }
 
     public void onDestroy() {
+        pickerActive = false;
+
         view0 = null;
         view1 = null;
         view2 = null;
@@ -153,6 +154,8 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
+            if (!pickerActive) return;
+
             switch (v.getId()) {
                 case R.id.dot:
                     appendToString(-1);
@@ -189,6 +192,8 @@ public class LDollarAmountPickerView implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
+        if (!pickerActive) return;
+
         switch (v.getId()) {
             case R.id.b0:
                 appendToString(0);
@@ -345,6 +350,13 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         char ch1 = str.charAt(1);
         if (ch0 == '0' && ch1 != '.') return str.substring(1);
 
+        // max two decimal digits
+        int ii = str.lastIndexOf('.');
+        if (ii > 0) {
+            if (str.length() > ii + 3) {
+                str = str.substring(0, ii + 3);
+            }
+        }
         return str;
     }
 
