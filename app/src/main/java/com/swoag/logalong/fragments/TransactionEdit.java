@@ -186,11 +186,10 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             if (item.getChangeBy() == LPreferences.getUserIdNum()) {
                 uname = "myself";
             } else {
-                //TODO: String fname = LPreferences.getShareUserFullName(item.getChangeBy());
-                //String id = LPreferences.getShareUserName(item.getChangeBy());
-                //if ((!TextUtils.isEmpty(fname)) && (!TextUtils.isEmpty(id))) {
-                //    uname = fname + " (" + id + ")";
-                //}
+                uname = LPreferences.getShareUserName(item.getChangeBy());
+                if (TextUtils.isEmpty(uname)) {
+                    uname = LPreferences.getShareUserId(item.getChangeBy());
+                }
             }
             if (!TextUtils.isEmpty(uname)) name = " by " + uname;
             lastChangeTV.setText(new SimpleDateFormat("MMM d, yyy").format(item.getTimeStampLast()) + name);
@@ -496,7 +495,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         mSelectionDialog = new LSelectionDialog
                                 (activity, TransactionEdit.this, ids,
                                         DBHelper.TABLE_TAG_NAME,
-                                        DBHelper.TABLE_COLUMN_NAME, DBTag.getInstance().getDbIndexById(item.getTag()), DLG_ID_TAG);
+                                        DBHelper.TABLE_COLUMN_NAME, DBTag.getInstance().getDbIndexById(item.getTag())
+                                        , DLG_ID_TAG);
                         mSelectionDialog.show();
                         mSelectionDialog.getWindow().setSoftInputMode(WindowManager.LayoutParams
                                 .SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -713,7 +713,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         boolean changed = !item.isEqual(savedItem);
         if (changed) {
             item.setTimeStampLast(LPreferences.getServerUtc());
-            item.setChangeBy((int)LPreferences.getUserIdNum());
+            item.setChangeBy((int) LPreferences.getUserIdNum());
         }
         myClickListener.disableEnable(false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
