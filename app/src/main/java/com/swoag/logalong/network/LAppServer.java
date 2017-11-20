@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -41,7 +42,7 @@ public class LAppServer {
     private final int STATE_EXIT = 50;
 
     private Object netLock;
-    private int netThreadState;
+    private int netTxThreadState, netRxThreadState;
     private LBufferPool netTxBufPool;
     private LBuffer netRxBuf;
 
@@ -65,7 +66,7 @@ public class LAppServer {
         context = LApp.ctx;
         lProtocol = LProtocol.getInstance();
         netLock = new Object();
-        netThreadState = STATE_INIT;
+        netRxThreadState = netTxThreadState = STATE_INIT;
         netTxBufPool = new LBufferPool(LProtocol.PACKET_MAX_LEN, 16);
         netTxBufPool.enable(true);
 
@@ -81,24 +82,36 @@ public class LAppServer {
     }
 
     //caller must hold netLock
-    private void closeSockets(int timeMs) {
-        try {
-            if (null != sockOut) {
+    private static int INPUT_SOCKET = 0x01;
+    private static int OUTPUT_SOCKET = 0x02;
+
+    private void closeSockets(int sock, int timeMs) {
+        if (null != sockOut && ((sock & OUTPUT_SOCKET) == OUTPUT_SOCKET)) {
+            try {
                 sockOut.close();
+            } catch (Exception e) {
             }
-        } catch (Exception e) {
-        }
-        try {
-            if (null != sockIn) {
-                sockIn.close();
-            }
-        } catch (Exception e) {
+            sockOut = null;
         }
 
-        sockOut = null;
-        sockIn = null;
-        connected = false;
-        autoReconnect(timeMs);
+        if (null != sockIn && ((sock & INPUT_SOCKET) == INPUT_SOCKET)) {
+            try {
+                sockIn.close();
+            } catch (Exception e) {
+            }
+            sockIn = null;
+        }
+
+        if (sockIn == null && sockOut == null) {
+            try {
+                socket.close();
+            } catch (Exception e) {
+            }
+            socket = null;
+
+            connected = false;
+            autoReconnect(timeMs);
+        }
     }
 
     public boolean connect() {
@@ -115,7 +128,10 @@ public class LAppServer {
                             try {
                                 if (sockIn != null) sockIn.close();
                                 if (sockOut != null) sockOut.close();
-                                if (socket != null) socket.close();
+                                if (socket != null) {
+                                    socket.close();
+                                    LLog.w(TAG, "unexpected: socket was not properly shut down");
+                                }
                             } catch (Exception e) {
                             }
 
@@ -125,7 +141,7 @@ public class LAppServer {
                                 LLog.d(TAG, "server addr:" + serverAddr);
                                 socket = new Socket(serverAddr, serverPort);
                                 LLog.d(TAG, "stream opened: " + socket);
-                                socket.setSoTimeout(0);
+                                socket.setSoTimeout(3000);
 
                                 sockIn = socket.getInputStream();
                                 sockOut = socket.getOutputStream();
@@ -134,12 +150,13 @@ public class LAppServer {
                                     netTxBufPool.enable(true);
                                     netTxBufPool.flush();
 
-                                    netThreadState = STATE_READY;
+                                    netTxThreadState = netRxThreadState = STATE_READY;
                                     netLock.notifyAll();
                                 }
 
-                                Thread netThread = new Thread(new NetThread());
-                                netThread.start();
+                                new Thread(new NetTxThread()).start();
+                                new Thread(new NetRxThread()).start();
+
                                 tried = 0;
                                 LLog.d(TAG, "network connected");
                                 Intent intent;
@@ -169,167 +186,139 @@ public class LAppServer {
 
     public void disconnect() {
         synchronized (netLock) {
-            if (netThreadState == STATE_READY) {
-                while (netThreadState != STATE_EXIT) {
-                    netThreadState = STATE_OFF;
-                    netTxBufPool.enable(false);
-                    netLock.notifyAll();
+            if (connected) {
+                if (netRxThreadState == STATE_READY) {
+                    while (netRxThreadState != STATE_EXIT) {
+                        netRxThreadState = STATE_OFF;
+                        netLock.notifyAll();
 
-                    try {
-                        netLock.wait(5000);
-                    } catch (Exception e) {
-                    }
-
-                    if (netThreadState != STATE_EXIT) {
-                        closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
+                        try {
+                            netLock.wait(5000);
+                        } catch (Exception e) {
+                        }
                     }
                 }
-            } else {
-                netThreadState = STATE_OFF;
+
+                if (netTxThreadState == STATE_READY) {
+                    while (netTxThreadState != STATE_EXIT) {
+                        netTxThreadState = STATE_OFF;
+                        netTxBufPool.enable(false);
+                        netLock.notifyAll();
+
+                        try {
+                            netLock.wait(5000);
+                        } catch (Exception e) {
+                        }
+                    }
+                }
             }
-            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
+            closeSockets(INPUT_SOCKET | OUTPUT_SOCKET, AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
         }
     }
 
-    private boolean netThreadEnabled = true;
-
-    public void enable() {
-        synchronized (netLock) {
-            netThreadEnabled = true;
-            netLock.notifyAll();
-        }
-    }
-
-    public void disable() {
-        synchronized (netLock) {
-            netThreadEnabled = false;
-            netLock.notifyAll();
-        }
-    }
-
-    private class NetThread implements Runnable {
+    private class NetTxThread implements Runnable {
 
         public void run() {
-            LBuffer buf = null;
             boolean loop = true;
-            boolean hasBuf = false;
-            boolean fail = false;
+            boolean haveBuffer = false;
+            LBuffer buf = null;
 
-            final int SEND_REQUEST = 10;
-            final int WAIT_FOR_RESPONSE = 20;
-
-            int protocolState = SEND_REQUEST;
-            short requestCode = 0;
-            // protocol behaviour:
-            // client (App) sends request to server, then wait for response. If response does not
-            // come as expected, networks thread bails to restart.
-            LLog.d(TAG, "net thread running ...");
+            LLog.d(TAG, "net tx thread running ...");
             while (loop) {
                 synchronized (netLock) {
-                    fail = false;
-                    while (netThreadState != STATE_READY) {
-                        if (netThreadState == STATE_OFF) {
-                            netThreadState = STATE_EXIT;
-                            LLog.d(TAG, "net thread socket closing ...");
-                            loop = false;
-                            closeSockets(AUTO_RECONNECT_DEFAULT_TIME_SECONDS);
-                            break;
-                        } else {
-                            LLog.d(TAG, "flushing socket");
-                            UiPing(); //flush socket
-                        }
-                        try {
-                            //LLog.d(TAG, "net thread waiting to start...");
-                            netLock.wait();
-                        } catch (Exception e) {
-                        }
-                    }
-
-                    while (!netThreadEnabled) {
-                        try {
-                            //LLog.d(TAG, "net thread waiting to enable...");
-                            netLock.wait();
-                        } catch (Exception e) {
-                        }
-                    }
-                }
-
-                //LLog.d(TAG, "net thread protocol start... " + protocolState);
-                switch (protocolState) {
-                    case SEND_REQUEST:
-                        if (!hasBuf) {
-                            //LLog.d(TAG, "net thread protocol get request...");
-                            buf = netTxBufPool.getReadBuffer();
-                            if (buf == null) {
-                                LLog.w(TAG, "network thread: interrupted unable to get read buffer");
-                                continue;
-                            } else
-                                hasBuf = true;
-                        }
-
-                        try {
-                            sockOut.write(buf.getBuf(), 0, buf.getLen());
-                            sockOut.flush();
-                            requestCode = buf.getShortAt(4);
-                        } catch (Exception e) {
-                            fail = true;
-                            LLog.e(TAG, "write error: " + e.getMessage());
-                            break;
-                        }
-
-                        protocolState = WAIT_FOR_RESPONSE;
-                        //LLog.d(TAG, "net thread request sent");
-                        //fall through
-
-                    case WAIT_FOR_RESPONSE:
-                        //LLog.d(TAG, "waiting for response");
-                        try {
-                            netRxBuf.setBufOffset(0);
-                            netRxBuf.setLen(sockIn.read(netRxBuf.getBuf(), 0, netRxBuf.size()));
-                        } catch (Exception e) {
-                            fail = true;
-                        }
-
-                        if (fail || netRxBuf.getLen() <= 0) {
-                            fail = true;
-                            LLog.w(TAG, "read error");
-                        } else {
-                            //LLog.d(TAG, "waiting for response: returned");
-                            int parseResult = lProtocol.parse(netRxBuf, requestCode, scrambler);
-                            switch (parseResult) {
-                                case LProtocol.RESPONSE_PARSE_RESULT_DONE:
-                                    netTxBufPool.putReadBuffer(buf);
-                                    hasBuf = false;
-                                    protocolState = SEND_REQUEST;
-                                    break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_MORE2COME:
-                                    //continue to read more
-                                    break;
-                                case LProtocol.RESPONSE_PARSE_RESULT_ERROR:
-                                    LLog.e(TAG, "protocol broken, restart service");
-                                    fail = true;
-                                    break;
-                            }
-                        }
-                        break;
-                }
-                //LLog.d(TAG, "net thread protocol end...");
-
-                if (fail) {
-                    synchronized (netLock) {
-                        LLog.d(TAG, "net thread failed");
-                        closeSockets(AUTO_RECONNECT_RETRY_TIME_SECONDS);
-                        //network layer broken in the middle of transfer, teardown server and restart
+                    if (netTxThreadState == STATE_OFF) {
+                        netTxThreadState = STATE_EXIT;
                         break;
                     }
                 }
+
+                //LLog.d(TAG, "net tx thread get buffer");
+                if (!haveBuffer) {
+                    buf = netTxBufPool.getReadBuffer();
+                    if (buf == null) {
+                        LLog.w(TAG, "network thread: interrupted unable to get read buffer");
+                        continue;
+                    } else {
+                        haveBuffer = true;
+                    }
+                }
+
+                //LLog.d(TAG, "net tx thread sending ... ");
+                try {
+                    sockOut.write(buf.getBuf(), 0, buf.getLen());
+                    sockOut.flush();
+                } catch (SocketTimeoutException e) {
+                    LLog.d(TAG, "net write timeout exception: " + e.getMessage());
+                } catch (Exception e) {
+                    loop = false;
+                    LLog.e(TAG, "net write exception: " + e.getMessage());
+                }
+
+                netTxBufPool.putReadBuffer(buf);
+                haveBuffer = false;
+                //LLog.d(TAG, "net tx thread sending done");
+            }
+
+            LLog.d(TAG, "app server stopped: net tx thread done");
+            synchronized (netLock) {
+                if (netRxThreadState == STATE_READY) netRxThreadState = STATE_OFF;
+
+                closeSockets(OUTPUT_SOCKET, AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                netTxThreadState = STATE_EXIT;
+                netLock.notifyAll();
+            }
+
+            Intent intent;
+            intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED));
+            LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
+        }
+    }
+
+
+    private class NetRxThread implements Runnable {
+
+        public void run() {
+            boolean loop = true;
+
+            LLog.d(TAG, "net rx thread running ...");
+            while (loop) {
+                synchronized (netLock) {
+                    if (netRxThreadState == STATE_OFF) {
+                        netRxThreadState = STATE_EXIT;
+                        break;
+                    }
+                }
+                //LLog.d(TAG, "rx thread receiving ...");
+                try {
+                    netRxBuf.setBufOffset(0);
+                    netRxBuf.setLen(sockIn.read(netRxBuf.getBuf(), 0, netRxBuf.size()));
+                    if (netRxBuf.getLen() <= 0) {
+                        Thread.sleep(1000);
+                        LLog.w(TAG, "read error");
+                        continue;
+                    }
+                } catch (SocketTimeoutException e) {
+                    LLog.d(TAG, "net read timeout exception: " + e.getMessage());
+                } catch (Exception e) {
+                    LLog.d(TAG, "net read exception: " + e.getMessage());
+                    break;
+                }
+
+                //LLog.d(TAG, "rx thread receiving returned");
+                lProtocol.parse(netRxBuf, scrambler);
             }
 
             // signal the end of connection.
-            LLog.d(TAG, "app server stopped: net thread done");
+            LLog.d(TAG, "app server stop: net rx thread done");
             lProtocol.shutdown();
             synchronized (netLock) {
-                netThreadState = STATE_EXIT;
+                if (netTxThreadState == STATE_READY) {
+                    netTxThreadState = STATE_OFF;
+                    netTxBufPool.enable(false);
+                }
+
+                closeSockets(INPUT_SOCKET, AUTO_RECONNECT_RETRY_TIME_SECONDS);
+                netRxThreadState = STATE_EXIT;
                 netLock.notifyAll();
             }
 

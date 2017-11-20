@@ -13,6 +13,7 @@ public class LBroadcastReceiver {
     private static final String TAG = LBroadcastReceiver.class.getSimpleName();
     public static final String EXTRA_RET_CODE = "ret";
     private static final String ACTION_BASE = "com.swoag.logalong.action.";
+
     public static final int ACTION_USER_CREATED = 4;
     public static final int ACTION_CONNECTED_TO_SERVER = 10;
     public static final int ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH = 40;
@@ -52,6 +53,7 @@ public class LBroadcastReceiver {
     public static final int ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY = 118;
     public static final int ACTION_REQUESTED_TO_SHARE_SCHEDULE = 119;
 
+    public static final int ACTION_PUSH_NOTIFICATION = 7777;;
     public static final int ACTION_SERVER_BROADCAST_MSG_RECEIVED = 1000;
     public static final int ACTION_UNKNOWN_MSG = 9999;
 

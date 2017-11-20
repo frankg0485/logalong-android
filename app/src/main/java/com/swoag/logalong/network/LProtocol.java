@@ -45,6 +45,8 @@ public class LProtocol {
     public static final short RESPONSE_PARSE_RESULT_MORE2COME = 20;
     public static final short RESPONSE_PARSE_RESULT_ERROR = 99;
 
+    public static final short PUSH_NOTIFICATION = 0x0bad;
+
     public static int PACKET_PAYLOAD_LENGTH(int payloadLen) {
         return ((((payloadLen) + 3) / 4) * 4);
     }
@@ -152,7 +154,7 @@ public class LProtocol {
     }
 
     //NOTE: in general, it's a big NO-NO to do anything that's designed for UI thread.
-    private PacketConsumptionStatus consumePacket(LBuffer pkt, short requestCode, int scrambler) {
+    private PacketConsumptionStatus consumePacket(LBuffer pkt, int scrambler) {
         PacketConsumptionStatus packetConsumptionStatus = new PacketConsumptionStatus();
         packetConsumptionStatus.bytesConsumed = 0;
         packetConsumptionStatus.isResponseCompleted = true;
@@ -185,11 +187,11 @@ public class LProtocol {
         pkt.skip(6);
         status = pkt.getShortAutoInc();
 
-        if ((RSPS | requestCode) != rsps) {
-            LLog.w(TAG, "protocol failed: unexpected response");
-            packetConsumptionStatus.bytesConsumed = -1;
-            return packetConsumptionStatus;
-        }
+        //if ((RSPS | requestCode) != rsps) {
+        //    LLog.w(TAG, "protocol failed: unexpected response");
+        //    packetConsumptionStatus.bytesConsumed = -1;
+        //    return packetConsumptionStatus;
+        //}
 
         //if (status != LProtocol.RSPS_OK && status != LProtocol.RSPS_MORE) {
         //    LLog.w(TAG, "protocol request code: " + requestCode + " error status := " + status);
@@ -509,6 +511,12 @@ public class LProtocol {
                         }
                         break;
 
+                    case PUSH_NOTIFICATION:
+                        LLog.d(TAG, "push notify received");
+                        rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_PUSH_NOTIFICATION));
+                        LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
+                        break;
+
                     default:
                         LLog.w(TAG, "unexpected response: " + rsps + "@state: " + state);
                         break;
@@ -541,7 +549,7 @@ public class LProtocol {
     }
 
     // parser runs in Network receiving thread, thus no GUI update here.
-    public short parse(LBuffer buf, short requestCode, int scrambler) {
+    public short parse(LBuffer buf, int scrambler) {
         if (pktBuf.getLen() > 0) {
             //LLog.d(TAG, "packet pipe fragmented");
             pktBuf.reset();
@@ -552,7 +560,7 @@ public class LProtocol {
         }
 
         while (alignPacket(pkt)) {
-            PacketConsumptionStatus status = consumePacket(pkt, requestCode, scrambler);
+            PacketConsumptionStatus status = consumePacket(pkt, scrambler);
             int bytes = status.bytesConsumed;
             if (bytes == -1) {
                 LLog.e(TAG, "packet parse error?");

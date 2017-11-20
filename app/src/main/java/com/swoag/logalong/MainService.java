@@ -49,8 +49,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     private static final int CMD_START = 10;
     private static final int CMD_STOP = 20;
-    private static final int CMD_ENABLE = 30;
-    private static final int CMD_DISABLE = 40;
     private static final int CMD_SCAN_BALANCE = 50;
 
     private static final short NOTIFICATION_UPDATE_USER_PROFILE = 0x001;
@@ -91,11 +89,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     private Runnable serviceShutdownRunnable;
     private boolean accountBalanceSynced = false;
 
-    //default to active polling, if polling returned IDLE, switch to IDLE_POLLING interval
-    //as soon as any valid command found, go back to active polling.
-    static final int NETWORK_IDLE_POLLING_MS = 5000;
-    static final int NETWORK_ACTIVE_POLLING_MS = 15 * 60000; //so each polled command has a
-    // 15-min window to respond
+    static final int NETWORK_IDLE_POLLING_MS = 1000;
+    static final int MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION = 5;
+    static int pollingCount = MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION;
+
     static final int SERVICE_SHUTDOWN_MS = 15000;
     private BroadcastReceiver broadcastReceiver;
     private LAppServer server;
@@ -118,18 +115,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
     public static void stop(Context context) {
         Intent serviceIntent = new Intent(context, MainService.class);
         serviceIntent.putExtra("cmd", MainService.CMD_STOP);
-        context.startService(serviceIntent);
-    }
-
-    public static void enable(Context context) {
-        Intent serviceIntent = new Intent(context, MainService.class);
-        serviceIntent.putExtra("cmd", MainService.CMD_ENABLE);
-        context.startService(serviceIntent);
-    }
-
-    public static void disable(Context context) {
-        Intent serviceIntent = new Intent(context, MainService.class);
-        serviceIntent.putExtra("cmd", MainService.CMD_DISABLE);
         context.startService(serviceIntent);
     }
 
@@ -162,8 +147,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     LLog.d(TAG, "heart beat polling");
                     //polling happens only where there's no pending journal
                     if (!journal.flush()) server.UiPoll();
-                    //default to active polling
-                    serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
                 }
             }
         };
@@ -200,7 +183,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 LBroadcastReceiver.ACTION_POST_JOURNAL,
                 LBroadcastReceiver.ACTION_POLL,
                 LBroadcastReceiver.ACTION_POLL_ACK,
-                LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE}, this);
+                LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE,
+                LBroadcastReceiver.ACTION_PUSH_NOTIFICATION}, this);
 
 
         updateAccountBalanceRunnable = new Runnable() {
@@ -301,13 +285,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     serviceHandler.removeCallbacks(serviceShutdownRunnable);
                     serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
                     break;
-                case CMD_ENABLE:
-                    server.enable();
-                    break;
-
-                case CMD_DISABLE:
-                    server.disable();
-                    break;
 
                 case CMD_SCAN_BALANCE:
                     cursorLoader.startLoading();
@@ -350,10 +327,6 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         }
         serviceHandler.removeCallbacks(pollRunnable); //disable polling by default
 
-        //serviceHandler.removeCallbacks(serviceShutdownRunnable);
-        //default polling policy: active, with longer period
-        //serviceHandler.removeCallbacks(pollRunnable);
-        //serviceHandler.postDelayed(pollRunnable, NETWORK_ACTIVE_POLLING_MS);
         LLog.d(TAG, "action: " + action + " logged in: " + loggedIn);
         if (action == LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED) {
             loggedIn = false;
@@ -1124,6 +1097,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             default:
                                 LLog.w(TAG, "unexpected notification id: " + nid);
                         }
+                        pollingCount = MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION;
                         server.UiPollAck(id);
                     } else {
                         //no more
@@ -1131,7 +1105,9 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         if (!journal.flush()) {
                             if (LFragmentActivity.upRunning) {
                                 //server.UiUtcSync();
-                                serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                                if (pollingCount++ < MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION) {
+                                    serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                                }
 
                                 Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                         .ACTION_UI_NET_IDLE));
@@ -1145,8 +1121,16 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     }
                     break;
 
+                case LBroadcastReceiver.ACTION_PUSH_NOTIFICATION:
+                    LLog.d(TAG, "poll upon push notification");
+                    //reset polling count upon receiving push notification from server
+                    //we'll keep polling up to MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION times, till a positive
+                    //polling result from server: this is to handle the case where server sends the notification
+                    //but underlying database hasn't got a chance to flush.
+                    pollingCount = 0;
+                    //FALL THROUGH
                 case LBroadcastReceiver.ACTION_POLL_ACK:
-                    LLog.d(TAG, "poll ack journal flushing");
+                    //LLog.d(TAG, "poll ack journal flushing");
                     if (!journal.flush()) {
                         server.UiPoll();
                     }
