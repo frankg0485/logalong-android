@@ -49,7 +49,7 @@ public class LAppServer {
     private static LAppServer instance;
     private boolean connected;
     private int tried;
-    private static final int AUTO_RECONNECT_DEFAULT_TIME_SECONDS = 3600;
+    private static final int AUTO_RECONNECT_DEFAULT_TIME_SECONDS = 3600 * 2;
     private static final int AUTO_RECONNECT_RETRY_TIME_SECONDS = 30;
 
     private Context context;
@@ -227,7 +227,6 @@ public class LAppServer {
             while (loop) {
                 synchronized (netLock) {
                     if (netTxThreadState == STATE_OFF) {
-                        netTxThreadState = STATE_EXIT;
                         break;
                     }
                 }
@@ -284,7 +283,6 @@ public class LAppServer {
             while (loop) {
                 synchronized (netLock) {
                     if (netRxThreadState == STATE_OFF) {
-                        netRxThreadState = STATE_EXIT;
                         break;
                     }
                 }
