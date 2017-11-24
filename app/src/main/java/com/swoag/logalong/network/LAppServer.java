@@ -246,15 +246,15 @@ public class LAppServer {
                 try {
                     sockOut.write(buf.getBuf(), 0, buf.getLen());
                     sockOut.flush();
+
+                    netTxBufPool.putReadBuffer(buf);
+                    haveBuffer = false;
                 } catch (SocketTimeoutException e) {
                     LLog.d(TAG, "net write timeout exception: " + e.getMessage());
                 } catch (Exception e) {
                     loop = false;
                     LLog.e(TAG, "net write exception: " + e.getMessage());
                 }
-
-                netTxBufPool.putReadBuffer(buf);
-                haveBuffer = false;
                 //LLog.d(TAG, "net tx thread sending done");
             }
 
@@ -296,7 +296,7 @@ public class LAppServer {
                         continue;
                     }
                 } catch (SocketTimeoutException e) {
-                    LLog.d(TAG, "net read timeout exception: " + e.getMessage());
+                    //LLog.d(TAG, "net read timeout exception: " + e.getMessage());
                 } catch (Exception e) {
                     LLog.d(TAG, "net read exception: " + e.getMessage());
                     break;
