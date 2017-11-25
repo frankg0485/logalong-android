@@ -36,7 +36,6 @@ public class LAppServer {
     private InputStream sockIn = null;
     private OutputStream sockOut = null;
 
-    private final int STATE_INIT = 10;
     private final int STATE_READY = 30;
     private final int STATE_OFF = 40;
     private final int STATE_EXIT = 50;
@@ -66,7 +65,7 @@ public class LAppServer {
         context = LApp.ctx;
         lProtocol = LProtocol.getInstance();
         netLock = new Object();
-        netRxThreadState = netTxThreadState = STATE_INIT;
+        netRxThreadState = netTxThreadState = STATE_EXIT;
         netTxBufPool = new LBufferPool(LProtocol.PACKET_MAX_LEN, 16);
         netTxBufPool.enable(true);
 
@@ -76,6 +75,7 @@ public class LAppServer {
     }
 
     private void autoReconnect(int timeS) {
+        LLog.d(TAG, "auto reconnect in " + timeS + " seconds");
         if (tried++ >= 5) timeS = AUTO_RECONNECT_DEFAULT_TIME_SECONDS;
         LAlarm.cancelAutoReconnectAlarm();
         LAlarm.setAutoReconnectAlarm(System.currentTimeMillis() + timeS * 1000);
@@ -85,7 +85,7 @@ public class LAppServer {
     private static int INPUT_SOCKET = 0x01;
     private static int OUTPUT_SOCKET = 0x02;
 
-    private void closeSockets(int sock, int timeMs) {
+    private void closeSockets(int sock, int timeS) {
         if (null != sockOut && ((sock & OUTPUT_SOCKET) == OUTPUT_SOCKET)) {
             try {
                 sockOut.close();
@@ -110,7 +110,8 @@ public class LAppServer {
             socket = null;
 
             connected = false;
-            autoReconnect(timeMs);
+            //LLog.d(TAG, "close socket: request to auto reconnect in " + timeS + " seconds");
+            autoReconnect(timeS);
         }
     }
 
@@ -187,28 +188,24 @@ public class LAppServer {
     public void disconnect() {
         synchronized (netLock) {
             if (connected) {
-                if (netRxThreadState == STATE_READY) {
-                    while (netRxThreadState != STATE_EXIT) {
-                        netRxThreadState = STATE_OFF;
-                        netLock.notifyAll();
+                while (netRxThreadState != STATE_EXIT) {
+                    netRxThreadState = STATE_OFF;
+                    netLock.notifyAll();
 
-                        try {
-                            netLock.wait(5000);
-                        } catch (Exception e) {
-                        }
+                    try {
+                        netLock.wait(5000);
+                    } catch (Exception e) {
                     }
                 }
 
-                if (netTxThreadState == STATE_READY) {
-                    while (netTxThreadState != STATE_EXIT) {
-                        netTxThreadState = STATE_OFF;
-                        netTxBufPool.enable(false);
-                        netLock.notifyAll();
+                while (netTxThreadState != STATE_EXIT) {
+                    netTxThreadState = STATE_OFF;
+                    netTxBufPool.enable(false);
+                    netLock.notifyAll();
 
-                        try {
-                            netLock.wait(5000);
-                        } catch (Exception e) {
-                        }
+                    try {
+                        netLock.wait(5000);
+                    } catch (Exception e) {
                     }
                 }
             }
@@ -261,7 +258,6 @@ public class LAppServer {
             LLog.d(TAG, "app server stopped: net tx thread done");
             synchronized (netLock) {
                 if (netRxThreadState == STATE_READY) netRxThreadState = STATE_OFF;
-
                 closeSockets(OUTPUT_SOCKET, AUTO_RECONNECT_RETRY_TIME_SECONDS);
                 netTxThreadState = STATE_EXIT;
                 netLock.notifyAll();
