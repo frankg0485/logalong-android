@@ -38,6 +38,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
         LBroadcastReceiver.BroadcastReceiverListener,
         LShareAccountConfirmDialog.LShareAccountConfirmDialogItf {
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 0x1234;
 
     FragmentManager fragmentManager;
     LPagerAdapter lPagerAdapter;
@@ -50,7 +51,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
     private Runnable showBusySignal;
     private boolean shareAccountConfirmDialogOpened = false;
 
-    public String getDeviceName() {
+    private String getDeviceName() {
         String manufacturer = Build.MANUFACTURER;
         String model = Build.MODEL;
         if (model.startsWith(manufacturer)) {
@@ -90,6 +91,15 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
         }
         LLog.i(TAG, "VERSION=" + BuildConfig.VERSION_NAME + " DEVICE=" + getDeviceName());
         LViewUtils.screenInit();
+
+        /*
+        // request external storage access early-on
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+        }
+        */
 
         //DEBUG: invalidate user
         //LPreferences.setUserId("");
@@ -224,6 +234,27 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             handler.post(confirmAccountShare);
         }
     }
+
+    /*
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+                    // permission denied,
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        LLog.w(TAG, "failed to request write storage permission");
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    */
 
     /*
     public void enablePager() {

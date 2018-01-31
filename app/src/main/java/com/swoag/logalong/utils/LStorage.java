@@ -1,7 +1,7 @@
 package com.swoag.logalong.utils;
 /* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
 
-import android.os.Environment;
+import com.swoag.logalong.LApp;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -133,6 +133,13 @@ public class LStorage {
     }
 
     public boolean release(int id) {
+
+
+
+
+
+
+
         boolean ret = false;
         synchronized (lock) {
             if (file == null) {
@@ -180,7 +187,7 @@ public class LStorage {
     public boolean open() {
         boolean ret = false;
         try {
-            if (isExternalStorageWritable()) {
+            /*if (isExternalStorageWritable())*/ {
                 File path = openDir("cache");
                 if (path != null) {
                     File f = new File(path, "journal");
@@ -219,6 +226,7 @@ public class LStorage {
         return true;
     }
 
+    /*
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -227,14 +235,16 @@ public class LStorage {
 
         return false;
     }
+    */
 
     private static String getPath(String subdir) {
         return "logalong" + File.separator + subdir;
     }
 
     public static File openDir(String subdir) {
-        File path = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), getPath(subdir));
+        //File path = new File(Environment.getExternalStoragePublicDirectory(
+        //        Environment.DIRECTORY_DOWNLOADS), getPath(subdir));
+        File path = new File(LApp.ctx.getFilesDir(), getPath(subdir));
         if (!path.exists()) {
             if (!path.mkdirs()) {
                 return null;

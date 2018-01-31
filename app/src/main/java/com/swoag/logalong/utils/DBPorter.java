@@ -150,7 +150,7 @@ public class DBPorter {
     }
 
     public static boolean saveDeviceId() {
-        if (!LStorage.isExternalStorageWritable()) return false;
+        //if (!LStorage.isExternalStorageWritable()) return false;
 
         try {
             File path = openCacheDir();
