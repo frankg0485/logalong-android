@@ -133,17 +133,14 @@ public class LStorage {
     }
 
     public boolean release(int id) {
-
-
-
-
-
-
-
         boolean ret = false;
         synchronized (lock) {
             if (file == null) {
                 return memory.release(id);
+            }
+            if (LPreferences.getCacheLength() <= 0) {
+                LLog.w(TAG, "nothing left to release from storage");
+                return true;
             }
 
             long offset = LPreferences.getCacheReadPointer();
@@ -153,7 +150,7 @@ public class LStorage {
 
                 int signature = file.readInt();
                 if (signature != SIGNATURE) {
-                    LLog.e(TAG, "cache corrupted upon release: " + signature);
+                    LLog.e(TAG, "cache corrupted upon release: " + signature + " @offset: " + offset);
                     reset();
                     return false;
                 }
@@ -163,13 +160,16 @@ public class LStorage {
                     if (bytes <= 0) {
                         LLog.e(TAG, "unexpected: negative bytes: " + bytes);
                     }
+                    //LLog.d(TAG, "skip bytes: " + bytes);
                     file.skipBytes(bytes);
 
                     long newOffset = file.getFilePointer();
                     LPreferences.setCacheLength(LPreferences.getCacheLength() - (int)(newOffset - offset));
 
-                    if (newOffset > MAX_CACHE_LENGTH - MAX_RECORD_LENGTH)
+                    if (newOffset > MAX_CACHE_LENGTH - MAX_RECORD_LENGTH) {
+                        LLog.d(TAG, "rewinding cache: " + newOffset);
                         newOffset = 0;
+                    }
 
                     LPreferences.setCacheReadPointer(newOffset);
                     ret = true;
@@ -177,7 +177,7 @@ public class LStorage {
                     LLog.w(TAG, "invalid cache: " + id + " : " + entryId);
                 }
             } catch (Exception e) {
-                LLog.e(TAG, "unable to release cache");
+                LLog.e(TAG, "unable to release cache: " + e + " offset: " + offset);
                 reset();
             }
         }
@@ -257,6 +257,7 @@ public class LStorage {
         ArrayList<Entry> cache;
 
         boolean open() {
+            LLog.w(TAG, "failed to open file journal, using memory cache instead");
             cache = new ArrayList<Entry>();
             return true;
         }

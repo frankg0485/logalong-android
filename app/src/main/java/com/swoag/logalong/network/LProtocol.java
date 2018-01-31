@@ -512,7 +512,7 @@ public class LProtocol {
                         break;
 
                     case PUSH_NOTIFICATION:
-                        LLog.d(TAG, "push notify received");
+                        //LLog.d(TAG, "push notify received");
                         rspsIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_PUSH_NOTIFICATION));
                         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(rspsIntent);
                         break;
@@ -526,12 +526,13 @@ public class LProtocol {
         pkt.setBufOffset(origOffset);
 
         packetConsumptionStatus.bytesConsumed = total;
+        //LLog.d(TAG, "bytes consumed: " + total);
         return packetConsumptionStatus;
     }
 
     private boolean alignPacket(LBuffer pkt) {
         if (pkt.getShort() == PACKET_SIGNATURE1) return true;
-        LLog.w(TAG, "packet misaligned");
+        LLog.w(TAG, "packet misaligned, with length: " + pkt.getLen() + " offset: " + pkt.getBufOffset());
 
         while (pkt.getLen() >= 12) { //minimum packet length 8 + CRC32
             if (pkt.getShort() == PACKET_SIGNATURE1) return true;
@@ -551,7 +552,7 @@ public class LProtocol {
     // parser runs in Network receiving thread, thus no GUI update here.
     public short parse(LBuffer buf, int scrambler) {
         if (pktBuf.getLen() > 0) {
-            //LLog.d(TAG, "packet pipe fragmented");
+            //LLog.d(TAG, "packet pipe fragmented: " + pktBuf.getLen());
             pktBuf.reset();
             pktBuf.append(buf);
             pkt = pktBuf;
@@ -559,7 +560,12 @@ public class LProtocol {
             pkt = buf;
         }
 
-        while (alignPacket(pkt)) {
+        //LLog.d(TAG, "on entry: packet data length: " + pkt.getLen() + " offset: " + pkt.getBufOffset());
+
+        while (true) {
+            if (pkt.getLen() < 12) return RESPONSE_PARSE_RESULT_MORE2COME;
+            if (!alignPacket(pkt)) break;
+
             PacketConsumptionStatus status = consumePacket(pkt, scrambler);
             int bytes = status.bytesConsumed;
             if (bytes == -1) {
@@ -589,6 +595,7 @@ public class LProtocol {
                 //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));
                 if (status.isResponseCompleted) return RESPONSE_PARSE_RESULT_DONE;
             }
+            //LLog.d(TAG, "packet data length now: " + pkt.getLen() + " offset: " + pkt.getBufOffset());
         }
         //unexpected: unable to align packet
         return RESPONSE_PARSE_RESULT_ERROR;

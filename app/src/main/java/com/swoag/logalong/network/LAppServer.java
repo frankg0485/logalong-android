@@ -236,6 +236,9 @@ public class LAppServer {
                         continue;
                     } else {
                         haveBuffer = true;
+                        if (netTxBufPool.getReadBufferCount() > 0) {
+                            LLog.d(TAG, "number of network buffers: " + netTxBufPool.getReadBufferCount());
+                        }
                     }
                 }
 
@@ -247,7 +250,7 @@ public class LAppServer {
                     netTxBufPool.putReadBuffer(buf);
                     haveBuffer = false;
                 } catch (SocketTimeoutException e) {
-                    LLog.d(TAG, "net write timeout exception: " + e.getMessage());
+                    LLog.w(TAG, "net write timeout exception: " + e.getMessage());
                 } catch (Exception e) {
                     loop = false;
                     LLog.e(TAG, "net write exception: " + e.getMessage());
@@ -292,9 +295,10 @@ public class LAppServer {
                         continue;
                     }
                 } catch (SocketTimeoutException e) {
-                    //LLog.d(TAG, "net read timeout exception: " + e.getMessage());
+                    //LLog.w(TAG, "net read timeout exception: " + e.getMessage());
+                    continue;
                 } catch (Exception e) {
-                    LLog.d(TAG, "net read exception: " + e.getMessage());
+                    LLog.e(TAG, "net read exception: " + e.getMessage());
                     break;
                 }
 

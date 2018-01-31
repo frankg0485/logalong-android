@@ -4,6 +4,8 @@ package com.swoag.logalong;
 import android.app.Application;
 import android.content.Context;
 
+import com.swoag.logalong.utils.LStorage;
+
 public class LApp extends Application {
     public static Context ctx;
 
@@ -11,5 +13,6 @@ public class LApp extends Application {
     public void onCreate() {
         super.onCreate();
         ctx = getApplicationContext();
+        LStorage.getInstance().open();
     }
 }

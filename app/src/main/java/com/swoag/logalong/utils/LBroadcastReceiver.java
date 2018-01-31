@@ -121,4 +121,90 @@ public class LBroadcastReceiver {
     public void unregister(BroadcastReceiver receiver) {
         LocalBroadcastManager.getInstance(LApp.ctx).unregisterReceiver(receiver);
     }
+
+    public static String getActionName(int action) {
+        switch (action) {
+            case ACTION_USER_CREATED:
+                return "USER_CREATED";
+            case ACTION_CONNECTED_TO_SERVER:
+                return "CONNECTED_TO_SERVER";
+            case ACTION_REQUESTED_TO_SHARE_ACCOUNT_WITH:
+                return "SHARE_ACCOUNT_WITH";
+
+            case ACTION_NETWORK_CONNECTED:
+                return "NETWORK_CONNECTED";
+            case ACTION_NETWORK_DISCONNECTED:
+                return "NETWORK_DISCONNECTED";
+            case ACTION_GET_USER_BY_NAME:
+                return "GET_USER_BY_NAME";
+            case ACTION_CREATE_USER:
+                return "CREATE_USER";
+            case ACTION_SIGN_IN:
+                return "SIGN_IN";
+            case ACTION_LOG_IN:
+                return "LOG_IN";
+            case ACTION_UPDATE_USER_PROFILE:
+                return "UPDATE_USER_PROFILE";
+            case ACTION_POST_JOURNAL:
+                return "POST_JOURNAL";
+            case ACTION_POLL:
+                return "POLL";
+            case ACTION_POLL_ACK:
+                return "POLL_ACK";
+
+            case ACTION_NEW_JOURNAL_AVAILABLE:
+                return "NEW_JOURNAL_AVAILABLE";
+
+            case ACTION_UI_UPDATE_USER_PROFILE:
+                return "UI_UPDATE_PROFILE";
+            case ACTION_UI_UPDATE_ACCOUNT:
+                return "UI_UPDATE_USER_ACCOUNT";
+            case ACTION_UI_UPDATE_CATEGORY:
+                return "UI_UPDATE_CATEGORY";
+            case ACTION_UI_UPDATE_TAG:
+                return "UI_UPDATE_TAG";
+            case ACTION_UI_UPDATE_VENDOR:
+                return "UI_UPDATE_VENDOR";
+            case ACTION_UI_SHARE_ACCOUNT:
+                return "UI_SHARE_ACCOUNT";
+            case ACTION_UI_NET_IDLE:
+                return "UI_NET_IDLE";
+            case ACTION_UI_NET_BUSY:
+                return "UI_NET_BUSY";
+            case ACTION_UI_RESET_PASSWORD:
+                return "UI_RESET_PASSWORD";
+
+            case ACTION_REQUESTED_TO_SET_ACCOUNT_GID:
+                return "REQUESTED_TO_SET_ACCOUNT_GID";
+            case ACTION_REQUESTED_TO_UPDATE_ACCOUNT_SHARE:
+                return "REQUESTED_TO_UPDATE_ACCOUNT_SHARE";
+            case ACTION_REQUESTED_TO_UPDATE_ACCOUNT_INFO:
+                return "REQUESTED_TO_UPDATE_ACCOUNT_INFO";
+            case ACTION_REQUESTED_TO_UPDATE_SHARE_USER_PROFILE:
+                return "REQUESTED_TO_UPDATE_SHARE_USER_PROFILE";
+            case ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORD:
+                return "REQUESTED_TO_SHARE_TRANSITION_RECORD";
+            case ACTION_REQUESTED_TO_SHARE_TRANSITION_RECORDS:
+                return "REQUESTED_TO_SHARE_TRANSITION_RECORDS";
+            case ACTION_REQUESTED_TO_SHARE_TRANSITION_CATEGORY:
+                return "REQUESTED_TO_SHARE_TRANSITION_CATEGORY";
+            case ACTION_REQUESTED_TO_SHARE_TRANSITION_PAYER:
+                return "REQUESTED_TO_SHARE_TRANSITION_PAYER";
+            case ACTION_REQUESTED_TO_SHARE_TRANSITION_TAG:
+                return "REQUESTED_TO_SHARE_TRANSITION_TAG";
+            case ACTION_REQUESTED_TO_SHARE_PAYER_CATEGORY:
+                return "REQUESTED_TO_SHARE_PAYER_CATEGORY";
+            case ACTION_REQUESTED_TO_SHARE_SCHEDULE:
+                return "REQUESTED_TO_SHARE_SCHEDULE";
+
+            case ACTION_PUSH_NOTIFICATION:
+                return "PUSH_NOTIFICATION";
+            case ACTION_SERVER_BROADCAST_MSG_RECEIVED:
+                return "SERVER_BROADCAST_MSG_RECEIVED";
+            case ACTION_UNKNOWN_MSG:
+                return "UNKNOWN_MSG";
+            default:
+                return "Unknown Message";
+        }
+    }
 }

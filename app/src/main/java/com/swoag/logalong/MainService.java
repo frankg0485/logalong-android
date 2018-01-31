@@ -144,9 +144,12 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             @Override
             public void run() {
                 if (loggedIn) {
-                    LLog.d(TAG, "heart beat polling");
+                    LLog.d(TAG, "heart beat journal flushing");
                     //polling happens only where there's no pending journal
-                    if (!journal.flush()) server.UiPoll();
+                    if (!journal.flush()) {
+                        LLog.d(TAG, "heart beat polling without pending journal");
+                        server.UiPoll();
+                    }
                 }
             }
         };
@@ -327,7 +330,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         }
         serviceHandler.removeCallbacks(pollRunnable); //disable polling by default
 
-        LLog.d(TAG, "action: " + action + " logged in: " + loggedIn);
+        //LLog.d(TAG, "action: " + action + ":" + LBroadcastReceiver.getActionName(action) + " logged in: " + loggedIn);
         if (action == LBroadcastReceiver.ACTION_NETWORK_DISCONNECTED) {
             loggedIn = false;
             return;
@@ -362,19 +365,19 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
             switch (action) {
                 case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
-                    LLog.d(TAG, "flushing journal upon creation ...");
+                    //LLog.d(TAG, "flushing journal upon creation ...");
                     if (!journal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
                 case LBroadcastReceiver.ACTION_POST_JOURNAL:
                     boolean moreJournal = true;
                     int journalId = intent.getIntExtra("journalId", 0);
-                    LLog.d(TAG, "post journal: " + journalId + " status: " + ret);
+                    //LLog.d(TAG, "post journal: " + journalId + " status: " + ret);
 
                     if (LProtocol.RSPS_OK == ret || LProtocol.RSPS_MORE == ret) {
                         short jrqstId = intent.getShortExtra("jrqstId", (short) 0);
                         short jret = intent.getShortExtra("jret", (short) 0);
-                        LLog.d(TAG, "post journal rsps ok, rqstId: " + jrqstId + " status: " + jret);
+                        //LLog.d(TAG, "post journal rsps ok, rqstId: " + jrqstId + " status: " + jret);
                         if (LProtocol.RSPS_OK != jret) {
                             LLog.w(TAG, "journal request " + jrqstId + " failed.");
                         } else {
@@ -560,6 +563,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 case LProtocol.JRQST_GET_RECORDS:
                                 case LProtocol.JRQST_GET_ACCOUNT_RECORDS:
                                     gid = intent.getLongExtra("gid", 0L);
+                                    //LLog.d(TAG, "get record: " + gid);
                                     long aid = intent.getLongExtra("aid", 0);
                                     long aid2 = intent.getLongExtra("aid2", 0);
                                     long cid = intent.getLongExtra("cid", 0);
@@ -695,7 +699,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         }
                         if (LProtocol.RSPS_OK == ret) {
                             journal.deleteById(journalId);
-                            LLog.d(TAG, "flushing journal upon completion ...");
+                            //LLog.d(TAG, "flushing journal upon completion ...");
                             moreJournal = journal.flush();
                         }
                     } else {
@@ -1101,7 +1105,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                         server.UiPollAck(id);
                     } else {
                         //no more
-                        LLog.d(TAG, "flushing journal upon polling ends ...");
+                        //LLog.d(TAG, "flushing journal upon polling ends ...");
                         if (!journal.flush()) {
                             if (LFragmentActivity.upRunning) {
                                 //server.UiUtcSync();
@@ -1122,7 +1126,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
 
                 case LBroadcastReceiver.ACTION_PUSH_NOTIFICATION:
-                    LLog.d(TAG, "poll upon push notification");
+                    //LLog.d(TAG, "received push notification --- fall through");
                     //reset polling count upon receiving push notification from server
                     //we'll keep polling up to MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION times, till a positive
                     //polling result from server: this is to handle the case where server sends the notification
@@ -1130,14 +1134,15 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     pollingCount = 0;
                     //FALL THROUGH
                 case LBroadcastReceiver.ACTION_POLL_ACK:
-                    //LLog.d(TAG, "poll ack journal flushing");
+                    //LLog.d(TAG, "flushing journal upon poll ack");
                     if (!journal.flush()) {
+                        //LLog.d(TAG, "poll again upon ack without pending journal");
                         server.UiPoll();
                     }
                     break;
 
                 case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
-                    LLog.w(TAG, "unknown message received");
+                    LLog.w(TAG, "flushing journal upon unknown message received");
                     if (!journal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
@@ -1173,7 +1178,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         protected Boolean doInBackground(Cursor... params) {
             Cursor data = params[0];
             if (data == null || data.getCount() == 0) {
-                LLog.d(TAG, "no account left, deleting all balances");
+                //LLog.d(TAG, "no account left, deleting all balances");
                 DBAccountBalance.deleteAll(); //clean up balances if all accounts are removed.
                 return false;
             }
@@ -1233,7 +1238,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
         @Override
         protected void onPostExecute(Boolean result) {
             accountBalanceSynced = true;
-            LLog.d(TAG, "account balance synchronized");
+            //LLog.d(TAG, "account balance synchronized");
             serviceHandler.removeCallbacks(serviceShutdownRunnable);
             serviceHandler.postDelayed(serviceShutdownRunnable, SERVICE_SHUTDOWN_MS);
         }

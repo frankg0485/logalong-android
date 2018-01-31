@@ -105,6 +105,12 @@ public class LBufferPool {
         }
     }
 
+    public int getReadBufferCount() {
+        synchronized (lock) {
+            return filledBuffers.size();
+        }
+    }
+
     public LBuffer getReadBuffer() {
         synchronized (lock) {
             while (poolEnabled) {

@@ -402,9 +402,7 @@ public class LJournal {
         }
     }
 
-    //return TRUE if any journal is actually posted, otherwise FALSE
-    //returning FALSE tells service that it can move forward with server polling, which would
-    //come back to flush() again to double check *before* polling actually happens.
+    //return TRUE if there's any pending journal, otherwise FALSE
     private static int errorCount = 0;
     private static boolean removeEntry = false;
     private static boolean newEntry = false;
@@ -440,13 +438,21 @@ public class LJournal {
         LStorage.Entry entry = LStorage.getInstance().get();
         if (null == entry) return false;
 
-        if (lastFlushId == entry.id && (System.currentTimeMillis() - lastFlushMs < 15000)) {
-            //so not to keep flushing the same journal over and over
-            LLog.w(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
-                    + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
-            return false;
+        if (lastFlushId == entry.id) {
+            if (System.currentTimeMillis() - lastFlushMs < 30000) {
+                //so not to keep flushing the same journal over and over
+                LLog.d(TAG, "journal flush request ignored: " + entry.id);
+                return true;
+            }
+            else {
+                LLog.w(TAG, "repeated journal request: " + entry.id + " lastFlushMs: "
+                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
+                //return true;
+            }
+
         }
-        LLog.d(TAG, "total flushing count: " + flushCount++);
+        LLog.d(TAG, "total flushed count: " + (flushCount++) + " posted: " + postCount +
+                " cache length: " + LStorage.getInstance().getCacheLength());
 
         removeEntry = false;
         newEntry = false;
@@ -516,7 +522,7 @@ public class LJournal {
         errorCount = 0;
         if (removeEntry) {
             deleteById(entry.id);
-            return false;
+            return (null != LStorage.getInstance().get());
         }
 
         if (newEntry) {
@@ -532,6 +538,7 @@ public class LJournal {
     }
 
     public void deleteById(int journalId) {
+        //LLog.d(TAG, "removing journal entry: " + journalId);
         LStorage.getInstance().release(journalId);
     }
 
@@ -555,7 +562,7 @@ public class LJournal {
         }
         LStorage.getInstance().put(entry);
 
-        LLog.d(TAG, "total posted journal: " + postCount++);
+        LLog.d(TAG, "total posted journal: " + (postCount++) +  " flushed: " + flushCount );
         Intent intent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE));
         LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(intent);
         return true;
