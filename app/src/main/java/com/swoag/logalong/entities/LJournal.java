@@ -439,14 +439,14 @@ public class LJournal {
         if (null == entry) return false;
 
         if (lastFlushId == entry.id) {
-            if (System.currentTimeMillis() - lastFlushMs < 30000) {
+            if (System.currentTimeMillis() - lastFlushMs < 180000) {
                 //so not to keep flushing the same journal over and over
-                LLog.d(TAG, "journal flush request ignored: " + entry.id);
+                LLog.d(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
+                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
                 return true;
             }
             else {
-                LLog.w(TAG, "repeated journal request: " + entry.id + " lastFlushMs: "
-                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
+                LLog.w(TAG, "repeated journal request: " + entry.id);
                 //return true;
             }
 

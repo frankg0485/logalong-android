@@ -561,9 +561,16 @@ public class LProtocol {
         }
 
         //LLog.d(TAG, "on entry: packet data length: " + pkt.getLen() + " offset: " + pkt.getBufOffset());
-
         while (true) {
-            if (pkt.getLen() < 12) return RESPONSE_PARSE_RESULT_MORE2COME;
+            if (pkt.getLen() < 12) {
+                if (pkt != pktBuf) {
+                    //LLog.d(TAG, "reset packet then append");
+                    pkt.reset();
+                    pktBuf.reset();
+                    pktBuf.append(pkt);
+                }
+                return RESPONSE_PARSE_RESULT_MORE2COME;
+            }
             if (!alignPacket(pkt)) break;
 
             PacketConsumptionStatus status = consumePacket(pkt, scrambler);
@@ -578,22 +585,12 @@ public class LProtocol {
                     pkt.reset();
                     pktBuf.reset();
                     pktBuf.append(pkt);
-                } else {
-                    //this must be the case where the data is only partially received.
-                    //reset packet then quit the loop
-                    //LLog.d(TAG, "reset packet");
-                    pkt.reset();
                 }
                 return RESPONSE_PARSE_RESULT_MORE2COME;
             } else {
                 //packet consumed
                 pkt.setLen(pkt.getLen() - bytes);
                 pkt.setBufOffset((pkt.getLen() == 0) ? 0 : pkt.getBufOffset() + bytes);
-
-                //LLog.d(TAG, "continue parsing: " + buf.getLen() + " offset: " + pkt
-                // .getBufOffset());
-                //LLog.d(TAG, LLog.bytesToHex(pkt.getBuf()));
-                if (status.isResponseCompleted) return RESPONSE_PARSE_RESULT_DONE;
             }
             //LLog.d(TAG, "packet data length now: " + pkt.getLen() + " offset: " + pkt.getBufOffset());
         }
