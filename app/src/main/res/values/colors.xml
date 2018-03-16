@@ -46,4 +46,5 @@
     <color name="topbar_bgd_color">#585c60</color>
     <color name="balance_header_bgd_color">#e4e6e8</color>
     <color name="row_released_color">#ced0d2</color>
+    <color name="light_row_released_color">#dee0e2</color>
 </resources>

@@ -2,6 +2,7 @@ package com.swoag.logalong.fragments;
 /* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,7 +17,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
 
+import com.swoag.logalong.ChartActivity;
 import com.swoag.logalong.LFragment;
+import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
@@ -52,7 +55,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
-    private View dispV, altDispV;
+    private View dispV, altDispV, chartView;
     private ImageView queryOrderIV, altQueryOrderIV;
     private LSectionSummary sectionSummary;
 
@@ -381,12 +384,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         filterView = (ImageView) setViewListener(rootView, R.id.filter);
         searchView = (ImageView) setViewListener(rootView, R.id.search);
-
-        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-            LViewUtils.setAlpha(searchView, 0.8f);
-        } else {
-            LViewUtils.setAlpha(searchView, 1.0f);
-        }
+        chartView = setViewListener(rootView, R.id.tabChart);
 
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
         customTimeView = (TextView) rootView.findViewById(R.id.customTime);
@@ -481,6 +479,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         altBalanceTV = null;
         altExpenseTV = null;
         altIncomeTV = null;
+        chartView = null;
 
         rootView = null;
         super.onDestroyView();
@@ -505,10 +504,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         showTime();
         showFilterView();
 
-        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-            LViewUtils.setAlpha(searchView, 0.8f);
+        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()
+                && !LPreferences.getSearchFilterByValue()) {
+            //LViewUtils.setAlpha(searchView, 0.8f);
+            searchView.setImageResource(R.drawable.ic_action_search);
         } else {
-            LViewUtils.setAlpha(searchView, 1.0f);
+            //LViewUtils.setAlpha(searchView, 1.0f);
+            searchView.setImageResource(R.drawable.ic_action_search_enabled);
         }
         dbLoaderHelper.restart(getLoaderManager(), DBLoaderHelper.LOADER_INIT_RANGE);
     }
@@ -541,6 +543,10 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             : R.drawable.ic_action_collapse);
                     initDbLoader();
                     break;
+                case R.id.tabChart:
+                    startActivity(new Intent(ViewTransactionFragment.this.getActivity(), ChartActivity.class));
+                    break;
+
                 default:
                     break;
             }
@@ -1079,10 +1085,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         if (changed) {
             showTime();
 
-            if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-                LViewUtils.setAlpha(searchView, 0.8f);
+            if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()
+                    && !LPreferences.getSearchFilterByValue()) {
+                //LViewUtils.setAlpha(searchView, 0.8f);
+                searchView.setImageResource(R.drawable.ic_action_search);
             } else {
-                LViewUtils.setAlpha(searchView, 1.0f);
+                //LViewUtils.setAlpha(searchView, 1.0f);
+                searchView.setImageResource(R.drawable.ic_action_search_enabled);
             }
 
             AppPersistency.clearViewHistory();
@@ -1126,28 +1135,28 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
     private void showTime() {
         if (LPreferences.getSearchAllTime()) {
-            customTimeView.setVisibility(View.GONE);
-            monthlyView.setVisibility(View.VISIBLE);
-            prevView.setVisibility(View.VISIBLE);
-            nextView.setVisibility(View.VISIBLE);
+            //customTimeView.setVisibility(View.GONE);
+            //monthlyView.setVisibility(View.VISIBLE);
+            //prevView.setVisibility(View.VISIBLE);
+            //nextView.setVisibility(View.VISIBLE);
 
         } else {
-            customTimeView.setVisibility(View.VISIBLE);
-            monthlyView.setVisibility(View.GONE);
+            //customTimeView.setVisibility(View.VISIBLE);
+            //monthlyView.setVisibility(View.GONE);
             prevView.setVisibility(View.GONE);
             nextView.setVisibility(View.GONE);
 
-            if (LPreferences.getSearchFilterByEditTIme()) {
-                customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences
-                        .getSearchAllTimeFrom()) + " - " +
-                        new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo())));
-            } else {
-                customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom())
-                        + " - " +
-                        new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
-            }
-            prevView.setEnabled(false);
-            nextView.setEnabled(false);
+            //if (LPreferences.getSearchFilterByEditTIme()) {
+            //    customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences
+            //            .getSearchAllTimeFrom()) + " - " +
+            //            new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo())));
+            //} else {
+            //    customTimeView.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom())
+            //            + " - " +
+            //            new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+            //}
+            //prevView.setEnabled(false);
+            //nextView.setEnabled(false);
             return;
         }
 
@@ -1167,15 +1176,19 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         }
 
         if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) {
-            prevView.setEnabled(false);
-            nextView.setEnabled(false);
-            LViewUtils.setAlpha(prevView, 0.8f);
-            LViewUtils.setAlpha(nextView, 0.8f);
+            //prevView.setEnabled(false);
+            //nextView.setEnabled(false);
+            //LViewUtils.setAlpha(prevView, 0.8f);
+            //LViewUtils.setAlpha(nextView, 0.8f);
+            prevView.setVisibility(View.INVISIBLE);
+            nextView.setVisibility(View.INVISIBLE);
         } else {
-            prevView.setEnabled(true);
-            nextView.setEnabled(true);
-            LViewUtils.setAlpha(prevView, 1.0f);
-            LViewUtils.setAlpha(nextView, 1.0f);
+            //prevView.setEnabled(true);
+            //nextView.setEnabled(true);
+            //LViewUtils.setAlpha(prevView, 1.0f);
+            //LViewUtils.setAlpha(nextView, 1.0f);
+            prevView.setVisibility(View.VISIBLE);
+            nextView.setVisibility(View.VISIBLE);
         }
     }
 

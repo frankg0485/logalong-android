@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 
 public class LViewPager extends ViewPager {
     private boolean isPagingEnabled = true;
+    private boolean isSwipeable = true;
 
     public LViewPager(Context context) {
         super(context);
@@ -24,6 +25,7 @@ public class LViewPager extends ViewPager {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
+        if (!isSwipeable) return false;
         return this.isPagingEnabled && super.onInterceptTouchEvent(event);
     }
 
@@ -34,4 +36,10 @@ public class LViewPager extends ViewPager {
     public boolean isPagingEnabled() {
         return isPagingEnabled;
     }
+
+    public void setSwipeable(boolean b) {
+        this.isSwipeable = b;
+    }
+
+    public boolean isSwipeable() { return isSwipeable; }
 }

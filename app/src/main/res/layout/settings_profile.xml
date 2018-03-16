@@ -244,7 +244,7 @@
         android:id="@+id/createUserView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#dee0e2"
+        android:background="@color/light_row_released_color"
         android:paddingBottom="15dp"
         android:paddingLeft="10dp">
 

@@ -188,6 +188,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             public void onPageSelected(int position) {
                 //LLog.d(TAG, "selected position: " + position);
                 selectTab(position);
+                //mViewPager.setSwipeable(position != 0);
             }
 
             @Override
@@ -197,7 +198,7 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
                         if (outOfBoundCount > 5 && !userClick) {
                             if (this.position == 0) {
                                 //LLog.d(TAG, "Out of boundary on: left");
-                                startActivity(new Intent(MainActivity.this, ChartActivity.class));
+                                //startActivity(new Intent(MainActivity.this, ChartActivity.class));
                             } else if (this.position == 2) {
                                 //LLog.d(TAG, "Out of boundary on: right");
                             }
@@ -319,10 +320,6 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
             mViewPager.setCurrentItem(2);
             userClick = true;
         }
-    }
-
-    public void onCharts(View v) {
-        startActivity(new Intent(MainActivity.this, ChartActivity.class));
     }
 
     @Override
