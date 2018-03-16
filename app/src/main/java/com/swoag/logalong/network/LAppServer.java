@@ -28,7 +28,7 @@ import java.util.Random;
 public class LAppServer {
     private static final String TAG = LAppServer.class.getSimpleName();
 
-    public static final String serverIp = "192.168.1.116";
+    public static final String serverIp = "192.168.1.108";
     //public static final String serverIp = "auto";
     private static final int serverPort = 8000;
 

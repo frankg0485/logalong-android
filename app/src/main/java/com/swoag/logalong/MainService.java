@@ -458,10 +458,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                                     LTransaction transaction = dbTransaction.getByGid(gid);
                                     if (null != transaction) {
-                                        if (transaction.getId() == id) {
+                                        if (transaction.getId() != id) {
                                             LLog.e(TAG, "unexpected error, record GID: " + gid + " already taken ");
+                                           dbTransaction.deleteById(transaction.getId());
                                         }
-                                        dbTransaction.deleteById(transaction.getId());
                                     }
                                     dbTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
@@ -472,10 +472,10 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
                                     LScheduledTransaction scheduledTransaction = dbSchTransaction.getByGid(gid);
                                     if (null != scheduledTransaction) {
-                                        if (scheduledTransaction.getId() == id) {
+                                        if (scheduledTransaction.getId() != id) {
                                             LLog.e(TAG, "unexpected error, schedule GID: " + gid + " already taken ");
+                                            dbSchTransaction.deleteById(scheduledTransaction.getId());
                                         }
-                                        dbSchTransaction.deleteById(scheduledTransaction.getId());
                                     }
                                     dbSchTransaction.updateColumnById(id, DBHelper.TABLE_COLUMN_GID, gid);
                                     break;
@@ -638,7 +638,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                     byte interval = intent.getByteExtra("interval", (byte) 0);
                                     byte unit = intent.getByteExtra("unit", (byte) 0);
                                     byte count = intent.getByteExtra("count", (byte) 0);
-                                    boolean enabled = intent.getByteExtra("count", (byte) 0) == 0 ? false : true;
+                                    boolean enabled = intent.getByteExtra("enabled", (byte) 0) == 0 ? false : true;
 
                                     dbSchTransaction = DBScheduledTransaction.getInstance();
                                     scheduledTransaction = dbSchTransaction.getByGid(gid);

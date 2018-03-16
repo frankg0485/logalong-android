@@ -162,6 +162,7 @@ public class LAccount extends LDbBase {
             if (shareIds.get(ii) == id) {
                 shareIds.remove(ii);
                 shareStates.remove(ii);
+                ii--;
             }
         }
     }
