@@ -148,7 +148,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     //polling happens only where there's no pending journal
                     if (!journal.flush()) {
                         LLog.d(TAG, "heart beat polling without pending journal");
-                        server.UiPoll();
+                        gatedPoll();//server.UiPoll();
                     }
                 }
             }
@@ -725,6 +725,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     break;
 
                 case LBroadcastReceiver.ACTION_POLL:
+                    pollRequested = false;
+
                     if (LProtocol.RSPS_OK == ret) {
                         long id = intent.getLongExtra("id", 0);
                         short nid = intent.getShortExtra("nid", (short) 0);
@@ -1137,13 +1139,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     //LLog.d(TAG, "flushing journal upon poll ack");
                     if (!journal.flush()) {
                         //LLog.d(TAG, "poll again upon ack without pending journal");
-                        server.UiPoll();
+                        gatedPoll();//server.UiPoll();
                     }
                     break;
 
                 case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
                     LLog.w(TAG, "flushing journal upon unknown message received");
-                    if (!journal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                    if (!journal.flush()) gatedPoll(); //serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
                     break;
 
                 //case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:
@@ -1153,6 +1155,14 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             }
         }
     }
+
+    private boolean pollRequested = false;
+    private void gatedPoll() {
+        if (!pollRequested) {
+            pollRequested = server.UiPoll();
+        }
+    }
+
 
     private class AsyncScanBalances extends AsyncTask<Cursor, Void, Boolean> {
 
