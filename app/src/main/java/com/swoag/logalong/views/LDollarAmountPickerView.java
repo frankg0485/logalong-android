@@ -15,6 +15,9 @@ import com.swoag.logalong.utils.LViewUtils;
 
 public class LDollarAmountPickerView implements View.OnClickListener {
     private static final String TAG = LDollarAmountPickerView.class.getSimpleName();
+    private static final int MAX_INPUT_LENGHT = 16;
+    private static final int MAX_DECIMAL_DIGITS = 3;
+    private static final double MAX_VALUE = 999999999999f;
     public static final int VALUE_COLOR_RED = 10;
     public static final int VALUE_COLOR_GREEN = 20;
     public static final int VALUE_COLOR_BLUE = 30;
@@ -35,14 +38,33 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private boolean pickerActive;
 
     private String inputString = "";
-    private double lastValue;
-    private int lastValueEnd;
-    private int mathOperator;
+    private int firstValueEnd = 0;
+    private char mathOperator;
+
     private MyClickListener myClickListener;
 
     public interface LDollarAmountPickerViewItf {
         public void onDollarAmountPickerExit(double value, boolean save);
     }
+
+    private enum State {
+        INIT_NO_INPUT,
+        INTEGER_1,
+        DECIMAL_1,
+        DECIMAL_1_0,
+        MATH_INIT,
+        INTEGER_2,
+        DECIMAL_2
+    }
+
+    private enum InputStringLastBit {
+        EMPTY,
+        DOT,
+        MATH,
+        DIGIT
+    }
+
+    private State state = State.INIT_NO_INPUT;
 
     public LDollarAmountPickerView(View rootView, double value, int colorCode, LDollarAmountPickerViewItf callback) {
         this.rootView = rootView;
@@ -110,16 +132,13 @@ public class LDollarAmountPickerView implements View.OnClickListener {
                 break;
         }
 
-        clearInputString();
-        inputString = value2string(value);
-        if (TextUtils.isEmpty(inputString)) {
-            valueTV.setText("0.0");
+        if (value < 0.01) {
+            inputString = "";
+            state = initNoInputState();
         } else {
-            valueTV.setText(inputString);
-            enableDot(false);
-            enableOk(true);
+            inputString = value2string(value);
+            state = initDecimal1State();
         }
-
         pickerActive = true;
     }
 
@@ -156,36 +175,13 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         public void onClicked(View v) {
             if (!pickerActive) return;
 
-            switch (v.getId()) {
-                case R.id.dot:
-                    appendToString(-1);
-                    break;
-                case R.id.clear:
-                    clearInputString();
-                    break;
-                case R.id.plus:
-                    doMathToString(0);
-                    break;
-                case R.id.minus:
-                    doMathToString(1);
-                    break;
-                case R.id.multiply:
-                    doMathToString(2);
-                    break;
-                case R.id.divide:
-                    doMathToString(3);
-                    break;
-
-                case R.id.cancel:
-                    callback.onDollarAmountPickerExit(0, false);
-                    break;
-
-                case R.id.ok:
-                    saveLog();
-                    break;
-
-                default:
-                    break;
+            if (R.id.cancel == v.getId()) {
+                callback.onDollarAmountPickerExit(0, false);
+            } else if (R.id.clear == v.getId()) {
+                inputString = "";
+                state = initNoInputState();
+            } else {
+                handleButtonPress(v.getId());
             }
         }
     }
@@ -193,44 +189,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (!pickerActive) return;
-
-        switch (v.getId()) {
-            case R.id.b0:
-                appendToString(0);
-                break;
-            case R.id.b1:
-                appendToString(1);
-                break;
-            case R.id.b2:
-                appendToString(2);
-                break;
-            case R.id.b3:
-                appendToString(3);
-                break;
-            case R.id.b4:
-                appendToString(4);
-                break;
-            case R.id.b5:
-                appendToString(5);
-                break;
-            case R.id.b6:
-                appendToString(6);
-                break;
-            case R.id.b7:
-                appendToString(7);
-                break;
-            case R.id.b8:
-                appendToString(8);
-                break;
-            case R.id.b9:
-                appendToString(9);
-                break;
-            case R.id.backspace:
-                removeLastDigitFromString();
-                break;
-            default:
-                break;
-        }
+        handleButtonPress(v.getId());
     }
 
     private View setViewListener(int id, boolean myListener) {
@@ -270,139 +229,81 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         else LViewUtils.setAlpha((View) viewDot, VIEW_DIM_ALPHA_VALUE);
     }
 
-    private void clearInputString() {
-        inputString = "";
-        valueTV.setText("0.0");
-        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
-
-        mathOperator = -1;
-        lastValue = 0;
-        enableOk(false);
-        enableDot(true);
-        enableMath(false);
-    }
-
-    private void appendToString(int digit) {
-        if (digit == -1) {
-            if (TextUtils.isEmpty(inputString)) {
-                inputString = "0.";
-            } else {
-                inputString += '.';
-            }
-            enableDot(false);
-        } else {
-            if (TextUtils.isEmpty(inputString) && digit == 0) {
-                inputString = "0.";
-                enableDot(false);
-            } else {
-                inputString = inputString + digit;
-            }
-        }
-
-        validateStringAndUpdateDisplay();
-        valueTV.setText(inputString);
-    }
-
-    private void removeLastDigitFromString() {
-        if (TextUtils.isEmpty(inputString)) {
-            clearInputString();
-        } else {
-            char lastDigit = inputString.charAt(inputString.length() - 1);
-            if (lastDigit == '.') {
-                enableDot(true);
-            } else {
-                if (lastDigit == '+' || lastDigit == '-' || lastDigit == '*' || lastDigit == '/') {
-                    mathOperator = -1;
-                    ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
+    private boolean appendToString(char ch) {
+        boolean ret = false;
+        if (inputString.length() < MAX_INPUT_LENGHT) {
+            if (ch >= '0' && ch <= '9') {
+                int ii = inputString.lastIndexOf('.');
+                if (ii > 0 && ii > firstValueEnd) {
+                    if (inputString.length() < ii + MAX_DECIMAL_DIGITS + 1) {
+                        inputString += ch;
+                        ret = true;
+                    }
+                } else {
+                    inputString += ch;
+                    ret = true;
                 }
-            }
-
-            inputString = inputString.substring(0, inputString.length() - 1);
-            int len = inputString.length();
-            while (true && len > 0) {
-                lastDigit = inputString.charAt(len - 1);
-                if ((!Character.isDigit(lastDigit)) && lastDigit != '.'
-                        && lastDigit != '+'
-                        && lastDigit != '-'
-                        && lastDigit != '*'
-                        && lastDigit != '/') {
-                    inputString = inputString.substring(0, len - 1);
-                    len--;
-                } else break;
-            }
-            if (len == 0) clearInputString();
-            else {
-                validateStringAndUpdateDisplay();
-                valueTV.setText(inputString);
+            } else {
+                inputString += ch;
+                ret = true;
             }
         }
+        return ret;
     }
 
-    private String validateString(String str) {
-        if (TextUtils.isEmpty(str)) return str;
-        char ch0 = str.charAt(0);
-        if (ch0 == '.') return "0.";
-        if (str.length() == 1) {
-            if (ch0 == '-') return "0.0";
-            else return str;
+    private boolean appendMathToString(char ch) {
+        boolean ret = false;
+        if (inputString.length() < MAX_INPUT_LENGHT - 3) {
+            inputString += ' ';
+            inputString += ch;
+            inputString += ' ';
+            mathOperator = ch;
+            ret = true;
         }
-
-        char ch1 = str.charAt(1);
-        if (ch0 == '0' && ch1 != '.') return str.substring(1);
-
-        // max two decimal digits
-        int ii = str.lastIndexOf('.');
-        if (ii > 0) {
-            if (str.length() > ii + 3) {
-                str = str.substring(0, ii + 3);
-            }
-        }
-        return str;
+        return ret;
     }
 
-    private void validateStringAndUpdateDisplay() {
-        String tmp = (mathOperator >= 0) ? inputString.substring(lastValueEnd) : inputString;
-        tmp = validateString(tmp);
-        if (mathOperator < 0) inputString = tmp;
-        else inputString = inputString.substring(0, lastValueEnd) + tmp;
+    private InputStringLastBit getLastBit() {
+        if (inputString.isEmpty()) {
+            return InputStringLastBit.EMPTY;
+        }
 
-        if (string2value(tmp) != 0) {
-            enableOk(true);
-            enableMath(true);
+        char lastDigit = inputString.charAt(inputString.length() - 1);
+        if (lastDigit >= '0' && lastDigit <= '9') return InputStringLastBit.DIGIT;
+        else if (lastDigit == '.') return InputStringLastBit.DOT;
+        else if (lastDigit == ' ')
+            return InputStringLastBit.MATH;
+
+        LLog.e(TAG, "unexpected ending character: " + lastDigit);
+        return InputStringLastBit.EMPTY;
+    }
+
+    private InputStringLastBit removeLastBit() {
+        if (inputString.isEmpty()) {
+            return InputStringLastBit.EMPTY;
+        }
+
+        if (inputString.charAt(inputString.length() - 1) == ' ') {
+            inputString = inputString.substring(0, inputString.length() - 3);
         } else {
-            if (mathOperator == 3 || mathOperator < 0) enableOk(false);
-            if (mathOperator < 0) enableMath(false);
-        }
-    }
-
-    private void doMathToString(int operator) {
-        if (mathOperator >= 0) {
-            saveLog();
+            inputString = inputString.substring(0, inputString.length() - 1);
         }
 
-        switch (operator) {
-            case 0:
-                inputString += '+';
-                break;
-            case 1:
-                inputString += '-';
-                break;
-            case 2:
-                inputString += '*';
-                break;
-            case 3:
-                inputString += '/';
-                break;
+        if (inputString.isEmpty()) {
+            return InputStringLastBit.EMPTY;
+        } else {
+            if (inputString.length() == firstValueEnd + 1 &&
+                    (inputString.charAt(firstValueEnd) == '-' ||
+                            inputString.charAt(firstValueEnd) == '0')) {
+                inputString = inputString.substring(0, inputString.length() - 1);
+                if (firstValueEnd > 0)
+                    return InputStringLastBit.MATH;
+                else
+                    return InputStringLastBit.EMPTY;
+            }
         }
 
-        lastValueEnd = inputString.length();
-        lastValue = string2value(inputString.substring(0, lastValueEnd - 1));
-        enableMath(false);
-        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_equal);
-        enableDot(true);
-
-        mathOperator = operator;
-        valueTV.setText(inputString);
+        return getLastBit();
     }
 
     private String value2string(double value) {
@@ -417,42 +318,488 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         if (TextUtils.isEmpty(str)) return 0f;
 
         char lastDigit = str.charAt(str.length() - 1);
-        if (lastDigit == '.'
-                || lastDigit == '+'
-                || lastDigit == '-'
-                || lastDigit == '*'
-                || lastDigit == '/') {
+        if (lastDigit == '.') {
             return (Double.parseDouble(str.substring(0, str.length() - 1)));
         }
         return Double.parseDouble(str);
     }
 
-    private void saveLog() {
-        if (mathOperator >= 0) {
-            double curValue = string2value(inputString.substring(lastValueEnd, inputString.length()));
-            switch (mathOperator) {
-                case 0:
-                    curValue = lastValue + curValue;
-                    break;
-                case 1:
-                    curValue = lastValue - curValue;
-                    break;
-                case 2:
-                    curValue = lastValue * curValue;
-                    break;
-                case 3:
-                    if (curValue != 0) curValue = lastValue / curValue;
-                    break;
-            }
+    private boolean applyMath() {
+        boolean ret = true;
+        String str1 = inputString.substring(0, firstValueEnd - 3);
+        String str2 = inputString.substring(firstValueEnd, inputString.length());
+        double val1 = string2value(str1);
+        double val2 = string2value(str2);
 
-            clearInputString();
-            inputString = String.format("%.2f", curValue);
-
-            validateStringAndUpdateDisplay();
-            valueTV.setText(inputString);
-            enableDot(false); //math result always has '.' in it.
-        } else {
-            callback.onDollarAmountPickerExit(string2value(inputString), true);
+        switch (mathOperator) {
+            case '+':
+                value = val1 + val2;
+                break;
+            case '-':
+                value = val1 - val2;
+                break;
+            case '*':
+                value = val1 * val2;
+                break;
+            case '/':
+                if (val2 == 0) {
+                    ret = false;
+                } else {
+                    value = val1 / val2;
+                }
+                break;
         }
+
+        if (!ret || value > MAX_VALUE) {
+            inputString = "";
+            value = 0;
+            return false;
+        } else {
+            inputString = value2string(value);
+        }
+        return true;
+    }
+
+    private void saveLog() {
+        callback.onDollarAmountPickerExit(string2value(inputString), true);
+    }
+
+    private void handleButtonPress( int sender) {
+        switch (state) {
+            case INIT_NO_INPUT:
+                state = doNoInputState(sender);
+                break;
+            case INTEGER_1:
+                state = doInteger1State(sender);
+                break;
+            case DECIMAL_1_0:
+                state = doDecimal10State(sender);
+                break;
+            case DECIMAL_1:
+                state = doDecimal1State(sender);
+                break;
+            case MATH_INIT:
+                state = doMathInitState(sender);
+                break;
+            case INTEGER_2:
+                state = doInteger2State(sender);
+                break;
+            case DECIMAL_2:
+                state = doDecimal2State(sender);
+                break;
+        }
+    }
+
+    private char getDigit(int btn) {
+        int digit = 0;
+        switch (btn) {
+            case R.id.b9: digit++;
+            case R.id.b8: digit++;
+            case R.id.b7: digit++;
+            case R.id.b6: digit++;
+            case R.id.b5: digit++;
+            case R.id.b4: digit++;
+            case R.id.b3: digit++;
+            case R.id.b2: digit++;
+            case R.id.b1: digit++;
+            case R.id.b0: break;
+        }
+        return (char)('0' + digit);
+    }
+
+    private char getMath(int btn) {
+        char ch = '+';
+        switch (btn) {
+            case R.id.minus:
+                ch = '-';
+                break;
+            case R.id.multiply:
+                ch ='*';
+                break;
+            case R.id.divide:
+                ch = '/';
+                break;
+        }
+        return ch;
+    }
+
+    private State doNoInputState(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+                appendToString(getDigit(btn));
+                return initInteger1State();
+
+            case R.id.b0:
+            case R.id.dot:
+                appendToString('0');
+                appendToString('.');
+                return initDecimal10State();
+        }
+
+        return State.INIT_NO_INPUT;
+    }
+
+    private State initNoInputState() {
+        enableMath(false);
+        enableOk(false);
+        enableDot(true);
+
+        valueTV.setText("0.0");
+        LViewUtils.setAlpha(valueTV, 0.3f);
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
+        inputString = "";
+        return State.INIT_NO_INPUT;
+    }
+
+    private State doInteger1State(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+            case R.id.b0:
+                if (appendToString(getDigit(btn))) {
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.backspace:
+                switch (removeLastBit()) {
+                    case DIGIT:
+                        valueTV.setText(inputString);
+                        break;
+                    case EMPTY:
+                        return initNoInputState();
+                }
+                break;
+
+            case R.id.dot:
+                if (appendToString('.'))
+                    return initDecimal1State();
+
+            case R.id.plus:
+            case R.id.minus:
+            case R.id.multiply:
+            case R.id.divide:
+                if (appendMathToString(getMath(btn)))
+                    return initMathInitState();
+                break;
+
+            case R.id.ok:
+                saveLog();
+        }
+        return State.INTEGER_1;
+    }
+
+    private State initInteger1State() {
+        enableDot(true);
+        enableMath(true);
+        enableOk(true);
+
+        firstValueEnd = 0;
+        LViewUtils.setAlpha(valueTV, 1.0f);
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
+        valueTV.setText(inputString);
+        return State.INTEGER_1;
+    }
+
+    private State doDecimal10State(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+                if (appendToString(getDigit(btn)))
+                    return initDecimal1State();
+
+            case R.id.b0:
+                if (appendToString('0')) {
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.backspace:
+                if (InputStringLastBit.DOT == getLastBit()) {
+                    if (InputStringLastBit.EMPTY == removeLastBit())
+                        return initNoInputState();
+                    else
+                        return initInteger1State();
+                } else {
+                    removeLastBit();
+                    valueTV.setText(inputString);
+                }
+                break;
+        }
+        return State.DECIMAL_1_0;
+    }
+
+    private State initDecimal10State() {
+        enableDot(false);
+        enableMath(false);
+        enableOk(false);
+
+        LViewUtils.setAlpha(valueTV, 1.0f);
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
+        valueTV.setText(inputString);
+        return State.DECIMAL_1_0;
+    }
+
+    private State doDecimal1State(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+            case R.id.b0:
+                if (appendToString(getDigit(btn))) {
+                    valueTV.setText(inputString);
+                    if (string2value(inputString) >= 0.01)
+                        enableOk(true);
+                    else
+                        enableOk(false);
+                }
+                break;
+
+            case R.id.backspace:
+                if (InputStringLastBit.DOT == getLastBit()) {
+                    if (InputStringLastBit.EMPTY == removeLastBit())
+                        return initNoInputState();
+                    else
+                        return initInteger1State();
+                } else {
+                    removeLastBit();
+                    if (0f == string2value(inputString))
+                        return initDecimal10State();
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.plus:
+            case R.id.minus:
+            case R.id.multiply:
+            case R.id.divide:
+                if (appendMathToString(getMath(btn)))
+                    return initMathInitState();
+                break;
+
+            case R.id.ok:
+                saveLog();
+        }
+        return State.DECIMAL_1;
+    }
+
+    private State initDecimal1State() {
+        enableDot(false);
+        enableMath(true);
+
+        if (string2value(inputString) >= 0.01)
+            enableOk(true);
+        else
+            enableOk(false);
+
+        firstValueEnd = 0;
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
+        LViewUtils.setAlpha(valueTV, 1.0f);
+        valueTV.setText(inputString);
+        return State.DECIMAL_1;
+    }
+
+    private State doMathInitState(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+                if (appendToString(getDigit(btn))) {
+                    return initInteger2State();
+                }
+                break;
+
+            case R.id.b0:
+            case R.id.dot:
+                appendToString('0');
+                appendToString('.');
+                return initDecimal2State();
+
+            case R.id.backspace:
+            case R.id.ok:
+                removeLastBit();
+
+                if (inputString.lastIndexOf('.') > 0)
+                    return initDecimal1State();
+                else
+                    return initInteger1State();
+        }
+        return State.MATH_INIT;
+    }
+
+    private State initMathInitState() {
+        enableMath(false);
+        enableDot(true);
+        ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_equal);
+
+        valueTV.setText(inputString);
+        firstValueEnd = inputString.length();
+
+        return State.MATH_INIT;
+    }
+
+    private State doInteger2State(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+            case R.id.b0:
+                if (appendToString(getDigit(btn))) {
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.backspace:
+                switch (removeLastBit()) {
+                    case DIGIT:
+                        valueTV.setText(inputString);
+                        break;
+                    case MATH:
+                        return initMathInitState();
+                }
+                break;
+
+            case R.id.dot:
+                if (appendToString('.'))
+                    return initDecimal2State();
+                break;
+
+            case R.id.plus:
+            case R.id.minus:
+            case R.id.multiply:
+            case R.id.divide:
+                if (applyMath()) {
+                    if (appendMathToString(getMath(btn))) {
+                        return initMathInitState();
+                    } else {
+                        return initDecimal1State();
+                    }
+                } else {
+                    return initNoInputState();
+                }
+
+            case R.id.ok:
+                if (applyMath()) {
+                    return initDecimal1State();
+                } else {
+                    return initNoInputState();
+                }
+        }
+        return State.INTEGER_2;
+    }
+
+    private State initInteger2State() {
+        enableDot(true);
+        enableMath(true);
+        enableOk(true);
+
+        LViewUtils.setAlpha(valueTV, 1.0f);
+        valueTV.setText(inputString);
+
+        return State.INTEGER_2;
+    }
+
+    private State doDecimal2State(int btn) {
+        switch (btn) {
+            case R.id.b9:
+            case R.id.b8:
+            case R.id.b7:
+            case R.id.b6:
+            case R.id.b5:
+            case R.id.b4:
+            case R.id.b3:
+            case R.id.b2:
+            case R.id.b1:
+            case R.id.b0:
+                if (appendToString(getDigit(btn))) {
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.backspace:
+                if (InputStringLastBit.DOT == getLastBit()) {
+                    if (InputStringLastBit.MATH == removeLastBit())
+                        return initMathInitState();
+                    else
+                        return initInteger2State();
+                } else {
+                    removeLastBit();
+                    valueTV.setText(inputString);
+                }
+                break;
+
+            case R.id.plus:
+            case R.id.minus:
+            case R.id.multiply:
+            case R.id.divide:
+                if (applyMath()) {
+                    if (appendMathToString(getMath(btn))) {
+                        return initMathInitState();
+                    } else {
+                        return initDecimal1State();
+                    }
+                } else {
+                    return initNoInputState();
+                }
+
+            case R.id.ok:
+                if (applyMath()) {
+                    return initDecimal1State();
+                } else {
+                    return initNoInputState();
+                }
+        }
+        return State.DECIMAL_2;
+    }
+
+    private State initDecimal2State() {
+        enableDot(false);
+        enableMath(true);
+        enableOk(true);
+
+        LViewUtils.setAlpha(valueTV, 1.0f);
+        valueTV.setText(inputString);
+
+        return State.DECIMAL_2;
     }
 }
