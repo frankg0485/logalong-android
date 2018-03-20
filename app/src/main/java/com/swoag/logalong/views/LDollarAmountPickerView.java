@@ -307,11 +307,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     }
 
     private String value2string(double value) {
-        String str = "";
-        if (value != 0) {
-            str = String.format("%.2f", value);
-        }
-        return str;
+        return String.format("%.2f", value);
     }
 
     private double string2value(String str) {
