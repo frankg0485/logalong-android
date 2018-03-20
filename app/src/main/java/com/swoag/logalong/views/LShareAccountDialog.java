@@ -170,6 +170,14 @@ public class LShareAccountDialog extends Dialog
         }
     }
 
+    private boolean userAdded(LUser user) {
+        boolean ret = false;
+        for (int ii = 0; ii < users.size(); ii++) {
+            if (users.get(ii).getId() == user.getId()) return true;
+        }
+        return ret;
+    }
+
     @Override
     public void onBroadcastReceiverReceive(int action, int ret, Intent intent) {
         switch (action) {
@@ -181,7 +189,11 @@ public class LShareAccountDialog extends Dialog
                     String fullName = intent.getStringExtra("fullName");
 
                     LUser user = new LUser(name, fullName, id);
-                    users.add(user);
+
+                    if (!userAdded(user)) {
+                        users.add(user);
+                    }
+
                     selectAllView.setVisibility(users.size() <= 1 ? View.GONE : View.VISIBLE);
 
                     selectedIds.add(id);
