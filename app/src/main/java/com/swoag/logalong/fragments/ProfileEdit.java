@@ -211,7 +211,6 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         showPassV = setViewListener(rootView, R.id.showPassView);
 
         userIdTV = (EditText) setViewListener(rootView, R.id.userId);
-        userIdTV.addTextChangedListener(userIdTextWatcher);
 
         userNameTV = (EditText) setViewListener(rootView, R.id.userName);
         userNameTV.addTextChangedListener(userNameTextWatcher);
@@ -234,6 +233,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         if ((!TextUtils.isEmpty(userId)) && (!TextUtils.isEmpty(userPass))) {
             enableDisplayForLoggedInUser();
         } else {
+            userIdTV.addTextChangedListener(userIdTextWatcher);
+
             userPassV.setVisibility(View.VISIBLE);
             showPassV.setVisibility(View.VISIBLE);
             changePassV.setVisibility(View.GONE);
@@ -380,7 +381,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                     //userNumberHintV.setVisibility(newUserBtn.isChecked() ? View.VISIBLE : View.GONE);
                     break;
                 case R.id.userId:
-                    requestInputFocus(userIdTV);
+                    if (!userIdPresent) requestInputFocus(userIdTV);
                     break;
                 case R.id.userName:
                     requestInputFocus(userNameTV);
@@ -595,4 +596,3 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         }
     }
 }
-
