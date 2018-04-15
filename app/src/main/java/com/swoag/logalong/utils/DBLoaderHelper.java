@@ -68,10 +68,11 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     public int getAllStartYear() {
         return allStartYear;
     }
-
+    public int getAllStartMonth() { return allStartMonth; }
     public int getAllEndYear() {
         return allEndYear;
     }
+    public int getAllEndMonth() { return allEndMonth; }
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();

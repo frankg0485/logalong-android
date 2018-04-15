@@ -19,7 +19,6 @@ import android.widget.ViewFlipper;
 
 import com.swoag.logalong.ChartActivity;
 import com.swoag.logalong.LFragment;
-import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
@@ -171,6 +170,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         } catch (Exception e) {
             LLog.w(TAG, "unexpected listview history error: " + e.getMessage());
         }
+        showPrevNextControls();
     }
 
     @Override
@@ -976,11 +976,11 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 if (ym < dbLoaderHelper.getAllStartMs() || ym >= dbLoaderHelper.getAllEndMs()) {
                     AppPersistency.viewTransactionYear = year;
                     AppPersistency.viewTransactionMonth = month;
-                    return false;
+                    ret = false;
                 }
-                return true;
+                break;
 
-            case AppPersistency.TRANSACTION_TIME_QUARTERLY:
+            /*case AppPersistency.TRANSACTION_TIME_QUARTERLY:
                 AppPersistency.viewTransactionQuarter += (prev) ? -1 : 1;
                 if (AppPersistency.viewTransactionQuarter >= 4) {
                     AppPersistency.viewTransactionQuarter = 0;
@@ -999,18 +999,21 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     return false;
                 }
                 return true;
+                */
 
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
                 AppPersistency.viewTransactionYear += (prev) ? -1 : 1;
-                ymS = getMs(AppPersistency.viewTransactionYear, 0);
-                ymE = getMs(AppPersistency.viewTransactionYear + 1, 0);
+                long ymS = getMs(AppPersistency.viewTransactionYear, 0);
+                long ymE = getMs(AppPersistency.viewTransactionYear + 1, 0);
                 if (dbLoaderHelper.getAllStartMs() >= ymE || dbLoaderHelper.getAllEndMs() <= ymS) {
                     AppPersistency.viewTransactionYear = year;
                     return false;
                 }
-                return true;
+                break;
         }
-        return false;
+
+        showPrevNextControls();
+        return ret;
     }
 
     private long lastClickMs;
@@ -1133,18 +1136,57 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         }
     }
 
-    private void showTime() {
-        if (LPreferences.getSearchAllTime()) {
-            //customTimeView.setVisibility(View.GONE);
-            //monthlyView.setVisibility(View.VISIBLE);
-            //prevView.setVisibility(View.VISIBLE);
-            //nextView.setVisibility(View.VISIBLE);
-
-        } else {
-            //customTimeView.setVisibility(View.VISIBLE);
-            //monthlyView.setVisibility(View.GONE);
+    private void showPrevNextControls() {
+        if (!LPreferences.getSearchAllTime()) {
             prevView.setVisibility(View.GONE);
             nextView.setVisibility(View.GONE);
+        } else {
+            switch (AppPersistency.viewTransactionTime) {
+                case AppPersistency.TRANSACTION_TIME_ALL:
+                    prevView.setVisibility(View.GONE);
+                    nextView.setVisibility(View.GONE);
+                    break;
+                case AppPersistency.TRANSACTION_TIME_MONTHLY:
+                    if (AppPersistency.viewTransactionYear <= dbLoaderHelper.getAllStartYear() &&
+                            AppPersistency.viewTransactionMonth <= dbLoaderHelper.getAllStartMonth()) {
+                        prevView.setVisibility(View.GONE);
+                    } else {
+                        prevView.setVisibility(View.VISIBLE);
+                    }
+
+                    if (AppPersistency.viewTransactionYear >= dbLoaderHelper.getAllEndYear() &&
+                            AppPersistency.viewTransactionMonth >= dbLoaderHelper.getAllEndMonth()) {
+                        nextView.setVisibility(View.GONE);
+                    } else {
+                        nextView.setVisibility(View.VISIBLE);
+                    }
+                    break;
+
+                case AppPersistency.TRANSACTION_TIME_ANNUALLY:
+                    if (AppPersistency.viewTransactionYear <= dbLoaderHelper.getAllStartYear()) {
+                        prevView.setVisibility(View.GONE);
+                    } else {
+                        prevView.setVisibility(View.VISIBLE);
+                    }
+                    if (AppPersistency.viewTransactionYear >= dbLoaderHelper.getAllEndYear()) {
+                        nextView.setVisibility(View.GONE);
+                    } else {
+                        nextView.setVisibility(View.VISIBLE);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private void showTime() {
+        showPrevNextControls();
+
+        if (LPreferences.getSearchAllTime()) {
+            //customTimeView.setVisibility(View.GONE);
+            monthlyView.setVisibility(View.VISIBLE);
+        } else {
+            //customTimeView.setVisibility(View.VISIBLE);
+            monthlyView.setVisibility(View.GONE);
 
             //if (LPreferences.getSearchFilterByEditTIme()) {
             //    customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences
@@ -1173,22 +1215,6 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             case AppPersistency.TRANSACTION_TIME_QUARTERLY:
                 monthlyView.setText(getActivity().getString(R.string.quarterly));
                 break;
-        }
-
-        if (AppPersistency.viewTransactionTime == AppPersistency.TRANSACTION_TIME_ALL) {
-            //prevView.setEnabled(false);
-            //nextView.setEnabled(false);
-            //LViewUtils.setAlpha(prevView, 0.8f);
-            //LViewUtils.setAlpha(nextView, 0.8f);
-            prevView.setVisibility(View.INVISIBLE);
-            nextView.setVisibility(View.INVISIBLE);
-        } else {
-            //prevView.setEnabled(true);
-            //nextView.setEnabled(true);
-            //LViewUtils.setAlpha(prevView, 1.0f);
-            //LViewUtils.setAlpha(nextView, 1.0f);
-            prevView.setVisibility(View.VISIBLE);
-            nextView.setVisibility(View.VISIBLE);
         }
     }
 
