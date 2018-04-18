@@ -1242,10 +1242,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         if (LPreferences.getSearchAllTime()) {
             //customTimeView.setVisibility(View.GONE);
-            monthlyView.setVisibility(View.VISIBLE);
+            //monthlyView.setVisibility(View.VISIBLE);
+            monthlyView.setEnabled(true);
         } else {
             //customTimeView.setVisibility(View.VISIBLE);
-            monthlyView.setVisibility(View.GONE);
+            //monthlyView.setVisibility(View.GONE);
+            monthlyView.setText("");
+            monthlyView.setEnabled(false);
 
             //if (LPreferences.getSearchFilterByEditTIme()) {
             //    customTimeView.setText("M: " + (new SimpleDateFormat("MMM d, yyy").format(LPreferences

@@ -37,8 +37,8 @@ public class TransactionSearchDialog extends Dialog implements
         DialogInterface.OnDismissListener, DatePickerDialog.OnDateSetListener, LDollarAmountPickerView.LDollarAmountPickerViewItf {
 
     private Context context;
-    private View filterCheckView, filterView, timeCheckView, timeView, byValueView;
-    private TextView accountV, categoryV, vendorV, tagV, fromV, toV, filterByV, byValueV;
+    private View filterCheckView, filterView, timeCheckView, timeView, valueCheckView, valueView;
+    private TextView accountV, categoryV, vendorV, tagV, fromV, toV, fromValueV, toValueV, filterByV;
     private TransactionSearchDialogItf callback;
     private MyClickListener myClickListener;
     private CheckBox checkBox, checkBoxTime, checkboxByValue;
@@ -224,21 +224,29 @@ public class TransactionSearchDialog extends Dialog implements
         toV = (TextView) findViewById(R.id.toTime);
         filterByV = (TextView) findViewById(R.id.filterByValue);
 
+        valueView = findViewById(R.id.customValue);
+        fromValueV = (TextView) findViewById(R.id.fromValue);
+        toValueV = (TextView) findViewById(R.id.toValue);
+
         filterCheckView = findViewById(R.id.checkboxView);
+        //LViewUtils.setAlpha(filterCheckView, 0.8f);
         filterCheckView.setOnClickListener(myClickListener);
         checkBox = (CheckBox) findViewById(R.id.checkboxAll);
         showAll = LPreferences.getSearchAll();
 
         timeCheckView = findViewById(R.id.checkboxViewTime);
+        //LViewUtils.setAlpha(timeCheckView, 0.8f);
         timeCheckView.setOnClickListener(myClickListener);
+
         checkBoxTime = (CheckBox) findViewById(R.id.checkboxAllTime);
         allTime = LPreferences.getSearchAllTime();
 
-        byValueView = findViewById(R.id.checkboxByValueView);
-        byValueView.setOnClickListener(myClickListener);
+        valueCheckView = findViewById(R.id.checkboxByValueView);
+        //LViewUtils.setAlpha(valueCheckView, 0.8f);
+        valueCheckView.setOnClickListener(myClickListener);
         checkboxByValue = (CheckBox) findViewById(R.id.checkboxByValue);
-        byValueV = (TextView) findViewById(R.id.byValue);
-        byValueV.setOnClickListener(myClickListener);
+        fromValueV.setOnClickListener(myClickListener);
+        toValueV.setOnClickListener(myClickListener);
         pickerV = rootView.findViewById(R.id.picker);
 
         displayUpdateFilter(showAll);
@@ -352,11 +360,11 @@ public class TransactionSearchDialog extends Dialog implements
         if (all) {
             //LViewUtils.setAlpha(filterView, 0.8f);
             filterView.setVisibility(View.GONE);
-            LViewUtils.setAlpha(filterCheckView, 1.0f);
+            LViewUtils.setAlpha(filterCheckView, 0.8f);
         } else {
             //LViewUtils.setAlpha(filterView, 1.0f);
             filterView.setVisibility(View.VISIBLE);
-            LViewUtils.setAlpha(filterCheckView, 0.8f);
+            LViewUtils.setAlpha(filterCheckView, 0.6f);
         }
         displayAccounts();
         displayCategories();
@@ -370,11 +378,11 @@ public class TransactionSearchDialog extends Dialog implements
         if (all) {
             //LViewUtils.setAlpha(timeView, 0.8f);
             timeView.setVisibility(View.GONE);
-            LViewUtils.setAlpha(timeCheckView, 1.0f);
+            LViewUtils.setAlpha(timeCheckView, 0.8f);
         } else {
             //LViewUtils.setAlpha(timeView, 1.0f);
             timeView.setVisibility(View.VISIBLE);
-            LViewUtils.setAlpha(timeCheckView, 0.8f);
+            LViewUtils.setAlpha(timeCheckView, 0.6f);
         }
         fromV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()));
         toV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
@@ -387,26 +395,29 @@ public class TransactionSearchDialog extends Dialog implements
 
     private void displayByValue() {
         checkboxByValue.setChecked(LPreferences.getSearchFilterByValue());
-        byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
+        LViewUtils.disableEnableControls(!LPreferences.getSearchFilterByValue(), (ViewGroup) valueView);
+        //byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
 
         if (LPreferences.getSearchFilterByValue()) {
-            filterCheckView.setEnabled(false);
-            timeCheckView.setEnabled(false);
-            filterView.setVisibility(View.GONE);
-            timeView.setVisibility(View.GONE);
-            LViewUtils.setAlpha(filterCheckView, 0.8f);
-            LViewUtils.setAlpha(timeCheckView, 0.8f);
+            //filterCheckView.setEnabled(false);
+            //timeCheckView.setEnabled(false);
+            //filterView.setVisibility(View.GONE);
+            //timeView.setVisibility(View.GONE);
+            //LViewUtils.setAlpha(filterCheckView, 0.8f);
+            //LViewUtils.setAlpha(timeCheckView, 0.8f);
 
-            LViewUtils.setAlpha(byValueView, 1.0f);
-            byValueV.setEnabled(true);
+            LViewUtils.setAlpha(valueCheckView, 0.8f);
+            valueView.setVisibility(View.GONE);
+            //byValueV.setEnabled(true);
         } else {
-            LViewUtils.setAlpha(byValueView, 0.6f);
-            byValueV.setEnabled(false);
+            LViewUtils.setAlpha(valueCheckView, 0.6f);
+            valueView.setVisibility(View.VISIBLE);
+            //byValueV.setEnabled(false);
 
-            filterCheckView.setEnabled(true);
-            timeCheckView.setEnabled(true);
-            displayUpdateFilter(showAll);
-            displayUpdateTime(allTime);
+            //filterCheckView.setEnabled(true);
+            //timeCheckView.setEnabled(true);
+            //displayUpdateFilter(showAll);
+            //displayUpdateTime(allTime);
         }
     }
 
@@ -448,7 +459,8 @@ public class TransactionSearchDialog extends Dialog implements
                     displayByValue();
                     return;
 
-                case R.id.byValue:
+                case R.id.fromValue:
+                case R.id.toValue:
                     if (picker != null) picker.onDestroy();
                     picker = new LDollarAmountPickerView(rootView, LPreferences.getSearchValue(),
                             LDollarAmountPickerView.VALUE_COLOR_NEUTRAL, TransactionSearchDialog.this);
@@ -569,7 +581,7 @@ public class TransactionSearchDialog extends Dialog implements
     public void onDollarAmountPickerExit(double value, boolean save) {
         if (save) {
             LPreferences.setSearchValue((float)value);
-            byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
+            //byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
         }
         pickerV.setVisibility(View.GONE);
     }
