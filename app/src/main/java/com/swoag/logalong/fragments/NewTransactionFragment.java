@@ -39,7 +39,7 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         DBLoaderHelper.DBLoaderHelperCallbacks {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
 
-    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (30 * 60 * 1000);
+    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (60 * 60 * 1000);
     private static long lastTransactionTimestamp;
     private static long lastTransactionAccountFrom;
     private static long lastTransactionAccountTo;
@@ -124,6 +124,10 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
         viewFlipper.setOutAnimation(null);
         viewFlipper = null;
 
+        btnExpense = null;
+        btnIncome = null;
+        btnTransaction = null;
+        selectTypeV = null;
         edit = null;
         rootView = null;
         super.onDestroyView();

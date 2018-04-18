@@ -45,16 +45,17 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class ViewTransactionFragment extends LFragment implements DBLoaderHelper.DBLoaderHelperCallbacks,
-        TransactionSearchDialog.TransactionSearchDialogItf {
+        TransactionSearchDialog.TransactionSearchDialogItf, TransactionEdit.TransitionEditItf {
     private static final String TAG = ViewTransactionFragment.class.getSimpleName();
 
     private ListView listView;
     private ListView.OnScrollListener onScrollListener;
     private ImageView filterView, searchView;
+    private View btnExpense, btnIncome, btnTransaction, selectTypeV;
 
     private MyCursorAdapter adapter;
     private TextView monthTV, balanceTV, incomeTV, expenseTV, altMonthTV, altBalanceTV, altIncomeTV, altExpenseTV;
-    private View dispV, altDispV, chartView;
+    private View dispV, altDispV, chartView, newRecordView;
     private ImageView queryOrderIV, altQueryOrderIV;
     private LSectionSummary sectionSummary;
 
@@ -374,6 +375,12 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         myClickListener = new MyClickListener();
 
+        selectTypeV = rootView.findViewById(R.id.selectType);
+        selectTypeV.setVisibility(View.GONE);
+        btnExpense = setViewListener(selectTypeV, R.id.expense);
+        btnIncome = setViewListener(selectTypeV, R.id.income);
+        btnTransaction = setViewListener(selectTypeV, R.id.transaction);
+
         //prevView = setViewListener(rootView, R.id.prev);
         //nextView = setViewListener(rootView, R.id.next);
         prevView = rootView.findViewById(R.id.prev);
@@ -384,6 +391,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         filterView = (ImageView) setViewListener(rootView, R.id.filter);
         searchView = (ImageView) setViewListener(rootView, R.id.search);
+        newRecordView = setViewListener(rootView, R.id.newRecord);
         chartView = setViewListener(rootView, R.id.tabChart);
 
         monthlyView = (TextView) setViewListener(rootView, R.id.monthly);
@@ -479,6 +487,15 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         altBalanceTV = null;
         altExpenseTV = null;
         altIncomeTV = null;
+        filterView = null;
+        searchView = null;
+        newRecordView = null;
+
+        btnExpense = null;
+        btnIncome = null;
+        btnTransaction = null;
+        selectTypeV = null;
+
         chartView = null;
 
         rootView = null;
@@ -490,6 +507,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         if (edit != null) {
             edit.dismiss();
         }
+        //if (selectTypeV != null) {
+        //    selectTypeV.setVisibility(View.GONE);
+        //}
     }
 
     @Override
@@ -519,12 +539,28 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
+                case R.id.expense:
+                    newLog(LTransaction.TRANSACTION_TYPE_EXPENSE);
+                    break;
+                case R.id.income:
+                    newLog(LTransaction.TRANSACTION_TYPE_INCOME);
+                    break;
+                case R.id.transaction:
+                    newLog(LTransaction.TRANSACTION_TYPE_TRANSFER);
+                    break;
                 case R.id.filter:
                     changeFilter();
                     break;
                 case R.id.search:
                     changeSearch();
                     break;
+                case R.id.newRecord:
+                    if (selectTypeV.getVisibility() != View.VISIBLE) {
+                        selectTypeV.setVisibility(View.VISIBLE);
+                    } else {
+                        selectTypeV.setVisibility(View.GONE);
+                    }
+                    return;
                 case R.id.prev:
                     showPrevNext(true);
                     break;
@@ -550,6 +586,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                 default:
                     break;
             }
+            selectTypeV.setVisibility(View.GONE);
         }
     }
 
@@ -733,6 +770,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         private class ClickListener extends LOnClickListener {
             @Override
             public void onClicked(View v) {
+                selectTypeV.setVisibility(View.GONE);
+
                 VTag tag = (VTag) v.getTag();
 
                 item = DBTransaction.getInstance().getById(tag.id);
@@ -1055,6 +1094,98 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             AppPersistency.setViewLevel(AppPersistency.getViewLevel() + 1);
         }
         initDbLoader();
+    }
+
+    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (60 * 60 * 1000);
+    private static long lastTransactionTimestamp;
+    private static long lastTransactionAccountFrom;
+    private static long lastTransactionAccountTo;
+    private static long lastTransactionEditTimestamp = 0;
+    private LTransaction newItem;
+    private void newLog(int type) {
+        newItem = new LTransaction();
+        newItem.setType(type);
+
+        if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis()) {
+            newItem.setTimeStamp(lastTransactionTimestamp + 1);
+            if (lastTransactionAccountFrom != 0) {
+                newItem.setAccount(lastTransactionAccountFrom);
+            }
+            if ((lastTransactionAccountTo != 0) && (lastTransactionAccountFrom != lastTransactionAccountTo)
+                    && (type == LTransaction.TRANSACTION_TYPE_TRANSFER)) {
+                newItem.setAccount2(lastTransactionAccountTo);
+            }
+        }
+
+        edit = new TransactionEdit(getActivity(), rootView, newItem, true, false, true, this);
+
+        viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
+        viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
+        viewFlipper.showNext();
+    }
+
+    @Override
+    public void onTransactionEditExit(int action, boolean changed) {
+        switch (action) {
+            case TransactionEdit.TransitionEditItf.EXIT_OK:
+                AppPersistency.transactionChanged = changed;
+
+                newItem.setTimeStampLast(LPreferences.getServerUtc());
+
+                //patch up the actual timestamp to make sure this is the last entry for the day
+                Calendar calendar = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+                calendar.setTimeInMillis(newItem.getTimeStamp());
+                int year2 = calendar.get(Calendar.YEAR);
+                int month2 = calendar.get(Calendar.MONTH);
+                int day2 = calendar.get(Calendar.DAY_OF_MONTH);
+                if ((year != year2) || (month != month2) || (day != day2)) {
+                    LTransaction transaction = DBTransaction.getInstance().getLastItemOfTheDay(year2, month2, day2);
+                    if (null == transaction) {
+                        calendar.set(year2, month2, day2, 0, 0, 1);
+                        newItem.setTimeStamp(calendar.getTimeInMillis());
+                    } else {
+                        long ms = transaction.getTimeStamp() + 1;
+                        calendar.setTimeInMillis(ms);
+                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2) ms = transaction.getTimeStamp();
+                        newItem.setTimeStamp(ms);
+                    }
+                }
+
+                AppPersistency.lastTransactionChangeTimeMs = newItem.getTimeStamp();
+                AppPersistency.lastTransactionChangeTimeMsHonored = false;
+
+                //save last edit info
+                lastTransactionAccountFrom = newItem.getAccount();
+                if (newItem.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    lastTransactionAccountTo = newItem.getAccount2();
+                }
+                lastTransactionTimestamp = newItem.getTimeStamp();
+                lastTransactionEditTimestamp = System.currentTimeMillis();
+
+                newItem.generateRid();
+                if (newItem.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    DBTransaction.getInstance().add2(newItem);
+                } else
+                    DBTransaction.getInstance().add(newItem);
+
+                LJournal journal = new LJournal();
+                journal.addRecord(newItem.getId());
+                break;
+            case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
+                break;
+            case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                LLog.w(TAG, "unexpected, should never come here");
+                AppPersistency.transactionChanged = changed;
+                break;
+        }
+        viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
+        viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
+        viewFlipper.showPrevious();
+        edit = null;
     }
 
     private View setViewListener(View v, int id) {
