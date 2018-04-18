@@ -21,13 +21,9 @@ import com.swoag.logalong.LFragment;
 import com.swoag.logalong.R;
 import com.swoag.logalong.ScheduleActivity;
 import com.swoag.logalong.entities.LAllBalances;
-import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LTransaction;
-import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBLoaderHelper;
-import com.swoag.logalong.utils.DBTransaction;
-import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.views.GenericListOptionDialog;
@@ -38,12 +34,6 @@ import java.util.Calendar;
 public class NewTransactionFragment extends LFragment implements TransactionEdit.TransitionEditItf,
         DBLoaderHelper.DBLoaderHelperCallbacks {
     private static final String TAG = NewTransactionFragment.class.getSimpleName();
-
-    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (60 * 60 * 1000);
-    private static long lastTransactionTimestamp;
-    private static long lastTransactionAccountFrom;
-    private static long lastTransactionAccountTo;
-    private static long lastTransactionEditTimestamp = 0;
 
     private View btnExpense, btnIncome, btnTransaction, selectTypeV;
     private ViewFlipper viewFlipper;
@@ -189,62 +179,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
 
     @Override
     public void onTransactionEditExit(int action, boolean changed) {
-        switch (action) {
-            case TransactionEdit.TransitionEditItf.EXIT_OK:
-                AppPersistency.transactionChanged = changed;
-
-                item.setTimeStampLast(LPreferences.getServerUtc());
-
-                //patch up the actual timestamp to make sure this is the last entry for the day
-                Calendar calendar = Calendar.getInstance();
-                int year = calendar.get(Calendar.YEAR);
-                int month = calendar.get(Calendar.MONTH);
-                int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-                calendar.setTimeInMillis(item.getTimeStamp());
-                int year2 = calendar.get(Calendar.YEAR);
-                int month2 = calendar.get(Calendar.MONTH);
-                int day2 = calendar.get(Calendar.DAY_OF_MONTH);
-                if ((year != year2) || (month != month2) || (day != day2)) {
-                    LTransaction transaction = DBTransaction.getInstance().getLastItemOfTheDay(year2, month2, day2);
-                    if (null == transaction) {
-                        calendar.set(year2, month2, day2, 0, 0, 1);
-                        item.setTimeStamp(calendar.getTimeInMillis());
-                    } else {
-                        long ms = transaction.getTimeStamp() + 1;
-                        calendar.setTimeInMillis(ms);
-                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2) ms = transaction.getTimeStamp();
-                        item.setTimeStamp(ms);
-                    }
-                }
-
-                AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
-                AppPersistency.lastTransactionChangeTimeMsHonored = false;
-
-                //save last edit info
-                lastTransactionAccountFrom = item.getAccount();
-                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                    lastTransactionAccountTo = item.getAccount2();
-                }
-                lastTransactionTimestamp = item.getTimeStamp();
-                lastTransactionEditTimestamp = System.currentTimeMillis();
-
-                item.generateRid();
-                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
-                    DBTransaction.getInstance().add2(item);
-                } else
-                    DBTransaction.getInstance().add(item);
-
-                LJournal journal = new LJournal();
-                journal.addRecord(item.getId());
-                break;
-            case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
-                break;
-            case TransactionEdit.TransitionEditItf.EXIT_DELETE:
-                LLog.w(TAG, "unexpected, should never come here");
-                AppPersistency.transactionChanged = changed;
-                break;
-        }
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();
@@ -263,17 +197,6 @@ public class NewTransactionFragment extends LFragment implements TransactionEdit
     private void newLog(int type) {
         item = new LTransaction();
         item.setType(type);
-
-        if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis()) {
-            item.setTimeStamp(lastTransactionTimestamp + 1);
-            if (lastTransactionAccountFrom != 0) {
-                item.setAccount(lastTransactionAccountFrom);
-            }
-            if ((lastTransactionAccountTo != 0) && (lastTransactionAccountFrom != lastTransactionAccountTo)
-                    && (type == LTransaction.TRANSACTION_TYPE_TRANSFER)) {
-                item.setAccount2(lastTransactionAccountTo);
-            }
-        }
 
         edit = new TransactionEdit(getActivity(), rootView.findViewById(R.id.editView), item, true, false, true, this);
 

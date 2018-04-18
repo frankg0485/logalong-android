@@ -20,13 +20,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.swoag.logalong.R;
+import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
 import com.swoag.logalong.entities.LTransaction;
+import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBAccount;
 import com.swoag.logalong.utils.DBCategory;
 import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBTag;
+import com.swoag.logalong.utils.DBTransaction;
 import com.swoag.logalong.utils.DBVendor;
+import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
@@ -69,6 +73,12 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     private MyClickListener myClickListener;
     private TextWatcher editTextWatcher;
 
+    private static final long LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS = (60 * 60 * 1000);
+    private static long lastTransactionTimestamp;
+    private static long lastTransactionAccountFrom;
+    private static long lastTransactionAccountTo;
+    private static long lastTransactionEditTimestamp = 0;
+
     public interface TransitionEditItf {
         public static final int EXIT_DELETE = 10;
         public static final int EXIT_OK = 20;
@@ -77,17 +87,93 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         public void onTransactionEditExit(int action, boolean changed);
     }
 
+    private void onExit(int action, boolean changed) {
+        if ((!bCreate) || bScheduleMode) return;
+
+        switch (action) {
+            case TransactionEdit.TransitionEditItf.EXIT_OK:
+                AppPersistency.transactionChanged = changed;
+
+                item.setTimeStampLast(LPreferences.getServerUtc());
+
+                //patch up the actual timestamp to make sure this is the last entry for the day
+                Calendar calendar = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+                calendar.setTimeInMillis(item.getTimeStamp());
+                int year2 = calendar.get(Calendar.YEAR);
+                int month2 = calendar.get(Calendar.MONTH);
+                int day2 = calendar.get(Calendar.DAY_OF_MONTH);
+                if ((year != year2) || (month != month2) || (day != day2)) {
+                    LTransaction transaction = DBTransaction.getInstance().getLastItemOfTheDay(year2, month2, day2);
+                    if (null == transaction) {
+                        calendar.set(year2, month2, day2, 0, 0, 1);
+                        item.setTimeStamp(calendar.getTimeInMillis());
+                    } else {
+                        long ms = transaction.getTimeStamp() + 1;
+                        calendar.setTimeInMillis(ms);
+                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2) ms = transaction.getTimeStamp();
+                        item.setTimeStamp(ms);
+                    }
+                }
+
+                AppPersistency.lastTransactionChangeTimeMs = item.getTimeStamp();
+                AppPersistency.lastTransactionChangeTimeMsHonored = false;
+
+                //save last edit info
+                lastTransactionAccountFrom = item.getAccount();
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    lastTransactionAccountTo = item.getAccount2();
+                }
+                lastTransactionTimestamp = item.getTimeStamp();
+                lastTransactionEditTimestamp = System.currentTimeMillis();
+
+                item.generateRid();
+                if (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                    DBTransaction.getInstance().add2(item);
+                } else
+                    DBTransaction.getInstance().add(item);
+
+                LJournal journal = new LJournal();
+                journal.addRecord(item.getId());
+                break;
+
+            case TransactionEdit.TransitionEditItf.EXIT_CANCEL:
+                break;
+
+            case TransactionEdit.TransitionEditItf.EXIT_DELETE:
+                LLog.w(TAG, "unexpected, should never come here");
+                AppPersistency.transactionChanged = changed;
+                break;
+        }
+    }
+
     public TransactionEdit(Activity activity, View rootView, LTransaction item, boolean bCreate, boolean bScheduleMode,
                            boolean allowEdit, TransitionEditItf callback) {
         this.activity = activity;
         this.rootView = rootView;
         this.item = item;
         this.callback = callback;
+        this.bCreate = bCreate;
+
+        if (bCreate) {
+            if (lastTransactionEditTimestamp + LAST_TRANSACTION_EDIT_INFO_TIMEOUT_MS > System.currentTimeMillis()) {
+                item.setTimeStamp(lastTransactionTimestamp + 1);
+                if (lastTransactionAccountFrom != 0) {
+                    item.setAccount(lastTransactionAccountFrom);
+                }
+                if ((lastTransactionAccountTo != 0) && (lastTransactionAccountFrom != lastTransactionAccountTo)
+                        && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER)) {
+                    item.setAccount2(lastTransactionAccountTo);
+                }
+            }
+        }
 
         this.savedItem = new LTransaction(item);
         this.bAllowEdit = allowEdit;
 
-        this.bCreate = bCreate;
         this.bScheduleMode = bScheduleMode;
         myClickListener = new MyClickListener();
         create();
@@ -363,6 +449,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         } else if (firstTimeAmountPicker) {
             if (bCreate) {
                 myClickListener.disableEnable(false);
+                onExit(TransitionEditItf.EXIT_CANCEL, false);
                 callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                 destroy();
                 return;
@@ -515,6 +602,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                 case R.id.exit:
                 case R.id.back:
                     myClickListener.disableEnable(false);
+                    onExit(TransitionEditItf.EXIT_CANCEL, false);
                     callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
                     destroy();
                     break;
@@ -531,6 +619,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     public void dismiss() {
         myClickListener.disableEnable(false);
+        onExit(TransitionEditItf.EXIT_CANCEL, false);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_CANCEL, false);
         destroy();
     }
@@ -539,6 +628,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
         if (confirm && ok) {
             myClickListener.disableEnable(false);
+            onExit(TransitionEditItf.EXIT_DELETE, false);
             callback.onTransactionEditExit(TransitionEditItf.EXIT_DELETE, false);
             destroy();
         }
@@ -716,6 +806,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             item.setChangeBy((int) LPreferences.getUserIdNum());
         }
         myClickListener.disableEnable(false);
+        onExit(TransitionEditItf.EXIT_OK, changed);
         callback.onTransactionEditExit(TransitionEditItf.EXIT_OK, changed);
         destroy();
     }
