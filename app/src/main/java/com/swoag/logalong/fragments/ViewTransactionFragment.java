@@ -1,5 +1,5 @@
 package com.swoag.logalong.fragments;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2018 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +23,7 @@ import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccountSummary;
 import com.swoag.logalong.entities.LAllBalances;
 import com.swoag.logalong.entities.LJournal;
+import com.swoag.logalong.entities.LSearch;
 import com.swoag.logalong.entities.LSectionSummary;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
@@ -201,6 +202,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private void setSectionSummary(int filterId, Cursor data) {
+        LSearch search = LPreferences.getSearchControls();
+
         String column = "";
         switch (filterId) {
             case DBLoaderHelper.LOADER_TRANSACTION_FILTER_ALL:
@@ -283,7 +286,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     switch (filterId) {
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
                             summary.setName(DBAccount.getInstance().getNameById(lastId));
-                            if (LPreferences.getSearchAllTime()) setAccountSummary(summary, lastId);
+                            if (search.isbAllTime()) setAccountSummary(summary, lastId);
                             break;
                         case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                             summary.setName(DBCategory.getInstance().getNameById(lastId));
@@ -327,7 +330,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             switch (filterId) {
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_ACCOUNT:
                     summary.setName(DBAccount.getInstance().getNameById(id));
-                    if (LPreferences.getSearchAllTime()) setAccountSummary(summary, id);
+                    if (search.isbAllTime()) setAccountSummary(summary, id);
                     break;
                 case DBLoaderHelper.LOADER_TRANSACTION_FILTER_BY_CATEGORY:
                     summary.setName(DBCategory.getInstance().getNameById(id));
@@ -524,8 +527,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         showTime();
         showFilterView();
 
-        if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()
-                && !LPreferences.getSearchFilterByValue()) {
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbAllTime() && search.isbShowAll() && search.isbAllValue()) {
             //LViewUtils.setAlpha(searchView, 0.8f);
             searchView.setImageResource(R.drawable.ic_action_search);
         } else {
@@ -890,17 +893,18 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             //dispv = dispV;
         }
 
-        if ((!LPreferences.getSearchFilterByValue()) && (LPreferences.getSearchAll() || (LPreferences
-                .getSearchCategories() == null &&
-                LPreferences.getSearchTags() == null &&
-                LPreferences.getSearchVendors() == null))) {
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbAllValue() && (search.isbShowAll() || (search.getCategories() == null &&
+                search.getTags() == null &&
+                search.getVendors() == null &&
+                search.getTypes() == null))) {
             //dispv.setVisibility(View.VISIBLE);
             btv.setVisibility(View.VISIBLE);
         } else {
             //dispv.setVisibility(View.INVISIBLE);
             btv.setVisibility(View.INVISIBLE);
         }
-        mtv.setVisibility(LPreferences.getSearchFilterByValue() ? View.INVISIBLE : View.VISIBLE);
+        //mtv.setVisibility(search.isbAllValue() ? View.INVISIBLE : View.VISIBLE);
 
         LAccountSummary summary = new LAccountSummary();
         getBalance(summary, data);
@@ -915,7 +919,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         itv.setText(String.format("%.2f", summary.getIncome()));
         etv.setText(String.format("%.2f", summary.getExpense()));
 
-        if (LPreferences.getSearchAllTime() /*&& data != null && data.getCount() > 0*/) {
+        if (search.isbAllTime() /*&& data != null && data.getCount() > 0*/) {
             switch (AppPersistency.viewTransactionTime) {
                 case AppPersistency.TRANSACTION_TIME_ALL:
                     mtv.setText(getString(R.string.balance));
@@ -941,9 +945,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private void getBalance(LAccountSummary summary, Cursor data) {
         if (data == null || data.getCount() < 1) return;
 
-        DBAccountBalance.getAccountSummaryForCurrentCursor(summary, data, LPreferences.getSearchAll() ? null : LPreferences
-                .getSearchAccounts());
-        if (!LPreferences.getSearchAllTime()) {
+        LSearch search = LPreferences.getSearchControls();
+        DBAccountBalance.getAccountSummaryForCurrentCursor(summary, data, search.isbShowAll() ? null : search.getAccounts());
+        if (!search.isbAllTime()) {
             summary.setBalance(summary.getIncome() - summary.getExpense());
             return;
         }
@@ -953,33 +957,33 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         //get balance for All accounts at current year/month
         switch (AppPersistency.viewTransactionTime) {
             case AppPersistency.TRANSACTION_TIME_ALL:
-                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                if (search.isbShowAll() || search.getAccounts() == null)
                     summary.setBalance(allBalances.getBalance());
                 else
-                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts()));
+                    summary.setBalance(allBalances.getBalance(search.getAccounts()));
                 break;
             case AppPersistency.TRANSACTION_TIME_MONTHLY:
-                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                if (search.isbShowAll() || search.getAccounts() == null)
                     summary.setBalance(allBalances.getBalance(
                             AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
                 else
-                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(),
+                    summary.setBalance(allBalances.getBalance(search.getAccounts(),
                             AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth));
                 break;
             case AppPersistency.TRANSACTION_TIME_QUARTERLY:
-                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                if (search.isbShowAll() || search.getAccounts() == null)
                     summary.setBalance(allBalances.getBalance(
                             AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
                 else
-                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(),
+                    summary.setBalance(allBalances.getBalance(search.getAccounts(),
                             AppPersistency.viewTransactionYear, AppPersistency.viewTransactionQuarter * 3 + 2));
 
                 break;
             case AppPersistency.TRANSACTION_TIME_ANNUALLY:
-                if (LPreferences.getSearchAll() || LPreferences.getSearchAccounts() == null)
+                if (search.isbShowAll() || search.getAccounts() == null)
                     summary.setBalance(allBalances.getBalance(AppPersistency.viewTransactionYear, 11));
                 else
-                    summary.setBalance(allBalances.getBalance(LPreferences.getSearchAccounts(), AppPersistency
+                    summary.setBalance(allBalances.getBalance(search.getAccounts(), AppPersistency
                             .viewTransactionYear, 11));
                 break;
         }
@@ -1147,8 +1151,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         if (changed) {
             showTime();
 
-            if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()
-                    && !LPreferences.getSearchFilterByValue()) {
+            LSearch search = LPreferences.getSearchControls();
+            if (search.isbAllTime() && search.isbShowAll() && search.isbAllValue()) {
                 //LViewUtils.setAlpha(searchView, 0.8f);
                 searchView.setImageResource(R.drawable.ic_action_search);
             } else {
@@ -1196,7 +1200,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private void showPrevNextControls() {
-        if (!LPreferences.getSearchAllTime()) {
+        LSearch search = LPreferences.getSearchControls();
+        if (!search.isbAllTime()) {
             prevView.setVisibility(View.GONE);
             nextView.setVisibility(View.GONE);
         } else {
@@ -1240,7 +1245,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     private void showTime() {
         showPrevNextControls();
 
-        if (LPreferences.getSearchAllTime()) {
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbAllTime()) {
             //customTimeView.setVisibility(View.GONE);
             //monthlyView.setVisibility(View.VISIBLE);
             monthlyView.setEnabled(true);

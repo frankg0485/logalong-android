@@ -1,5 +1,5 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2018 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.database.Cursor;
@@ -10,13 +10,16 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 
+import com.swoag.logalong.entities.LSearch;
+import com.swoag.logalong.entities.LTransaction;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 
 public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = DBLoaderHelper.class.getSimpleName();
 
-    public static final  int LOADER_INIT_RANGE = 10;
+    public static final int LOADER_INIT_RANGE = 10;
     public static final int LOADER_ALL_SUMMARY = 20;
     public static final int LOADER_ALL_ACCOUNTS = 30;
     public static final int LOADER_ALL_ACCOUNT_BALANCES = 40;
@@ -37,16 +40,18 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
 
     public interface DBLoaderHelperCallbacks {
         public void onLoadFinished(Loader<Cursor> loader, Cursor data);
+
         public void onLoaderReset(Loader<Cursor> loader);
     }
 
-    public DBLoaderHelper (Context context, DBLoaderHelperCallbacks callbacks) {
+    public DBLoaderHelper(Context context, DBLoaderHelperCallbacks callbacks) {
         this.context = context;
         this.callbacks = callbacks;
         this.annualModeOnly = false;
     }
 
-    public DBLoaderHelper (Context context, DBLoaderHelperCallbacks callbacks, boolean annualModeOnly) {
+    //annualModeOnly: loader that is used in chart
+    public DBLoaderHelper(Context context, DBLoaderHelperCallbacks callbacks, boolean annualModeOnly) {
         this.context = context;
         this.callbacks = callbacks;
         this.annualModeOnly = annualModeOnly;
@@ -68,11 +73,18 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
     public int getAllStartYear() {
         return allStartYear;
     }
-    public int getAllStartMonth() { return allStartMonth; }
+
+    public int getAllStartMonth() {
+        return allStartMonth;
+    }
+
     public int getAllEndYear() {
         return allEndYear;
     }
-    public int getAllEndMonth() { return allEndMonth; }
+
+    public int getAllEndMonth() {
+        return allEndMonth;
+    }
 
     private long getMs(int year, int month) {
         Calendar now = Calendar.getInstance();
@@ -95,6 +107,7 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         return getMs(year, month);
     }
 
+    //TODO: cleanup redundant logic within this function.
     private boolean validateYearMonth() {
         long ym = getMs(AppPersistency.viewTransactionYear, AppPersistency.viewTransactionMonth);
 
@@ -126,22 +139,25 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         return false;
     }
 
-    public void initStartEndMs () {
+    public void initStartEndMs() {
+        LSearch search = LPreferences.getSearchControls();
         if (annualModeOnly) {
-            if (LPreferences.getSearchAllTime()) {
+            //TODO: if this code is ever called, allStartYear allEndYear may not have been initialized
+            LLog.w(TAG, "BUG: uninitialized start/end year");
+            if (search.isbAllTime()) {
                 if (AppPersistency.viewTransactionYear < allStartYear || AppPersistency.viewTransactionYear > allEndYear) {
                     AppPersistency.viewTransactionYear = allEndYear;
                 }
                 startMs = getMs(AppPersistency.viewTransactionYear, 0);
                 endMs = getMs(AppPersistency.viewTransactionYear + 1, 0);
             } else {
-                startMs = LPreferences.getSearchAllTimeFrom();
-                endMs = LPreferences.getSearchAllTimeTo();
+                startMs = search.getTimeFrom();
+                endMs = search.getTimeTo();
             }
         } else {
             validateYearMonth();
 
-            if (LPreferences.getSearchAllTime()) {
+            if (search.isbAllTime()) {
                 switch (AppPersistency.viewTransactionTime) {
                     case AppPersistency.TRANSACTION_TIME_ALL:
                         startMs = 0;
@@ -162,8 +178,8 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                         break;
                 }
             } else {
-                startMs = LPreferences.getSearchAllTimeFrom();
-                endMs = LPreferences.getSearchAllTimeTo();
+                startMs = search.getTimeFrom();
+                endMs = search.getTimeTo();
                 //LLog.d(TAG, "start: " + startMs + "@" + (new Date(startMs) + " end: " + endMs + "@" + (new Date(endMs))));
             }
         }
@@ -179,45 +195,110 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         selectionArgs.add("" + ids[ids.length - 1]);
     }
 
+    private long transactionIndex2Type( long idx) {
+        switch ((int)idx) {
+            case 0: return (long)LTransaction.TRANSACTION_TYPE_EXPENSE;
+            case 1: return (long)LTransaction.TRANSACTION_TYPE_INCOME;
+        }
+        return (long) LTransaction.TRANSACTION_TYPE_TRANSFER;
+    }
+
     private void resetSelections() {
-        if (LPreferences.getSearchAll()) {
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbShowAll() && (search.isbAllValue() ||
+                (search.getValueFrom() == 0 && search.getValueTo() == 0))) {
             selections = "";
         } else {
             selections = "";
             selectionArgs.clear();
 
             boolean and = false;
-            long[] ids = LPreferences.getSearchAccounts();
-            if (ids != null) {
-                setSelections(ids, DBHelper.TABLE_COLUMN_ACCOUNT);
+            long[] ids;
+
+            if (!(search.isbAllValue() ||
+                    (search.getValueFrom() == 0 && search.getValueTo() == 0))) {
+                float startValue, endValue;
+                startValue = search.getValueFrom();
+                endValue = search.getValueTo();
+                if (endValue == 0) {
+                    endValue = Float.MAX_VALUE;
+                }
                 and = true;
+
+                selections = "(" + DBHelper.TABLE_COLUMN_AMOUNT + ">=? AND ";
+                selections += DBHelper.TABLE_COLUMN_AMOUNT + "<=?)";
+                selectionArgs.add("" + startValue);
+                selectionArgs.add("" + endValue);
             }
 
-            ids = LPreferences.getSearchCategories();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_CATEGORY);
-                and = true;
-            }
+            if (!search.isbShowAll()) {
+                if (search.isbAccounts()) {
+                    ids = search.getAccounts();
+                    if (ids != null) {
+                        if (and) selections += " AND ";
+                        setSelections(ids, DBHelper.TABLE_COLUMN_ACCOUNT);
+                        and = true;
+                    }
+                }
 
-            ids = LPreferences.getSearchVendors();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_VENDOR);
-                and = true;
-            }
+                if (search.isbCategories()) {
+                    ids = search.getCategories();
+                    if (ids != null) {
+                        if (and) selections += " AND ";
+                        setSelections(ids, DBHelper.TABLE_COLUMN_CATEGORY);
+                        and = true;
+                    }
+                }
 
-            ids = LPreferences.getSearchTags();
-            if (ids != null) {
-                if (and) selections += " AND ";
-                setSelections(ids, DBHelper.TABLE_COLUMN_TAG);
+                if (search.isbVendors()) {
+                    ids = search.getVendors();
+                    if (ids != null) {
+                        if (and) selections += " AND ";
+                        setSelections(ids, DBHelper.TABLE_COLUMN_VENDOR);
+                        and = true;
+                    }
+                }
+
+                if (search.isbTags()) {
+                    ids = search.getTags();
+                    if (ids != null) {
+                        if (and) selections += " AND ";
+                        setSelections(ids, DBHelper.TABLE_COLUMN_TAG);
+                    }
+                }
+
+                if (search.isbTypes()) {
+                    ids = search.getTypes();
+                    if (ids != null) {
+                        if (and) selections += " AND ";
+
+                        int length = ids.length;
+                        for (int ii = 0; ii < ids.length; ii++) {
+                            if (LTransaction.TRANSACTION_TYPE_TRANSFER == transactionIndex2Type(ids[ii])) {
+                                length++;
+                                break;
+                            }
+                        }
+                        long[] ids2 = new long[length];
+                        int jj = 0;
+                        for (int ii = 0; ii < ids.length; ii++) {
+                            ids2[jj] = transactionIndex2Type(ids[ii]);
+                            if (ids2[jj] == LTransaction.TRANSACTION_TYPE_TRANSFER) {
+                                ids2[jj + 1] = LTransaction.TRANSACTION_TYPE_TRANSFER_COPY;
+                                jj++;
+                            }
+                            jj++;
+                        }
+                        setSelections(ids2, DBHelper.TABLE_COLUMN_TYPE);
+                    }
+                }
             }
         }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
+        LSearch search = LPreferences.getSearchControls();
         if (id == LOADER_ALL_ACCOUNT_BALANCES) {
             return new CursorLoader(
                     context,
@@ -235,15 +316,15 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                     DBHelper.TABLE_COLUMN_NAME + " ASC");
         }
 
-        if (LPreferences.getSearchFilterByValue()) {
+        /*if (search.isbAllValue()) {
             return new CursorLoader(
                     context,
                     DBProvider.URI_TRANSACTIONS,
                     null,
                     DBHelper.TABLE_COLUMN_STATE + "=? AND " + DBHelper.TABLE_COLUMN_AMOUNT + "=?",
-                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + LPreferences.getSearchValue()},
-                    DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC"));
-        }
+                    new String[]{"" + DBHelper.STATE_ACTIVE, "" + search.getValueFrom()},
+                    DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend() ? " ASC" : " DESC"));
+        }*/
 
         String s, ds, sort;
         String[] sa, dsa;
@@ -273,16 +354,16 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
         switch (id) {
             case LOADER_INIT_RANGE:
                 long start, end;
-                if (LPreferences.getSearchAllTime()) {
+                if (search.isbAllTime()) {
                     start = 0;
                     end = Long.MAX_VALUE;
                 } else {
-                    start = LPreferences.getSearchAllTimeFrom();
-                    end = LPreferences.getSearchAllTimeTo();
+                    start = search.getTimeFrom();
+                    end = search.getTimeTo();
                 }
 
                 uri = DBProvider.URI_TRANSACTIONS;
-                if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+                if ((!search.isbAllTime()) && search.isbByEditTime()) {
                     s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
@@ -318,18 +399,18 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
             case LOADER_TRANSACTION_FILTER_ALL:
                 uri = DBProvider.URI_TRANSACTIONS;
 
-                if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+                if ((!search.isbAllTime()) && search.isbByEditTime()) {
                     s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
                     sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend() ? " ASC" : " DESC");
                 } else {
                     s = ds = DBHelper.TABLE_COLUMN_STATE + "=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
                             + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
                     sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
+                    sort = DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend() ? " ASC" : " DESC");
                 }
 
                 if (!TextUtils.isEmpty(selections)) {
@@ -368,18 +449,18 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                 return null;
         }
 
-        if ((!LPreferences.getSearchAllTime()) && LPreferences.getSearchFilterByEditTIme()) {
+        if ((!search.isbAllTime()) && search.isbByEditTime()) {
             s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + ">=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + "<?";
             sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP_LAST_CHANGE + (LPreferences.getQueryOrderAscend() ? " ASC" : " DESC");
         } else {
             s = ds = "a." + DBHelper.TABLE_COLUMN_STATE + "=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + ">=? AND "
                     + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + "<?";
             sa = dsa = new String[]{"" + DBHelper.STATE_ACTIVE, "" + startMs, "" + endMs};
-            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend()? " ASC" : " DESC");
+            sort = "b." + DBHelper.TABLE_COLUMN_NAME + " ASC, " + "a." + DBHelper.TABLE_COLUMN_TIMESTAMP + (LPreferences.getQueryOrderAscend() ? " ASC" : " DESC");
         }
 
         if (!TextUtils.isEmpty(selections)) {

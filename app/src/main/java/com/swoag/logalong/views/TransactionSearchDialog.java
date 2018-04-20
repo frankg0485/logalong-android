@@ -245,8 +245,15 @@ public class TransactionSearchDialog extends Dialog implements
     @Override
     public void onDismiss(DialogInterface dialog) {
         if (search.getTimeFrom() > search.getTimeTo()) {
-            search.setTimeFrom(0);
-            search.setTimeTo(0);
+            long time = search.getTimeFrom();
+            search.setTimeFrom(search.getTimeTo());
+            search.setTimeTo(time);
+            LPreferences.setSearchControls(search);
+        }
+        if (search.getValueFrom() > search.getValueTo() && search.getValueTo() != 0) {
+            float value = search.getValueFrom();
+            search.setValueFrom(search.getValueTo());
+            search.setValueTo(value);
             LPreferences.setSearchControls(search);
         }
 
