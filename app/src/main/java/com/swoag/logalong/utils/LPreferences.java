@@ -1,5 +1,5 @@
 package com.swoag.logalong.utils;
-/* Copyright (C) 2015 - 2016 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2018 SWOAG Technology <www.swoag.com> */
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -7,6 +7,7 @@ import android.text.TextUtils;
 
 import com.swoag.logalong.LApp;
 import com.swoag.logalong.entities.LAccountShareRequest;
+import com.swoag.logalong.entities.LSearch;
 
 import java.util.Calendar;
 
@@ -21,17 +22,8 @@ public class LPreferences {
     private static final String LOGIN_ERROR = "LoginError";
     private static final String ONE_TIME_INIT = "OneTimeInit2";
     private static final String QUERY_ORDER = "QueryOrder";
-    private static final String SEARCH_ALLTIME = "SearchAllTime";
-    private static final String SEARCH_ALLTIME_FROM = "SearchAllTimeFrom";
-    private static final String SEARCH_ALLTIME_TO = "SearchAllTimeTo";
-    private static final String SEARCH_ALL = "SearchAll";
-    private static final String SEARCH_ACCOUNTS = "SearchAccounts";
-    private static final String SEARCH_CATEGORIES = "SearchCategories";
-    private static final String SEARCH_VENDORS = "SearchVendors";
-    private static final String SEARCH_TAGS = "SearchTags";
-    private static final String SEARCH_FILTER_BY_EDIT_TIME = "SearchFilterByEditTime";
-    private static final String SEARCH_FILTER_BY_VALUE = "SearchFilterByValue";
-    private static final String SEARCH_VALUE = "SearchValue";
+
+    private static final String SEARCH_CONTROLS = "SearchControls";
     private static final String SHARE_ACCEPT = "ShareAccept";
     private static final String SHARE_ACCOUNT_REQUEST = "ShareAccountRqst";
     private static final String SHARED_PREF_NAME = "LogAlong";
@@ -263,14 +255,6 @@ public class LPreferences {
         savePreference(LApp.ctx, ONE_TIME_INIT, yes);
     }
 
-    public static boolean getSearchAllTime() {
-        return getPreference(LApp.ctx, SEARCH_ALLTIME, true);
-    }
-
-    public static void setSearchAllTime(boolean all) {
-        savePreference(LApp.ctx, SEARCH_ALLTIME, all);
-    }
-
     private static long defaultSearchAllTime(boolean from) {
         Calendar calendar = Calendar.getInstance();
         if (from) calendar.add(Calendar.MONTH, -1);
@@ -287,22 +271,64 @@ public class LPreferences {
         return calendar.getTimeInMillis();
     }
 
-    public static long getSearchAllTimeFrom() {
-        return getPreference(LApp.ctx, SEARCH_ALLTIME_FROM, defaultSearchAllTime(true));
+    public static LSearch getSearchControls() {
+        LSearch search = new LSearch();
+
+        search.setbShowAll(getPreference(LApp.ctx, SEARCH_CONTROLS + ".showAll", true));
+        search.setbAccounts(getPreference(LApp.ctx, SEARCH_CONTROLS + ".bAccounts", true));
+        search.setAccounts(getLongArray(SEARCH_CONTROLS + ".accounts"));
+        search.setbCategories(getPreference(LApp.ctx, SEARCH_CONTROLS + ".bCategories", true));
+        search.setCategories(getLongArray(SEARCH_CONTROLS + ".categories"));
+        search.setbVendors(getPreference(LApp.ctx, SEARCH_CONTROLS + ".bVendors", true));
+        search.setVendors(getLongArray(SEARCH_CONTROLS + ".vendors"));
+        search.setbTags(getPreference(LApp.ctx, SEARCH_CONTROLS + ".bTags", true));
+        search.setTags(getLongArray(SEARCH_CONTROLS + ".tags"));
+        search.setbTypes(getPreference(LApp.ctx, SEARCH_CONTROLS + ".bTypes", true));
+        search.setTypes(getLongArray(SEARCH_CONTROLS + ".types"));
+
+        search.setbAllTime(getPreference(LApp.ctx, SEARCH_CONTROLS + ".allTime", true));
+        search.setbByEditTime(getPreference(LApp.ctx, SEARCH_CONTROLS + ".byEditTime", false));
+        search.setTimeFrom(getPreference(LApp.ctx, SEARCH_CONTROLS + ".timeFrom", defaultSearchAllTime(true)));
+        search.setTimeTo(getPreference(LApp.ctx, SEARCH_CONTROLS + ".timeTo", defaultSearchAllTime(false)));
+        if (search.getTimeFrom() > search.getTimeTo()) {
+            search.setTimeFrom(defaultSearchAllTime(true));
+            search.setTimeTo(defaultSearchAllTime(false));
+        }
+        if (search.getTimeFrom() == 0) {
+            search.setTimeFrom(defaultSearchAllTime(true));
+        }
+        if (search.getTimeTo() == 0) {
+            search.setTimeTo(defaultSearchAllTime(false));
+        }
+
+        search.setbAllValue(getPreference(LApp.ctx, SEARCH_CONTROLS + ".allValue", true));
+        search.setValueFrom(getPreference(LApp.ctx, SEARCH_CONTROLS + ".valueFrom", 0f));
+        search.setValueTo(getPreference(LApp.ctx, SEARCH_CONTROLS + ".valueTo", 0f));
+
+        return search;
     }
 
-    public static void setSearchAllTimeFrom(long from) {
-        if (from == 0) from = defaultSearchAllTime(true);
-        savePreference(LApp.ctx, SEARCH_ALLTIME_FROM, from);
-    }
+    public static void setSearchControls(LSearch search) {
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".showAll", search.isbShowAll());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".bAccounts", search.isbAccounts());
+        setLongArray(SEARCH_CONTROLS + ".accounts", search.getAccounts());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".bCategories", search.isbCategories());
+        setLongArray(SEARCH_CONTROLS + ".categories", search.getCategories());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".bVendors", search.isbVendors());
+        setLongArray(SEARCH_CONTROLS + ".vendors", search.getVendors());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".bTags", search.isbTags());
+        setLongArray(SEARCH_CONTROLS + ".tags", search.getTags());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".bTypes", search.isbTypes());
+        setLongArray(SEARCH_CONTROLS + ".types", search.getTypes());
 
-    public static long getSearchAllTimeTo() {
-        return getPreference(LApp.ctx, SEARCH_ALLTIME_TO, defaultSearchAllTime(false));
-    }
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".allTime", search.isbAllTime());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".byEditTime", search.isbByEditTime());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".timeFrom", search.getTimeFrom());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".timeTo", search.getTimeTo());
 
-    public static void setSearchAllTimeTo(long to) {
-        if (to == 0) to = defaultSearchAllTime(false);
-        savePreference(LApp.ctx, SEARCH_ALLTIME_TO, to);
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".allValue", search.isbAllValue());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".valueFrom", search.getValueFrom());
+        savePreference(LApp.ctx, SEARCH_CONTROLS + ".valueTo", search.getValueTo());
     }
 
     private static long[] getLongArray(String key) {
@@ -342,76 +368,12 @@ public class LPreferences {
         savePreference(LApp.ctx, QUERY_ORDER, order);
     }
 
-    public static boolean getSearchAll() {
-        return getPreference(LApp.ctx, SEARCH_ALL, true);
-    }
-
-    public static void setSearchAll(boolean all) {
-        savePreference(LApp.ctx, SEARCH_ALL, all);
-    }
-
-    public static long[] getSearchAccounts() {
-        return getLongArray(SEARCH_ACCOUNTS);
-    }
-
-    public static void setSearchAccounts(long[] accounts) {
-        setLongArray(SEARCH_ACCOUNTS, accounts);
-    }
-
-    public static long[] getSearchCategories() {
-        return getLongArray(SEARCH_CATEGORIES);
-    }
-
-    public static void setSearchCategories(long[] categories) {
-        setLongArray(SEARCH_CATEGORIES, categories);
-    }
-
-    public static long[] getSearchVendors() {
-        return getLongArray(SEARCH_VENDORS);
-    }
-
-    public static void setSearchVendors(long[] vendors) {
-        setLongArray(SEARCH_VENDORS, vendors);
-    }
-
-    public static long[] getSearchTags() {
-        return getLongArray(SEARCH_TAGS);
-    }
-
-    public static void setSearchTags(long[] tags) {
-        setLongArray(SEARCH_TAGS, tags);
-    }
-
     public static String getServerMsg() {
         return getPreference(LApp.ctx, SERVER_MSG_BROADCAST, "");
     }
 
     public static void setServerMsg(String msg) {
         savePreference(LApp.ctx, SERVER_MSG_BROADCAST, msg);
-    }
-
-    public static boolean getSearchFilterByEditTIme() {
-        return getPreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, false);
-    }
-
-    public static void setSearchFilterByEditTime(boolean yes) {
-        savePreference(LApp.ctx, SEARCH_FILTER_BY_EDIT_TIME, yes);
-    }
-
-    public static boolean getSearchFilterByValue() {
-        return getPreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, false);
-    }
-
-    public static void setSearchFilterByValue(boolean yes) {
-        savePreference(LApp.ctx, SEARCH_FILTER_BY_VALUE, yes);
-    }
-
-    public static float getSearchValue() {
-        return getPreference(LApp.ctx, SEARCH_VALUE, 0f);
-    }
-
-    public static void setSearchValue(float value) {
-        savePreference(LApp.ctx, SEARCH_VALUE, value);
     }
 
     public static long getUtcDelta() {

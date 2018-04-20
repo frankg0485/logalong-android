@@ -1,5 +1,5 @@
 package com.swoag.logalong.views;
-/* Copyright (C) 2015 SWOAG Technology <www.swoag.com> */
+/* Copyright (C) 2015 - 2018 SWOAG Technology <www.swoag.com> */
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AlphabetIndexer;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -25,6 +26,7 @@ import android.widget.TextView;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 public class LMultiSelectionDialog extends Dialog
@@ -60,6 +62,7 @@ public class LMultiSelectionDialog extends Dialog
     private String[] columns;
     private HashSet<Long> selectedIds;
     private Object obj;
+    private ArrayList<String> strings;
 
     private void init(Context context, Object obj, HashSet<Long> selectedIds,
                       LMultiSelectionDialog.MultiSelectionDialogItf callback,
@@ -70,7 +73,10 @@ public class LMultiSelectionDialog extends Dialog
         this.selectedIds = selectedIds;
 
         this.mCursor = callback.onMultiSelectionGetCursor("");
-        this.idColumnIndex = this.mCursor.getColumnIndex("_id");
+        this.strings = callback.onMultiSelectionGetStrings();
+        if (this.mCursor != null) {
+            this.idColumnIndex = this.mCursor.getColumnIndex("_id");
+        }
 
         this.ids = ids;
         this.columns = columns;
@@ -78,6 +84,8 @@ public class LMultiSelectionDialog extends Dialog
 
     public interface MultiSelectionDialogItf {
         public Cursor onMultiSelectionGetCursor(String column);
+
+        public ArrayList<String> onMultiSelectionGetStrings();
 
         public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected);
     }
@@ -106,9 +114,14 @@ public class LMultiSelectionDialog extends Dialog
             mList.setOnItemClickListener(this);
 
             mList.setFastScrollEnabled(true);
-            mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
-                    mCursor, ids[1], columns[0], null/*columns[1]*/,
-                    ids[7], ids[6]));
+
+            if (mCursor != null) {
+                mList.setAdapter(new MyCursorAdapter(context.getApplicationContext(),
+                        mCursor, ids[1], columns[0], null/*columns[1]*/,
+                        ids[7], ids[6]));
+            } else {
+                mList.setAdapter(new MyArrayAdapter(context.getApplicationContext(), strings, ids[1], ids[7], ids[6]));
+            }
         } catch (Exception e) {
             LLog.e(TAG, "unexpected error: " + e.getMessage());
         }
@@ -120,8 +133,12 @@ public class LMultiSelectionDialog extends Dialog
 
     private boolean isAllSelected() {
         if (selectedIds.isEmpty()) return false;
-        if (null == mCursor || mCursor.getCount() < 1) return false;
-        return (selectedIds.size() == mCursor.getCount());
+        if (strings != null) {
+            return (selectedIds.size() == strings.size());
+        } else {
+            if (null == mCursor || mCursor.getCount() < 1) return false;
+            return (selectedIds.size() == mCursor.getCount());
+        }
     }
 
     @Override
@@ -169,17 +186,28 @@ public class LMultiSelectionDialog extends Dialog
                     cb.setChecked(!cb.isChecked());
                     allSelected = cb.isChecked();
 
-                    mCursor.moveToFirst();
-                    for (int ii = 0; ii < mCursor.getCount(); ii++) {
+                    if (mCursor != null) {
+                        mCursor.moveToFirst();
+                        for (int ii = 0; ii < mCursor.getCount(); ii++) {
 
-                        if (cb.isChecked()) {
-                            selectedIds.add(mCursor.getLong(idColumnIndex));
-                        } else {
-                            selectedIds.remove(mCursor.getLong(idColumnIndex));
+                            if (cb.isChecked()) {
+                                selectedIds.add(mCursor.getLong(idColumnIndex));
+                            } else {
+                                selectedIds.remove(mCursor.getLong(idColumnIndex));
+                            }
+                            mCursor.moveToNext();
                         }
-                        mCursor.moveToNext();
+                    } else {
+                        for (int ii = 0; ii < strings.size(); ii++) {
+                            if (cb.isChecked()) {
+                                selectedIds.add((long) ii);
+                            } else {
+                                selectedIds.remove((long) ii);
+                            }
+                        }
                     }
                     mList.invalidateViews();
+
                 } catch (Exception e) {
                     LLog.e(TAG, "unexpected error: " + e.getMessage());
                 }
@@ -195,8 +223,15 @@ public class LMultiSelectionDialog extends Dialog
 
     @Override
     public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-        this.mCursor.moveToPosition(arg2);
-        long id = this.mCursor.getLong(idColumnIndex);
+        long id;
+
+        if (mCursor != null) {
+            this.mCursor.moveToPosition(arg2);
+            id = this.mCursor.getLong(idColumnIndex);
+        } else {
+            id = arg2;
+        }
+
         boolean checked = !selectedIds.contains(id);
         if (checked) {
             selectedIds.add(id);
@@ -215,6 +250,37 @@ public class LMultiSelectionDialog extends Dialog
     private void leave() {
         callback.onMultiSelectionDialogExit(obj, selectedIds, allSelected);
         dismiss();
+    }
+
+    private class MyArrayAdapter extends ArrayAdapter<String> {
+        int layoutId;
+        private int textId1;
+        private int checkboxId;
+        private ArrayList<String> arrayList;
+
+        public MyArrayAdapter(Context context, ArrayList<String> arrayList, int layoutId, int textId1, int checkboxId) {
+            super(context, 0, arrayList);
+            this.layoutId = layoutId;
+            this.textId1 = textId1;
+            this.checkboxId = checkboxId;
+            this.arrayList = arrayList;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            String item = getItem(position);
+
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(layoutId, parent, false);
+            }
+
+            TextView txtView = (TextView) convertView.findViewById(textId1);
+            txtView.setText(item);
+
+            CheckBox cb = (CheckBox) convertView.findViewById(checkboxId);
+            cb.setChecked(selectedIds.contains((long) position));
+            return convertView;
+        }
     }
 
     /**

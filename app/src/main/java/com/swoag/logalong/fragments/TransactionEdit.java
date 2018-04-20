@@ -360,7 +360,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                         colorCode = LDollarAmountPickerView.VALUE_COLOR_BLUE;
                         break;
                 }
-                picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, this);
+                picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, false, this);
                 pickerVisible = true;
             }
             viewDiscard.setVisibility(View.GONE);
@@ -508,7 +508,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                             colorCode = LDollarAmountPickerView.VALUE_COLOR_BLUE;
                             break;
                     }
-                    picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, TransactionEdit.this);
+                    picker = new LDollarAmountPickerView(rootView, item.getValue(), colorCode, false, TransactionEdit.this);
                     pickerVisible = true;
                     pickerV.setVisibility(View.VISIBLE);
                     break;

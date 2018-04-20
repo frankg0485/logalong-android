@@ -100,6 +100,7 @@
     <string name="select_records">Select Records</string>
     <string name="select_tag">Select Tag</string>
     <string name="select_tags">Select Tags</string>
+    <string name="select_types">Select Types</string>
     <string name="select_vendor">Select Payer/Payee</string>
     <string name="select_vendors">Select Payer/Payee</string>
     <string name="settings">Settings</string>

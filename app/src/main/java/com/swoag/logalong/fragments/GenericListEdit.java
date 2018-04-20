@@ -656,6 +656,11 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
         }
 
+        @Override
+        public ArrayList<String> onMultiSelectionGetStrings() {
+            return null;
+        }
+
         private class VTag {
             long id;
             String name;

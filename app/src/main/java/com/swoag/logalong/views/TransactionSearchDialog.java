@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LAccount;
 import com.swoag.logalong.entities.LCategory;
+import com.swoag.logalong.entities.LSearch;
 import com.swoag.logalong.entities.LTag;
 import com.swoag.logalong.entities.LVendor;
 import com.swoag.logalong.utils.DBAccount;
@@ -30,21 +31,23 @@ import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LViewUtils;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 
 public class TransactionSearchDialog extends Dialog implements
-        DialogInterface.OnDismissListener, DatePickerDialog.OnDateSetListener, LDollarAmountPickerView.LDollarAmountPickerViewItf {
+        DialogInterface.OnDismissListener, DatePickerDialog.OnDateSetListener, LDollarAmountPickerView
+        .LDollarAmountPickerViewItf {
 
     private Context context;
     private View filterCheckView, filterView, timeCheckView, timeView, valueCheckView, valueView;
-    private TextView accountV, categoryV, vendorV, tagV, fromV, toV, fromValueV, toValueV, filterByV;
+    private TextView accountV, categoryV, vendorV, tagV, typeV, fromV, toV, fromValueV, toValueV, filterByV;
     private TransactionSearchDialogItf callback;
     private MyClickListener myClickListener;
-    private CheckBox checkBox, checkBoxTime, checkboxByValue;
-    private boolean showAll, allTime, showAllOrig, allTimeOrig;
-    private boolean byValueOrig;
-    private float valuerOrig;
+    private CheckBox checkBox, checkBoxTime, checkboxByValue, checkBoxAccounts, checkBoxCategories, checkBoxPayers,
+            checkBoxTags, checkBoxTypes;
+    private LSearch searchOrig;
+    private LSearch search;
     private View rootView, pickerV;
     private LDollarAmountPickerView picker;
 
@@ -52,6 +55,7 @@ public class TransactionSearchDialog extends Dialog implements
     private LMultiSelectionDialog.MultiSelectionDialogItf categorySelectionDlgItf;
     private LMultiSelectionDialog.MultiSelectionDialogItf vendorSelectionDlgItf;
     private LMultiSelectionDialog.MultiSelectionDialogItf tagSelectionDlgItf;
+    private LMultiSelectionDialog.MultiSelectionDialogItf typeSelectionDlgItf;
 
     public interface TransactionSearchDialogItf {
         public void onTransactionSearchDialogDismiss(boolean changed);
@@ -63,16 +67,18 @@ public class TransactionSearchDialog extends Dialog implements
         this.callback = callback;
         myClickListener = new MyClickListener();
 
-        allTimeOrig = LPreferences.getSearchAllTime();
-        showAllOrig = LPreferences.getSearchAll();
-
-        byValueOrig = LPreferences.getSearchFilterByValue();
-        valuerOrig = LPreferences.getSearchValue();
+        searchOrig = LPreferences.getSearchControls();
+        search = new LSearch(searchOrig);
 
         accountSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
                 return DBAccount.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            }
+
+            @Override
+            public ArrayList<String> onMultiSelectionGetStrings() {
+                return null;
             }
 
             @Override
@@ -91,7 +97,8 @@ public class TransactionSearchDialog extends Dialog implements
                             }
                         }
                     }
-                    LPreferences.setSearchAccounts(ok? accounts : null);
+                    search.setAccounts(ok ? accounts : null);
+                    LPreferences.setSearchControls(search);
                 }
                 displayAccounts();
             }
@@ -101,6 +108,11 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
                 return DBCategory.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            }
+
+            @Override
+            public ArrayList<String> onMultiSelectionGetStrings() {
+                return null;
             }
 
             @Override
@@ -119,7 +131,8 @@ public class TransactionSearchDialog extends Dialog implements
                             }
                         }
                     }
-                    LPreferences.setSearchCategories(ok? categories : null);
+                    search.setCategories(ok ? categories : null);
+                    LPreferences.setSearchControls(search);
                 }
                 displayCategories();
             }
@@ -129,6 +142,11 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
                 return DBVendor.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            }
+
+            @Override
+            public ArrayList<String> onMultiSelectionGetStrings() {
+                return null;
             }
 
             @Override
@@ -147,7 +165,8 @@ public class TransactionSearchDialog extends Dialog implements
                             }
                         }
                     }
-                    LPreferences.setSearchVendors(ok? vendors : null);
+                    search.setVendors(ok ? vendors : null);
+                    LPreferences.setSearchControls(search);
                 }
                 displayVendors();
             }
@@ -157,6 +176,11 @@ public class TransactionSearchDialog extends Dialog implements
             @Override
             public Cursor onMultiSelectionGetCursor(String column) {
                 return DBTag.getInstance().getCursorSortedBy(DBHelper.TABLE_COLUMN_NAME);
+            }
+
+            @Override
+            public ArrayList<String> onMultiSelectionGetStrings() {
+                return null;
             }
 
             @Override
@@ -175,23 +199,59 @@ public class TransactionSearchDialog extends Dialog implements
                             }
                         }
                     }
-                    LPreferences.setSearchTags(ok? tags : null);
+                    search.setTags(ok ? tags : null);
+                    LPreferences.setSearchControls(search);
                 }
                 displayTags();
+            }
+        };
+
+        typeSelectionDlgItf = new LMultiSelectionDialog.MultiSelectionDialogItf() {
+            @Override
+            public Cursor onMultiSelectionGetCursor(String column) {
+                return null;
+            }
+
+            @Override
+            public ArrayList<String> onMultiSelectionGetStrings() {
+                ArrayList<String> list = new ArrayList<>();
+                list.add(context.getString(R.string.expense));
+                list.add(context.getString(R.string.income));
+                list.add(context.getString(R.string.transfer));
+                return list;
+            }
+
+            @Override
+            public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                if (selections != null) {
+                    boolean ok = false;
+                    long[] types = null;
+                    if (!allSelected && selections.size() > 0) {
+                        types = new long[selections.size()];
+                        int ii = 0;
+                        for (Long ll : selections) {
+                            types[ii++] = ll;
+                            ok = true;
+                        }
+                    }
+                    search.setTypes(ok ? types : null);
+                    LPreferences.setSearchControls(search);
+                }
+                displayTypes();
             }
         };
     }
 
     @Override
     public void onDismiss(DialogInterface dialog) {
-        if (LPreferences.getSearchAllTimeFrom() > LPreferences.getSearchAllTimeTo()) {
-            LPreferences.setSearchAllTimeFrom(0);
-            LPreferences.setSearchAllTimeTo(0);
+        if (search.getTimeFrom() > search.getTimeTo()) {
+            search.setTimeFrom(0);
+            search.setTimeTo(0);
+            LPreferences.setSearchControls(search);
         }
 
         // for time and filter, treat it as change as long as it was/is not all default values.
-        boolean changed = !(allTimeOrig && showAllOrig && allTime && showAll);
-        changed |= ((byValueOrig != LPreferences.getSearchFilterByValue()) || (valuerOrig != LPreferences.getSearchValue()));
+        boolean changed = !search.isEqual(searchOrig);
         callback.onTransactionSearchDialogDismiss(changed);
     }
 
@@ -204,10 +264,22 @@ public class TransactionSearchDialog extends Dialog implements
         rootView = findViewById(android.R.id.content);
 
         findViewById(R.id.closeDialog).setOnClickListener(myClickListener);
-        findViewById(R.id.accounts).setOnClickListener(myClickListener);
-        findViewById(R.id.categories).setOnClickListener(myClickListener);
-        findViewById(R.id.vendors).setOnClickListener(myClickListener);
-        findViewById(R.id.tags).setOnClickListener(myClickListener);
+        findViewById(R.id.selectedAccounts).setOnClickListener(myClickListener);
+        findViewById(R.id.selectedCategories).setOnClickListener(myClickListener);
+        findViewById(R.id.selectedPayers).setOnClickListener(myClickListener);
+        findViewById(R.id.selectedTags).setOnClickListener(myClickListener);
+        findViewById(R.id.selectedTypes).setOnClickListener(myClickListener);
+
+        checkBoxAccounts = (CheckBox) findViewById(R.id.checkboxAccounts);
+        checkBoxAccounts.setOnClickListener(myClickListener);
+        checkBoxCategories = (CheckBox) findViewById(R.id.checkboxCategories);
+        checkBoxCategories.setOnClickListener(myClickListener);
+        checkBoxPayers = (CheckBox) findViewById(R.id.checkboxPayers);
+        checkBoxPayers.setOnClickListener(myClickListener);
+        checkBoxTags = (CheckBox) findViewById(R.id.checkboxTags);
+        checkBoxTags.setOnClickListener(myClickListener);
+        checkBoxTypes = (CheckBox) findViewById(R.id.checkboxTypes);
+        checkBoxTypes.setOnClickListener(myClickListener);
 
         findViewById(R.id.fromTime).setOnClickListener(myClickListener);
         findViewById(R.id.toTime).setOnClickListener(myClickListener);
@@ -218,6 +290,7 @@ public class TransactionSearchDialog extends Dialog implements
         categoryV = (TextView) findViewById(R.id.selectedCategories);
         vendorV = (TextView) findViewById(R.id.selectedPayers);
         tagV = (TextView) findViewById(R.id.selectedTags);
+        typeV = (TextView) findViewById(R.id.selectedTypes);
 
         timeView = findViewById(R.id.customTime);
         fromV = (TextView) findViewById(R.id.fromTime);
@@ -229,41 +302,44 @@ public class TransactionSearchDialog extends Dialog implements
         toValueV = (TextView) findViewById(R.id.toValue);
 
         filterCheckView = findViewById(R.id.checkboxView);
-        //LViewUtils.setAlpha(filterCheckView, 0.8f);
         filterCheckView.setOnClickListener(myClickListener);
         checkBox = (CheckBox) findViewById(R.id.checkboxAll);
-        showAll = LPreferences.getSearchAll();
 
         timeCheckView = findViewById(R.id.checkboxViewTime);
-        //LViewUtils.setAlpha(timeCheckView, 0.8f);
         timeCheckView.setOnClickListener(myClickListener);
 
         checkBoxTime = (CheckBox) findViewById(R.id.checkboxAllTime);
-        allTime = LPreferences.getSearchAllTime();
 
         valueCheckView = findViewById(R.id.checkboxByValueView);
-        //LViewUtils.setAlpha(valueCheckView, 0.8f);
         valueCheckView.setOnClickListener(myClickListener);
         checkboxByValue = (CheckBox) findViewById(R.id.checkboxByValue);
         fromValueV.setOnClickListener(myClickListener);
         toValueV.setOnClickListener(myClickListener);
         pickerV = rootView.findViewById(R.id.picker);
 
-        displayUpdateFilter(showAll);
-
-        if (LPreferences.getSearchAllTimeFrom() > LPreferences.getSearchAllTimeTo()) {
-            LPreferences.setSearchAllTimeFrom(0);
-            LPreferences.setSearchAllTimeTo(0);
-        }
-        displayUpdateTime(allTime);
+        displayUpdateFilter(search.isbShowAll());
+        displayUpdateTime(search.isbAllTime());
         displayFilterBy();
         displayByValue();
 
         this.setOnDismissListener(this);
     }
 
+    private void displayItem(boolean enable, CheckBox checkbox, View view) {
+        checkbox.setChecked(enable);
+        if (enable) {
+            LViewUtils.setAlpha(view, 1.0f);
+            view.setEnabled(true);
+        } else {
+            LViewUtils.setAlpha(view, 0.4f);
+            view.setEnabled(false);
+        }
+    }
+
     private void displayAccounts() {
-        long vals[] = LPreferences.getSearchAccounts();
+        displayItem(search.isbAccounts(), checkBoxAccounts, accountV);
+
+        long vals[] = search.getAccounts();
         String str = "";
         boolean ok = false;
         if (null != vals) {
@@ -280,14 +356,16 @@ public class TransactionSearchDialog extends Dialog implements
             str = str.replaceAll(", $", "");
             accountV.setText(str);
         } else {
-            LPreferences.setSearchAccounts(null);
+            search.setAccounts(null);
+            LPreferences.setSearchControls(search);
             accountV.setText(context.getString(R.string.all));
         }
     }
 
-
     private void displayCategories() {
-        long vals[] = LPreferences.getSearchCategories();
+        displayItem(search.isbCategories(), checkBoxCategories, categoryV);
+
+        long vals[] = search.getCategories();
         String str = "";
         boolean ok = false;
         if (null != vals) {
@@ -303,13 +381,16 @@ public class TransactionSearchDialog extends Dialog implements
             str = str.replaceAll(", $", "");
             categoryV.setText(str);
         } else {
-            LPreferences.setSearchCategories(null);
+            search.setCategories(null);
+            LPreferences.setSearchControls(search);
             categoryV.setText(context.getString(R.string.all));
         }
     }
 
     private void displayVendors() {
-        long vals[] = LPreferences.getSearchVendors();
+        displayItem(search.isbVendors(), checkBoxPayers, vendorV);
+
+        long vals[] = search.getVendors();
         String str = "";
         boolean ok = false;
         if (null != vals) {
@@ -326,13 +407,16 @@ public class TransactionSearchDialog extends Dialog implements
             str = str.replaceAll(", $", "");
             vendorV.setText(str);
         } else {
-            LPreferences.setSearchVendors(null);
+            search.setVendors(null);
+            LPreferences.setSearchControls(search);
             vendorV.setText(context.getString(R.string.all));
         }
     }
 
     private void displayTags() {
-        long vals[] = LPreferences.getSearchTags();
+        displayItem(search.isbTags(), checkBoxTags, tagV);
+
+        long vals[] = search.getTags();
         String str = "";
         boolean ok = false;
         if (null != vals) {
@@ -349,20 +433,45 @@ public class TransactionSearchDialog extends Dialog implements
             str = str.replaceAll(", $", "");
             tagV.setText(str);
         } else {
-            LPreferences.setSearchTags(null);
+            search.setTags(null);
+            LPreferences.setSearchControls(search);
             tagV.setText(context.getString(R.string.all));
+        }
+    }
+
+    private void displayTypes() {
+        displayItem(search.isbTypes(), checkBoxTypes, typeV);
+
+        long vals[] = search.getTypes();
+        String str = "";
+        boolean ok = false;
+        if (null != vals) {
+            for (int ii = 0; ii < vals.length; ii++) {
+                String name;
+                if (vals[ii] == 0) name = context.getString(R.string.expense);
+                else if (vals[ii] == 1) name = context.getString(R.string.income);
+                else name = context.getString(R.string.transfer);
+                str += name + ", ";
+                ok = true;
+            }
+        }
+        if (ok) {
+            str = str.replaceAll(", $", "");
+            typeV.setText(str);
+        } else {
+            search.setTypes(null);
+            LPreferences.setSearchControls(search);
+            typeV.setText(context.getString(R.string.all));
         }
     }
 
     private void displayUpdateFilter(boolean all) {
         checkBox.setChecked(all);
-        LViewUtils.disableEnableControls(!all, (ViewGroup) filterView);
+        //LViewUtils.disableEnableControls(!all, (ViewGroup) filterView);
         if (all) {
-            //LViewUtils.setAlpha(filterView, 0.8f);
             filterView.setVisibility(View.GONE);
             LViewUtils.setAlpha(filterCheckView, 0.8f);
         } else {
-            //LViewUtils.setAlpha(filterView, 1.0f);
             filterView.setVisibility(View.VISIBLE);
             LViewUtils.setAlpha(filterCheckView, 0.6f);
         }
@@ -370,54 +479,48 @@ public class TransactionSearchDialog extends Dialog implements
         displayCategories();
         displayVendors();
         displayTags();
+        displayTypes();
     }
 
     private void displayUpdateTime(boolean all) {
         checkBoxTime.setChecked(all);
         LViewUtils.disableEnableControls(!all, (ViewGroup) timeView);
         if (all) {
-            //LViewUtils.setAlpha(timeView, 0.8f);
             timeView.setVisibility(View.GONE);
             LViewUtils.setAlpha(timeCheckView, 0.8f);
         } else {
-            //LViewUtils.setAlpha(timeView, 1.0f);
             timeView.setVisibility(View.VISIBLE);
             LViewUtils.setAlpha(timeCheckView, 0.6f);
         }
-        fromV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeFrom()));
-        toV.setText(new SimpleDateFormat("MMM d, yyy").format(LPreferences.getSearchAllTimeTo()));
+        fromV.setText(new SimpleDateFormat("MMM d, yyy").format(search.getTimeFrom()));
+        toV.setText(new SimpleDateFormat("MMM d, yyy").format(search.getTimeTo()));
     }
 
     private void displayFilterBy() {
         filterByV.setText(context.getString
-                (LPreferences.getSearchFilterByEditTIme() ? R.string.edit_time : R.string.record_time));
+                (search.isbByEditTime() ? R.string.edit_time : R.string.record_time));
     }
 
     private void displayByValue() {
-        checkboxByValue.setChecked(LPreferences.getSearchFilterByValue());
-        LViewUtils.disableEnableControls(!LPreferences.getSearchFilterByValue(), (ViewGroup) valueView);
-        //byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
+        checkboxByValue.setChecked(search.isbAllValue());
 
-        if (LPreferences.getSearchFilterByValue()) {
-            //filterCheckView.setEnabled(false);
-            //timeCheckView.setEnabled(false);
-            //filterView.setVisibility(View.GONE);
-            //timeView.setVisibility(View.GONE);
-            //LViewUtils.setAlpha(filterCheckView, 0.8f);
-            //LViewUtils.setAlpha(timeCheckView, 0.8f);
-
+        if (search.isbAllValue()) {
             LViewUtils.setAlpha(valueCheckView, 0.8f);
             valueView.setVisibility(View.GONE);
-            //byValueV.setEnabled(true);
         } else {
             LViewUtils.setAlpha(valueCheckView, 0.6f);
             valueView.setVisibility(View.VISIBLE);
-            //byValueV.setEnabled(false);
+        }
 
-            //filterCheckView.setEnabled(true);
-            //timeCheckView.setEnabled(true);
-            //displayUpdateFilter(showAll);
-            //displayUpdateTime(allTime);
+        if (search.getValueFrom() <= 0) {
+            fromValueV.setText("---");
+        } else {
+            fromValueV.setText(String.format("%.2f", (float) search.getValueFrom()));
+        }
+        if (search.getValueTo() <= 0) {
+            toValueV.setText("---");
+        } else {
+            toValueV.setText(String.format("%.2f", (float) search.getValueTo()));
         }
     }
 
@@ -443,34 +546,41 @@ public class TransactionSearchDialog extends Dialog implements
         public void onClicked(View v) {
             switch (v.getId()) {
                 case R.id.checkboxView:
-                    showAll = !showAll;
-                    LPreferences.setSearchAll(showAll);
-                    displayUpdateFilter(showAll);
+                    search.setbShowAll(!search.isbShowAll());
+                    LPreferences.setSearchControls(search);
+                    displayUpdateFilter(search.isbShowAll());
                     return;
 
                 case R.id.checkboxViewTime:
-                    allTime = !allTime;
-                    LPreferences.setSearchAllTime(allTime);
-                    displayUpdateTime(allTime);
+                    search.setbAllTime(!search.isbAllTime());
+                    LPreferences.setSearchControls(search);
+                    displayUpdateTime(search.isbAllTime());
                     return;
 
                 case R.id.checkboxByValueView:
-                    LPreferences.setSearchFilterByValue(!LPreferences.getSearchFilterByValue());
+                    search.setbAllValue(!search.isbAllValue());
+                    LPreferences.setSearchControls(search);
                     displayByValue();
                     return;
 
                 case R.id.fromValue:
-                case R.id.toValue:
-                    if (picker != null) picker.onDestroy();
-                    picker = new LDollarAmountPickerView(rootView, LPreferences.getSearchValue(),
-                            LDollarAmountPickerView.VALUE_COLOR_NEUTRAL, TransactionSearchDialog.this);
-                    pickerV.setVisibility(View.VISIBLE);
+                    showValuePicker(true);
                     return;
 
-                case R.id.accounts:
+                case R.id.toValue:
+                    showValuePicker(false);
+                    return;
+
+                case R.id.checkboxAccounts:
+                    search.setbAccounts(!search.isbAccounts());
+                    LPreferences.setSearchControls(search);
+                    displayAccounts();
+                    return;
+
+                case R.id.selectedAccounts:
                     ids[9] = R.string.select_accounts;
 
-                    long[] accounts = LPreferences.getSearchAccounts();
+                    long[] accounts = search.getAccounts();
                     selectedIds.clear();
                     if (accounts != null) {
                         for (long ll : accounts) {
@@ -483,10 +593,16 @@ public class TransactionSearchDialog extends Dialog implements
                     dialog.show();
                     return;
 
-                case R.id.categories:
+                case R.id.checkboxCategories:
+                    search.setbCategories(!search.isbCategories());
+                    LPreferences.setSearchControls(search);
+                    displayCategories();
+                    return;
+
+                case R.id.selectedCategories:
                     ids[9] = R.string.select_categories;
 
-                    long[] categories = LPreferences.getSearchCategories();
+                    long[] categories = search.getCategories();
                     selectedIds.clear();
                     if (categories != null) {
                         for (long ll : categories) selectedIds.add(ll);
@@ -497,10 +613,16 @@ public class TransactionSearchDialog extends Dialog implements
                     dialog.show();
                     return;
 
-                case R.id.vendors:
+                case R.id.checkboxPayers:
+                    search.setbVendors(!search.isbVendors());
+                    LPreferences.setSearchControls(search);
+                    displayVendors();
+                    return;
+
+                case R.id.selectedPayers:
                     ids[9] = R.string.select_vendors;
 
-                    long[] vendors = LPreferences.getSearchVendors();
+                    long[] vendors = search.getVendors();
                     selectedIds.clear();
                     if (vendors != null) {
                         for (long ll : vendors) selectedIds.add(ll);
@@ -511,10 +633,16 @@ public class TransactionSearchDialog extends Dialog implements
                     dialog.show();
                     return;
 
-                case R.id.tags:
+                case R.id.checkboxTags:
+                    search.setbTags(!search.isbTags());
+                    LPreferences.setSearchControls(search);
+                    displayTags();
+                    return;
+
+                case R.id.selectedTags:
                     ids[9] = R.string.select_tags;
 
-                    long[] tags = LPreferences.getSearchTags();
+                    long[] tags = search.getTags();
                     selectedIds.clear();
                     if (tags != null) {
                         for (long ll : tags) selectedIds.add(ll);
@@ -522,6 +650,26 @@ public class TransactionSearchDialog extends Dialog implements
 
                     dialog = new LMultiSelectionDialog
                             (context, context, selectedIds, tagSelectionDlgItf, ids, columns);
+                    dialog.show();
+                    return;
+
+                case R.id.checkboxTypes:
+                    search.setbTypes(!search.isbTypes());
+                    LPreferences.setSearchControls(search);
+                    displayTypes();
+                    return;
+
+                case R.id.selectedTypes:
+                    ids[9] = R.string.select_types;
+
+                    long[] types = search.getTypes();
+                    selectedIds.clear();
+                    if (types != null) {
+                        for (long ll : types) selectedIds.add(ll);
+                    }
+
+                    dialog = new LMultiSelectionDialog
+                            (context, context, selectedIds, typeSelectionDlgItf, ids, columns);
                     dialog.show();
                     return;
 
@@ -534,7 +682,8 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.filterBy:
-                    LPreferences.setSearchFilterByEditTime(!LPreferences.getSearchFilterByEditTIme());
+                    search.setbByEditTime(!search.isbByEditTime());
+                    LPreferences.setSearchControls(search);
                     displayFilterBy();
                     return;
 
@@ -546,16 +695,18 @@ public class TransactionSearchDialog extends Dialog implements
         }
     }
 
-    boolean setFromTime;
+    private boolean setFromTime;
 
     private void showDatePicker(boolean from) {
         setFromTime = from;
 
         final Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(from ? LPreferences.getSearchAllTimeFrom() : LPreferences.getSearchAllTimeTo());
+        c.setTimeInMillis(from ? search.getTimeFrom() : search.getTimeTo());
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(context, android.R.style.Theme_Holo_Light_Dialog_NoActionBar,
-                TransactionSearchDialog.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+        DatePickerDialog datePickerDialog = new DatePickerDialog(context, android.R.style
+                .Theme_Holo_Light_Dialog_NoActionBar,
+                TransactionSearchDialog.this, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar
+                .DAY_OF_MONTH));
         datePickerDialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         datePickerDialog.show();
     }
@@ -568,20 +719,39 @@ public class TransactionSearchDialog extends Dialog implements
         TextView tv = fromV;
 
         if (setFromTime) {
-            LPreferences.setSearchAllTimeFrom(calendar.getTimeInMillis());
+            search.setTimeFrom(calendar.getTimeInMillis());
         } else {
             tv = toV;
-            LPreferences.setSearchAllTimeTo(calendar.getTimeInMillis() + (long) 24 * 3600 * 1000 - 1);
+            search.setTimeTo(calendar.getTimeInMillis() + (long) 24 * 3600 * 1000 - 1);
         }
-
+        LPreferences.setSearchControls(search);
         tv.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
+    }
+
+    private boolean setFromValue;
+
+    private void showValuePicker(boolean from) {
+        setFromValue = from;
+
+        if (picker != null) picker.onDestroy();
+        float value = from ? search.getValueFrom() : search.getValueTo();
+        picker = new LDollarAmountPickerView(rootView, value,
+                LDollarAmountPickerView.VALUE_COLOR_NEUTRAL, true, TransactionSearchDialog.this);
+        pickerV.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onDollarAmountPickerExit(double value, boolean save) {
         if (save) {
-            LPreferences.setSearchValue((float)value);
-            //byValueV.setText(String.format("%.2f", LPreferences.getSearchValue()));
+            if (value < 0.01) value = 0;
+
+            if (setFromValue) {
+                search.setValueFrom((float) value);
+            } else {
+                search.setValueTo((float) value);
+            }
+            LPreferences.setSearchControls(search);
+            displayByValue();
         }
         pickerV.setVisibility(View.GONE);
     }
