@@ -35,6 +35,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private TextView valueTV;
     private View pickerBgdView;
     private int colorCode;
+    private boolean allowZero;
     private boolean pickerActive;
 
     private String inputString = "";
@@ -66,10 +67,11 @@ public class LDollarAmountPickerView implements View.OnClickListener {
 
     private State state = State.INIT_NO_INPUT;
 
-    public LDollarAmountPickerView(View rootView, double value, int colorCode, LDollarAmountPickerViewItf callback) {
+    public LDollarAmountPickerView(View rootView, double value, int colorCode, boolean allowZero, LDollarAmountPickerViewItf callback) {
         this.rootView = rootView;
         this.value = value;
         this.colorCode = colorCode;
+        this.allowZero = allowZero;
         this.callback = callback;
         myClickListener = new MyClickListener();
 
@@ -438,6 +440,10 @@ public class LDollarAmountPickerView implements View.OnClickListener {
                 appendToString('0');
                 appendToString('.');
                 return initDecimal10State();
+
+            case R.id.ok:
+                if (allowZero) saveLog();
+                break;
         }
 
         return State.INIT_NO_INPUT;
@@ -445,7 +451,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
 
     private State initNoInputState() {
         enableMath(false);
-        enableOk(false);
+        enableOk(allowZero? true: false);
         enableDot(true);
 
         valueTV.setText("0.0");
@@ -543,6 +549,10 @@ public class LDollarAmountPickerView implements View.OnClickListener {
                     valueTV.setText(inputString);
                 }
                 break;
+
+            case R.id.ok:
+                if (allowZero) saveLog();
+                break;
         }
         return State.DECIMAL_1_0;
     }
@@ -550,7 +560,7 @@ public class LDollarAmountPickerView implements View.OnClickListener {
     private State initDecimal10State() {
         enableDot(false);
         enableMath(false);
-        enableOk(false);
+        enableOk(allowZero? true: false);
 
         LViewUtils.setAlpha(valueTV, 1.0f);
         ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
@@ -611,10 +621,13 @@ public class LDollarAmountPickerView implements View.OnClickListener {
         enableDot(false);
         enableMath(true);
 
-        if (string2value(inputString) >= 0.01)
-            enableOk(true);
-        else
-            enableOk(false);
+        if (allowZero) enableOk(true);
+        else {
+            if (string2value(inputString) >= 0.01)
+                enableOk(true);
+            else
+                enableOk(false);
+        }
 
         firstValueEnd = 0;
         ((ImageButton) viewSave).setImageResource(R.drawable.ic_action_accept);
