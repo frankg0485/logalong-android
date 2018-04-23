@@ -322,7 +322,7 @@ public class LViewUtils {
             }
         };
 
-        private View downView;
+        private View downView = null;
 
         public void setFastInterval (int fastThreshold, int fastInterval) {
             mFastThreshold = fastThreshold;
@@ -364,8 +364,10 @@ public class LViewUtils {
                 case MotionEvent.ACTION_UP:
                     handler.removeCallbacks(handlerRunnable);
                     if (singleClick) clickListener.onClick(view);
-                    downView.setSelected(false);
-                    downView = null;
+                    if (downView != null) {
+                        downView.setSelected(false);
+                        downView = null;
+                    }
                     break;
             }
             return true;
