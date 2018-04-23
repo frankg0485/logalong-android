@@ -40,7 +40,7 @@
             android:textSize="18sp"
             android:textStyle="bold"/>
 
-        <ProgressBar
+        <!-- ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleInverse"
             android:layout_width="30dp"
@@ -53,7 +53,7 @@
             android:layout_height="match_parent"
             android:paddingBottom="16dp"
             android:paddingTop="16dp"
-            android:src="@drawable/ic_action_search"/>
+            android:src="@drawable/ic_action_search"/ -->
 
         <ImageView
             android:id="@+id/changePassOption"
@@ -64,13 +64,13 @@
             android:paddingTop="15dp"
             android:src="@drawable/ic_action_overflow"/>
 
-        <ImageView
+        <!-- ImageView
             android:id="@+id/userIdOk"
             android:layout_width="40dp"
             android:layout_height="@dimen/list_item_height"
             android:paddingBottom="15dp"
             android:paddingTop="15dp"
-            android:src="@drawable/ic_action_accept"/>
+            android:src="@drawable/ic_action_accept"/ -->
 
     </LinearLayout>
 
@@ -109,13 +109,13 @@
             android:textColorHint="#ddd"
             android:textSize="18sp"/>
 
-        <ImageView
+        <!-- ImageView
             android:id="@+id/userPassOk"
             android:layout_width="40dp"
             android:layout_height="@dimen/list_item_height"
             android:paddingBottom="15dp"
             android:paddingTop="15dp"
-            android:src="@drawable/ic_action_accept"/>
+            android:src="@drawable/ic_action_accept"/ -->
 
     </LinearLayout>
 
@@ -248,27 +248,28 @@
         android:paddingBottom="15dp"
         android:paddingLeft="10dp">
 
-        <RadioGroup
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true">
 
-            <RadioButton
+            <!-- RadioButton
                 android:id="@+id/createUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:button="@drawable/btn_check_holo_light"
                 android:text="@string/create_new_user_id"
-                android:textColor="@color/light_gray_text_color"/>
+                android:textColor="@color/light_gray_text_color"
+                android:visibility="visible"/ -->
 
-            <RadioButton
+            <CheckBox
                 android:id="@+id/loginUser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:button="@drawable/btn_check_holo_light"
                 android:text="@string/login_with_existing_user_id"
                 android:textColor="@color/light_gray_text_color"/>
-        </RadioGroup>
+        </LinearLayout>
     </RelativeLayout>
 </LinearLayout>
 

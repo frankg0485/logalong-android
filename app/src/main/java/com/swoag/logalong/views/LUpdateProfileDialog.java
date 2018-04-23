@@ -225,7 +225,7 @@ public class LUpdateProfileDialog extends Dialog implements LBroadcastReceiver.B
 
                     pushLocalDb();
                 } else {
-                    displayMsg(true, context.getString(R.string.warning_unable_to_connect));
+                    displayMsg(true, context.getString(R.string.warning_user_id_taken));
                 }
                 break;
             case LBroadcastReceiver.ACTION_SIGN_IN:

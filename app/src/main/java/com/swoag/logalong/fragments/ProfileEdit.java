@@ -14,8 +14,6 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.swoag.logalong.MainService;
@@ -42,11 +40,13 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     private Activity activity;
     private View parentView, rootView, userNameV, userPassV, /*userNumberV, userNumberHintV,*/
             saveV, changePassV,
-            showPassV, userIdOkV, userPassOkV, newUserV;
-    private View checkUserIdAvailabilityV, dummyV;
-    private ProgressBar checkUserIdAvailabilityProgressBar;
+            showPassV, /*userIdOkV, userPassOkV,*/ newUserV;
+    //private View checkUserIdAvailabilityV;
+    private View dummyV;
+    //private ProgressBar checkUserIdAvailabilityProgressBar;
     private CheckBox checkboxShowPass;
-    private RadioButton newUserBtn, loginUserBtn;
+    //private RadioButton newUserBtn, loginUserBtn;
+    private CheckBox loginUserBtn;
     private EditText userIdTV, userNameTV, userPassTV/*, userNumberTV*/;
     private TextWatcher userIdTextWatcher, userNameTextWatcher, userPassTextWatcher/*, userNumberTextWatcher*/;
     private String oldUserId, oldUserName, oldUserPass/*, oldUserNumber*/;
@@ -143,11 +143,11 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                     userPassTV.setText(userPass);
                     userPassTV.setSelection(userPass.length());
                 }
-                if (userPass.length() > 3) {
-                    LViewUtils.setAlpha(userPassOkV, 1.0f);
-                } else {
-                    LViewUtils.setAlpha(userPassOkV, 0.3f);
-                }
+                //if (userPass.length() > 3) {
+                //    LViewUtils.setAlpha(userPassOkV, 1.0f);
+                //} else {
+                //    LViewUtils.setAlpha(userPassOkV, 0.3f);
+                //}
                 setupSaveButton();
             }
         };
@@ -185,16 +185,16 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 LBroadcastReceiver.ACTION_GET_USER_BY_NAME}, this);
 
         newUserV = rootView.findViewById(R.id.createUserView);
-        newUserBtn = (RadioButton) setViewListener(rootView, R.id.createUser);
-        loginUserBtn = (RadioButton) setViewListener(rootView, R.id.loginUser);
+        //newUserBtn = (RadioButton) setViewListener(rootView, R.id.createUser);
+        loginUserBtn = (CheckBox) setViewListener(rootView, R.id.loginUser);
         dummyV = setViewListener(rootView, R.id.dummy);
 
-        checkUserIdAvailabilityV = setViewListener(rootView, R.id.checkUserIdAvailability);
-        checkUserIdAvailabilityProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
-        checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
+        //checkUserIdAvailabilityV = setViewListener(rootView, R.id.checkUserIdAvailability);
+        //checkUserIdAvailabilityProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        //checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
 
-        userIdOkV = setViewListener(rootView, R.id.userIdOk);
-        userPassOkV = setViewListener(rootView, R.id.userPassOk);
+        //userIdOkV = setViewListener(rootView, R.id.userIdOk);
+        //userPassOkV = setViewListener(rootView, R.id.userPassOk);
 
         saveV = setViewListener(parentView, R.id.add);
         LViewUtils.setAlpha(saveV, 0.5f);
@@ -239,21 +239,22 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             showPassV.setVisibility(View.VISIBLE);
             changePassV.setVisibility(View.GONE);
 
-            userIdOkV.setVisibility(View.VISIBLE);
-            userPassOkV.setVisibility(View.VISIBLE);
-            LViewUtils.setAlpha(userIdOkV, 0.3f);
-            LViewUtils.setAlpha(userPassOkV, 0.3f);
+            //userIdOkV.setVisibility(View.VISIBLE);
+            //userPassOkV.setVisibility(View.VISIBLE);
+            //LViewUtils.setAlpha(userIdOkV, 0.3f);
+            //LViewUtils.setAlpha(userPassOkV, 0.3f);
 
             newUserV.setVisibility(View.VISIBLE);
-            checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
-            checkUserIdAvailabilityV.setEnabled(false);
+            //checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
+            //checkUserIdAvailabilityV.setEnabled(false);
             userNameV.setVisibility(View.VISIBLE);
             //userNumberV.setVisibility(View.VISIBLE);
             //userNumberHintV.setVisibility(View.VISIBLE);
 
             userIdPresent = false;
         }
-        newUserBtn.setChecked(true);
+        //newUserBtn.setChecked(true);
+        loginUserBtn.setChecked(false);
 
         userIdTV.setText(userId);
         userPassTV.setText(userPass);
@@ -268,8 +269,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         userPassV.setVisibility(View.GONE);
         showPassV.setVisibility(View.GONE);
         changePassV.setVisibility(View.VISIBLE);
-        userIdOkV.setVisibility(View.GONE);
-        userPassOkV.setVisibility(View.GONE);
+        //userIdOkV.setVisibility(View.GONE);
+        //userPassOkV.setVisibility(View.GONE);
         newUserV.setVisibility(View.GONE);
         userNameV.setVisibility(View.VISIBLE);
         //userNumberV.setVisibility(View.GONE);
@@ -280,6 +281,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     private void setUserIdDisplayControls() {
+        /*
         checkUserIdAvailabilityV.setVisibility((newUserBtn.isChecked() && (!userIdPresent)) ? View.VISIBLE : View
                 .INVISIBLE);
         if (userId.length() > 1) {
@@ -295,12 +297,13 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             LViewUtils.setAlpha(checkUserIdAvailabilityV, 0.3f);
             checkUserIdAvailabilityV.setEnabled(false);
         }
+        */
     }
 
     private void setupSaveButton() {
         boolean enable = false;
         if ((userId.length() > 1) && (userPass.length() > 3)) {
-            if (!newUserBtn.isChecked()) {
+            if (loginUserBtn.isChecked()) {
                 enable = true;
             } else {
                 if (/*(userNumber.length() > 2) && */(userName.length() > 1) &&
@@ -371,12 +374,12 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         @Override
         public void onClicked(View v) {
             switch (v.getId()) {
-                case R.id.createUser:
+                //case R.id.createUser:
                 case R.id.loginUser:
                     hideMsg();
                     setupSaveButton();
                     setUserIdDisplayControls();
-                    userNameV.setVisibility(newUserBtn.isChecked() ? View.VISIBLE : View.GONE);
+                    userNameV.setVisibility(loginUserBtn.isChecked() ? View.GONE : View.VISIBLE);
                     //userNumberV.setVisibility(newUserBtn.isChecked() ? View.VISIBLE : View.GONE);
                     //userNumberHintV.setVisibility(newUserBtn.isChecked() ? View.VISIBLE : View.GONE);
                     break;
@@ -408,8 +411,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                     break;
 
                 case R.id.errorMsg:
-                case R.id.userIdOk:
-                case R.id.userPassOk:
+                //case R.id.userIdOk:
+                //case R.id.userPassOk:
                 case R.id.dummy:
                     //case R.id.userNumberView:
                     //case R.id.userNumberViewHint:
@@ -418,15 +421,15 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                     hideIME();
                     break;
 
-                case R.id.checkUserIdAvailability:
-                    checkUserIdAvailabilityStart();
-                    break;
+                //case R.id.checkUserIdAvailability:
+                //    checkUserIdAvailabilityStart();
+                //    break;
                 case R.id.add: //SAVE
                     int action;
                     if ((!TextUtils.isEmpty(LPreferences.getUserId())) && (!TextUtils.isEmpty(LPreferences
                             .getUserPass()))) {
                         action = LUpdateProfileDialog.UPDATE_USER;
-                    } else if (newUserBtn.isChecked()) {
+                    } else if (!loginUserBtn.isChecked()) {
                         action = LUpdateProfileDialog.NEW_USER;
                     } else {
                         action = LUpdateProfileDialog.LOGIN_USER;
@@ -451,7 +454,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
     }
 
     private void displayMsg(boolean error, String msg) {
-        checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
+        //checkUserIdAvailabilityProgressBar.setVisibility(View.GONE);
         errorMsgV.setTextColor(error ? activity.getResources().getColor(R.color.red_text_color) :
                 activity.getResources().getColor(R.color.base_text_color));
         errorMsgV.setText(msg);
@@ -463,7 +466,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
         userPassTV.setEnabled(enable);
         userNameTV.setEnabled(enable);
         //userNumberTV.setEnabled(enable);
-        newUserBtn.setEnabled(enable);
+        //newUserBtn.setEnabled(enable);
         loginUserBtn.setEnabled(enable);
         showPassV.setEnabled(enable);
         saveV.setEnabled(enable);
@@ -484,7 +487,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
             @Override
             public void onFinish() {
                 displayMsg(true, activity.getString(R.string.warning_unable_to_connect));
-                checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
+                //checkUserIdAvailabilityV.setVisibility(View.VISIBLE);
 
                 disableEnableAllControls(true);
 
@@ -492,8 +495,8 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 saveV.setEnabled(false);
             }
         }.start();
-        checkUserIdAvailabilityProgressBar.setVisibility(View.VISIBLE);
-        checkUserIdAvailabilityV.setVisibility(View.GONE);
+        //checkUserIdAvailabilityProgressBar.setVisibility(View.VISIBLE);
+        //checkUserIdAvailabilityV.setVisibility(View.GONE);
         hideIME();
         hideMsg();
         disableEnableAllControls(false);
@@ -576,7 +579,7 @@ public class ProfileEdit implements LChangePassDialog.LChangePassDialogItf, LUpd
                 if (countDownTimer != null) {
                     countDownTimer.cancel();
                 }
-                if (newUserBtn.isChecked()) {
+                if (!loginUserBtn.isChecked()) {
                     if (ret != LProtocol.RSPS_OK) {
                         displayMsg(false, activity.getResources().getString(R.string.note_user_id_available));
                     } else {
