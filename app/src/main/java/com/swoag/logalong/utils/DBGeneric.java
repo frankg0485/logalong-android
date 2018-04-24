@@ -134,8 +134,9 @@ public abstract class DBGeneric<T> {
     }
 
     public long getIdByGid(long gid) {
-        long id = 0;
+        if (gid <= 0) return 0;
 
+        long id = 0;
         try {
             Cursor csr = null;
             csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{"_id"}, DBHelper.TABLE_COLUMN_GID + "=? " +
@@ -160,8 +161,9 @@ public abstract class DBGeneric<T> {
     }
 
     public long getGidById(long id) {
-        long gid = 0;
+        if (id <= 0) return 0;
 
+        long gid = 0;
         try {
             Cursor csr = null;
             csr = LApp.ctx.getContentResolver().query(getUri(), new String[]{DBHelper.TABLE_COLUMN_GID}, "_id=? " +

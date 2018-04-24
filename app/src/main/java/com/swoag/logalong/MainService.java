@@ -91,7 +91,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
 
     static final int NETWORK_IDLE_POLLING_MS = 1000;
     static final int MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION = 5;
-    static int pollingCount = MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION;
+    static int pollingCount = 0;
 
     static final int SERVICE_SHUTDOWN_MS = 15000;
     private BroadcastReceiver broadcastReceiver;
@@ -146,9 +146,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                 if (loggedIn) {
                     LLog.d(TAG, "heart beat journal flushing");
                     //polling happens only where there's no pending journal
-                    if (!journal.flush()) {
+                    int ret = journal.flush();
+                    if (ret == LJournal.DONE) {
                         LLog.d(TAG, "heart beat polling without pending journal");
-                        gatedPoll();//server.UiPoll();
+                        gatedPoll();
+                    } else if (ret == LJournal.RETRY_LATER){
+                        gatedPoll();
+                        serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS * 5);
                     }
                 }
             }
@@ -366,11 +370,13 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
             switch (action) {
                 case LBroadcastReceiver.ACTION_NEW_JOURNAL_AVAILABLE:
                     //LLog.d(TAG, "flushing journal upon creation ...");
-                    if (!journal.flush()) serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                    if (loggedIn && !journal.flushingInProgress()) {
+                        serviceHandler.post(pollRunnable);
+                    }
                     break;
 
                 case LBroadcastReceiver.ACTION_POST_JOURNAL:
-                    boolean moreJournal = true;
+                    int moreJournal = LJournal.MORE;
                     int journalId = intent.getIntExtra("journalId", 0);
                     //LLog.d(TAG, "post journal: " + journalId + " status: " + ret);
 
@@ -698,7 +704,7 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             }
                         }
                         if (LProtocol.RSPS_OK == ret) {
-                            journal.deleteById(journalId);
+                            journal.remove(journalId);
                             //LLog.d(TAG, "flushing journal upon completion ...");
                             moreJournal = journal.flush();
                         }
@@ -709,18 +715,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             //retry happens when one of the following happens
                             // - new journal request
                             // - polling timer expired
-                            moreJournal = false;
+                            moreJournal = LJournal.DONE;
                         } else {
                             journalPostErrorCount = 0;
                             LLog.e(TAG, "fatal journal post error, journal skipped");
-                            journal.deleteById(journalId);
+                            journal.remove(journalId);
                             moreJournal = journal.flush();
                         }
                     }
 
                     //no more active journal, start polling
-                    if (!moreJournal) {
-                        serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                    if (moreJournal == LJournal.DONE) {
+                        gatedPoll();
+                    } else if (moreJournal == LJournal.RETRY_LATER){
+                        serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS * 5);
                     }
                     break;
 
@@ -1103,18 +1111,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                             default:
                                 LLog.w(TAG, "unexpected notification id: " + nid);
                         }
-                        pollingCount = MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION;
+                        pollingCount = 0;
                         server.UiPollAck(id);
                     } else {
                         //no more
                         //LLog.d(TAG, "flushing journal upon polling ends ...");
-                        if (!journal.flush()) {
-                            if (LFragmentActivity.upRunning) {
-                                //server.UiUtcSync();
-                                if (pollingCount++ < MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION) {
-                                    serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
-                                }
+                        ret = journal.flush();
+                        if (ret == LJournal.DONE) {
+                            //server.UiUtcSync();
+                            if (pollingCount > 0) {
+                                pollingCount--;
+                                serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                            }
 
+                            if (LFragmentActivity.upRunning) {
                                 Intent uiIntent = new Intent(LBroadcastReceiver.action(LBroadcastReceiver
                                         .ACTION_UI_NET_IDLE));
                                 LocalBroadcastManager.getInstance(LApp.ctx).sendBroadcast(uiIntent);
@@ -1123,6 +1133,8 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                                 serviceHandler.postDelayed(serviceShutdownRunnable,
                                         SERVICE_SHUTDOWN_MS);
                             }
+                        } else if (ret == LJournal.RETRY_LATER) {
+                            serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS * 5);
                         }
                     }
                     break;
@@ -1133,19 +1145,20 @@ public class MainService extends Service implements LBroadcastReceiver.Broadcast
                     //we'll keep polling up to MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION times, till a positive
                     //polling result from server: this is to handle the case where server sends the notification
                     //but underlying database hasn't got a chance to flush.
-                    pollingCount = 0;
-                    //FALL THROUGH
+                    pollingCount = MAX_POLLING_COUNT_UPON_PUSH_NOTIFICATION;
+                    if (!journal.flushingInProgress()) {
+                        serviceHandler.post(pollRunnable);
+                    }
+                    break;
+
                 case LBroadcastReceiver.ACTION_POLL_ACK:
                     //LLog.d(TAG, "flushing journal upon poll ack");
-                    if (!journal.flush()) {
-                        //LLog.d(TAG, "poll again upon ack without pending journal");
-                        gatedPoll();//server.UiPoll();
-                    }
+                    serviceHandler.post(pollRunnable);
                     break;
 
                 case LBroadcastReceiver.ACTION_UNKNOWN_MSG:
                     LLog.w(TAG, "flushing journal upon unknown message received");
-                    if (!journal.flush()) gatedPoll(); //serviceHandler.postDelayed(pollRunnable, NETWORK_IDLE_POLLING_MS);
+                    serviceHandler.post(pollRunnable);
                     break;
 
                 //case LBroadcastReceiver.ACTION_SERVER_BROADCAST_MSG_RECEIVED:

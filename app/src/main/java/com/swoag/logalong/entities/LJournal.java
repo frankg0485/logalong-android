@@ -402,7 +402,7 @@ public class LJournal {
         }
     }
 
-    //return TRUE if there's any pending journal, otherwise FALSE
+
     private static int errorCount = 0;
     private static boolean removeEntry = false;
     private static boolean newEntry = false;
@@ -415,7 +415,22 @@ public class LJournal {
     private static TagJournalFlushAction tagJournalFlushAction;
     private static VendorJournalFlushAction vendorJournalFlushAction;
 
-    public boolean flush() {
+    private boolean inProgress = false;
+    public boolean flushingInProgress() {
+        return inProgress;
+    }
+
+    public void remove(int journalId) {
+        //LLog.d(TAG, "removing journal entry: " + journalId);
+        LStorage.getInstance().release(journalId);
+        inProgress = false;
+    }
+
+    // poll when there's no active journal: when flush returns either DONE ore RETRY_LATER.
+    public static final int MORE = 10; //flush
+    public static final int RETRY_LATER = 20;
+    public static final int DONE = 30;
+    public int flush() {
         if (recordJournalFlushAction == null) {
             recordJournalFlushAction = new LJournal.RecordJournalFlushAction();
         }
@@ -436,24 +451,21 @@ public class LJournal {
         }
 
         LStorage.Entry entry = LStorage.getInstance().get();
-        if (null == entry) return false;
+        if (null == entry) {
+            inProgress = false;
+            return DONE;
+        }
 
-        if (lastFlushId == entry.id) {
-            if (System.currentTimeMillis() - lastFlushMs < 180000) {
-                //so not to keep flushing the same journal over and over
-                LLog.d(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
-                        + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
-                return true;
-            }
-            else {
-                LLog.w(TAG, "repeated journal request: " + entry.id);
-                //return true;
-            }
-
+        if (lastFlushId == entry.id && System.currentTimeMillis() - lastFlushMs < 15000) {
+            //so not to keep flushing the same journal over and over
+            LLog.d(TAG, "journal flush request ignored: " + entry.id + " lastFlushMs: "
+                    + lastFlushMs + " delta: " + (lastFlushMs - System.currentTimeMillis()));
+            return RETRY_LATER;
         }
         LLog.d(TAG, "total flushed count: " + (flushCount++) + " posted: " + postCount +
                 " cache length: " + LStorage.getInstance().getCacheLength());
 
+        boolean retVal = true;
         removeEntry = false;
         newEntry = false;
 
@@ -464,67 +476,78 @@ public class LJournal {
         LBuffer ndata = new LBuffer(MAX_JOURNAL_DATA_BYTES);
         switch (jdata.getShortAutoInc()) {
             case LProtocol.JRQST_ADD_RECORD:
-                if (!recordJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = recordJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_RECORD:
-                if (!recordJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = recordJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_RECORD:
-                if (!recordJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = recordJournalFlushAction.delete(jdata, ndata);
                 break;
             case LProtocol.JRQST_ADD_SCHEDULE:
-                if (!scheduleJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = scheduleJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_SCHEDULE:
-                if (!scheduleJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = scheduleJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_SCHEDULE:
-                if (!scheduleJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = scheduleJournalFlushAction.delete(jdata, ndata);
                 break;
             case LProtocol.JRQST_ADD_ACCOUNT:
-                if (!accountJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = accountJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_ACCOUNT:
-                if (!accountJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = accountJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_ACCOUNT:
-                if (!accountJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = accountJournalFlushAction.delete(jdata, ndata);
                 break;
             case LProtocol.JRQST_ADD_CATEGORY:
-                if (!categoryJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = categoryJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_CATEGORY:
-                if (!categoryJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = categoryJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_CATEGORY:
-                if (!categoryJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = categoryJournalFlushAction.delete(jdata, ndata);
                 break;
             case LProtocol.JRQST_ADD_TAG:
-                if (!tagJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = tagJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_TAG:
-                if (!tagJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = tagJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_TAG:
-                if (!tagJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = tagJournalFlushAction.delete(jdata, ndata);
                 break;
             case LProtocol.JRQST_ADD_VENDOR:
-                if (!vendorJournalFlushAction.add(jdata, ndata)) return false;
+                retVal = vendorJournalFlushAction.add(jdata, ndata);
                 break;
             case LProtocol.JRQST_UPDATE_VENDOR:
-                if (!vendorJournalFlushAction.update(jdata, ndata)) return false;
+                retVal = vendorJournalFlushAction.update(jdata, ndata);
                 break;
             case LProtocol.JRQST_DELETE_VENDOR:
-                if (!vendorJournalFlushAction.delete(jdata, ndata)) return false;
+                retVal = vendorJournalFlushAction.delete(jdata, ndata);
                 break;
+        }
+
+        if (!retVal) {
+            errorCount += 1;
+            if (errorCount > MAX_ERROR_RETRIES) {
+                removeEntry = true;
+                LLog.e(TAG, "db entry gid not available, journal request dropped");
+            } else {
+                return RETRY_LATER;
+            }
         }
 
         errorCount = 0;
         if (removeEntry) {
-            deleteById(entry.id);
-            return (null != LStorage.getInstance().get());
+            remove(entry.id);
+            return MORE;
         }
 
+        inProgress = true;
         if (newEntry) {
             try {
                 entry.data = new byte[ndata.getLen()];
@@ -534,12 +557,7 @@ public class LJournal {
             }
         }
         LAppServer.getInstance().UiPostJournal(entry.id, entry.data);
-        return true;
-    }
-
-    public void deleteById(int journalId) {
-        //LLog.d(TAG, "removing journal entry: " + journalId);
-        LStorage.getInstance().release(journalId);
+        return MORE;
     }
 
     private static int postCount = 0;
