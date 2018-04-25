@@ -89,9 +89,9 @@ public class GenericListOptionDialog extends Dialog implements
 
         switch (listId) {
             case R.id.vendors:
-                View view = findViewById(R.id.associated_categories);
-                view.setVisibility(View.VISIBLE);
-                view.setOnClickListener(myClickListener);
+                //View view = findViewById(R.id.associated_categories);
+                //view.setVisibility(View.VISIBLE);
+                //view.setOnClickListener(myClickListener);
 
                 payeePayerView.setVisibility(View.VISIBLE);
                 checkBoxPayee.setOnClickListener(myClickListener);
