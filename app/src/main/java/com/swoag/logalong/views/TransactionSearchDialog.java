@@ -257,6 +257,21 @@ public class TransactionSearchDialog extends Dialog implements
             LPreferences.setSearchControls(search);
         }
 
+        if ((search.isbAccounts() && search.getAccounts() != null) ||
+                (search.isbCategories() && search.getCategories() != null) ||
+                (search.isbVendors() && search.getVendors() != null) ||
+                (search.isbTags() && search.getTags() != null) ||
+                (search.isbTypes() && search.getTypes() != null)) {
+        } else {
+            search.setbShowAll(true);
+            LPreferences.setSearchControls(search);
+        }
+
+        if (search.getValueFrom() < 0.01 && search.getValueTo() < 0.01 ) {
+            search.setbAllValue(true);
+            LPreferences.setSearchControls(search);
+        }
+
         // for time and filter, treat it as change as long as it was/is not all default values.
         boolean changed = !search.isEqual(searchOrig);
         callback.onTransactionSearchDialogDismiss(changed);
