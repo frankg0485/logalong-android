@@ -257,7 +257,6 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
     }
     */
 
-    /*
     public void enablePager() {
         mViewPager.setPagingEnabled(true);
     }
@@ -265,7 +264,6 @@ public class MainActivity extends LFragmentActivity implements LChangePassDialog
     public void disablePager() {
         mViewPager.setPagingEnabled(false);
     }
-    */
 
     private View selectedTabView;
     private int deselectedPosition;

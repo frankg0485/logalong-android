@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.swoag.logalong.MainActivity;
 import com.swoag.logalong.R;
 import com.swoag.logalong.entities.LJournal;
 import com.swoag.logalong.entities.LScheduledTransaction;
@@ -88,6 +89,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
     }
 
     private void onExit(int action, boolean changed) {
+        if (!bScheduleMode) {
+            ((MainActivity) activity).enablePager();
+        }
         if ((!bCreate) || bScheduleMode) return;
 
         switch (action) {
@@ -177,6 +181,10 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         this.bScheduleMode = bScheduleMode;
         myClickListener = new MyClickListener();
         create();
+
+        if (!bScheduleMode) {
+            ((MainActivity)activity).disablePager();
+        }
     }
 
     private void updateItemDisplay() {
