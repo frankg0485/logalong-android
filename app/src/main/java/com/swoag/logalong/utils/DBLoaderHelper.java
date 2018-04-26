@@ -264,6 +264,7 @@ public class DBLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> {
                     if (ids != null) {
                         if (and) selections += " AND ";
                         setSelections(ids, DBHelper.TABLE_COLUMN_TAG);
+                        and = true;
                     }
                 }
 
