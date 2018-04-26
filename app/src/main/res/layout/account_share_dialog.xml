@@ -110,7 +110,10 @@
                 android:id="@+id/userCtrlView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -123,10 +126,10 @@
                     android:gravity="top"
                     android:hint="@string/hint_user_id"
                     android:imeOptions="flagNoExtractUi"
-                    android:paddingBottom="5dp"
+                    android:paddingBottom="8dp"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
-                    android:paddingTop="5dp"
+                    android:paddingTop="8dp"
                     android:singleLine="true"
                     android:textColor="@color/base_text_color" />
 
@@ -165,7 +168,7 @@
                 android:id="@+id/shareAllAccounts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
+                android:layout_marginLeft="5dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 

@@ -1,17 +1,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/catchAll"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="@color/dialog_bg_color"
-              android:gravity="center"
-              android:orientation="horizontal"
-              android:weightSum="100">
+    android:id="@+id/catchAll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dialog_bg_color"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:weightSum="100">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="90"
-        android:background="#a4a6a8"
+        android:background="@drawable/dialog_bgd"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="3dp">
@@ -34,7 +34,7 @@
                 android:text="@string/reminder"
                 android:textColor="@color/base_text_color"
                 android:textSize="@dimen/settings_option_text_size"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -73,7 +73,7 @@
                         android:paddingTop="10dp"
                         android:singleLine="false"
                         android:textColor="@color/base_text_color"
-                        android:textSize="18sp"/>
+                        android:textSize="18sp" />
 
                     <LinearLayout
                         android:id="@+id/buttons"
@@ -82,8 +82,8 @@
                         android:layout_marginLeft="1dp"
                         android:layout_marginRight="1dp"
                         android:gravity="right"
-                        android:weightSum="1"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:weightSum="1">
 
                         <Button
                             android:id="@+id/confirmDialog"
@@ -91,7 +91,7 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="0.5"
-                            android:text="@android:string/ok"/>
+                            android:text="@android:string/ok" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="90"
-            android:background="@drawable/dialog_row_bgd"
+            android:background="@drawable/dialog_bgd"
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:padding="3dp">

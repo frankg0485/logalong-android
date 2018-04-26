@@ -26,7 +26,7 @@
     <color name="base_orange">#bcb586</color>
     <color name="dollar_amount_picker_bg_color">#80000000</color>
     <color name="dialog_bg_color">#90000000</color>
-    <color name="dialog_border_color">#848688</color>
+    <color name="dialog_border_color">#a4a6a8</color>
     <color name="released_base_btn_background">#42bb38</color>
     <color name="pressed_base_btn_background">#52cb48</color>
     <color name="released_quickie_btn_background">#b4cdcd</color>

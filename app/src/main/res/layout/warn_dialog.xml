@@ -11,7 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="90"
-        android:background="@drawable/dialog_row_bgd"
+        android:background="@drawable/dialog_bgd"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="3dp">
@@ -66,7 +66,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
-                    android:background="@drawable/row_selector"
+                    android:background="@drawable/row_shape_normal"
                     android:orientation="vertical">
 
                     <LinearLayout

@@ -1,10 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/catchAll"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="@color/dialog_bg_color"
-              android:orientation="vertical"
-              android:weightSum="100">
+    android:id="@+id/catchAll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dialog_bg_color"
+    android:orientation="vertical"
+    android:weightSum="100">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="90"
-            android:background="@drawable/dialog_row_bgd"
+            android:background="@drawable/dialog_bgd"
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:padding="3dp">
@@ -39,7 +39,7 @@
                     android:singleLine="true"
                     android:textColor="@color/base_text_color"
                     android:textSize="@dimen/settings_option_text_size"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
 
                 <ImageView
                     android:id="@+id/closeDialog"
@@ -52,7 +52,7 @@
                     android:layout_marginTop="2dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/ic_action_cancel"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout
@@ -99,7 +99,7 @@
                                     android:imeOptions="flagNoExtractUi"
                                     android:padding="10dp"
                                     android:singleLine="true"
-                                    android:textColor="@color/base_text_color"/>
+                                    android:textColor="@color/base_text_color" />
                             </RelativeLayout>
                         </LinearLayout>
 
@@ -122,7 +122,7 @@
                                 android:focusable="false"
                                 android:text="@string/payee"
                                 android:textColor="@color/base_text_color"
-                                android:textSize="15sp"/>
+                                android:textSize="15sp" />
 
                             <CheckBox
                                 android:id="@+id/checkBoxPayer"
@@ -133,7 +133,7 @@
                                 android:focusable="false"
                                 android:text="@string/payer"
                                 android:textColor="@color/base_text_color"
-                                android:textSize="15sp"/>
+                                android:textSize="15sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -155,7 +155,7 @@
                                 android:focusable="false"
                                 android:text="@string/show_balance"
                                 android:textColor="@color/base_text_color"
-                                android:textSize="15sp"/>
+                                android:textSize="15sp" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -175,7 +175,7 @@
                                 android:layout_height="match_parent"
                                 android:layout_marginRight="1dp"
                                 android:layout_weight="1"
-                                android:text="@android:string/cancel"/>
+                                android:text="@android:string/cancel" />
 
                             <Button
                                 android:id="@+id/confirmDialog"
@@ -183,7 +183,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
-                                android:text="@android:string/ok"/>
+                                android:text="@android:string/ok" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
