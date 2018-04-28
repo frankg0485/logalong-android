@@ -37,6 +37,7 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.swoag.logalong.entities.LSearch;
 import com.swoag.logalong.entities.LTransaction;
 import com.swoag.logalong.utils.AppPersistency;
 import com.swoag.logalong.utils.DBCategory;
@@ -44,6 +45,7 @@ import com.swoag.logalong.utils.DBHelper;
 import com.swoag.logalong.utils.DBLoaderHelper;
 import com.swoag.logalong.utils.LLog;
 import com.swoag.logalong.utils.LOnClickListener;
+import com.swoag.logalong.utils.LPreferences;
 import com.swoag.logalong.utils.LTask;
 import com.swoag.logalong.utils.LViewUtils;
 import com.swoag.logalong.views.TransactionSearchDialog;
@@ -165,13 +167,14 @@ public class ChartActivity extends LFragmentActivity implements
 
     @Override
     public void onTransactionSearchDialogDismiss(boolean changed) {
-        if (changed) {
-            /*if (LPreferences.getSearchAllTime() && LPreferences.getSearchAll()) {
-                LViewUtils.setAlpha(searchIV, 0.8f);
-            } else {
-                LViewUtils.setAlpha(searchIV, 1.0f);
-            }*/
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbAllTime() && search.isbShowAll() && search.isbAllValue()) {
+            searchIV.setImageResource(R.drawable.ic_action_search_dark);
+        } else {
+            searchIV.setImageResource(R.drawable.ic_action_search_enabled);
+        }
 
+        if (changed) {
             AppPersistency.clearViewHistory();
             //chartDataHashMap.clear();
             restartDbLoader();
