@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
-    android:background="@drawable/row_selector"
+    android:background="@drawable/row_shape_normal"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingBottom="10dp"

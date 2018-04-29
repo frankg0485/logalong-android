@@ -85,7 +85,6 @@
                 android:listSelector="@android:color/transparent"
                 android:orientation="vertical"></ListView>
 
-
             <LinearLayout
                 android:id="@+id/buttons"
                 android:layout_width="match_parent"
