@@ -167,12 +167,7 @@ public class ChartActivity extends LFragmentActivity implements
 
     @Override
     public void onTransactionSearchDialogDismiss(boolean changed) {
-        LSearch search = LPreferences.getSearchControls();
-        if (search.isbAllTime() && search.isbShowAll() && search.isbAllValue()) {
-            searchIV.setImageResource(R.drawable.ic_action_search_dark);
-        } else {
-            searchIV.setImageResource(R.drawable.ic_action_search_enabled);
-        }
+        setSearchDisplay();
 
         if (changed) {
             AppPersistency.clearViewHistory();
@@ -211,6 +206,7 @@ public class ChartActivity extends LFragmentActivity implements
 
         searchIV = (ImageView) findViewById(R.id.search);
         searchIV.setOnClickListener(myClickListener);
+        setSearchDisplay();
 
         prevIV = (ImageView) findViewById(R.id.prev);
         nextIV = (ImageView) findViewById(R.id.next);
@@ -244,6 +240,14 @@ public class ChartActivity extends LFragmentActivity implements
         super.onDestroy();
     }
 
+    private void setSearchDisplay() {
+        LSearch search = LPreferences.getSearchControls();
+        if (search.isbAllTime() && search.isbShowAll() && search.isbAllValue()) {
+            searchIV.setImageResource(R.drawable.ic_action_search_dark);
+        } else {
+            searchIV.setImageResource(R.drawable.ic_action_search_enabled);
+        }
+    }
     private void restartDbLoader() {
         ChartData chartData = chartDataHashMap.get(AppPersistency.viewTransactionYear);
         if (null == chartData) {
