@@ -692,18 +692,24 @@ public class ChartActivity extends LFragmentActivity implements
             if (data == null) return false;
 
             try {
+                //prepare all column indexs
+                int idxAccount1 = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT);
+                int idxAccount2 = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2);
+                int idxAmount = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT);
+                int idxCategory = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY);
+                int idxTimeStamp = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP);
+                int idxType = data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE);
+
                 //prepare chart data
                 Set<Integer> accountIds = new HashSet<Integer>();
+                HashMap<Integer, String> categoryMap = new HashMap<>();
                 int accountId, accountId2;
 
                 if (isCancelled()) return false;
                 else data.moveToFirst();
                 do {
-                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
+                    accountId = data.getInt(idxAccount1);
                     if (accountId != 0) accountIds.add(accountId);
-
-                    //accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    //if (accountId2 != 0) accountIds.add(accountId2);
                 } while (!isCancelled() && data.moveToNext());
 
 
@@ -715,14 +721,14 @@ public class ChartActivity extends LFragmentActivity implements
                 if (isCancelled()) return false;
                 data.moveToFirst();
                 do {
-                    v = data.getDouble(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_AMOUNT));
-                    accountId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT));
-                    accountId2 = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_ACCOUNT2));
-                    categoryId = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_CATEGORY));
-                    timeMs = data.getLong(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TIMESTAMP));
+                    v = data.getDouble(idxAmount);
+                    accountId = data.getInt(idxAccount1);
+                    accountId2 = data.getInt(idxAccount2);
+                    categoryId = data.getInt(idxCategory);
+                    timeMs = data.getLong(idxTimeStamp);
                     calendar.setTimeInMillis(timeMs);
 
-                    int type = data.getInt(data.getColumnIndexOrThrow(DBHelper.TABLE_COLUMN_TYPE));
+                    int type = data.getInt(idxType);
                     switch (type) {
                         case LTransaction.TRANSACTION_TYPE_TRANSFER:
                         case LTransaction.TRANSACTION_TYPE_TRANSFER_COPY:
@@ -742,11 +748,20 @@ public class ChartActivity extends LFragmentActivity implements
                     }
 
                     if (v < 0) {
-                        String category = DBCategory.getInstance().getNameById(categoryId);
-                        if (category == null || TextUtils.isEmpty(category)) {
-                            category = "Unspecified";
+                        categoryId = data.getInt(idxCategory);
+                        String category;
+                        if (categoryId != 0) {
+                            category = categoryMap.get(categoryId);
+                            if (category == null) {
+                                category = DBCategory.getInstance().getNameById(categoryId);
+                                if (category == null || TextUtils.isEmpty(category)) {
+                                    category = "Unspecified";
+                                }
+
+                                categoryMap.put(categoryId, category);
+                            }
                         } else {
-                            //category = category.split(":", -1)[0];
+                            category = "Unspecified";
                         }
 
                         Double sum = expenseCats.get(category);
