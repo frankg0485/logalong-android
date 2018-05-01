@@ -2,7 +2,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
-    android:background="@drawable/row_shape_normal"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingBottom="10dp"
@@ -15,7 +14,7 @@
         android:layout_height="@dimen/list_item_height"
         android:paddingBottom="16dp"
         android:paddingTop="16dp"
-        android:src="@drawable/ic_action_share"
+        android:src="@drawable/ic_action_share_dark"
         android:visibility="gone" />
 
     <TextView
@@ -36,8 +35,8 @@
 
     <ImageView
         android:id="@+id/option"
-        android:layout_width="55dp"
+        android:layout_width="50dp"
         android:layout_height="@dimen/list_item_height"
-        android:padding="15dp"
-        android:src="@drawable/ic_action_overflow" />
+        android:padding="13dp"
+        android:src="@drawable/ic_action_overflow_dark" />
 </LinearLayout>

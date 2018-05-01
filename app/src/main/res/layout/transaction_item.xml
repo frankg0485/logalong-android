@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:baselineAligned="false"
+    android:background="@color/list_divider_color"
     android:gravity="center"
     android:orientation="vertical">
 
@@ -35,7 +36,7 @@
                 android:scrollHorizontally="true"
                 android:singleLine="true"
                 android:textColor="@color/base_text_color"
-                android:textSize="18dp" />
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/date"
@@ -44,7 +45,7 @@
                 android:layout_below="@id/category"
                 android:gravity="center_vertical"
                 android:textColor="@color/light_gray_text_color"
-                android:textSize="12dp" />
+                android:textSize="11sp" />
 
             <TextView
                 android:id="@+id/note"
@@ -57,7 +58,7 @@
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:textColor="@color/gray_text_color"
-                android:textSize="12dp" />
+                android:textSize="11sp" />
         </RelativeLayout>
 
         <TextView
@@ -68,7 +69,7 @@
             android:gravity="center_vertical"
             android:text="0:0"
             android:textColor="@color/gray_text_color"
-            android:textSize="22dp" />
+            android:textSize="18sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -90,7 +91,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:gravity="left|center_vertical"
-            android:textSize="14dp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
         <TextView
@@ -100,7 +101,7 @@
             android:gravity="center_vertical"
             android:text="345.00"
             android:textColor="@color/base_green"
-            android:textSize="14dp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/p1"
@@ -109,7 +110,7 @@
             android:layout_marginLeft="5dp"
             android:gravity="center_vertical"
             android:text="("
-            android:textSize="14dp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/income"
@@ -119,7 +120,7 @@
             android:gravity="center_vertical"
             android:text="345.00"
             android:textColor="@color/base_green"
-            android:textSize="14dp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/expense"
@@ -129,7 +130,7 @@
             android:gravity="center_vertical"
             android:text="345.00"
             android:textColor="@color/base_red"
-            android:textSize="14dp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/p2"
@@ -140,6 +141,6 @@
             android:layout_marginRight="15dp"
             android:gravity="center_vertical"
             android:text=")"
-            android:textSize="14dp" />
+            android:textSize="13sp" />
     </LinearLayout>
 </LinearLayout>

@@ -8,6 +8,7 @@
     <color name="base_text_color">#303030</color>
     <color name="base_white_text_color">#f0f0f0</color>
     <color name="base_black_text_color">#202020</color>
+    <color name="default_bgd_color">#fafafa</color>
     <color name="gray_text_color">#505050</color>
     <color name="light_gray_text_color">#606060</color>
     <color name="dark_gray_text_color">#808080</color>
@@ -45,6 +46,7 @@
     <color name="released_dialog_btn_background">#a4a6a8</color>
     <color name="topbar_bgd_color">#585c60</color>
     <color name="balance_header_bgd_color">#e4e6e8</color>
-    <color name="row_released_color">#ced0d2</color>
+    <color name="row_released_color">#fafafa</color>
     <color name="light_row_released_color">#dee0e2</color>
+    <color name="list_divider_color">#e8e8e8</color>
 </resources>

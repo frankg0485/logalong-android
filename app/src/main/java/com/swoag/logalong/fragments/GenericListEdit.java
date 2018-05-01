@@ -251,7 +251,7 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                 } else if (account.isShareConfirmed()) {
                     iv.setImageResource(R.drawable.ic_action_share_green);
                 } else {
-                    iv.setImageResource(R.drawable.ic_action_share);
+                    iv.setImageResource(R.drawable.ic_action_share_dark);
                 }
                 iv.setVisibility(View.VISIBLE);
                 iv.setOnClickListener(clickListener);

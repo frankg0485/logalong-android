@@ -11,6 +11,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@color/list_divider_color"
             android:orientation="vertical">
 
             <RelativeLayout
@@ -30,12 +31,12 @@
                     android:textSize="@dimen/settings_option_text_size"/>
 
                 <ImageView
-                    android:layout_width="@dimen/settings_row_icon_w"
-                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_width="@dimen/settings_row_icon_w_small"
+                    android:layout_height="@dimen/settings_row_icon_h_small"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/settings_row_margin_right"
-                    android:background="@drawable/ic_action_right"/>
+                    android:background="@drawable/ic_action_right_dark"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -55,12 +56,12 @@
                     android:textSize="@dimen/settings_option_text_size"/>
 
                 <ImageView
-                    android:layout_width="@dimen/settings_row_icon_w"
-                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_width="@dimen/settings_row_icon_w_small"
+                    android:layout_height="@dimen/settings_row_icon_h_small"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/settings_row_margin_right"
-                    android:background="@drawable/ic_action_right"/>
+                    android:background="@drawable/ic_action_right_dark"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -80,12 +81,12 @@
                     android:textSize="@dimen/settings_option_text_size"/>
 
                 <ImageView
-                    android:layout_width="@dimen/settings_row_icon_w"
-                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_width="@dimen/settings_row_icon_w_small"
+                    android:layout_height="@dimen/settings_row_icon_h_small"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/settings_row_margin_right"
-                    android:background="@drawable/ic_action_right"/>
+                    android:background="@drawable/ic_action_right_dark"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -105,12 +106,12 @@
                     android:textSize="@dimen/settings_option_text_size"/>
 
                 <ImageView
-                    android:layout_width="@dimen/settings_row_icon_w"
-                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_width="@dimen/settings_row_icon_w_small"
+                    android:layout_height="@dimen/settings_row_icon_h_small"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/settings_row_margin_right"
-                    android:background="@drawable/ic_action_right"/>
+                    android:background="@drawable/ic_action_right_dark"/>
             </RelativeLayout>
 
             <RelativeLayout
@@ -130,12 +131,12 @@
                     android:textSize="@dimen/settings_option_text_size"/>
 
                 <ImageView
-                    android:layout_width="@dimen/settings_row_icon_w"
-                    android:layout_height="@dimen/settings_row_icon_h"
+                    android:layout_width="@dimen/settings_row_icon_w_small"
+                    android:layout_height="@dimen/settings_row_icon_h_small"
                     android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/settings_row_margin_right"
-                    android:background="@drawable/ic_action_right"/>
+                    android:background="@drawable/ic_action_right_dark"/>
             </RelativeLayout>
 
             <RelativeLayout
