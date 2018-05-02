@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/base_bgd_color"
         android:orientation="vertical">
 
         <LinearLayout
@@ -27,7 +26,7 @@
                 android:layout_height="32dp"
                 android:layout_marginRight="5dp"
                 android:padding="5dp"
-                android:src="@drawable/ic_action_accept"/>
+                android:src="@drawable/ic_action_accept" />
 
 
             <TextView
@@ -35,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Expense"
-                android:textSize="18sp"/>
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/tvDate"
@@ -45,14 +44,14 @@
                 android:layout_weight="1"
                 android:gravity="right"
                 android:textSize="18sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/discard"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:background="@drawable/ic_action_discard"
-                android:visibility="gone"/>
+                android:visibility="gone" />
         </LinearLayout>
 
         <ScrollView
@@ -63,15 +62,15 @@
                 android:id="@+id/allItems"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/list_divider_color"
                 android:orientation="vertical">
-
 
                 <LinearLayout
                     android:id="@+id/repeatForRow"
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height"
                     android:layout_marginTop="1dp"
-                    android:background="#e4e6e8"
+                    android:background="@color/default_bgd_color"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -84,7 +83,7 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:text="@string/repeat"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/repeatCount"
@@ -94,14 +93,15 @@
                         android:paddingLeft="30dp"
                         android:paddingRight="15dp"
                         android:textSize="16sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/repeatRow"
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height"
-                    android:background="#e4e6e8"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/default_bgd_color"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -114,7 +114,7 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:text="@string/repeat_every"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/repeatInterval"
@@ -124,7 +124,7 @@
                         android:paddingLeft="10dp"
                         android:paddingRight="10dp"
                         android:textSize="16sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/repeatWeekMonth"
@@ -134,7 +134,7 @@
                         android:paddingLeft="10dp"
                         android:paddingRight="15dp"
                         android:textSize="16sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -143,7 +143,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height"
                     android:layout_marginTop="1dp"
-                    android:background="#e4e6e8"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -156,14 +156,21 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:text="$123.45"
-                        android:textSize="24sp"/>
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/accountRow"
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
-                    android:background="@color/base_bgd_separator_color"
+                    android:layout_marginTop="1dp"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -174,7 +181,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_from"
-                        android:textSize="12sp"/>
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvAccount"
@@ -182,13 +189,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right"/>
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -196,7 +203,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -208,7 +215,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_to"
-                        android:textSize="12sp"/>
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvAccount2"
@@ -216,13 +223,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right"/>
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -230,7 +237,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -243,13 +250,13 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_category_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right"/>
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -257,7 +264,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -269,13 +276,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right"/>
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -283,7 +290,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -296,36 +303,38 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_tag_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16sp"/>
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right"/>
-
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvLastChangeBy"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:background="@color/default_bgd_color"
                     android:gravity="right"
                     android:paddingRight="15dp"
                     android:text="Jan 25, 2015 by Michael"
                     android:textColor="#aaa"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
 
             </LinearLayout>
         </ScrollView>
 
         <LinearLayout
+            android:id="@+id/dummy"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:gravity="bottom">
 
-            <include layout="@layout/bottom"/>
+            <include layout="@layout/bottom" />
         </LinearLayout>
     </LinearLayout>
 
@@ -335,6 +344,6 @@
         android:layout_height="match_parent"
         android:clickable="true">
 
-        <include layout="@layout/dollar_amount_picker"/>
+        <include layout="@layout/dollar_amount_picker" />
     </LinearLayout>
 </FrameLayout>

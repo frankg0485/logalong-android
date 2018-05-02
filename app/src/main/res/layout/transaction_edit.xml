@@ -7,7 +7,6 @@
         android:id="@+id/editTopView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/base_bgd_color"
         android:orientation="vertical">
 
         <ScrollView
@@ -18,6 +17,7 @@
                 android:id="@+id/allEditItems"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@color/list_divider_color"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -41,7 +41,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="5dp"
                         android:text="Expense"
-                        android:textSize="18dp" />
+                        android:textSize="18sp" />
 
                     <TextView
                         android:id="@+id/tvDate"
@@ -50,7 +50,7 @@
                         android:layout_marginRight="15dp"
                         android:layout_weight="1"
                         android:gravity="right"
-                        android:textSize="18dp"
+                        android:textSize="18sp"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -65,7 +65,7 @@
                     android:id="@+id/amountRow"
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height"
-                    android:background="#e4e6e8"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -78,14 +78,21 @@
                         android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:text="$123.45"
-                        android:textSize="24dp" />
+                        android:textSize="22sp" />
+
+                    <ImageView
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
+                        android:layout_marginLeft="30dp"
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/accountRow"
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
-                    android:background="@color/base_bgd_separator_color"
+                    android:layout_marginTop="1dp"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -96,7 +103,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_from"
-                        android:textSize="12dp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvAccount"
@@ -104,13 +111,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16dp" />
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -118,7 +125,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -130,7 +137,7 @@
                         android:layout_width="45dp"
                         android:layout_height="wrap_content"
                         android:text="@string/transfer_to"
-                        android:textSize="12dp" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/tvAccount2"
@@ -138,13 +145,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/hint_choose_account"
-                        android:textSize="16dp" />
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -152,7 +159,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -165,13 +172,13 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_category_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16dp" />
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -179,7 +186,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -191,13 +198,13 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:textColorHint="#aaa"
-                        android:textSize="16dp" />
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -205,7 +212,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="@dimen/list_item_height_small"
                     android:layout_marginTop="1dp"
-                    android:background="@color/base_bgd_separator_color"
+                    android:background="@drawable/row_selector"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingLeft="42dp"
@@ -218,13 +225,13 @@
                         android:layout_weight="1"
                         android:hint="@string/hint_tag_not_specified"
                         android:textColorHint="#aaa"
-                        android:textSize="16dp" />
+                        android:textSize="16sp" />
 
                     <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
+                        android:layout_width="@dimen/settings_row_icon_w_small"
+                        android:layout_height="@dimen/settings_row_icon_h_small"
                         android:layout_marginLeft="30dp"
-                        android:background="@drawable/ic_action_right" />
+                        android:background="@drawable/ic_action_right_dark" />
                 </LinearLayout>
 
                 <RelativeLayout
@@ -236,8 +243,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
-                        android:background="@drawable/editbox_bgd"
-                        android:gravity="top"
+                        android:background="#f0f0f0"
+                        android:gravity="center|left"
                         android:hint="@string/additional_note_here"
                         android:imeOptions="flagNoExtractUi"
                         android:lines="2"
@@ -269,15 +276,17 @@
                     android:id="@+id/tvLastChangeBy"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@color/default_bgd_color"
                     android:gravity="right"
                     android:paddingRight="15dp"
                     android:text="Jan 25, 2015 by Michael"
                     android:textColor="#aaa"
-                    android:textSize="12dp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </ScrollView>
 
         <LinearLayout
+            android:id="@+id/dummy"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -289,9 +298,10 @@
 
     <LinearLayout
         android:id="@+id/picker"
-        android:clickable="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <include layout="@layout/dollar_amount_picker"/>
+        android:layout_height="match_parent"
+        android:clickable="true">
+
+        <include layout="@layout/dollar_amount_picker" />
     </LinearLayout>
 </FrameLayout>

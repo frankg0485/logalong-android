@@ -64,7 +64,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         this.callback = callback;
         clickDisabled = false;
 
-        allItemsViewGroup = (ViewGroup)rootView.findViewById(R.id.allItems);
+        allItemsViewGroup = (ViewGroup) rootView.findViewById(R.id.allItems);
         rootView.findViewById(R.id.repeatInterval).setOnClickListener(this);
         rootView.findViewById(R.id.repeatIntervalH).setOnClickListener(this);
         rootView.findViewById(R.id.repeatWeekMonth).setOnClickListener(this);
@@ -101,10 +101,10 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         }
         if ((scheduledItem.getRepeatCount() == 0)) {
             LViewUtils.setAlpha(repeatIntervalView, 0.5f);
-            LViewUtils.disableEnableControls(false, (ViewGroup)repeatIntervalView);
+            LViewUtils.disableEnableControls(false, (ViewGroup) repeatIntervalView);
         } else {
             LViewUtils.setAlpha(repeatIntervalView, 1.0f);
-            LViewUtils.disableEnableControls(true, (ViewGroup)repeatIntervalView);
+            LViewUtils.disableEnableControls(true, (ViewGroup) repeatIntervalView);
         }
     }
 
@@ -125,8 +125,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
         savedScheduledItem = null;
     }
 
-    private void scheduleEnableDisplay()
-    {
+    private void scheduleEnableDisplay() {
         if (scheduledItem.isEnabled()) {
             LViewUtils.setAlpha(enableView, 0.5f);
             LViewUtils.disableEnableControls(true, allItemsViewGroup);
@@ -170,7 +169,7 @@ public class ScheduledTransactionEdit implements TransactionEdit.TransitionEditI
                     transactionEdit.updateDateDisplay();
                 }
                 scheduleEnableDisplay();
-                break;
+                return;
             case R.id.repeatInterval:
             case R.id.repeatIntervalH:
                 int interval = scheduledItem.getRepeatInterval();

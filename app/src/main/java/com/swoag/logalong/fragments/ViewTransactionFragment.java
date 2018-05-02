@@ -593,6 +593,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         }
     }
 
+    private static boolean listItemClicked = false;
+
     private class MyCursorAdapter extends CursorAdapter implements TransactionEdit.TransitionEditItf {
         private LTransaction item;
         private LTransaction itemOrig;
@@ -773,6 +775,9 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
         private class ClickListener extends LOnClickListener {
             @Override
             public void onClicked(View v) {
+                if (listItemClicked) return;
+                else listItemClicked = true;
+
                 selectTypeV.setVisibility(View.GONE);
 
                 VTag tag = (VTag) v.getTag();
@@ -852,6 +857,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
             viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
             viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
             viewFlipper.showPrevious();
+            listItemClicked = false;
         }
 
         private class VTag {
@@ -1101,6 +1107,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
     }
 
     private LTransaction newItem;
+
     private void newLog(int type) {
         newItem = new LTransaction();
         newItem.setType(type);

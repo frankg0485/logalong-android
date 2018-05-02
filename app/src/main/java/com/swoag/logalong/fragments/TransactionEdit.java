@@ -239,6 +239,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
         setViewListener(rootView, R.id.amountRow);
         setViewListener(rootView, R.id.accountRow);
+        setViewListener(rootView, R.id.dummy);
         viewCategory = setViewListener(rootView, R.id.categoryRow);
         viewVendor = setViewListener(rootView, R.id.vendorRow);
         viewTag = setViewListener(rootView, R.id.tagRow);
