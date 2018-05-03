@@ -1,8 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/dialog_bg_color"
-                android:gravity="center">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dialog_bg_color"
+    android:gravity="center">
 
     <RelativeLayout
         android:layout_width="300dp"
@@ -30,7 +30,7 @@
                 android:text="@string/select_records"
                 android:textColor="@color/base_text_color"
                 android:textSize="@dimen/settings_option_text_size"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/closeDialog"
@@ -42,7 +42,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="2dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_action_cancel"/>
+                android:src="@drawable/ic_action_cancel" />
         </LinearLayout>
 
         <ScrollView
@@ -54,14 +54,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:background="#808080"
+                android:background="@color/dialog_title_bar_drop_shadow"
                 android:orientation="vertical">
 
                 <LinearLayout
                     android:id="@+id/checkboxView"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/list_item_height"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="1dp"
                     android:background="@drawable/row_selector"
                     android:clickable="true"
                     android:gravity="center_vertical"
@@ -77,14 +77,13 @@
                         android:focusable="false"
                         android:text="@string/show_all"
                         android:textColor="@color/base_text_color"
-                        android:textSize="15sp"/>
+                        android:textSize="15sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/customFilter"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
                     android:orientation="vertical">
 
                     <RelativeLayout
@@ -103,7 +102,7 @@
                             android:button="@drawable/btn_check_holo_light"
                             android:text="@string/accounts"
                             android:textColor="@color/base_text_color"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/selectedAccounts"
@@ -120,7 +119,7 @@
                             android:text="@string/all"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -139,7 +138,7 @@
                             android:button="@drawable/btn_check_holo_light"
                             android:text="@string/categories"
                             android:textColor="@color/base_text_color"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/selectedCategories"
@@ -156,7 +155,7 @@
                             android:text="@string/all"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -175,7 +174,7 @@
                             android:button="@drawable/btn_check_holo_light"
                             android:text="@string/payee_payers"
                             android:textColor="@color/base_text_color"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/selectedPayers"
@@ -192,7 +191,7 @@
                             android:text="@string/all"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -212,7 +211,7 @@
                             android:paddingRight="20dp"
                             android:text="@string/tags"
                             android:textColor="@color/base_text_color"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/selectedTags"
@@ -229,7 +228,7 @@
                             android:text="@string/all"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
 
                     <RelativeLayout
@@ -249,7 +248,7 @@
                             android:paddingRight="20dp"
                             android:text="@string/types"
                             android:textColor="@color/base_text_color"
-                            android:textSize="15sp"/>
+                            android:textSize="15sp" />
 
                         <TextView
                             android:id="@+id/selectedTypes"
@@ -266,10 +265,9 @@
                             android:text="@string/all"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
                 </LinearLayout>
-
 
                 <LinearLayout
                     android:id="@+id/checkboxViewTime"
@@ -291,19 +289,19 @@
                         android:focusable="false"
                         android:text="@string/all_time"
                         android:textColor="@color/base_text_color"
-                        android:textSize="15sp"/>
+                        android:textSize="15sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/customTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
                     android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
                         android:background="@drawable/row_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
@@ -319,7 +317,7 @@
                             android:text="Dec 6, 2015"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -328,7 +326,7 @@
                             android:layout_marginRight="5dp"
                             android:text="@string/to"
                             android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"/>
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <TextView
                             android:id="@+id/toTime"
@@ -340,7 +338,7 @@
                             android:text="Dec 6, 2015"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
 
@@ -361,7 +359,7 @@
                             android:layout_marginLeft="@dimen/settings_row_margin_left"
                             android:text="@string/filter_by"
                             android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"/>
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <TextView
                             android:id="@+id/filterByValue"
@@ -378,7 +376,7 @@
                             android:text="@string/record_time"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </RelativeLayout>
                 </LinearLayout>
 
@@ -402,19 +400,20 @@
                         android:focusable="false"
                         android:text="@string/all_value"
                         android:textColor="@color/base_text_color"
-                        android:textSize="15sp"/>
+                        android:textSize="15sp" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/customValue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
+
                     android:orientation="vertical">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/settings_item_height"
+                        android:layout_marginTop="1dp"
                         android:background="@drawable/row_selector"
                         android:clickable="true"
                         android:gravity="center_vertical"
@@ -430,7 +429,7 @@
                             android:text="---"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -439,7 +438,7 @@
                             android:layout_marginRight="5dp"
                             android:text="@string/to"
                             android:textColor="@color/base_text_color"
-                            android:textSize="@dimen/settings_option_text_size"/>
+                            android:textSize="@dimen/settings_option_text_size" />
 
                         <TextView
                             android:id="@+id/toValue"
@@ -451,7 +450,7 @@
                             android:text="---"
                             android:textColor="@color/base_text_color"
                             android:textSize="@dimen/settings_option_text_size"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -466,6 +465,6 @@
         android:clickable="true"
         android:visibility="gone">
 
-        <include layout="@layout/dollar_amount_picker"/>
+        <include layout="@layout/dollar_amount_picker" />
     </LinearLayout>
 </RelativeLayout>

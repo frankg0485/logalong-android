@@ -88,12 +88,14 @@ public class SettingsFragment extends LFragment implements
         super.onResume();
     }
 
+    private boolean clicked = false;
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
             View viewSettings = viewFlipper.findViewById(R.id.viewSettings);
             switch (v.getId()) {
                 case R.id.backup:
+                    /*
                     viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.VISIBLE);
@@ -106,9 +108,13 @@ public class SettingsFragment extends LFragment implements
                     viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_right);
                     viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_left);
                     viewFlipper.showNext();
+                    */
                     break;
 
                 case R.id.profile:
+                    if (clicked) break;
+                    else clicked = true;
+
                     viewSettings.findViewById(R.id.listView).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.VISIBLE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
@@ -127,6 +133,9 @@ public class SettingsFragment extends LFragment implements
                 case R.id.categories:
                 case R.id.vendors:
                 case R.id.tags:
+                    if (clicked) break;
+                    else clicked = true;
+
                     viewSettings.findViewById(R.id.listView).setVisibility(View.VISIBLE);
                     viewSettings.findViewById(R.id.profileSettings).setVisibility(View.GONE);
                     viewSettings.findViewById(R.id.dataBackupSettings).setVisibility(View.GONE);
@@ -152,6 +161,8 @@ public class SettingsFragment extends LFragment implements
     }
 
     private void restoreView() {
+        clicked = false;
+
         viewFlipper.setInAnimation(getActivity(), R.anim.slide_in_left);
         viewFlipper.setOutAnimation(getActivity(), R.anim.slide_out_right);
         viewFlipper.showPrevious();

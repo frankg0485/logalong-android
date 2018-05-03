@@ -118,7 +118,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     } else {
                         long ms = transaction.getTimeStamp() + 1;
                         calendar.setTimeInMillis(ms);
-                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2) ms = transaction.getTimeStamp();
+                        if (calendar.get(Calendar.DAY_OF_MONTH) != day2)
+                            ms = transaction.getTimeStamp();
                         item.setTimeStamp(ms);
                     }
                 }
@@ -183,7 +184,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         create();
 
         if (!bScheduleMode) {
-            ((MainActivity)activity).disablePager();
+            ((MainActivity) activity).disablePager();
         }
     }
 
@@ -428,6 +429,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+        clicked = false;
+
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, monthOfYear, dayOfMonth);
         item.setTimeStamp(calendar.getTimeInMillis());
@@ -447,6 +450,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     @Override
     public void onDollarAmountPickerExit(double value, boolean save) {
+        clicked = false;
+
         if (save) {
             item.setValue(value);
             String inputString = value2string(value);
@@ -470,12 +475,17 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         pickerV.setVisibility(View.GONE);
     }
 
+    private boolean clicked = false;
+
     private class MyClickListener extends LOnClickListener {
         @Override
         public void onClicked(View v) {
             hideIME();
             switch (v.getId()) {
                 case R.id.tvDate:
+                    if (clicked) break;
+                    else clicked = true;
+
                     final Calendar c = Calendar.getInstance();
                     c.setTimeInMillis(item.getTimeStamp());
                     DatePickerDialog datePickerDialog = new DatePickerDialog(activity, android.R.style
@@ -504,6 +514,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     break;
 
                 case R.id.amountRow:
+                    if (clicked) break;
+                    else clicked = true;
+
                     if (picker != null) picker.onDestroy();
                     int colorCode = 0;
                     switch (item.getType()) {
@@ -523,6 +536,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     break;
 
                 case R.id.account2Row:
+                    if (clicked) break;
+                    else clicked = true;
+
                     try {
                         ids[9] = R.string.select_account;
                         mSelectionDialog = new LSelectionDialog
@@ -539,6 +555,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     break;
 
                 case R.id.accountRow:
+                    if (clicked) break;
+                    else clicked = true;
+
                     try {
                         ids[9] = R.string.select_account;
                         mSelectionDialog = new LSelectionDialog
@@ -555,6 +574,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     break;
 
                 case R.id.categoryRow:
+                    if (clicked) break;
+                    else clicked = true;
+
                     try {
                         ids[9] = R.string.select_category;
                         mSelectionDialog = new LSelectionDialog
@@ -569,6 +591,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     }
                     break;
                 case R.id.vendorRow:
+                    if (clicked) break;
+                    else clicked = true;
+
                     try {
                         ids[9] = R.string.select_vendor;
                         DBVendor dbVendor = DBVendor.getInstance();
@@ -586,6 +611,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     }
                     break;
                 case R.id.tagRow:
+                    if (clicked) break;
+                    else clicked = true;
+
                     try {
                         ids[9] = R.string.select_tag;
                         mSelectionDialog = new LSelectionDialog
@@ -600,6 +628,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
                     }
                     break;
                 case R.id.discard:
+                    if (clicked) break;
+                    else clicked = true;
+
                     LWarnDialog warnDialog = new LWarnDialog(activity, null, TransactionEdit.this,
                             activity.getString(R.string.delete),
                             activity.getString(R.string.warning_delete_record),
@@ -635,6 +666,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     @Override
     public void onWarnDialogExit(Object obj, boolean confirm, boolean ok) {
+        clicked = false;
         if (confirm && ok) {
             myClickListener.disableEnable(false);
             onExit(TransitionEditItf.EXIT_DELETE, false);
@@ -735,6 +767,8 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
 
     @Override
     public void onSelectionDialogExit(int dlgId, long selectedId) {
+        clicked = false;
+
         switch (dlgId) {
             case DLG_ID_ACCOUNT:
                 if (selectedId == item.getAccount2() && (item.getType() == LTransaction.TRANSACTION_TYPE_TRANSFER

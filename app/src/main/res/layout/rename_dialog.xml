@@ -42,7 +42,6 @@
                     android:textStyle="bold" />
 
                 <ImageView
-                    android:visibility="invisible"
                     android:id="@+id/closeDialog"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
@@ -52,7 +51,8 @@
                     android:layout_marginRight="5dp"
                     android:layout_marginTop="2dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_action_cancel" />
+                    android:src="@drawable/ic_action_cancel"
+                    android:visibility="invisible" />
             </LinearLayout>
 
             <LinearLayout
@@ -65,7 +65,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:background="#606060"
+                    android:background="@color/dialog_title_bar_drop_shadow"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -117,15 +117,14 @@
                             </RelativeLayout>
                         </LinearLayout>
 
-
                         <LinearLayout
                             android:id="@+id/buttons"
                             android:layout_width="match_parent"
                             android:layout_height="@dimen/dialog_btn_height"
+                            android:layout_marginBottom="1dp"
                             android:layout_marginLeft="1dp"
                             android:layout_marginRight="1dp"
-                            android:layout_marginTop="15dp"
-                            android:layout_marginBottom="1dp"
+                            android:layout_marginTop="25dp"
                             android:orientation="horizontal">
 
                             <Button

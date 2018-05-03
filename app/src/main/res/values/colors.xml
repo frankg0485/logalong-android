@@ -27,7 +27,8 @@
     <color name="base_orange">#bcb586</color>
     <color name="dollar_amount_picker_bg_color">#80000000</color>
     <color name="dialog_bg_color">#90000000</color>
-    <color name="dialog_border_color">#a4a6a8</color>
+    <color name="dialog_border_color">#c8c8c8</color>
+    <color name="dialog_title_bar_drop_shadow">#a0a0a0</color>
     <color name="released_base_btn_background">#42bb38</color>
     <color name="pressed_base_btn_background">#52cb48</color>
     <color name="released_quickie_btn_background">#b4cdcd</color>
@@ -42,8 +43,8 @@
     <color name="pressed_login_btn_background">#52cb48</color>
     <color name="released_alt_login_btn_background">#708088</color>
     <color name="pressed_alt_login_btn_background">#879f9f</color>
-    <color name="pressed_dialog_btn_background">#979f9f</color>
-    <color name="released_dialog_btn_background">#a4a6a8</color>
+    <color name="pressed_dialog_btn_background">#e0e0e0</color>
+    <color name="released_dialog_btn_background">#e8e8e8</color>
     <color name="topbar_bgd_color">#585c60</color>
     <color name="balance_header_bgd_color">#e4e6e8</color>
     <color name="row_released_color">#fafafa</color>

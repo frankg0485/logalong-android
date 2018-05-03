@@ -65,7 +65,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:background="#606060"
+                    android:background="@color/dialog_title_bar_drop_shadow"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -165,7 +165,7 @@
                             android:layout_marginBottom="1dp"
                             android:layout_marginLeft="1dp"
                             android:layout_marginRight="1dp"
-                            android:layout_marginTop="15dp"
+                            android:layout_marginTop="25dp"
                             android:orientation="horizontal">
 
                             <Button
