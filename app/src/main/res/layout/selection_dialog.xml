@@ -67,7 +67,7 @@
                     android:layout_centerVertical="true"
                     android:paddingBottom="4dp"
                     android:paddingTop="4dp"
-                    android:src="@drawable/ic_action_add_to_queue" />
+                    android:src="@drawable/ic_action_new" />
             </LinearLayout>
 
             <ListView

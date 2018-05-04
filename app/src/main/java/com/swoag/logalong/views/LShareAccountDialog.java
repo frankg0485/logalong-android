@@ -484,7 +484,7 @@ public class LShareAccountDialog extends Dialog
                     imageView.setImageResource(R.drawable.ic_action_share_yellow);
                     break;
                 default:
-                    imageView.setImageResource(R.drawable.ic_action_share);
+                    imageView.setImageResource(R.drawable.ic_action_share_dark);
                     break;
             }
 

@@ -245,6 +245,8 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
             v.setTag(tag);
 
             if (listId == R.id.accounts) {
+                tv.setTag(tag);
+                tv.setOnClickListener(clickListener);
                 ImageView iv = (ImageView) view.findViewById(R.id.share);
                 if (account.isAnySharePending()) {
                     iv.setImageResource(R.drawable.ic_action_share_yellow);
@@ -306,13 +308,17 @@ public class GenericListEdit implements LNewEntryDialog.LNewEntryDialogItf, LBro
                         } else if (listId == R.id.accounts) {
                             LAccount account = DBAccount.getInstance().getById(tag.id);
                             attr1 = account.isShowBalance();
-                            if (account.getOwner() != LPreferences.getUserIdNum()) allowDelete = false;
+                            if (account.getOwner() != LPreferences.getUserIdNum())
+                                allowDelete = false;
                         }
                         optionDialog = new GenericListOptionDialog(activity, tag, tag.name,
                                 listId, MyCursorAdapter.this, attr1, attr2, allowDelete);
                         optionDialog.show();
                         break;
 
+                    case R.id.name:
+                        if (listId != R.id.accounts) break;
+                        //fall through
                     case R.id.share:
                         if (TextUtils.isEmpty(LPreferences.getUserId())) {
                             new LReminderDialog(activity, activity.getResources().getString(R.string
