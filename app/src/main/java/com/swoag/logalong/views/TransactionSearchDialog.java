@@ -83,6 +83,8 @@ public class TransactionSearchDialog extends Dialog implements
 
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                clicked = false;
+
                 if (selections != null) {
                     boolean ok = false;
                     long[] accounts = null;
@@ -117,6 +119,8 @@ public class TransactionSearchDialog extends Dialog implements
 
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                clicked = false;
+
                 if (selections != null) {
                     boolean ok = false;
                     long[] categories = null;
@@ -151,6 +155,8 @@ public class TransactionSearchDialog extends Dialog implements
 
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                clicked = false;
+
                 if (selections != null) {
                     boolean ok = false;
                     long[] vendors = null;
@@ -185,6 +191,8 @@ public class TransactionSearchDialog extends Dialog implements
 
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                clicked = false;
+
                 if (selections != null) {
                     boolean ok = false;
                     long[] tags = null;
@@ -223,6 +231,8 @@ public class TransactionSearchDialog extends Dialog implements
 
             @Override
             public void onMultiSelectionDialogExit(Object obj, HashSet<Long> selections, boolean allSelected) {
+                clicked = false;
+
                 if (selections != null) {
                     boolean ok = false;
                     long[] types = null;
@@ -546,6 +556,7 @@ public class TransactionSearchDialog extends Dialog implements
         }
     }
 
+    private boolean clicked = false;
     private class MyClickListener extends LOnClickListener {
         int[] ids = new int[]{
                 R.layout.multi_selection_dialog,
@@ -586,10 +597,16 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.fromValue:
+                    if (clicked) return;
+                    else clicked = true;
+
                     showValuePicker(true);
                     return;
 
                 case R.id.toValue:
+                    if (clicked) return;
+                    else clicked = true;
+
                     showValuePicker(false);
                     return;
 
@@ -600,6 +617,9 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.selectedAccounts:
+                    if (clicked) return;
+                    else clicked = true;
+
                     ids[9] = R.string.select_accounts;
 
                     long[] accounts = search.getAccounts();
@@ -622,6 +642,9 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.selectedCategories:
+                    if (clicked) return;
+                    else clicked = true;
+
                     ids[9] = R.string.select_categories;
 
                     long[] categories = search.getCategories();
@@ -642,6 +665,9 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.selectedPayers:
+                    if (clicked) return;
+                    else clicked = true;
+
                     ids[9] = R.string.select_vendors;
 
                     long[] vendors = search.getVendors();
@@ -662,6 +688,9 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.selectedTags:
+                    if (clicked) return;
+                    else clicked = true;
+
                     ids[9] = R.string.select_tags;
 
                     long[] tags = search.getTags();
@@ -682,6 +711,9 @@ public class TransactionSearchDialog extends Dialog implements
                     return;
 
                 case R.id.selectedTypes:
+                    if (clicked) return;
+                    else clicked = true;
+
                     ids[9] = R.string.select_types;
 
                     long[] types = search.getTypes();
@@ -764,6 +796,8 @@ public class TransactionSearchDialog extends Dialog implements
 
     @Override
     public void onDollarAmountPickerExit(double value, boolean save) {
+        clicked = false;
+
         if (save) {
             if (value < 0.01) value = 0;
 

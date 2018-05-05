@@ -427,6 +427,7 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
         dateTV.setText(new SimpleDateFormat("MMM d, yyy").format(calendar.getTimeInMillis()));
     }
 
+
     @Override
     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
         clicked = false;
@@ -483,8 +484,9 @@ public class TransactionEdit implements LSelectionDialog.OnSelectionDialogItf,
             hideIME();
             switch (v.getId()) {
                 case R.id.tvDate:
-                    if (clicked) break;
-                    else clicked = true;
+                    // default android Date picker may not have callback upon 'cancel'
+                    //if (clicked) break;
+                    //else clicked = true;
 
                     final Calendar c = Calendar.getInstance();
                     c.setTimeInMillis(item.getTimeStamp());

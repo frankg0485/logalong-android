@@ -12,13 +12,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="@integer/dialog_width_weight"
-        android:background="@drawable/button_bgd"
+        android:background="@drawable/dialog_bgd"
         android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/undo_bar_bgd"
             android:orientation="vertical"
             android:padding="3dp">
 
@@ -59,88 +58,96 @@
                     android:visibility="gone" />
             </LinearLayout>
 
-
             <LinearLayout
+                android:id="@+id/dontcare1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/row_released_color"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/request"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="top"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:paddingTop="5dp"
-                    android:singleLine="false"
-                    android:textColor="@color/base_text_color"
-                    android:textStyle="bold" />
+                    android:layout_margin="5dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/request"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="top"
+                        android:paddingBottom="5dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="5dp"
+                        android:singleLine="false"
+                        android:textColor="@color/base_text_color"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="top"
+                        android:paddingBottom="10dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:paddingTop="10dp"
+                        android:singleLine="false"
+                        android:text="@string/hint_account_share_accept"
+                        android:textColor="@color/base_text_color" />
+
+                    <CheckBox
+                        android:id="@+id/checkboxAccept"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginRight="20dp"
+                        android:button="@drawable/btn_check_holo_light"
+                        android:text="@string/accept_all_from_this_user"
+                        android:textColor="@color/base_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="top"
-                    android:paddingBottom="10dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:paddingTop="10dp"
-                    android:singleLine="false"
-                    android:text="@string/hint_account_share_accept"
-                    android:textColor="@color/base_text_color" />
-
-                <CheckBox
-                    android:id="@+id/checkboxAccept"
+                    android:id="@+id/errorMsg"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_marginBottom="10dp"
-                    android:button="@drawable/btn_check_holo_light"
-                    android:text="@string/accept_all_from_this_user"
-                    android:textColor="@color/base_text_color"
-                    android:textSize="15sp"/>
-            </LinearLayout>
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:singleLine="false"
+                    android:textColor="@color/red_text_color"
+                    android:textSize="15sp"
+                    android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/errorMsg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:singleLine="false"
-                android:textColor="@color/red_text_color"
-                android:textSize="15sp"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:id="@+id/buttons"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/dialog_btn_height"
-                android:layout_marginLeft="1dp"
-                android:layout_marginRight="1dp"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/cancel"
-                    style="@style/dialogButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                <LinearLayout
+                    android:id="@+id/buttons"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dialog_btn_height"
+                    android:layout_marginLeft="1dp"
                     android:layout_marginRight="1dp"
-                    android:layout_weight="1"
-                    android:text="@string/decline" />
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/save"
-                    style="@style/dialogButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/accept" />
+                    <Button
+                        android:id="@+id/cancel"
+                        style="@style/dialogButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="1dp"
+                        android:layout_weight="1"
+                        android:text="@string/decline" />
+
+                    <Button
+                        android:id="@+id/save"
+                        style="@style/dialogButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/accept" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
