@@ -122,14 +122,14 @@ public class LAccount extends LDbBase {
     }
 
     public long getOwner() {
-        if (shareIds == null || shareStates == null) return 0;
+        if (shareIds == null || shareStates == null) return LPreferences.getUserIdNum();
 
         for (int ii = 0; ii < shareStates.size(); ii++) {
             if (shareStates.get(ii) == ACCOUNT_SHARE_PERMISSION_OWNER) {
                 return shareIds.get(ii);
             }
         }
-        return 0;
+        return LPreferences.getUserIdNum();
     }
 
     public void setOwner(long id) {
