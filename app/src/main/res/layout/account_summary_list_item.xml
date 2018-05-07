@@ -9,7 +9,7 @@
     <LinearLayout
         android:id="@+id/mainView"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/list_item_height"
+        android:layout_height="@dimen/list_item_height_with_margin"
         android:layout_marginTop="1dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"

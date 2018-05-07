@@ -230,8 +230,8 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
 
         LAccountSummary summary;
         boolean hasLog = false;
+        long lastSectionStartIndex = -1;
         long lastId = 0;
-        long lastIndex = 0;
         long id = 0;
         long indexId;
         long lastTransferId = 0;
@@ -298,14 +298,13 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                             summary.setName(DBVendor.getInstance().getNameById(lastId));
                             break;
                     }
-                    sectionSummary.addSummary(lastIndex, summary);
+                    sectionSummary.addSummary(lastSectionStartIndex, summary);
+                    lastSectionStartIndex = indexId;
                     hasLog = false;
                     income = 0;
                     expense = 0;
                     lastId = id;
-                }
-
-                lastIndex = indexId;
+                } else if (lastSectionStartIndex == -1) lastSectionStartIndex = indexId;
 
                 if (type == LTransaction.TRANSACTION_TYPE_EXPENSE) expense += v;
                 else if (type == LTransaction.TRANSACTION_TYPE_INCOME) income += v;
@@ -342,7 +341,7 @@ public class ViewTransactionFragment extends LFragment implements DBLoaderHelper
                     summary.setName(DBVendor.getInstance().getNameById(id));
                     break;
             }
-            sectionSummary.addSummary(lastIndex, summary);
+            sectionSummary.addSummary(lastSectionStartIndex, summary);
         }
     }
 

@@ -2,81 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:baselineAligned="false"
     android:background="@color/list_divider_color"
+    android:baselineAligned="false"
     android:gravity="center"
     android:orientation="vertical">
-
-    <LinearLayout
-        android:id="@+id/mainView"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/list_item_height"
-        android:layout_marginTop="1dp"
-        android:background="@drawable/row_selector"
-        android:baselineAligned="false"
-        android:clickable="true"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="4dp">
-
-        <RelativeLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="11dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="marquee"
-                android:gravity="center_vertical"
-                android:marqueeRepeatLimit="3"
-                android:scrollHorizontally="true"
-                android:singleLine="true"
-                android:textColor="@color/base_text_color"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/category"
-                android:gravity="center_vertical"
-                android:textColor="@color/light_gray_text_color"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/note"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/category"
-                android:layout_marginLeft="5dp"
-                android:layout_toRightOf="@id/date"
-                android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:singleLine="true"
-                android:textColor="@color/gray_text_color"
-                android:textSize="11sp" />
-        </RelativeLayout>
-
-        <TextView
-            android:id="@+id/dollor"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="11dp"
-            android:gravity="center_vertical"
-            android:text="0:0"
-            android:textColor="@color/gray_text_color"
-            android:textSize="18sp" />
-    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/sectionView"
         android:layout_width="match_parent"
         android:layout_height="20dp"
-        android:background="@color/balance_header_bgd_color"
+        android:layout_marginTop="1dp"
+        android:background="@color/section_header_bgd_color"
         android:orientation="horizontal"
         android:visibility="visible">
 
@@ -142,5 +78,70 @@
             android:gravity="center_vertical"
             android:text=")"
             android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/mainView"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/list_item_height"
+        android:layout_marginTop="1dp"
+        android:background="@drawable/row_selector"
+        android:baselineAligned="false"
+        android:clickable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="11dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:gravity="center_vertical"
+                android:marqueeRepeatLimit="3"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:textColor="@color/base_text_color"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/category"
+                android:gravity="center_vertical"
+                android:textColor="@color/light_gray_text_color"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/note"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/category"
+                android:layout_marginLeft="5dp"
+                android:layout_toRightOf="@id/date"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:textColor="@color/gray_text_color"
+                android:textSize="11sp" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/dollor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="11dp"
+            android:gravity="center_vertical"
+            android:text="0:0"
+            android:textColor="@color/gray_text_color"
+            android:textSize="18sp" />
     </LinearLayout>
 </LinearLayout>
