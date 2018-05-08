@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/selectType"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_gravity="bottom|right"
-              android:background="@drawable/new_log_bgd"
-              android:orientation="vertical">
+    android:id="@+id/selectType"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|right"
+    android:background="@drawable/new_log_bgd"
+    android:orientation="vertical"
+    android:padding="2dp">
 
     <LinearLayout
         android:id="@+id/expense"
@@ -28,9 +29,9 @@
             android:textSize="@dimen/settings_option_text_size" />
 
         <ImageView
-            android:layout_width="@dimen/settings_row_icon_w"
-            android:layout_height="@dimen/settings_row_icon_h"
-            android:background="@drawable/ic_action_right" />
+            android:layout_width="@dimen/settings_row_icon_w_small"
+            android:layout_height="@dimen/settings_row_icon_h_small"
+            android:background="@drawable/ic_action_right_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -54,9 +55,9 @@
             android:textSize="@dimen/settings_option_text_size" />
 
         <ImageView
-            android:layout_width="@dimen/settings_row_icon_w"
-            android:layout_height="@dimen/settings_row_icon_h"
-            android:background="@drawable/ic_action_right" />
+            android:layout_width="@dimen/settings_row_icon_w_small"
+            android:layout_height="@dimen/settings_row_icon_h_small"
+            android:background="@drawable/ic_action_right_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -80,8 +81,8 @@
             android:textSize="@dimen/settings_option_text_size" />
 
         <ImageView
-            android:layout_width="@dimen/settings_row_icon_w"
-            android:layout_height="@dimen/settings_row_icon_h"
-            android:background="@drawable/ic_action_right" />
+            android:layout_width="@dimen/settings_row_icon_w_small"
+            android:layout_height="@dimen/settings_row_icon_h_small"
+            android:background="@drawable/ic_action_right_dark" />
     </LinearLayout>
 </LinearLayout>
