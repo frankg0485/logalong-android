@@ -45,7 +45,7 @@
                                 android:layout_toLeftOf="@+id/balance"
                                 android:gravity="center_vertical"
                                 android:text="@string/balance"
-                                android:textSize="14dp" />
+                                android:textSize="14sp" />
 
                             <TextView
                                 android:id="@+id/balance"
@@ -57,7 +57,7 @@
                                 android:gravity="right|center_vertical"
                                 android:text="0.00"
                                 android:textColor="@color/base_red"
-                                android:textSize="14dp" />
+                                android:textSize="16sp" />
                         </RelativeLayout>
 
                         <ListView
