@@ -472,7 +472,7 @@ public class ChartActivity extends LFragmentActivity implements
         String lastGroup = null;
         double lastGroupValue = 0;
 
-        List list = new ArrayList<String>();
+        ArrayList<String> list = new ArrayList<String>();
         double threshold = sum * 0.005;
         String lastKey = "";
         Double lastValue = 0.0;
@@ -499,19 +499,10 @@ public class ChartActivity extends LFragmentActivity implements
             count++;
         }
 
-        if (currentExpenseCats.size() <= list.size()) {
-            for (String key : currentExpenseCats.keySet()) {
-                pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
-            }
-        } else {
-            count = 0;
-            for (String key : currentExpenseCats.keySet()) {
-                if (list.contains(key)) {
-                    pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
-                    count++;
-                    if (count >= list.size()) break;
-                }
-            }
+        for (String key : list) {
+            pieEntries.add(new PieEntry(currentExpenseCats.get(key).floatValue(), key));
+        }
+        if (currentExpenseCats.size() > list.size()) {
             pieEntries.add(new PieEntry((float) lastGroupValue, lastGroup));
         }
 
